@@ -4,9 +4,17 @@ pragma solidity >=0.8.0;
 
 import "./TickMath.sol";
 import "../interfaces/IPoolsharkHedgePoolStructs.sol";
+import "../utils/PoolsharkErrors.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
+
+    error WrongTickOrder();
+    error WrongTickLowerRange();
+    error WrongTickUpperRange();
+    error WrongTickLowerOrder();
+    error WrongTickUpperOrder();
+
     function getMaxLiquidity(uint24 _tickSpacing) public pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(_tickSpacing)));
     }
@@ -65,9 +73,15 @@ library Ticks {
         int24 nearestTick,
         uint160 currentPrice
     ) public returns (int24) {
-        require(lower < upper, "WRONG_ORDER");
-        require(TickMath.MIN_TICK <= lower, "LOWER_RANGE");
-        require(upper <= TickMath.MAX_TICK, "UPPER_RANGE");
+        if (lower >= upper || lowerOld >= upperOld) {
+            revert WrongTickOrder();
+        }
+        if (TickMath.MIN_TICK > lower) {
+            revert WrongTickLowerRange();
+        }
+        if (upper > TickMath.MAX_TICK) {
+            revert WrongTickUpperRange();
+        }
 
         {
             // Stack overflow.
@@ -80,7 +94,9 @@ library Ticks {
                 IPoolsharkHedgePoolStructs.Tick storage old = ticks[lowerOld];
                 int24 oldNextTick = old.nextTick;
 
-                require((old.liquidity != 0 || lowerOld == TickMath.MIN_TICK) && lowerOld < lower && lower < oldNextTick, "LOWER_ORDER");
+                if ((old.liquidity == 0 && lowerOld != TickMath.MIN_TICK) || lowerOld >= lower || lower >= oldNextTick){
+                    revert WrongTickLowerOrder();
+                }
 
                 if (lower <= nearestTick) {
                     ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
@@ -92,7 +108,14 @@ library Ticks {
                         secondsGrowthGlobal
                     );
                 } else {
-                    ticks[lower] = IPoolsharkHedgePoolStructs.Tick(lowerOld, oldNextTick, amount, 0, 0, 0);
+                    ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                        lowerOld, 
+                        oldNextTick, 
+                        amount, 
+                        0, 
+                        0, 
+                        0
+                    );
                 }
 
                 old.nextTick = lower;
@@ -108,8 +131,10 @@ library Ticks {
             // Inserting a new tick.
             IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
             int24 oldNextTick = old.nextTick;
-
-            require(old.liquidity != 0 && oldNextTick > upper && upperOld < upper, "UPPER_ORDER");
+            
+            if ((old.liquidity == 0 || oldNextTick <= upper) || (upperOld >= upper)){
+                revert WrongTickUpperOrder();
+            }
 
             if (upper <= nearestTick) {
                 ticks[upper] = IPoolsharkHedgePoolStructs.Tick(

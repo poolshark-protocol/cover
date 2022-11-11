@@ -9,7 +9,10 @@ import "hardhat/console.sol";
 abstract contract PoolsharkHedgePoolFactory is 
     IPoolsharkHedgePoolFactory
 {
-
+    error IdenticalTokenAddresses();
+    error PoolAlreadyExists();
+    error FeeTierNotSupported();
+    
     constructor(
         address _concentratedLiquidityFactory
     ) {
@@ -30,8 +33,9 @@ abstract contract PoolsharkHedgePoolFactory is
         address destToken,
         uint256 swapFee
     ) external override returns (address book) {
-        require(fromToken != destToken,
-                "ERROR: Identical token addresses.");
+        if (fromToken == destToken) {
+            revert IdenticalTokenAddresses();
+        }
 
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
@@ -41,11 +45,15 @@ abstract contract PoolsharkHedgePoolFactory is
 
         bytes32 key = keccak256(abi.encode(token0, token1, swapFee));
 
-        require(poolMapping[key] == address(0), "Pool already exists");
+        if (poolMapping[key] != address(0)){
+            revert PoolAlreadyExists();
+        }
 
         uint256 tickSpacing = feeTierTickSpacing[swapFee];
 
-        require(tickSpacing != 0, "Fee tier not supported.");
+        if (tickSpacing == 0) {
+            revert FeeTierNotSupported();
+        }
 
         address pool = address(new PoolsharkHedgePool(abi.encode(token0, token1, swapFee, tickSpacing)));
         poolMapping[key] = book;

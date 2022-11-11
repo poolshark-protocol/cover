@@ -6,7 +6,7 @@ import "../interfaces/IPoolsharkHedgePoolFactory.sol";
 import "../utils/PoolsharkErrors.sol";
 import "../libraries/Ticks.sol";
 
-abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, PoolsharkErrors {
+abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, PoolsharkHedgePoolErrors {
     uint256 internal unlocked;
 
     address internal feeTo;

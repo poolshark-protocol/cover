@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../utils/PoolsharkErrors.sol";
 
-abstract contract SafeTransfers is PoolsharkErrors {
+abstract contract SafeTransfers is PoolsharkTransferErrors {
     
     /**
      * @dev Similar to EIP20 transfer, except it handles a False result from `transferFrom` and reverts in that case.

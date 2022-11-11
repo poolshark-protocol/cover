@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-abstract contract PoolsharkErrors {
-    /// @dev Error list to optimize around pool requirements.
+abstract contract PoolsharkHedgePoolErrors {
     error Locked();
-    error ZeroAddress();
     error InvalidToken();
     error InvalidSwapFee();
     error LiquidityOverflow();
@@ -15,5 +13,24 @@ abstract contract PoolsharkErrors {
     error UpperOdd();
     error MaxTickLiquidity();
     error Overflow();
+    error NotEnoughOutputLiquidity();
+    //error ZeroAddress();
+}
+
+abstract contract PoolsharkTicksErrors {
+    error WrongTickOrder();
+    error WrongTickLowerRange();
+    error WrongTickUpperRange();
+    error WrongTickLowerOrder();
+    error WrontTickUpperOrder();
+}
+
+abstract contract PoolsharkHedgePoolFactoryErrors {
+    error IdenticalTokenAddresses();
+    error PoolAlreadyExists();
+    error FeeTierNotSupported();
+}
+
+abstract contract PoolsharkTransferErrors {
     error TransferFailed(address from, address dest);
 }
