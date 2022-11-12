@@ -6,7 +6,7 @@ abstract contract IPoolsharkHedgePoolFactory {
     mapping(uint256 => uint256) public feeTierTickSpacing;
 
     address public owner;
-    address public concentratedLiquidityFactory;
+    address public concentratedFactory;
 
     mapping(bytes32 => address) public poolMapping;
     address[] public poolList;

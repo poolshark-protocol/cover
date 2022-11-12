@@ -14,6 +14,7 @@ import "./libraries/DyDxMath.sol";
 import "./libraries/SwapLib.sol";
 import "./libraries/Ticks.sol";
 import "./libraries/SafeTransfers.sol";
+import "./base/oracle/TwapOracle.sol";
 
 /// @notice Trident Concentrated liquidity pool implementation.
 /// @dev SafeTransfers contains PoolsharkHedgePoolErrors
@@ -22,13 +23,15 @@ contract PoolsharkHedgePool is
     PoolsharkHedgePoolStorage,
     PoolsharkHedgePoolEvents,
     PoolsharkHedgePoolView,
-    SafeTransfers
+    SafeTransfers,
+    TwapOracle
 {
     uint24 internal immutable tickSpacing;
     uint24 internal immutable swapFee; /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
     uint128 internal immutable MAX_TICK_LIQUIDITY;
 
-    address internal immutable poolFactory;
+    address internal immutable factory;
+    address internal immutable inputPool;
     address internal immutable token0;
     address internal immutable token1;
 
@@ -41,45 +44,58 @@ contract PoolsharkHedgePool is
 
     using Ticks for mapping(int24 => Tick);
 
-    constructor(bytes memory _deployParams) {
+    constructor(bytes memory _poolParams) {
         (
-            address _poolFactory,
+            address _factory,
+            address _inputPool,
             address _token0, 
             address _token1, 
             uint24  _swapFee, 
             uint24  _tickSpacing
         ) = abi.decode(
-            _deployParams,
+            _poolParams,
             (
                 address, 
                 address, 
-                address, 
+                address,
+                address,
+                address,
                 uint24,
                 uint24
             )
         );
 
+        // check for invalid params
         if (_token0 == address(0) || _token0 == address(this)) revert InvalidToken();
         if (_token1 == address(0) || _token1 == address(this)) revert InvalidToken();
         if (_swapFee > MAX_FEE) revert InvalidSwapFee();
 
-        token0 = _token0;
-        token1 = _token1;
-        swapFee = _swapFee;
+        // set state variables from params
+        factory     = _factory;
+        inputPool   = _inputPool;
+        token0      = _token0;
+        token1      = _token1;
+        swapFee     = _swapFee;
         tickSpacing = _tickSpacing;
-        poolFactory = _poolFactory;
-        feeTo = IPoolsharkHedgePoolFactory(_poolFactory).owner();
+
+        // extrapolate other state variables
+        feeTo = IPoolsharkHedgePoolFactory(_factory).owner();
         MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpacing);
         ticks[TickMath.MIN_TICK] = Tick(TickMath.MIN_TICK, TickMath.MAX_TICK, uint128(0), 0, 0, 0);
         ticks[TickMath.MAX_TICK] = Tick(TickMath.MIN_TICK, TickMath.MAX_TICK, uint128(0), 0, 0, 0);
-        nearestTick = TickMath.MIN_TICK;
+        
+        // set default initial values
+        nearestTick0 = calculateAverageTick(inputPool);
+        nearestTick1 = calculateAverageTick(inputPool);
+        sqrtPrice0 = TickMath.getSqrtRatioAtTick(nearestTick);
+        sqrtPrice1 = TickMath.getSqrtRatioAtTick(nearestTick);
         unlocked = 1;
         lastObservation = uint32(block.timestamp);
     }
 
 
     /// @dev Called only once from the factory.
-    /// @dev sqrtPriceis not a constructor parameter to allow for predictable address calculation.
+    /// @dev sqrtPrice is not a constructor parameter to allow for predictable address calculation.
     function setPrice(uint160 _sqrtPrice) external {
         if (sqrtPrice== 0) {
             TickMath.validatePrice(_sqrtPrice);
@@ -91,35 +107,44 @@ contract PoolsharkHedgePool is
     function mint(MintParams memory mintParams) public lock returns (uint256 liquidityMinted) {
         _ensureTickSpacing(mintParams.lower, mintParams.upper);
 
+        if (mintParams.amount0Desired == 0 && mintParams.amount1Desired == 0) { revert InvalidPosition(); }
+
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
         uint256 currentSqrtPrice = uint256(sqrtPrice);
+        uint256 priceEntry;
+
+        if(mintParams.zeroForOne){
+            if (priceLower < currentSqrtPrice) { revert InvalidPosition(); }
+            if (mintParams.amount0Desired == 0) { revert InvalidPosition(); }
+            priceEntry = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
+        } else {
+            if (priceLower > currentSqrtPrice) { revert InvalidPosition(); }
+            if (mintParams.amount0Desired == 0) { revert InvalidPosition(); }
+            priceEntry = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
+        }
+
+        if (priceUpper > currentSqrtPrice) { revert InvalidPosition(); }
 
         _updateSecondsPerLiquidity(uint256(liquidity));
 
+        //TODO: handle based on direction
         unchecked {
-            (uint256 amount0Fees, uint256 amount1Fees) = _updatePosition(
-                msg.sender,
-                mintParams.lower,
-                mintParams.upper,
-                int128(uint128(liquidityMinted))
-            );
-            
-            //autcompound fees accrued
             liquidityMinted = DyDxMath.getLiquidityForAmounts(
                 priceLower,
                 priceUpper,
-                currentSqrtPrice,
-                uint256(mintParams.amount1Desired + amount1Fees),
-                uint256(mintParams.amount0Desired + amount0Fees)
+                priceLower,
+                uint256(mintParams.amount1Desired),
+                uint256(mintParams.amount0Desired)
             );
 
-            if (priceLower <= currentSqrtPrice && currentSqrtPrice< priceUpper) liquidity += uint128(liquidityMinted);
+            if (priceLower <= currentSqrtPrice && currentSqrtPrice < priceUpper) liquidity += uint128(liquidityMinted);
         }
 
         // Ensure no overflow happens when we cast from uint256 to int128.
         if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
 
+        //TODO: handle with new Tick struct
         nearestTick = Ticks.insert(
             ticks,
             feeGrowthGlobal0,
@@ -140,6 +165,15 @@ contract PoolsharkHedgePool is
             currentSqrtPrice,
             liquidityMinted,
             true
+        );
+
+        //TODO: handle based on direction?
+        (uint256 amount0, uint256 amount1Fees) = _updatePosition(
+            msg.sender,
+            mintParams.lower,
+            mintParams.upper,
+            0,
+            int128(uint128(liquidityMinted))
         );
 
         IPositionManager(msg.sender).mintCallback(token0, token1, amount0Actual, amount1Actual, mintParams.native);
@@ -234,10 +268,10 @@ contract PoolsharkHedgePool is
             protocolFee: 0,
             feeGrowthGlobalA: zeroForOne ? feeGrowthGlobal1 : feeGrowthGlobal0,
             feeGrowthGlobalB: zeroForOne ? feeGrowthGlobal0 : feeGrowthGlobal1,
-            currentSqrtPrice: uint256(sqrtPrice),
-            currentLiquidity: uint256(liquidity),
+            currentSqrtPrice: zeroForOne ? uint256(sqrtPrice1) : uint256(sqrtPrice0),
+            currentLiquidity: zeroForOne ? uint256(liquidity1) : uint256(liquidity0),
             input: amountIn,
-            nextTickToCross: zeroForOne ? nearestTick : ticks[nearestTick].nextTick
+            nextTickToCross: zeroForOne ? nearestTick0 : nearestTick1
         });
 
         _updateSecondsPerLiquidity(cache.currentLiquidity);
@@ -267,23 +301,29 @@ contract PoolsharkHedgePool is
                         FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.currentSqrtPrice, liquidityPadded + cache.currentSqrtPrice * cache.input)
                     );
 
-                    if (!(nextSqrtPrice <= newSqrtPrice&& newSqrtPrice< cache.currentSqrtPrice)) {
+                    if (!(nextSqrtPrice <= newSqrtPrice && newSqrtPrice < cache.currentSqrtPrice)) {
                         // Overflow. We use a modified version of the formula.
-                        newSqrtPrice= uint160(UnsafeMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.currentSqrtPrice+ cache.input));
+                        newSqrtPrice = uint160(UnsafeMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.currentSqrtPrice+ cache.input));
                     }
                     // Based on the sqrtPricedifference calculate the output of th swap: Δy = Δ√P · L.
                     output = DyDxMath.getDy(cache.currentLiquidity, newSqrtPrice, cache.currentSqrtPrice, false);
                     cache.currentSqrtPrice= newSqrtPrice;
+                    //TODO: should be current tick
+                    ticks[cache.nextTickToCross].amount0 += cache.input;
                     cache.input = 0;
                 } else {
                     // Execute swap step and cross the tick.
                     output = DyDxMath.getDy(cache.currentLiquidity, nextSqrtPrice, cache.currentSqrtPrice, false);
                     cache.currentSqrtPrice= nextSqrtPrice;
                     if (nextSqrtPrice == nextTickSqrtPrice) { cross = true; }
+                    //TODO: should be current tick
+                    ticks[nearestTick].amount0 += maxDx;
                     cache.input -= maxDx;
                 }
+                ticks[cache.nextTickToCross].liquidity1 -= output;
+     
             } else {
-                // sqrtPriceis increasing.
+                // sqrtPrice is increasing.
                 // Maximum swap amount within the current tick range: Δy = Δ√P · L.
                 if (nextSqrtPrice > sqrtPriceLimitX96) { nextSqrtPrice = sqrtPriceLimitX96; }
                 uint256 maxDy = DyDxMath.getDy(cache.currentLiquidity, cache.currentSqrtPrice, nextSqrtPrice, false);
@@ -297,14 +337,19 @@ contract PoolsharkHedgePool is
                     // - Δx = Δ(1/√P) · L.
                     output = DyDxMath.getDx(cache.currentLiquidity, cache.currentSqrtPrice, newSqrtPrice, false);
                     cache.currentSqrtPrice= newSqrtPrice;
+                    //TODO: should be current tick
+                    ticks[nearestTick0].amount0 += cache.input;
                     cache.input = 0;
                 } else {
                     // Swap & cross the tick.
                     output = DyDxMath.getDx(cache.currentLiquidity, cache.currentSqrtPrice, nextSqrtPrice, false);
                     cache.currentSqrtPrice= nextSqrtPrice;
                     if (nextSqrtPrice == nextTickSqrtPrice) { cross = true; }
+                    //TODO: should be current tick
+                    ticks[nearestTick0].amount1 += maxDy;
                     cache.input -= maxDy;
                 }
+                ticks[cache.nextTickToCross].liquidity0 -= output;
             }
 
             // cache.feeGrowthGlobalA is the feeGrowthGlobal counter for the output token.
@@ -348,13 +393,18 @@ contract PoolsharkHedgePool is
             }
         }
 
-        sqrtPrice= uint160(cache.currentSqrtPrice);
 
-        int24 newNearestTick = zeroForOne ? cache.nextTickToCross : ticks[cache.nextTickToCross].previousTick;
-
-        if (nearestTick != newNearestTick) {
-            nearestTick = newNearestTick;
-            liquidity = uint128(cache.currentLiquidity);
+        if (zeroForOne){
+            sqrtPrice1 = uint160(cache.currentSqrtPrice);
+            int24 newNearestTick = cache.nextTickToCross;
+            if(nearestTick1 != newNearestTick){
+                nearestTick1 = newNearestTick;
+                liquidity1 = uint128(cache.currentLiquidity);
+            }
+        } else {
+            sqrtPrice0 = uint160(cache.currentSqrtPrice);
+            int24 newNearestTick = ticks[cache.nextTickToCross].previousTick;
+            liquidity1 = uint128(cache.currentLiquidity);
         }
 
         _updateFees(zeroForOne, cache.feeGrowthGlobalA, uint128(cache.protocolFee));
@@ -394,7 +444,6 @@ contract PoolsharkHedgePool is
         (address tokenOut, uint256 amountOut) = abi.decode(data, (address, uint256));
         uint256 amountOutWithoutFee = (amountOut * 1e6) / (1e6 - swapFee) + 1;
         uint256 currentPrice = uint256(sqrtPrice);
-        uint256 currentLiquidity = uint256(liquidity);
         int24 nextTickToCross = tokenOut == token1 ? nearestTick : ticks[nearestTick].nextTick;
         int24 nextTick;
 
@@ -402,6 +451,7 @@ contract PoolsharkHedgePool is
         while (amountOutWithoutFee != 0) {
             uint256 nextTickPrice = uint256(TickMath.getSqrtRatioAtTick(nextTickToCross));
             if (tokenOut == token1) {
+                uint256 currentLiquidity = uint256(liquidity1);
                 uint256 maxDy = DyDxMath.getDy(currentLiquidity, nextTickPrice, currentPrice, false);
                 if (amountOutWithoutFee <= maxDy) {
                     unchecked {
@@ -428,6 +478,7 @@ contract PoolsharkHedgePool is
                     nextTick = ticks[nextTickToCross].previousTick;
                 }
             } else {
+                uint256 currentLiquidity = uint256(liquidity0);
                 uint256 maxDx = DyDxMath.getDx(currentLiquidity, currentPrice, nextTickPrice, false);
 
                 if (amountOutWithoutFee <= maxDx) {
@@ -493,27 +544,108 @@ contract PoolsharkHedgePool is
         }
     }
 
+    function _accumulateLastBlock() internal {
+        // start from the current nearest tick
+
+        // find the amount0 amount1 needing to be carried over
+        // call getAmountsForLiquidity to get amount1 we should carry over
+        // if (zeroForOne)
+        // then we check amount1 and subtract out the delta
+        // any missing amount will be covered using amount0 and averageSqrtPrice0
+
+        // repeat until we capture everything up to the previous TWAP
+
+        // lastly update the TWAP with the most current
+    }
+
+    // to claim the current token amounts..
+    // we need to find the highest tick that
+    // has had feeGrowthGlobal > that of the position
+    // if there has been no fee growth we need to go down
+    // if there is fee growth we need to go up until there is none
+    // or we reach end of range
     function _updatePosition(
         address owner,
         int24 lower,
         int24 upper,
+        int24 claim,
+        bool zeroForOne,
+        bool claiming,
         int128 amount
-    ) internal returns (uint256 amount0Fees, uint256 amount1Fees) {
-        Position storage position = positions[owner][lower][upper];
+    ) internal returns (uint256 amount0, uint256 amount1) {
+        // if lower < upper
+        Position storage position = positions[owner][lower][upper][zeroForOne];
 
-        (uint256 rangeFeeGrowth0, uint256 rangeFeeGrowth1) = rangeFeeGrowth(lower, upper);
+        // if claim 
+        // check feeGrowthLast and compare to position
+        bool feeGrowthSinceLastUpdate;
+        if(zeroForOne){
+            feeGrowthSinceLastUpdate = ticks[claim].feeGrowthGlobal1 > position.feeGrowthGlobalLast;
 
-        amount0Fees = FullPrecisionMath.mulDiv(
-            rangeFeeGrowth0 - position.feeGrowthInside0Last,
+            if(feeGrowthSinceLastUpdate) {
+                if(claim == upper){
+                    // we can process the claim
+                } else {
+                    // check to see if tick above has fee growth
+                    // if so revert()
+                }
+            } else {
+                // revert()
+            }
+
+            position.feeGrowthGlobalLast = feeGrowthGlobal1;
+        } else {
+            feeGrowthSinceLastUpdate = ticks[claim].feeGrowthGlobal0 > position.feeGrowthGlobalLast;
+
+            if(feeGrowthSinceLastUpdate) {
+                if(claim == lower){
+                    // we can process the claim
+                } else {
+                    // we keep going to a higher tick until we find
+                    // one without fee growth
+                }
+            } else {
+                // we keep going to a lower tick until we find
+                // one with fee growth
+            }
+
+            position.feeGrowthGlobalLast = feeGrowthGlobal0;
+        }
+
+        // assume we've set the proper claim tick
+
+        // calculate max claimable at current tick
+
+        uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(lower));
+        uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper));
+        uint256 priceClaim = uint256(TickMath.getSqrtRatioAtTick(claim));
+
+        (uint128 amount0Actual, uint128 amount1Actual) = DyDxMath.getAmountsForLiquidity(
+            priceLower,
+            priceUpper,
+            priceClaim,
             position.liquidity,
-            0x100000000000000000000000000000000
+            false
         );
 
-        amount1Fees = FullPrecisionMath.mulDiv(
-            rangeFeeGrowth1 - position.feeGrowthInside1Last,
-            position.liquidity,
-            0x100000000000000000000000000000000
-        );
+        // claim the max allowable
+
+        // subtract from amount0 and amount1
+
+        // update highestTickClaimed and amountClaimed on position
+
+        //TODO: depends on direction which side acquired fees
+        // amount0Fees = FullPrecisionMath.mulDiv(
+        //     swapFee,
+        //     position.liquidity,
+        //     0x100000000000000000000000000000000
+        // );
+
+        // amount1Fees = FullPrecisionMath.mulDiv(
+        //     rangeFeeGrowth1 - position.feeGrowthInside1Last,
+        //     position.liquidity,
+        //     0x100000000000000000000000000000000
+        // );
 
         if (amount < 0) {
             position.liquidity -= uint128(-amount);
@@ -524,8 +656,5 @@ contract PoolsharkHedgePool is
             // Prevents a global liquidity overflow in even if all ticks are initialised.
             if (position.liquidity > MAX_TICK_LIQUIDITY) revert LiquidityOverflow();
         }
-
-        position.feeGrowthInside0Last = rangeFeeGrowth0;
-        position.feeGrowthInside1Last = rangeFeeGrowth1;
     }
 }

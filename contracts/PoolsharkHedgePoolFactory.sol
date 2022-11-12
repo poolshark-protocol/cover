@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./PoolsharkHedgePool.sol";
 import "./interfaces/IPoolsharkHedgePoolFactory.sol";
 import "hardhat/console.sol";
+import "./interfaces/IConcentratedFactory.sol";
 
 abstract contract PoolsharkHedgePoolFactory is 
     IPoolsharkHedgePoolFactory
@@ -14,18 +15,10 @@ abstract contract PoolsharkHedgePoolFactory is
     error FeeTierNotSupported();
     
     constructor(
-        address _concentratedLiquidityFactory
+        address _concentratedFactory
     ) {
         owner = msg.sender;
-        concentratedLiquidityFactory = _concentratedLiquidityFactory;
-        // 2 bps spacing
-        feeTierTickSpacing[100] = 2;
-        // 20 bps spacing
-        feeTierTickSpacing[500] = 20;
-        // 120 bps spacing
-        feeTierTickSpacing[3000] = 120;
-        // 200 bps spacing
-        feeTierTickSpacing[10000] = 200;
+        concentratedFactory = _concentratedFactory;
     }
 
     function createHedgePool(
@@ -33,32 +26,53 @@ abstract contract PoolsharkHedgePoolFactory is
         address destToken,
         uint256 swapFee
     ) external override returns (address book) {
+        
+        // validate token pair
         if (fromToken == destToken) {
             revert IdenticalTokenAddresses();
         }
-
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
-
         if(ERC20(token0).decimals() == 0) revert("ERROR: token0 decimals are zero.");
         if(ERC20(token1).decimals() == 0) revert("ERROR: token1 decimals are zero.");
 
+        // generate key for pool
         bytes32 key = keccak256(abi.encode(token0, token1, swapFee));
-
         if (poolMapping[key] != address(0)){
             revert PoolAlreadyExists();
         }
 
-        uint256 tickSpacing = feeTierTickSpacing[swapFee];
-
+        // check fee tier exists and get tick spacing
+        uint256 tickSpacing = IConcentratedFactory(concentratedFactory).feeTierTickSpacing[swapFee];
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
         }
+            //         address _factory,
+            // address _twapSource,
+            // address _token0, 
+            // address _token1, 
+            // uint24  _swapFee, 
+            // uint24  _tickSpacing
 
-        address pool = address(new PoolsharkHedgePool(abi.encode(token0, token1, swapFee, tickSpacing)));
+        address inputPool = getPool(token0, token1, swapFee);
+
+        // launch pool and save address
+        address pool = address(
+            new PoolsharkHedgePool(
+                abi.encode(
+                    address(this),
+                    inputPool,
+                    token0,
+                    token1,
+                    uint24(swapFee),
+                    uint24(tickSpacing)
+                )
+            )
+        );
         poolMapping[key] = book;
-
         poolList.push(pool);
+
+        // emit event for indexers
         emit PoolCreated(token0, token1, uint24(swapFee), uint24(tickSpacing), pool);
     }
 
@@ -67,11 +81,22 @@ abstract contract PoolsharkHedgePoolFactory is
         address destToken,
         uint256 fee
     ) public override view returns (address) {
+
+        // set lexographical token address ordering
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
 
+        // get pool address from mapping
         bytes32 key = keccak256(abi.encode(token0, token1, fee));
 
         return poolMapping[key];
+    }
+
+    function getPool(
+        address fromToken,
+        address destToken,
+        uint256 swapFee
+    ) internal view returns (address) {
+        return IConcentratedFactory(concentratedFactory).getPool(fromToken, destToken, swapFee);
     }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 abstract contract PoolsharkHedgePoolErrors {
     error Locked();
     error InvalidToken();
+    error InvalidPosition();
     error InvalidSwapFee();
     error LiquidityOverflow();
     error Token0Missing();

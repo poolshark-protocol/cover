@@ -6,18 +6,28 @@ interface IPoolsharkHedgePoolStructs {
     struct Tick {
         int24 previousTick;
         int24 nextTick;
-        uint128 liquidity;
-        uint256 feeGrowthOutside0; // Per unit of liquidity.
-        uint256 feeGrowthOutside1;
+        uint128 amount0; // Claimable token amounts
+        uint128 amount1;
+        uint128 liquidity0; // represent LPs for token0 -> token1
+        uint128 liquidity1; // represent LPs for token1 -> token0
+        uint256 feeGrowthGlobal0; // Used to check for claim updates
+        uint256 feeGrowthGlobal1;
+        uint160 averageSqrtPrice0;
+        uint160 averageSqrtPrice1;
         uint160 secondsGrowthOutside;
     }
-    
+
+    // feeGrowthGlobalInitial 
+    // balance needs to be immediately transferred to the position owner
     struct Position {
-        uint128 liquidity;
-        uint256 feeGrowthInside0Last;
-        uint256 feeGrowthInside1Last;
+        uint128 liquidity;           // expected amount to be used not actual
+        uint256 feeGrowthGlobalLast; // last feeGrowth this position was updated at
+        int24   highestTickClaimed;  // highest tick claimed at
+        uint128 amountClaimed;       // token amount already claimed; balance
     }
 
+
+    //TODO: should we have a recipient field here?
     struct MintParams {
         int24 lowerOld;
         int24 lower;
@@ -25,6 +35,7 @@ interface IPoolsharkHedgePoolStructs {
         int24 upper;
         uint128 amount0Desired;
         uint128 amount1Desired;
+        bool zeroForOne;
         bool native;
     }
 

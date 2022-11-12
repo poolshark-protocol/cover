@@ -21,11 +21,11 @@ library Ticks {
 
     function cross(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        int24 currentTick,
         int24 nextTickToCross,
         uint160 secondsGrowthGlobal,
         uint256 currentLiquidity,
-        uint256 feeGrowthGlobalA,
-        uint256 feeGrowthGlobalB,
+        uint256 feeGrowthGlobal,
         bool zeroForOne,
         uint24 tickSpacing
     ) internal returns (uint256, int24) {
@@ -35,26 +35,30 @@ library Ticks {
             // Moving backwards through the linked list.
             // Liquidity cannot overflow due to the MAX_TICK_LIQUIDITY requirement.
             unchecked {
+                //if price is decreasing, liquidity is only removed
+                // do all the ticks crosses at the first txn of the block
                 if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                    currentLiquidity -= ticks[nextTickToCross].liquidity;
-                } else {
-                    currentLiquidity += ticks[nextTickToCross].liquidity;
+                    currentLiquidity += ticks[nextTickToCross].liquidity0;
                 }
+                // // liquidity will never be recycled
+                // else {
+                //     currentLiquidity += ticks[nextTickToCross].liquidity1;
+                // }
             }
-            ticks[nextTickToCross].feeGrowthOutside0 = feeGrowthGlobalB - ticks[nextTickToCross].feeGrowthOutside0;
-            ticks[nextTickToCross].feeGrowthOutside1 = feeGrowthGlobalA - ticks[nextTickToCross].feeGrowthOutside1;
+            ticks[nextTickToCross].feeGrowthGlobal1 = feeGrowthGlobal;
             nextTickToCross = ticks[nextTickToCross].previousTick;
         } else {
             // Moving forwards through the linked list.
             unchecked {
-                if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                    currentLiquidity += ticks[nextTickToCross].liquidity;
-                } else {
-                    currentLiquidity -= ticks[nextTickToCross].liquidity;
+                // liquidity will never be recycled
+                // if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
+                //     currentLiquidity += ticks[nextTickToCross].liquidity;
+                // } 
+                if ((nextTickToCross / int24(tickSpacing)) % 2 != 0) {
+                    currentLiquidity -= ticks[nextTickToCross].liquidity1;
                 }
             }
-            ticks[nextTickToCross].feeGrowthOutside1 = feeGrowthGlobalB - ticks[nextTickToCross].feeGrowthOutside1;
-            ticks[nextTickToCross].feeGrowthOutside0 = feeGrowthGlobalA - ticks[nextTickToCross].feeGrowthOutside0;
+            ticks[nextTickToCross].feeGrowthGlobal0 = feeGrowthGlobal;
             nextTickToCross = ticks[nextTickToCross].nextTick;
         }
         return (currentLiquidity, nextTickToCross);
