@@ -7,9 +7,7 @@ import "./IPoolsharkHedgePoolStructs.sol";
 /// @notice Trident Concentrated Liquidity Pool interface.
 interface IPoolsharkHedgePool is  IPoolsharkHedgePoolStructs {
 
-    function setPrice(uint160 sqrtPrice) external;
-
-    function collect(int24 lower, int24 upper) external returns (uint256 amount0fees, uint256 amount1fees);
+    // function collect(int24 lower, int24 upper) external returns (uint256 amount0fees, uint256 amount1fees);
 
     function mint(MintParams memory data) external returns (uint256 liquidityMinted);
 

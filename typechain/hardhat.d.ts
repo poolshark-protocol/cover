@@ -65,6 +65,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
+      name: "TwapOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TwapOracle__factory>;
+    getContractFactory(
       name: "PoolsharkHedgePoolEvents",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkHedgePoolEvents__factory>;
@@ -156,6 +160,14 @@ declare module "hardhat/types/runtime" {
       name: "OrderBookRouter20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OrderBookRouter20__factory>;
+    getContractFactory(
+      name: "IConcentratedFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IConcentratedFactory__factory>;
+    getContractFactory(
+      name: "IConcentratedPool",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IConcentratedPool__factory>;
     getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -291,6 +303,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC165>;
     getContractAt(
+      name: "TwapOracle",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TwapOracle>;
+    getContractAt(
       name: "PoolsharkHedgePoolEvents",
       address: string,
       signer?: ethers.Signer
@@ -405,6 +422,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.OrderBookRouter20>;
+    getContractAt(
+      name: "IConcentratedFactory",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IConcentratedFactory>;
+    getContractAt(
+      name: "IConcentratedPool",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IConcentratedPool>;
     getContractAt(
       name: "IERC20",
       address: string,

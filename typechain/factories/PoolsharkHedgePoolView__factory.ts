@@ -12,6 +12,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "InvalidPosition",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidSwapFee",
     type: "error",
   },
@@ -85,7 +90,33 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "feeGrowthGlobal0Last",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "feeGrowthGlobal1",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "feeGrowthGlobal1Last",
     outputs: [
       {
         internalType: "uint256",
@@ -102,12 +133,22 @@ const _abi = [
     outputs: [
       {
         internalType: "uint160",
-        name: "_price",
+        name: "_price0",
+        type: "uint160",
+      },
+      {
+        internalType: "uint160",
+        name: "_price1",
         type: "uint160",
       },
       {
         internalType: "int24",
-        name: "_nearestTick",
+        name: "_nearestTick0",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_nearestTick1",
         type: "int24",
       },
     ],
@@ -152,7 +193,20 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "liquidity",
+    name: "liquidity0",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "",
+        type: "uint128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "liquidity1",
     outputs: [
       {
         internalType: "uint128",
@@ -180,6 +234,11 @@ const _abi = [
         name: "",
         type: "int24",
       },
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
     ],
     name: "positions",
     outputs: [
@@ -190,42 +249,18 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "feeGrowthInside0Last",
+        name: "feeGrowthGlobalLast",
         type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "feeGrowthInside1Last",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "int24",
-        name: "lowerTick",
-        type: "int24",
       },
       {
         internalType: "int24",
-        name: "upperTick",
+        name: "highestTickClaimed",
         type: "int24",
       },
-    ],
-    name: "rangeFeeGrowth",
-    outputs: [
       {
-        internalType: "uint256",
-        name: "feeGrowthInside0",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "feeGrowthInside1",
-        type: "uint256",
+        internalType: "uint128",
+        name: "amountClaimed",
+        type: "uint128",
       },
     ],
     stateMutability: "view",
@@ -253,18 +288,43 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidity",
+        name: "amount0",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amount1",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidity0",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidity1",
         type: "uint128",
       },
       {
         internalType: "uint256",
-        name: "feeGrowthOutside0",
+        name: "feeGrowthGlobal0",
         type: "uint256",
       },
       {
         internalType: "uint256",
-        name: "feeGrowthOutside1",
+        name: "feeGrowthGlobal1",
         type: "uint256",
+      },
+      {
+        internalType: "uint160",
+        name: "averageSqrtPrice0",
+        type: "uint160",
+      },
+      {
+        internalType: "uint160",
+        name: "averageSqrtPrice1",
+        type: "uint160",
       },
       {
         internalType: "uint160",

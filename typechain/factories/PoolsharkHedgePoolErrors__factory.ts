@@ -12,6 +12,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "InvalidPosition",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidSwapFee",
     type: "error",
   },

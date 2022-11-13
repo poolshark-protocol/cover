@@ -49,7 +49,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "concentratedLiquidityFactory",
+    name: "concentratedFactory",
     outputs: [
       {
         internalType: "address",

@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IPoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   functions: {
-    "concentratedLiquidityFactory()": FunctionFragment;
+    "concentratedFactory()": FunctionFragment;
     "createHedgePool(address,address,uint256)": FunctionFragment;
     "feeTierTickSpacing(uint256)": FunctionFragment;
     "getHedgePool(address,address,uint256)": FunctionFragment;
@@ -31,7 +31,7 @@ interface IPoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   };
 
   encodeFunctionData(
-    functionFragment: "concentratedLiquidityFactory",
+    functionFragment: "concentratedFactory",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -57,7 +57,7 @@ interface IPoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "concentratedLiquidityFactory",
+    functionFragment: "concentratedFactory",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -140,7 +140,7 @@ export class IPoolsharkHedgePoolFactory extends BaseContract {
   interface: IPoolsharkHedgePoolFactoryInterface;
 
   functions: {
-    concentratedLiquidityFactory(overrides?: CallOverrides): Promise<[string]>;
+    concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
 
     createHedgePool(
       fromToken: string,
@@ -168,7 +168,7 @@ export class IPoolsharkHedgePoolFactory extends BaseContract {
     poolMapping(arg0: BytesLike, overrides?: CallOverrides): Promise<[string]>;
   };
 
-  concentratedLiquidityFactory(overrides?: CallOverrides): Promise<string>;
+  concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
   createHedgePool(
     fromToken: string,
@@ -196,7 +196,7 @@ export class IPoolsharkHedgePoolFactory extends BaseContract {
   poolMapping(arg0: BytesLike, overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
-    concentratedLiquidityFactory(overrides?: CallOverrides): Promise<string>;
+    concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
     createHedgePool(
       fromToken: string,
@@ -261,7 +261,7 @@ export class IPoolsharkHedgePoolFactory extends BaseContract {
   };
 
   estimateGas: {
-    concentratedLiquidityFactory(overrides?: CallOverrides): Promise<BigNumber>;
+    concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
 
     createHedgePool(
       fromToken: string,
@@ -290,7 +290,7 @@ export class IPoolsharkHedgePoolFactory extends BaseContract {
   };
 
   populateTransaction: {
-    concentratedLiquidityFactory(
+    concentratedFactory(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

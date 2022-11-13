@@ -7,7 +7,7 @@ import "./interfaces/IPoolsharkHedgePoolFactory.sol";
 import "hardhat/console.sol";
 import "./interfaces/IConcentratedFactory.sol";
 
-abstract contract PoolsharkHedgePoolFactory is 
+contract PoolsharkHedgePoolFactory is 
     IPoolsharkHedgePoolFactory
 {
     error IdenticalTokenAddresses();
@@ -43,7 +43,7 @@ abstract contract PoolsharkHedgePoolFactory is
         }
 
         // check fee tier exists and get tick spacing
-        uint256 tickSpacing = IConcentratedFactory(concentratedFactory).feeTierTickSpacing[swapFee];
+        int24 tickSpacing = IConcentratedFactory(concentratedFactory).feeTierTickSpacing(uint24(swapFee));
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
         }
@@ -97,6 +97,6 @@ abstract contract PoolsharkHedgePoolFactory is
         address destToken,
         uint256 swapFee
     ) internal view returns (address) {
-        return IConcentratedFactory(concentratedFactory).getPool(fromToken, destToken, swapFee);
+        return IConcentratedFactory(concentratedFactory).getPool(fromToken, destToken, uint24(swapFee));
     }
 }

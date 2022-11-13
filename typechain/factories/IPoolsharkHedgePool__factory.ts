@@ -57,35 +57,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "int24",
-        name: "lower",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "upper",
-        type: "int24",
-      },
-    ],
-    name: "collect",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "amount0fees",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "amount1fees",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         components: [
           {
             internalType: "int24",
@@ -119,6 +90,11 @@ const _abi = [
           },
           {
             internalType: "bool",
+            name: "zeroForOne",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
             name: "native",
             type: "bool",
           },
@@ -136,19 +112,6 @@ const _abi = [
         type: "uint256",
       },
     ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint160",
-        name: "sqrtPrice",
-        type: "uint160",
-      },
-    ],
-    name: "setPrice",
-    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
