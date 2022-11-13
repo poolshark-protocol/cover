@@ -87,20 +87,10 @@ contract PoolsharkHedgePool is
         // set default initial values
         nearestTick0 = calculateAverageTick(inputPool);
         nearestTick1 = calculateAverageTick(inputPool);
-        sqrtPrice0 = TickMath.getSqrtRatioAtTick(nearestTick);
-        sqrtPrice1 = TickMath.getSqrtRatioAtTick(nearestTick);
+        sqrtPrice0 = TickMath.getSqrtRatioAtTick(nearestTick0);
+        sqrtPrice1 = TickMath.getSqrtRatioAtTick(nearestTick1);
         unlocked = 1;
         lastObservation = uint32(block.timestamp);
-    }
-
-
-    /// @dev Called only once from the factory.
-    /// @dev sqrtPrice is not a constructor parameter to allow for predictable address calculation.
-    function setPrice(uint160 _sqrtPrice) external {
-        if (sqrtPrice== 0) {
-            TickMath.validatePrice(_sqrtPrice);
-            sqrtPrice= _sqrtPrice;
-        }
     }
 
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
@@ -112,11 +102,12 @@ contract PoolsharkHedgePool is
 
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
-        uint256 currentSqrtPrice = uint256(sqrtPrice);
+        uint256 currentSqrtPrice ;
         uint256 priceEntry;
 
         if(mintParams.zeroForOne){
             // position lower and upper should be above current price
+            currentSqrtPrice = uint256(sqrtPrice0);
             if (priceLower <= currentSqrtPrice) { revert InvalidPosition(); }
             if (mintParams.amount0Desired == 0) { revert InvalidPosition(); }
             priceEntry = priceUpper;
@@ -135,6 +126,7 @@ contract PoolsharkHedgePool is
             }
         } else {
             // position upper should be lower than current price
+            currentSqrtPrice = uint256(sqrtPrice1);
             if (priceUpper >= currentSqrtPrice) { revert InvalidPosition(); }
             if (mintParams.amount1Desired == 0) { revert InvalidPosition(); }
             priceEntry = priceLower;
@@ -149,25 +141,14 @@ contract PoolsharkHedgePool is
             }
         }
 
-        _updateSecondsPerLiquidity(uint256(liquidity));
+        // _updateSecondsPerLiquidity(uint256(liquidity));
 
         // Ensure no overflow happens when we cast from uint256 to int128.
         if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
+        
 
         //TODO: handle with new Tick struct
-        nearestTick = Ticks.insert(
-            ticks,
-            feeGrowthGlobal0,
-            feeGrowthGlobal1,
-            secondsGrowthGlobal,
-            mintParams.lowerOld,
-            mintParams.lower,
-            mintParams.upperOld,
-            mintParams.upper,
-            uint128(liquidityMinted),
-            nearestTick,
-            uint160(currentSqrtPrice)
-        );
+
 
         (uint128 amount0Actual, uint128 amount1Actual) = DyDxMath.getAmountsForLiquidity(
             priceLower,
@@ -179,8 +160,8 @@ contract PoolsharkHedgePool is
 
         (uint256 amount0, uint256 amount1Fees) = _updatePosition(
             msg.sender,
-            mintParams.lower,
-            mintParams.upper,
+            priceLower,
+            priceUpper,
             mintParams.zeroForOne,
             int128(uint128(liquidityMinted)),
             false,
@@ -576,7 +557,7 @@ contract PoolsharkHedgePool is
     // or we reach end of range
     function _updatePosition(
         address owner,
-        int24 lower,
+        uint160 lower,
         int24 upper,
         bool zeroForOne,
         int128 amount,
@@ -585,6 +566,8 @@ contract PoolsharkHedgePool is
     ) internal returns (uint256 amount0, uint256 amount1) {
         // if lower < upper
         Position storage position = positions[owner][lower][upper][zeroForOne];
+
+
 
         // if claim 
         // check feeGrowthLast and compare to position
@@ -595,6 +578,7 @@ contract PoolsharkHedgePool is
             if(feeGrowthSinceLastUpdate) {
                 if(claim == upper){
                     // we can process the claim
+                    uint256 amount0 = DyDxMath.getAmountsForLiquidity(priceLower, priceUpper, currentPrice, liquidityAmount, roundUp);
                 } else {
                     // check to see if tick above has fee growth
                     // if so revert()

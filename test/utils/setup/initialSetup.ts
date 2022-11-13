@@ -71,7 +71,7 @@ export class InitialSetup {
         );
 
         // create tokenA/tokenB book
-        let txn = await hre.props.orderBook20Factory.connect(hre.props.alice).createBook(
+        let txn = await hre.props.hedgePoolFactory.connect(hre.props.alice).createBook(
             hre.props.token0.address,
             hre.props.token1.address,
             fee,

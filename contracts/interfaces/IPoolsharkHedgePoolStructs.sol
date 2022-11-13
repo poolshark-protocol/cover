@@ -26,7 +26,6 @@ interface IPoolsharkHedgePoolStructs {
         uint128 amountClaimed;       // token amount already claimed; balance
     }
 
-
     //TODO: should we have a recipient field here?
     struct MintParams {
         int24 lowerOld;
