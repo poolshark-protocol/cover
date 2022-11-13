@@ -108,6 +108,7 @@ contract PoolsharkHedgePool is
         _ensureTickSpacing(mintParams.lower, mintParams.upper);
 
         if (mintParams.amount0Desired == 0 && mintParams.amount1Desired == 0) { revert InvalidPosition(); }
+        if (mintParams.lower >= mintParams.upper) { revert InvalidPosition(); }
 
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
@@ -115,31 +116,40 @@ contract PoolsharkHedgePool is
         uint256 priceEntry;
 
         if(mintParams.zeroForOne){
-            if (priceLower < currentSqrtPrice) { revert InvalidPosition(); }
+            // position lower and upper should be above current price
+            if (priceLower <= currentSqrtPrice) { revert InvalidPosition(); }
             if (mintParams.amount0Desired == 0) { revert InvalidPosition(); }
-            priceEntry = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
-        } else {
-            if (priceLower > currentSqrtPrice) { revert InvalidPosition(); }
-            if (mintParams.amount0Desired == 0) { revert InvalidPosition(); }
-            priceEntry = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
-        }
+            priceEntry = priceUpper;
+            //TODO: handle based on direction
+            unchecked {
+                liquidityMinted = DyDxMath.getLiquidityForAmounts(
+                    priceLower,
+                    priceUpper,
+                    priceLower,
+                    0,
+                    uint256(mintParams.amount0Desired)
+                );
 
-        if (priceUpper > currentSqrtPrice) { revert InvalidPosition(); }
+                // liquidity should always be out of range initially
+                //if (priceLower <= currentSqrtPrice && currentSqrtPrice < priceUpper) liquidity += uint128(liquidityMinted);
+            }
+        } else {
+            // position upper should be lower than current price
+            if (priceUpper >= currentSqrtPrice) { revert InvalidPosition(); }
+            if (mintParams.amount1Desired == 0) { revert InvalidPosition(); }
+            priceEntry = priceLower;
+            unchecked {
+                liquidityMinted = DyDxMath.getLiquidityForAmounts(
+                    priceUpper,
+                    priceLower,
+                    priceUpper,
+                    uint256(mintParams.amount1Desired),
+                    0
+                );
+            }
+        }
 
         _updateSecondsPerLiquidity(uint256(liquidity));
-
-        //TODO: handle based on direction
-        unchecked {
-            liquidityMinted = DyDxMath.getLiquidityForAmounts(
-                priceLower,
-                priceUpper,
-                priceLower,
-                uint256(mintParams.amount1Desired),
-                uint256(mintParams.amount0Desired)
-            );
-
-            if (priceLower <= currentSqrtPrice && currentSqrtPrice < priceUpper) liquidity += uint128(liquidityMinted);
-        }
 
         // Ensure no overflow happens when we cast from uint256 to int128.
         if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
@@ -162,18 +172,19 @@ contract PoolsharkHedgePool is
         (uint128 amount0Actual, uint128 amount1Actual) = DyDxMath.getAmountsForLiquidity(
             priceLower,
             priceUpper,
-            currentSqrtPrice,
+            priceEntry,
             liquidityMinted,
             true
         );
 
-        //TODO: handle based on direction?
         (uint256 amount0, uint256 amount1Fees) = _updatePosition(
             msg.sender,
             mintParams.lower,
             mintParams.upper,
-            0,
-            int128(uint128(liquidityMinted))
+            mintParams.zeroForOne,
+            int128(uint128(liquidityMinted)),
+            false,
+            0
         );
 
         IPositionManager(msg.sender).mintCallback(token0, token1, amount0Actual, amount1Actual, mintParams.native);
@@ -284,7 +295,7 @@ contract PoolsharkHedgePool is
 
             if (zeroForOne) {
                 // Trading token 0 (x) for token 1 (y).
-                // sqrtPriceis decreasing.
+                // sqrtPrice  is decreasing.
                 // Maximum input amount within current tick range: Δx = Δ(1/√𝑃) · L.
                 if (nextSqrtPrice < sqrtPriceLimitX96) { nextSqrtPrice = sqrtPriceLimitX96; }
                 uint256 maxDx = DyDxMath.getDx(cache.currentLiquidity, nextSqrtPrice, cache.currentSqrtPrice, false);
@@ -392,7 +403,6 @@ contract PoolsharkHedgePool is
                 break;
             }
         }
-
 
         if (zeroForOne){
             sqrtPrice1 = uint160(cache.currentSqrtPrice);
@@ -568,10 +578,10 @@ contract PoolsharkHedgePool is
         address owner,
         int24 lower,
         int24 upper,
-        int24 claim,
         bool zeroForOne,
+        int128 amount,
         bool claiming,
-        int128 amount
+        int24 claim
     ) internal returns (uint256 amount0, uint256 amount1) {
         // if lower < upper
         Position storage position = positions[owner][lower][upper][zeroForOne];
