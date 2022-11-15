@@ -22,7 +22,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
   functions: {
     "burn(int24,int24,uint128)": FunctionFragment;
-    "mint((int24,int24,int24,int24,uint128,uint128,bool,bool))": FunctionFragment;
+    "mint((int24,int24,int24,int24,uint128,bool,bool))": FunctionFragment;
     "swap(address,bool,uint256,uint160)": FunctionFragment;
   };
 
@@ -38,8 +38,7 @@ interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
         lower: BigNumberish;
         upperOld: BigNumberish;
         upper: BigNumberish;
-        amount0Desired: BigNumberish;
-        amount1Desired: BigNumberish;
+        amountDesired: BigNumberish;
         zeroForOne: boolean;
         native: boolean;
       }
@@ -114,8 +113,7 @@ export class IPoolsharkHedgePool extends BaseContract {
         lower: BigNumberish;
         upperOld: BigNumberish;
         upper: BigNumberish;
-        amount0Desired: BigNumberish;
-        amount1Desired: BigNumberish;
+        amountDesired: BigNumberish;
         zeroForOne: boolean;
         native: boolean;
       },
@@ -144,8 +142,7 @@ export class IPoolsharkHedgePool extends BaseContract {
       lower: BigNumberish;
       upperOld: BigNumberish;
       upper: BigNumberish;
-      amount0Desired: BigNumberish;
-      amount1Desired: BigNumberish;
+      amountDesired: BigNumberish;
       zeroForOne: boolean;
       native: boolean;
     },
@@ -181,8 +178,7 @@ export class IPoolsharkHedgePool extends BaseContract {
         lower: BigNumberish;
         upperOld: BigNumberish;
         upper: BigNumberish;
-        amount0Desired: BigNumberish;
-        amount1Desired: BigNumberish;
+        amountDesired: BigNumberish;
         zeroForOne: boolean;
         native: boolean;
       },
@@ -214,8 +210,7 @@ export class IPoolsharkHedgePool extends BaseContract {
         lower: BigNumberish;
         upperOld: BigNumberish;
         upper: BigNumberish;
-        amount0Desired: BigNumberish;
-        amount1Desired: BigNumberish;
+        amountDesired: BigNumberish;
         zeroForOne: boolean;
         native: boolean;
       },
@@ -245,8 +240,7 @@ export class IPoolsharkHedgePool extends BaseContract {
         lower: BigNumberish;
         upperOld: BigNumberish;
         upper: BigNumberish;
-        amount0Desired: BigNumberish;
-        amount1Desired: BigNumberish;
+        amountDesired: BigNumberish;
         zeroForOne: boolean;
         native: boolean;
       },

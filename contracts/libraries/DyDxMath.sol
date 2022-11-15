@@ -61,7 +61,7 @@ library DyDxMath {
                     priceUpper - currentPrice
                 );
                 uint256 liquidity1 = FullPrecisionMath.mulDiv(dy, 0x1000000000000000000000000, currentPrice - priceLower);
-                liquidity = liquidity0 < liquidity1 ? liquidity0 : liquidity1;
+                liquidity = liquidity1;
             }
         }
     }

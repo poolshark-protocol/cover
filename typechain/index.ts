@@ -54,6 +54,7 @@ export type { Token1155 } from "./Token1155";
 export type { Token20 } from "./Token20";
 export type { PoolsharkHedgePoolErrors } from "./PoolsharkHedgePoolErrors";
 export type { PoolsharkHedgePoolFactoryErrors } from "./PoolsharkHedgePoolFactoryErrors";
+export type { PoolsharkPositionErrors } from "./PoolsharkPositionErrors";
 export type { PoolsharkTicksErrors } from "./PoolsharkTicksErrors";
 export type { PoolsharkTransferErrors } from "./PoolsharkTransferErrors";
 
@@ -110,5 +111,6 @@ export { Token1155__factory } from "./factories/Token1155__factory";
 export { Token20__factory } from "./factories/Token20__factory";
 export { PoolsharkHedgePoolErrors__factory } from "./factories/PoolsharkHedgePoolErrors__factory";
 export { PoolsharkHedgePoolFactoryErrors__factory } from "./factories/PoolsharkHedgePoolFactoryErrors__factory";
+export { PoolsharkPositionErrors__factory } from "./factories/PoolsharkPositionErrors__factory";
 export { PoolsharkTicksErrors__factory } from "./factories/PoolsharkTicksErrors__factory";
 export { PoolsharkTransferErrors__factory } from "./factories/PoolsharkTransferErrors__factory";

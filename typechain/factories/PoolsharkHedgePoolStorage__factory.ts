@@ -57,6 +57,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "NotImplementedYet",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "Overflow",
     type: "error",
   },
@@ -77,7 +82,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobal0",
+    name: "feeGrowthGlobal",
     outputs: [
       {
         internalType: "uint256",
@@ -90,7 +95,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobal0Last",
+    name: "feeGrowthGlobalLast",
     outputs: [
       {
         internalType: "uint256",
@@ -103,46 +108,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobal1",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "feeGrowthGlobal1Last",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "liquidity0",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "liquidity1",
+    name: "liquidity",
     outputs: [
       {
         internalType: "uint128",
@@ -170,11 +136,6 @@ const _abi = [
         name: "",
         type: "int24",
       },
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
     ],
     name: "positions",
     outputs: [
@@ -189,13 +150,18 @@ const _abi = [
         type: "uint256",
       },
       {
-        internalType: "int24",
-        name: "highestTickClaimed",
-        type: "int24",
+        internalType: "uint160",
+        name: "claimPriceLast",
+        type: "uint160",
       },
       {
         internalType: "uint128",
-        name: "amountClaimed",
+        name: "amountIn",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOut",
         type: "uint128",
       },
     ],
@@ -224,42 +190,32 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "amount0",
+        name: "amountIn",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amount1",
+        name: "amountOut",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "liquidity0",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "liquidity1",
+        name: "liquidity",
         type: "uint128",
       },
       {
         internalType: "uint256",
-        name: "feeGrowthGlobal0",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "feeGrowthGlobal1",
+        name: "feeGrowthGlobal",
         type: "uint256",
       },
       {
         internalType: "uint160",
-        name: "averageSqrtPrice0",
+        name: "percentUnfilled",
         type: "uint160",
       },
       {
         internalType: "uint160",
-        name: "averageSqrtPrice1",
+        name: "unfilledSqrtPrice",
         type: "uint160",
       },
       {

@@ -80,12 +80,7 @@ const _abi = [
           },
           {
             internalType: "uint128",
-            name: "amount0Desired",
-            type: "uint128",
-          },
-          {
-            internalType: "uint128",
-            name: "amount1Desired",
+            name: "amountDesired",
             type: "uint128",
           },
           {

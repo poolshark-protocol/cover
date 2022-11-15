@@ -57,6 +57,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "NotImplementedYet",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "Overflow",
     type: "error",
   },

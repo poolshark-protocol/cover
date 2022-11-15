@@ -12,6 +12,11 @@ import type {
 const _abi = [
   {
     inputs: [],
+    name: "WrongTickClaimedAt",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "WrongTickLowerOrder",
     type: "error",
   },
@@ -27,12 +32,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "WrongTickUpperRange",
+    name: "WrongTickUpperOrder",
     type: "error",
   },
   {
     inputs: [],
-    name: "WrontTickUpperOrder",
+    name: "WrongTickUpperRange",
     type: "error",
   },
 ];

@@ -15,7 +15,8 @@ abstract contract PoolsharkHedgePoolErrors {
     error MaxTickLiquidity();
     error Overflow();
     error NotEnoughOutputLiquidity();
-    //error ZeroAddress();
+    // to be removed before production
+    error NotImplementedYet();
 }
 
 abstract contract PoolsharkTicksErrors {
@@ -23,7 +24,13 @@ abstract contract PoolsharkTicksErrors {
     error WrongTickLowerRange();
     error WrongTickUpperRange();
     error WrongTickLowerOrder();
-    error WrontTickUpperOrder();
+    error WrongTickUpperOrder();
+    error WrongTickClaimedAt();
+}
+
+abstract contract PoolsharkPositionErrors {
+    error NotEnoughPositionLiquidity();
+    error InvalidClaimTick();
 }
 
 abstract contract PoolsharkHedgePoolFactoryErrors {

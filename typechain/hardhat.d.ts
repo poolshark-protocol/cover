@@ -229,6 +229,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkHedgePoolFactoryErrors__factory>;
     getContractFactory(
+      name: "PoolsharkPositionErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PoolsharkPositionErrors__factory>;
+    getContractFactory(
       name: "PoolsharkTicksErrors",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkTicksErrors__factory>;
@@ -507,6 +511,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.PoolsharkHedgePoolFactoryErrors>;
+    getContractAt(
+      name: "PoolsharkPositionErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PoolsharkPositionErrors>;
     getContractAt(
       name: "PoolsharkTicksErrors",
       address: string,

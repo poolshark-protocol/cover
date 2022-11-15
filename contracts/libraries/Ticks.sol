@@ -38,14 +38,14 @@ library Ticks {
                 //if price is decreasing, liquidity is only removed
                 // do all the ticks crosses at the first txn of the block
                 if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                    currentLiquidity += ticks[nextTickToCross].liquidity0;
+                    currentLiquidity += ticks[nextTickToCross].liquidity;
                 }
                 // // liquidity will never be recycled
                 // else {
-                //     currentLiquidity += ticks[nextTickToCross].liquidity1;
+                //     currentLiquidity += ticks[nextTickToCross].liquidity;
                 // }
             }
-            ticks[nextTickToCross].feeGrowthGlobal1 = feeGrowthGlobal;
+            ticks[nextTickToCross].feeGrowthGlobal = feeGrowthGlobal;
             nextTickToCross = ticks[nextTickToCross].previousTick;
         } else {
             // Moving forwards through the linked list.
@@ -55,10 +55,10 @@ library Ticks {
                 //     currentLiquidity += ticks[nextTickToCross].liquidity;
                 // } 
                 if ((nextTickToCross / int24(tickSpacing)) % 2 != 0) {
-                    currentLiquidity -= ticks[nextTickToCross].liquidity1;
+                    currentLiquidity -= ticks[nextTickToCross].liquidity;
                 }
             }
-            ticks[nextTickToCross].feeGrowthGlobal0 = feeGrowthGlobal;
+            ticks[nextTickToCross].feeGrowthGlobal = feeGrowthGlobal;
             nextTickToCross = ticks[nextTickToCross].nextTick;
         }
         return (currentLiquidity, nextTickToCross);
@@ -66,8 +66,7 @@ library Ticks {
 
     function insert(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        uint256 feeGrowthGlobal0,
-        uint256 feeGrowthGlobal1,
+        uint256 feeGrowthGlobal,
         uint160 secondsGrowthGlobal,
         int24 lowerOld,
         int24 lower,
@@ -89,16 +88,16 @@ library Ticks {
 
         {
             // Stack overflow.
-            uint128 currentLowerLiquidity = ticks[lower].liquidity0;
+            uint128 currentLowerLiquidity = ticks[lower].liquidity;
             if (currentLowerLiquidity != 0 || lower == TickMath.MIN_TICK) {
                 // We are adding liquidity to an existing tick.
-                ticks[lower].liquidity0 = currentLowerLiquidity + amount;
+                ticks[lower].liquidity = currentLowerLiquidity + amount;
             } else {
                 // We are inserting a new tick.
                 IPoolsharkHedgePoolStructs.Tick storage old = ticks[lowerOld];
                 int24 oldNextTick = old.nextTick;
 
-                if ((old.liquidity0 == 0 && lowerOld != TickMath.MIN_TICK) || lowerOld >= lower || lower >= oldNextTick){
+                if ((old.liquidity == 0 && lowerOld != TickMath.MIN_TICK) || lowerOld >= lower || lower >= oldNextTick){
                     revert WrongTickLowerOrder();
                 }
 
@@ -107,8 +106,8 @@ library Ticks {
                 //         lowerOld,
                 //         oldNextTick,
                 //         amount,
-                //         feeGrowthGlobal0,
-                //         feeGrowthGlobal1,
+                //         feeGrowthGlobal,
+                //         feeGrowthGlobal,
                 //         secondsGrowthGlobal
                 //     );
                 // } else {
@@ -127,16 +126,16 @@ library Ticks {
             }
         }
 
-        uint128 currentUpperLiquidity = ticks[upper].liquidity0;
+        uint128 currentUpperLiquidity = ticks[upper].liquidity;
         if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
             // We are adding liquidity to an existing tick.
-            ticks[upper].liquidity0 = currentUpperLiquidity + amount;
+            ticks[upper].liquidity = currentUpperLiquidity + amount;
         } else {
             // Inserting a new tick.
             IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
             int24 oldNextTick = old.nextTick;
             
-            if ((old.liquidity0 == 0 || oldNextTick <= upper) || (upperOld >= upper)){
+            if ((old.liquidity == 0 || oldNextTick <= upper) || (upperOld >= upper)){
                 revert WrongTickUpperOrder();
             }
 
@@ -145,8 +144,8 @@ library Ticks {
                 //     upperOld,
                 //     oldNextTick,
                 //     amount,
-                //     feeGrowthGlobal0,
-                //     feeGrowthGlobal1,
+                //     feeGrowthGlobal,
+                //     feeGrowthGlobal,
                 //     secondsGrowthGlobal
                 // );
             } else {
@@ -176,7 +175,7 @@ library Ticks {
     ) public returns (int24) {
         IPoolsharkHedgePoolStructs.Tick storage current = ticks[lower];
 
-        if (lower != TickMath.MIN_TICK && current.liquidity0 == amount) {
+        if (lower != TickMath.MIN_TICK && current.liquidity == amount) {
             // Delete lower tick.
             IPoolsharkHedgePoolStructs.Tick storage previous = ticks[current.previousTick];
             IPoolsharkHedgePoolStructs.Tick storage next = ticks[current.nextTick];
@@ -189,13 +188,13 @@ library Ticks {
             delete ticks[lower];
         } else {
             unchecked {
-                current.liquidity0 -= amount;
+                current.liquidity -= amount;
             }
         }
 
         current = ticks[upper];
 
-        if (upper != TickMath.MAX_TICK && current.liquidity0 == amount) {
+        if (upper != TickMath.MAX_TICK && current.liquidity == amount) {
             // Delete upper tick.
             IPoolsharkHedgePoolStructs.Tick storage previous = ticks[current.previousTick];
             IPoolsharkHedgePoolStructs.Tick storage next = ticks[current.nextTick];
@@ -208,7 +207,7 @@ library Ticks {
             delete ticks[upper];
         } else {
             unchecked {
-                current.liquidity0 -= amount;
+                current.liquidity -= amount;
             }
         }
 
