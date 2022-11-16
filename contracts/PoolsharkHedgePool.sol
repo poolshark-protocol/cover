@@ -134,92 +134,36 @@ contract PoolsharkHedgePool is
             uint256(mintParams.amountDesired)
         );
 
-        // calculate liquidity minted
-        if(mintParams.zeroForOne){
-            // position upper should be above current price
+        _updatePosition(
+            msg.sender,
+            mintParams.lower,
+            mintParams.upper,
+            mintParams.lower,
+            int128(uint128(liquidityMinted))
+        );
 
-
-            // unchecked {
-            //     // liquidity should always be out of range initially
-            //     if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
-            // }
-
-            // Ticks.insert(
-            //     ticks,
-            //     feeGrowthGlobal0,
-            //     feeGrowthGlobal1,
-            //     secondsGrowthGlobal,
-            //     mintParams.lowerOld,
-            //     mintParams.lower,
-            //     mintParams.upperOld,
-            //     mintParams.upper,
-            //     uint128(liquidityMinted),
-            //     nearestTick0,
-            //     uint160(currentPrice)
-            // );
-            // if tick is in range of the current TWAP, update nearestTick0/1
-        } else {
-            // position upper should be lower than current price
-            currentPrice = uint256(sqrtPrice);
-            if (priceLower >= currentPrice) { revert InvalidPosition(); }
-            if (mintParams.amountDesired == 0) { revert InvalidPosition(); }
-            priceEntry = priceLower;
-
-            liquidityMinted = DyDxMath.getLiquidityForAmounts(
-                priceLower,
-                priceUpper,
-                currentPrice,
-                uint256(mintParams.amountDesired),
-                0
-            );
-
-            _updatePosition(
-                msg.sender,
-                mintParams.lower,
-                mintParams.upper,
-                mintParams.lower,
-                int128(uint128(liquidityMinted))
-            );
-
-            // unchecked {
-            //     // liquidity should always be out of range initially
-            //     if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
-            // }
-
-            // Ticks.insert(
-            //     ticks,
-            //     feeGrowthGlobal0,
-            //     feeGrowthGlobal1,
-            //     secondsGrowthGlobal,
-            //     mintParams.lowerOld,
-            //     mintParams.lower,
-            //     mintParams.upperOld,
-            //     mintParams.upper,
-            //     uint128(liquidityMinted),
-            //     nearestTick0,
-            //     uint160(currentPrice)
-            // );
+        unchecked {
+            // liquidity should always be out of range initially
+            if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
         }
+
+        Ticks.insert(
+            ticks,
+            feeGrowthGlobal,
+            secondsGrowthGlobal,
+            mintParams.lowerOld,
+            mintParams.lower,
+            mintParams.upperOld,
+            mintParams.upper,
+            uint128(liquidityMinted),
+            nearestTick,
+            uint160(currentPrice)
+        );
 
         // Ensure no overflow happens when we cast from uint256 to int128.
         if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
 
         // _updateSecondsPerLiquidity(uint256(liquidity));
-
-        unchecked {
-            
-            // if (amountInFees > 0) {
-            //     _transferOut(msg.sender, tokenIn, amountIn);
-            // }
-            // if (amountOutFees > 0) {
-            //     _transferOut(msg.sender, tokenOut, amountOut);
-            // }
-
-            // if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
-        }
-        
-
-        //TODO: handle with new Tick struct
 
         (uint128 amountInActual, uint128 amountOutActual) = DyDxMath.getAmountsForLiquidity(
             priceLower,
@@ -630,15 +574,17 @@ contract PoolsharkHedgePool is
         int24 claim,
         int128 amount
     ) internal {
-        // if lower < upper
+        // load position into memory
         Position memory position = positions[owner][lower][upper];
 
+        // validate removal amount is less than position liquidity
         if (amount < 0 && uint128(amount) > position.liquidity) revert NotEnoughPositionLiquidity();
 
         uint256 priceLower   = uint256(TickMath.getSqrtRatioAtTick(lower));
         uint256 priceUpper   = uint256(TickMath.getSqrtRatioAtTick(upper));
         uint256 claimPrice   = uint256(TickMath.getSqrtRatioAtTick(claim));
 
+        // user cannot claim twice from the same part of the curve
         if (claimPrice <= position.claimPriceLast) revert InvalidClaimTick();
 
         // handle claims
@@ -655,7 +601,7 @@ contract PoolsharkHedgePool is
                     amountInClaimable -= amountInUnfilled;
                     amountOutClaimable = uint128(amountInUnfilled * (ticks[claim].unfilledSqrtPrice ** 2));
                 }
-                // if claim is not upper we verify highest tick with growth
+                // verify user passed highest tick with growth
                 if (claim != upper){
                     {
                         // next tick should not have any fee growth
@@ -663,9 +609,12 @@ contract PoolsharkHedgePool is
                         if (ticks[claimNextTick].feeGrowthGlobal > position.feeGrowthGlobalLast) revert WrongTickClaimedAt();
                     }
                 }
+                // update amounts claimable at tick
                 ticks[claim].amountIn  -= uint128(amountInClaimable);
                 ticks[claim].amountOut -= uint128(amountOutClaimable);
+
                 //TODO: store in position or transfer to user?
+                // update position values
                 position.amountIn      += amountInClaimable;
                 position.amountOut     += amountOutClaimable;
                 position.claimPriceLast = uint160(claimPrice);
@@ -675,12 +624,13 @@ contract PoolsharkHedgePool is
 
         // update liquidity at claim tick
         if (amount < 0) {
+            // calculate amount to transfer out
             ( , uint256 amountOutRemoved)     = DyDxMath.getAmountsForLiquidity(priceLower, priceUpper, claimPrice, uint128(amount), false);
             // will underflow if too much liquidity withdrawn
             uint128 liquidityAmount = uint128(-amount);
             position.liquidity -= liquidityAmount;
             // liquidity now needs to be removed at claim tick
-            ticks[claim].liquidity += liquidityAmount;
+            if (sqrtPrice < claimPrice) { ticks[claim].liquidity += liquidityAmount; }
             // liquidity at upper tick need not be removed anymore
             ticks[upper].liquidity -= liquidityAmount;
             _transferOut(owner, tokenOut, amountOutRemoved);
@@ -688,16 +638,19 @@ contract PoolsharkHedgePool is
 
         if (amount > 0) {
             //TODO: i'm not sure how to handle double mints just yet
-            // it would probably have to be two different positions
-            // since we use claimPriceLast
-            // only other solution is to take all their current liquidity
+            // one solution is to take all their current liquidity
             // and then respread it over whatever range they select
             // if they haven't claimed at all it's fine
-            // can we recalculate claimPriceLast?
+            // second solution is to recalculate claimPriceLast
+            // easiest option is to just reset the position
+            // and store the leftover amounts in the position
+            // or transfer the leftover balance to the owner
             if(position.liquidity > 0) revert NotImplementedYet();
             position.liquidity += uint128(amount);
             // Prevents a global liquidity overflow in even if all ticks are initialised.
             if (position.liquidity > MAX_TICK_LIQUIDITY) revert LiquidityOverflow();
         }
+
+        positions[owner][lower][upper] = position;
     }
 }

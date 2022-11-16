@@ -27,6 +27,7 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
 
     uint160 internal sqrtPrice; /// @dev Sqrt of price aka. √(y/x), multiplied by 2^96.
     
+    int24 internal latestTick;  /// @dev Tick externally sourced at the latest block.
     int24 internal nearestTick; /// @dev Tick that is just below the current price.
 
     mapping(int24 => Tick) public ticks;

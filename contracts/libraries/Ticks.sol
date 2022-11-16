@@ -85,78 +85,71 @@ library Ticks {
         if (upper > TickMath.MAX_TICK) {
             revert WrongTickUpperRange();
         }
-
         {
-            // Stack overflow.
-            uint128 currentLowerLiquidity = ticks[lower].liquidity;
-            if (currentLowerLiquidity != 0 || lower == TickMath.MIN_TICK) {
-                // We are adding liquidity to an existing tick.
-                ticks[lower].liquidity = currentLowerLiquidity + amount;
-            } else {
-                // We are inserting a new tick.
-                IPoolsharkHedgePoolStructs.Tick storage old = ticks[lowerOld];
-                int24 oldNextTick = old.nextTick;
+            uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(lower));
+            if (priceLower > currentPrice){
+                    // Stack overflow.
+                uint128 currentLowerLiquidity = ticks[lower].liquidity;
+                if (currentLowerLiquidity != 0 || lower == TickMath.MIN_TICK) {
+                    // We are adding liquidity to an existing tick.
+                    ticks[lower].liquidity = currentLowerLiquidity + amount;
+                } else {
+                    // We are inserting a new tick.
+                    IPoolsharkHedgePoolStructs.Tick storage old = ticks[lowerOld];
+                    int24 oldNextTick = old.nextTick;
 
-                if ((old.liquidity == 0 && lowerOld != TickMath.MIN_TICK) || lowerOld >= lower || lower >= oldNextTick){
-                    revert WrongTickLowerOrder();
+                    if ((old.liquidity == 0 && lowerOld != TickMath.MIN_TICK) || lowerOld >= lower || lower >= oldNextTick){
+                        revert WrongTickLowerOrder();
+                    }
+
+                    ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                        lowerOld,
+                        oldNextTick,
+                        0,0,
+                        amount,
+                        feeGrowthGlobal,
+                        0, 0,
+                        secondsGrowthGlobal
+                    );
+
+                    old.nextTick = lower;
+                    ticks[oldNextTick].previousTick = lower;
                 }
+            }
+        }
+        {
+            uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper)); 
+            if(priceUpper > currentPrice){
+                uint128 currentUpperLiquidity = ticks[upper].liquidity;
+                if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
+                    // We are adding liquidity to an existing tick.
+                    ticks[upper].liquidity = currentUpperLiquidity + amount;
+                } else {
+                    // Inserting a new tick.
+                    IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
+                    int24 oldNextTick = old.nextTick;
+                    
+                    if ((old.liquidity == 0 || oldNextTick <= upper) || (upperOld >= upper)){
+                        revert WrongTickUpperOrder();
+                    }
 
-                // if (lower <= nearestTick) {
-                //     ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
-                //         lowerOld,
-                //         oldNextTick,
-                //         amount,
-                //         feeGrowthGlobal,
-                //         feeGrowthGlobal,
-                //         secondsGrowthGlobal
-                //     );
-                // } else {
-                //     ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
-                //         lowerOld, 
-                //         oldNextTick, 
-                //         amount, 
-                //         0, 
-                //         0, 
-                //         0
-                //     );
-                // }
-
-                old.nextTick = lower;
-                ticks[oldNextTick].previousTick = lower;
+                    ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
+                        upperOld,
+                        oldNextTick,
+                        0, 0,
+                        amount,
+                        feeGrowthGlobal,
+                        0, 0,
+                        secondsGrowthGlobal
+                    );
+                    old.nextTick = upper;
+                    ticks[oldNextTick].previousTick = upper;
+                }
             }
         }
 
-        uint128 currentUpperLiquidity = ticks[upper].liquidity;
-        if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
-            // We are adding liquidity to an existing tick.
-            ticks[upper].liquidity = currentUpperLiquidity + amount;
-        } else {
-            // Inserting a new tick.
-            IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
-            int24 oldNextTick = old.nextTick;
-            
-            if ((old.liquidity == 0 || oldNextTick <= upper) || (upperOld >= upper)){
-                revert WrongTickUpperOrder();
-            }
-
-            if (upper <= nearestTick) {
-                // ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
-                //     upperOld,
-                //     oldNextTick,
-                //     amount,
-                //     feeGrowthGlobal,
-                //     feeGrowthGlobal,
-                //     secondsGrowthGlobal
-                // );
-            } else {
-                // ticks[upper] = IPoolsharkHedgePoolStructs.Tick(upperOld, oldNextTick, amount, 0, 0, 0);
-            }
-            old.nextTick = upper;
-            ticks[oldNextTick].previousTick = upper;
-        }
-
+        //TODO: update nearestTick if between TWAP and currentPrice
         int24 tickAtPrice = TickMath.getTickAtSqrtRatio(currentPrice);
-
         if (nearestTick < upper && upper <= tickAtPrice) {
             nearestTick = upper;
         } else if (nearestTick < lower && lower <= tickAtPrice) {
