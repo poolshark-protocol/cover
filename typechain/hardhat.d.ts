@@ -13,41 +13,13 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "ERC1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC1155__factory>;
-    getContractFactory(
-      name: "ERC1155Burnable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC1155Burnable__factory>;
-    getContractFactory(
-      name: "IERC1155MetadataURI",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC1155MetadataURI__factory>;
-    getContractFactory(
-      name: "IERC1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC1155__factory>;
-    getContractFactory(
-      name: "IERC1155Receiver",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC1155Receiver__factory>;
-    getContractFactory(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
     getContractFactory(
-      name: "IERC20Permit",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20Permit__factory>;
-    getContractFactory(
       name: "ERC20Burnable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20Burnable__factory>;
-    getContractFactory(
-      name: "ERC20Wrapper",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Wrapper__factory>;
     getContractFactory(
       name: "IERC20Metadata",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -56,14 +28,6 @@ declare module "hardhat/types/runtime" {
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
-    getContractFactory(
-      name: "ERC165",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC165__factory>;
-    getContractFactory(
-      name: "IERC165",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
       name: "TwapOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -81,86 +45,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkHedgePoolView__factory>;
     getContractFactory(
-      name: "OrderBookBase",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookBase__factory>;
-    getContractFactory(
-      name: "OrderBookStorage",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookStorage__factory>;
-    getContractFactory(
-      name: "OrderBookView",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookView__factory>;
-    getContractFactory(
-      name: "OrderBook1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBook1155__factory>;
-    getContractFactory(
-      name: "OrderBook1155To20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBook1155To20__factory>;
-    getContractFactory(
-      name: "OrderBook20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBook20__factory>;
-    getContractFactory(
-      name: "OrderBookEvents",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookEvents__factory>;
-    getContractFactory(
-      name: "OrderBookEvents1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookEvents1155__factory>;
-    getContractFactory(
-      name: "OrderBookEvents1155To20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookEvents1155To20__factory>;
-    getContractFactory(
-      name: "OrderBookFactoryEvents1155To20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookFactoryEvents1155To20__factory>;
-    getContractFactory(
-      name: "OrderBookEvents20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookEvents20__factory>;
-    getContractFactory(
-      name: "OrderBookFactoryEvents20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookFactoryEvents20__factory>;
-    getContractFactory(
-      name: "OrderBookFactoryBase",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookFactoryBase__factory>;
-    getContractFactory(
-      name: "IOrderBookFactory20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IOrderBookFactory20__factory>;
-    getContractFactory(
-      name: "OrderBookFactory1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookFactory1155__factory>;
-    getContractFactory(
-      name: "OrderBookFactory1155To20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookFactory1155To20__factory>;
-    getContractFactory(
-      name: "OrderBookFactory20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookFactory20__factory>;
-    getContractFactory(
-      name: "OrderBookRouter1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookRouter1155__factory>;
-    getContractFactory(
-      name: "OrderBookRouter1155To20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookRouter1155To20__factory>;
-    getContractFactory(
-      name: "OrderBookRouter20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OrderBookRouter20__factory>;
-    getContractFactory(
       name: "IConcentratedFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IConcentratedFactory__factory>;
@@ -172,10 +56,6 @@ declare module "hardhat/types/runtime" {
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
-    getContractFactory(
-      name: "IOrderBook",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IOrderBook__factory>;
     getContractFactory(
       name: "IPoolsharkHedgePool",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -213,10 +93,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkHedgePoolFactory__factory>;
     getContractFactory(
-      name: "Token1155",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Token1155__factory>;
-    getContractFactory(
       name: "Token20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Token20__factory>;
@@ -242,50 +118,15 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.PoolsharkTransferErrors__factory>;
 
     getContractAt(
-      name: "ERC1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC1155>;
-    getContractAt(
-      name: "ERC1155Burnable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC1155Burnable>;
-    getContractAt(
-      name: "IERC1155MetadataURI",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC1155MetadataURI>;
-    getContractAt(
-      name: "IERC1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC1155>;
-    getContractAt(
-      name: "IERC1155Receiver",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC1155Receiver>;
-    getContractAt(
       name: "ERC20",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ERC20>;
     getContractAt(
-      name: "IERC20Permit",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20Permit>;
-    getContractAt(
       name: "ERC20Burnable",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ERC20Burnable>;
-    getContractAt(
-      name: "ERC20Wrapper",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Wrapper>;
     getContractAt(
       name: "IERC20Metadata",
       address: string,
@@ -296,16 +137,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
-    getContractAt(
-      name: "ERC165",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC165>;
-    getContractAt(
-      name: "IERC165",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC165>;
     getContractAt(
       name: "TwapOracle",
       address: string,
@@ -327,106 +158,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.PoolsharkHedgePoolView>;
     getContractAt(
-      name: "OrderBookBase",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookBase>;
-    getContractAt(
-      name: "OrderBookStorage",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookStorage>;
-    getContractAt(
-      name: "OrderBookView",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookView>;
-    getContractAt(
-      name: "OrderBook1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBook1155>;
-    getContractAt(
-      name: "OrderBook1155To20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBook1155To20>;
-    getContractAt(
-      name: "OrderBook20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBook20>;
-    getContractAt(
-      name: "OrderBookEvents",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookEvents>;
-    getContractAt(
-      name: "OrderBookEvents1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookEvents1155>;
-    getContractAt(
-      name: "OrderBookEvents1155To20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookEvents1155To20>;
-    getContractAt(
-      name: "OrderBookFactoryEvents1155To20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookFactoryEvents1155To20>;
-    getContractAt(
-      name: "OrderBookEvents20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookEvents20>;
-    getContractAt(
-      name: "OrderBookFactoryEvents20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookFactoryEvents20>;
-    getContractAt(
-      name: "OrderBookFactoryBase",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookFactoryBase>;
-    getContractAt(
-      name: "IOrderBookFactory20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IOrderBookFactory20>;
-    getContractAt(
-      name: "OrderBookFactory1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookFactory1155>;
-    getContractAt(
-      name: "OrderBookFactory1155To20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookFactory1155To20>;
-    getContractAt(
-      name: "OrderBookFactory20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookFactory20>;
-    getContractAt(
-      name: "OrderBookRouter1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookRouter1155>;
-    getContractAt(
-      name: "OrderBookRouter1155To20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookRouter1155To20>;
-    getContractAt(
-      name: "OrderBookRouter20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OrderBookRouter20>;
-    getContractAt(
       name: "IConcentratedFactory",
       address: string,
       signer?: ethers.Signer
@@ -441,11 +172,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
-    getContractAt(
-      name: "IOrderBook",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IOrderBook>;
     getContractAt(
       name: "IPoolsharkHedgePool",
       address: string,
@@ -491,11 +217,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.PoolsharkHedgePoolFactory>;
-    getContractAt(
-      name: "Token1155",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Token1155>;
     getContractAt(
       name: "Token20",
       address: string,
