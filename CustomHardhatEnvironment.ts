@@ -16,4 +16,5 @@ export interface PsharksRuntimeEnvironment
     bob: SignerWithAddress;
     carol: SignerWithAddress;
     isAllTestSuite: boolean;
+    network: Network;
 }
