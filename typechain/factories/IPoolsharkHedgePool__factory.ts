@@ -23,6 +23,11 @@ const _abi = [
         type: "int24",
       },
       {
+        internalType: "int24",
+        name: "claim",
+        type: "int24",
+      },
+      {
         internalType: "uint128",
         name: "amount",
         type: "uint128",
@@ -38,16 +43,6 @@ const _abi = [
       {
         internalType: "uint256",
         name: "token1Amount",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "token0Fees",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "token1Fees",
         type: "uint256",
       },
     ],

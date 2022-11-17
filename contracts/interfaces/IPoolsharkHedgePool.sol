@@ -14,12 +14,11 @@ interface IPoolsharkHedgePool is  IPoolsharkHedgePoolStructs {
     function burn(
         int24 lower,
         int24 upper,
+        int24 claim,
         uint128 amount
     ) external returns (
         uint256 token0Amount,
-        uint256 token1Amount,
-        uint256 token0Fees,
-        uint256 token1Fees
+        uint256 token1Amount
     );
 
     function swap(

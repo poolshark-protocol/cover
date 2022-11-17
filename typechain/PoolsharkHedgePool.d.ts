@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
   functions: {
-    "burn(int24,int24,uint128)": FunctionFragment;
+    "burn(int24,int24,int24,uint128)": FunctionFragment;
     "collectProtocolFee()": FunctionFragment;
     "concentratedFactory()": FunctionFragment;
     "feeGrowthGlobal()": FunctionFragment;
@@ -35,7 +35,7 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
 
   encodeFunctionData(
     functionFragment: "burn",
-    values: [BigNumberish, BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "collectProtocolFee",
@@ -206,6 +206,7 @@ export class PoolsharkHedgePool extends BaseContract {
     burn(
       lower: BigNumberish,
       upper: BigNumberish,
+      claim: BigNumberish,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -289,6 +290,7 @@ export class PoolsharkHedgePool extends BaseContract {
   burn(
     lower: BigNumberish,
     upper: BigNumberish,
+    claim: BigNumberish,
     amount: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -372,14 +374,13 @@ export class PoolsharkHedgePool extends BaseContract {
     burn(
       lower: BigNumberish,
       upper: BigNumberish,
+      claim: BigNumberish,
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, BigNumber] & {
         tokenInAmount: BigNumber;
         tokenOutAmount: BigNumber;
-        tokenInFees: BigNumber;
-        tokenOutFees: BigNumber;
       }
     >;
 
@@ -575,6 +576,7 @@ export class PoolsharkHedgePool extends BaseContract {
     burn(
       lower: BigNumberish,
       upper: BigNumberish,
+      claim: BigNumberish,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -626,6 +628,7 @@ export class PoolsharkHedgePool extends BaseContract {
     burn(
       lower: BigNumberish,
       upper: BigNumberish,
+      claim: BigNumberish,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

@@ -134,20 +134,24 @@ contract PoolsharkHedgePool is
             uint256(mintParams.amountDesired)
         );
 
-        _updatePosition(
-            msg.sender,
-            mintParams.lower,
-            mintParams.upper,
-            mintParams.lower,
-            int128(uint128(liquidityMinted))
-        );
+        // Ensure no overflow happens when we cast from uint256 to int128.
+        if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
+
+        _updateSecondsPerLiquidity(uint256(liquidity));
 
         unchecked {
+            _updatePosition(
+                msg.sender,
+                mintParams.lower,
+                mintParams.upper,
+                mintParams.lower,
+                int128(uint128(liquidityMinted))
+            );
             // liquidity should always be out of range initially
             if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
         }
 
-        Ticks.insert(
+        nearestTick = Ticks.insert(
             ticks,
             feeGrowthGlobal,
             secondsGrowthGlobal,
@@ -159,11 +163,6 @@ contract PoolsharkHedgePool is
             nearestTick,
             uint160(currentPrice)
         );
-
-        // Ensure no overflow happens when we cast from uint256 to int128.
-        if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
-
-        // _updateSecondsPerLiquidity(uint256(liquidity));
 
         (uint128 amountInActual, uint128 amountOutActual) = DyDxMath.getAmountsForLiquidity(
             priceLower,
@@ -181,15 +180,14 @@ contract PoolsharkHedgePool is
     function burn(
         int24 lower,
         int24 upper,
+        int24 claim,
         uint128 amount
     )
         public
         lock
         returns (
             uint256 tokenInAmount,
-            uint256 tokenOutAmount,
-            uint256 tokenInFees,
-            uint256 tokenOutFees
+            uint256 tokenOutAmount
         )
     {
         uint160 priceLower = TickMath.getSqrtRatioAtTick(lower);
@@ -198,35 +196,38 @@ contract PoolsharkHedgePool is
 
         _updateSecondsPerLiquidity(uint256(liquidity));
 
+        // only remove liquidity if lower if below currentPrice
         unchecked {
-            if (priceLower <= currentPrice&& currentPrice< priceUpper) liquidity -= amount;
+            if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity -= amount;
         }
 
-        (tokenInAmount, tokenOutAmount) = DyDxMath.getAmountsForLiquidity(
-            uint256(priceLower),
-            uint256(priceUpper),
-            uint256(currentPrice),
-            uint256(amount),
-            false
-        );
+        // handle liquidity withdraw and transfer out in _updatePosition
+        // (tokenInAmount, tokenOutAmount) = DyDxMath.getAmountsForLiquidity(
+        //     uint256(priceLower),
+        //     uint256(priceUpper),
+        //     uint256(currentPrice),
+        //     uint256(amount),
+        //     false
+        // );
 
         // Ensure no overflow happens when we cast from uint128 to int128.
         if (amount > uint128(type(int128).max)) revert Overflow();
 
-        // (tokenInFees, tokenOutFees) = _updatePosition(msg.sender, lower, upper, -int128(amount));
+        // _updatePosition(msg.sender, lower, upper, -int128(amount));
+        (tokenInAmount, tokenOutAmount) = _updatePosition(
+            msg.sender,
+            lower,
+            upper,
+            claim,
+            -int128(amount)
+        );
 
         uint256 amountIn;
         uint256 amountOut;
 
-        unchecked {
-            amountIn = tokenInAmount + tokenInFees;
-            amountOut = tokenOutAmount + tokenOutFees;
-        }
-
-        _transferBothTokens(msg.sender, amountIn, amountOut);
-
         nearestTick = Ticks.remove(ticks, lower, upper, amount, nearestTick);
 
+        // get token amounts from _updatePosition return values
         emit Burn(msg.sender, amountIn, amountOut);
     }
 
@@ -573,7 +574,7 @@ contract PoolsharkHedgePool is
         int24 upper,
         int24 claim,
         int128 amount
-    ) internal {
+    ) internal returns (uint128 amountInClaimable, uint128 amountOutClaimable) {
         // load position into memory
         Position memory position = positions[owner][lower][upper];
 
@@ -592,7 +593,6 @@ contract PoolsharkHedgePool is
             // skip claim if lower == claim
             if(claim != lower){
                 // calculate what is claimable
-                uint128 amountInClaimable; uint128 amountOutClaimable;
                 {
                     (uint256 amountInTotal,)     = DyDxMath.getAmountsForLiquidity(priceLower, priceUpper, claimPrice, position.liquidity, false);
                     (uint256 amountInClaimed,) = DyDxMath.getAmountsForLiquidity(priceLower, priceUpper, position.claimPriceLast, uint128(amount), false);
