@@ -535,12 +535,24 @@ contract PoolsharkHedgePool is
             amountIn: 0,
             amountOut: 0
         });
-        uint128 amountInUnfilled;
+        uint128 amountInUnfilled; int24 stopTick;
         {
             uint256 currentPrice = uint256(TickMath.getSqrtRatioAtTick(ticks[nearestTick].previousTick));
-            amountInUnfilled = uint128(DyDxMath.getDy(cache.currentLiquidity, cache.nextPrice, cache.currentPrice, false));
+            amountInUnfilled = uint128(DyDxMath.getDy(cache.currentLiquidity, cache.nextPrice, currentPrice, false));
+            
+            // update the TWAP with the most current
+            // if TWAP moves up then we need to accumulate everything up to that
+            // if TWAP moves down there is no need to do anything
+            stopTick = latestTick;
+            int24 nextTickUpdate = calculateAverageTick(IConcentratedPool(inputPool));
+            nearestTick = nextTickUpdate;
+            sqrtPrice = TickMath.getSqrtRatioAtTick(nextTickUpdate);
+            if (nextTickUpdate > latestTick){
+                stopTick = nextTickUpdate;
+            }
         }
-        while(cache.currentTick <= latestTick) {
+
+        while(cache.currentTick <= stopTick) {
              // take amountInPending
             // push it to the previous tick
             // carry over based on percent of liquidity between the two ticks
@@ -561,22 +573,21 @@ contract PoolsharkHedgePool is
             cache.amountOut += amountOutCarryover;
 
             // zero out liquidity because everything has been filled
-            ticks[cache.prevTick].liquidity = 1;
-
+            ticks[cache.prevTick].liquidity = 0;
 
             cache.prevTick = cache.currentTick;
             cache.currentTick = ticks[cache.currentTick].nextTick;
             // handle liquidity removal and add with +/-
-            cache.currentLiquidity += ticks[cache.currentTick].liquidity;
+            // + -> upper tick of DAI liquidity curve
+            // - -> lower tick of DAI liquidity curve
+            cache.currentLiquidity -= ticks[cache.currentTick].liquidity;
             
             // repeat until we capture everything up to the previous TWAP
         }
 
-        // lastly update the TWAP with the most current
+        // once current tick is crossed, all liquidity is removed
+        ticks[cache.prevTick].liquidity = uint128(cache.currentLiquidity);
 
-        // if TWAP moves up then we need to accumulate everything up to that
-
-        // if TWAP moves down there is no need to do anything
     }
 
     function _updatePosition(
