@@ -96,10 +96,11 @@ library Ticks {
                     ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                         lowerOld,
                         oldNextTick,
-                        0,0,0,
+                        0,0,
+                        0,0,
                         amount,
                         feeGrowthGlobal,
-                        0, 0,
+                        0,
                         secondsGrowthGlobal
                     );
 
@@ -127,10 +128,11 @@ library Ticks {
                     ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                         upperOld,
                         oldNextTick,
-                        0,0,0,
+                        0,0,
+                        0,0,
                         amount,
                         feeGrowthGlobal,
-                        0,0,
+                        0,
                         secondsGrowthGlobal
                     );
                     old.nextTick = upper;

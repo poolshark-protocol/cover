@@ -190,17 +190,22 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "amountInPending",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "amountIn",
         type: "uint128",
       },
       {
         internalType: "uint128",
         name: "amountOut",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountInGrowth",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountInGrowthLast",
         type: "uint128",
       },
       {
@@ -217,11 +222,6 @@ const _abi = [
         internalType: "uint128",
         name: "amountInUnfilled",
         type: "uint128",
-      },
-      {
-        internalType: "uint160",
-        name: "unfilledSqrtPrice",
-        type: "uint160",
       },
       {
         internalType: "uint160",

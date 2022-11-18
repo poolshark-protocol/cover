@@ -140,13 +140,13 @@ export class PoolsharkHedgePoolView extends BaseContract {
       ] & {
         previousTick: number;
         nextTick: number;
-        amountInPending: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
+        amountInGrowth: BigNumber;
+        amountInGrowthLast: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobal: BigNumber;
         amountInUnfilled: BigNumber;
-        unfilledSqrtPrice: BigNumber;
         secondsGrowthOutside: BigNumber;
       }
     >;
@@ -191,13 +191,13 @@ export class PoolsharkHedgePoolView extends BaseContract {
     ] & {
       previousTick: number;
       nextTick: number;
-      amountInPending: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
+      amountInGrowth: BigNumber;
+      amountInGrowthLast: BigNumber;
       liquidity: BigNumber;
       feeGrowthGlobal: BigNumber;
       amountInUnfilled: BigNumber;
-      unfilledSqrtPrice: BigNumber;
       secondsGrowthOutside: BigNumber;
     }
   >;
@@ -242,13 +242,13 @@ export class PoolsharkHedgePoolView extends BaseContract {
       ] & {
         previousTick: number;
         nextTick: number;
-        amountInPending: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
+        amountInGrowth: BigNumber;
+        amountInGrowthLast: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobal: BigNumber;
         amountInUnfilled: BigNumber;
-        unfilledSqrtPrice: BigNumber;
         secondsGrowthOutside: BigNumber;
       }
     >;
