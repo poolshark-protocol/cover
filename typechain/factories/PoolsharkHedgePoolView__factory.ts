@@ -190,6 +190,11 @@ const _abi = [
       },
       {
         internalType: "uint128",
+        name: "amountInPending",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
         name: "amountIn",
         type: "uint128",
       },
@@ -209,9 +214,9 @@ const _abi = [
         type: "uint256",
       },
       {
-        internalType: "uint160",
-        name: "percentUnfilled",
-        type: "uint160",
+        internalType: "uint128",
+        name: "amountInUnfilled",
+        type: "uint128",
       },
       {
         internalType: "uint160",

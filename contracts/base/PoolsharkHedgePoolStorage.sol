@@ -18,6 +18,7 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
 
     uint160 internal secondsGrowthGlobal; /// @dev Multiplied by 2^128.
     uint32 internal lastObservation;
+    uint256 internal lastBlockTimestamp;
 
     uint256 public feeGrowthGlobal; /// @dev All fee growth counters are multiplied by 2^128.
     uint256 public feeGrowthGlobalLast;
