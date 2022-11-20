@@ -14,6 +14,7 @@ library Ticks {
     error WrongTickUpperRange();
     error WrongTickLowerOrder();
     error WrongTickUpperOrder();
+    error NotImplementedYet();
 
     function getMaxLiquidity(uint24 _tickSpacing) public pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(_tickSpacing)));
@@ -28,7 +29,7 @@ library Ticks {
         uint256 feeGrowthGlobal,
         bool zeroForOne,
         uint24 tickSpacing
-    ) internal returns (uint256, int24) {
+    ) internal returns (uint256, int24, int24) {
         ticks[nextTickToCross].secondsGrowthOutside = secondsGrowthGlobal - ticks[nextTickToCross].secondsGrowthOutside;
 
         if (zeroForOne) {
@@ -38,7 +39,7 @@ library Ticks {
                 //if price is decreasing, liquidity is only removed
                 // do all the ticks crosses at the first txn of the block
                 if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                    currentLiquidity += ticks[nextTickToCross].liquidity;
+                    currentLiquidity -= ticks[nextTickToCross].liquidity;
                 }
                 // // liquidity will never be recycled
                 // else {
@@ -46,22 +47,12 @@ library Ticks {
                 // }
             }
             ticks[nextTickToCross].feeGrowthGlobal = feeGrowthGlobal;
+            currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].previousTick;
         } else {
-            // Moving forwards through the linked list.
-            unchecked {
-                // liquidity will never be recycled
-                // if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                //     currentLiquidity += ticks[nextTickToCross].liquidity;
-                // } 
-                if ((nextTickToCross / int24(tickSpacing)) % 2 != 0) {
-                    currentLiquidity -= ticks[nextTickToCross].liquidity;
-                }
-            }
-            ticks[nextTickToCross].feeGrowthGlobal = feeGrowthGlobal;
-            nextTickToCross = ticks[nextTickToCross].nextTick;
+            revert NotImplementedYet();
         }
-        return (currentLiquidity, nextTickToCross);
+        return (currentLiquidity, currentTick, nextTickToCross);
     }
 
     function insert(
@@ -106,9 +97,10 @@ library Ticks {
                         lowerOld,
                         oldNextTick,
                         0,0,
+                        0,0,
                         amount,
                         feeGrowthGlobal,
-                        0, 0,
+                        0,
                         secondsGrowthGlobal
                     );
 
@@ -136,10 +128,11 @@ library Ticks {
                     ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                         upperOld,
                         oldNextTick,
-                        0, 0,
+                        0,0,
+                        0,0,
                         amount,
                         feeGrowthGlobal,
-                        0, 0,
+                        0,
                         secondsGrowthGlobal
                     );
                     old.nextTick = upper;
