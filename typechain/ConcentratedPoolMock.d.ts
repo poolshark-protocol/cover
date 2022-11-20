@@ -19,43 +19,34 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface IERC1155ReceiverInterface extends ethers.utils.Interface {
+interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
   functions: {
-    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": FunctionFragment;
-    "onERC1155Received(address,address,uint256,uint256,bytes)": FunctionFragment;
-    "supportsInterface(bytes4)": FunctionFragment;
+    "increaseObservationCardinalityNext(uint16)": FunctionFragment;
+    "observe(uint32[])": FunctionFragment;
+    "slot0()": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "onERC1155BatchReceived",
-    values: [string, string, BigNumberish[], BigNumberish[], BytesLike]
+    functionFragment: "increaseObservationCardinalityNext",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "onERC1155Received",
-    values: [string, string, BigNumberish, BigNumberish, BytesLike]
+    functionFragment: "observe",
+    values: [BigNumberish[]]
   ): string;
-  encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [BytesLike]
-  ): string;
+  encodeFunctionData(functionFragment: "slot0", values?: undefined): string;
 
   decodeFunctionResult(
-    functionFragment: "onERC1155BatchReceived",
+    functionFragment: "increaseObservationCardinalityNext",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "onERC1155Received",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "supportsInterface",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "observe", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "slot0", data: BytesLike): Result;
 
   events: {};
 }
 
-export class IERC1155Receiver extends BaseContract {
+export class ConcentratedPoolMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -96,130 +87,126 @@ export class IERC1155Receiver extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: IERC1155ReceiverInterface;
+  interface: ConcentratedPoolMockInterface;
 
   functions: {
-    onERC1155BatchReceived(
-      operator: string,
-      from: string,
-      ids: BigNumberish[],
-      values: BigNumberish[],
-      data: BytesLike,
+    increaseObservationCardinalityNext(
+      cardinalityNext: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    onERC1155Received(
-      operator: string,
-      from: string,
-      id: BigNumberish,
-      value: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    supportsInterface(
-      interfaceId: BytesLike,
+    observe(
+      secondsAgos: BigNumberish[],
       overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    ): Promise<
+      [BigNumber[], BigNumber[]] & {
+        tickCumulatives: BigNumber[];
+        secondsPerLiquidityCumulativeX128s: BigNumber[];
+      }
+    >;
+
+    slot0(
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, number, number, number, number, number, boolean] & {
+        sqrtPriceX96: BigNumber;
+        tick: number;
+        observationIndex: number;
+        cardinality: number;
+        cardinalityNext: number;
+        feeProtocol: number;
+        unlocked: boolean;
+      }
+    >;
   };
 
-  onERC1155BatchReceived(
-    operator: string,
-    from: string,
-    ids: BigNumberish[],
-    values: BigNumberish[],
-    data: BytesLike,
+  increaseObservationCardinalityNext(
+    cardinalityNext: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  onERC1155Received(
-    operator: string,
-    from: string,
-    id: BigNumberish,
-    value: BigNumberish,
-    data: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  supportsInterface(
-    interfaceId: BytesLike,
+  observe(
+    secondsAgos: BigNumberish[],
     overrides?: CallOverrides
-  ): Promise<boolean>;
+  ): Promise<
+    [BigNumber[], BigNumber[]] & {
+      tickCumulatives: BigNumber[];
+      secondsPerLiquidityCumulativeX128s: BigNumber[];
+    }
+  >;
+
+  slot0(
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, number, number, number, number, number, boolean] & {
+      sqrtPriceX96: BigNumber;
+      tick: number;
+      observationIndex: number;
+      cardinality: number;
+      cardinalityNext: number;
+      feeProtocol: number;
+      unlocked: boolean;
+    }
+  >;
 
   callStatic: {
-    onERC1155BatchReceived(
-      operator: string,
-      from: string,
-      ids: BigNumberish[],
-      values: BigNumberish[],
-      data: BytesLike,
+    increaseObservationCardinalityNext(
+      cardinalityNext: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<void>;
 
-    onERC1155Received(
-      operator: string,
-      from: string,
-      id: BigNumberish,
-      value: BigNumberish,
-      data: BytesLike,
+    observe(
+      secondsAgos: BigNumberish[],
       overrides?: CallOverrides
-    ): Promise<string>;
+    ): Promise<
+      [BigNumber[], BigNumber[]] & {
+        tickCumulatives: BigNumber[];
+        secondsPerLiquidityCumulativeX128s: BigNumber[];
+      }
+    >;
 
-    supportsInterface(
-      interfaceId: BytesLike,
+    slot0(
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<
+      [BigNumber, number, number, number, number, number, boolean] & {
+        sqrtPriceX96: BigNumber;
+        tick: number;
+        observationIndex: number;
+        cardinality: number;
+        cardinalityNext: number;
+        feeProtocol: number;
+        unlocked: boolean;
+      }
+    >;
   };
 
   filters: {};
 
   estimateGas: {
-    onERC1155BatchReceived(
-      operator: string,
-      from: string,
-      ids: BigNumberish[],
-      values: BigNumberish[],
-      data: BytesLike,
+    increaseObservationCardinalityNext(
+      cardinalityNext: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    onERC1155Received(
-      operator: string,
-      from: string,
-      id: BigNumberish,
-      value: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    supportsInterface(
-      interfaceId: BytesLike,
+    observe(
+      secondsAgos: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    slot0(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    onERC1155BatchReceived(
-      operator: string,
-      from: string,
-      ids: BigNumberish[],
-      values: BigNumberish[],
-      data: BytesLike,
+    increaseObservationCardinalityNext(
+      cardinalityNext: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    onERC1155Received(
-      operator: string,
-      from: string,
-      id: BigNumberish,
-      value: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    supportsInterface(
-      interfaceId: BytesLike,
+    observe(
+      secondsAgos: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    slot0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

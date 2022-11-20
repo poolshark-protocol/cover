@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.13;
 
 /// @notice A library that contains functions for calculating differences between two uint256.
 /// @author Adapted from https://github.com/saddle-finance/saddle-contract/blob/master/contracts/MathUtils.sol.

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.13;
 
 import "./FullPrecisionMath.sol";
 import "./UnsafeMath.sol";
@@ -55,11 +54,6 @@ library DyDxMath {
                     priceUpper - priceLower
                 );
             } else {
-                uint256 liquidity0 = FullPrecisionMath.mulDiv(
-                    dx,
-                    FullPrecisionMath.mulDiv(priceUpper, currentPrice, 0x1000000000000000000000000),
-                    priceUpper - currentPrice
-                );
                 uint256 liquidity1 = FullPrecisionMath.mulDiv(dy, 0x1000000000000000000000000, currentPrice - priceLower);
                 liquidity = liquidity1;
             }

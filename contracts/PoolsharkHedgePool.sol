@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.13;
 
 import "./interfaces/IPoolsharkHedgePool.sol";
 import "./interfaces/IPositionManager.sol";
@@ -8,7 +7,6 @@ import "./base/PoolsharkHedgePoolStorage.sol";
 import "./base/PoolsharkHedgePoolView.sol";
 import "./base/PoolsharkHedgePoolEvents.sol";
 import "./libraries/FullPrecisionMath.sol";
-import "./libraries/TickMath.sol";
 import "./libraries/UnsafeMath.sol";
 import "./libraries/DyDxMath.sol";
 import "./libraries/SwapLib.sol";
@@ -101,6 +99,8 @@ contract PoolsharkHedgePool is
             0,
             0
         );
+
+        //TODO: validate observationCardinalityNext
 
         // set default initial values
         nearestTick = calculateAverageTick(IConcentratedPool(inputPool));

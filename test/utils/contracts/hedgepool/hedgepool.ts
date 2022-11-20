@@ -10,7 +10,7 @@ export async function validateSwap(
     amountIn: BigNumber,
     sqrtPriceLimitX96: BigNumber 
 ) {
-    const inLiquidity = hre.props[amountIn];
-    const sqrtPrice = hre.props[sqrtPriceLimitX96];
-    const address = hre.props[recipient];
+    // const inLiquidity = hre.props[amountIn];
+    // const sqrtPrice = hre.props[sqrtPriceLimitX96];
+    // const address = hre.props[recipient];
 }

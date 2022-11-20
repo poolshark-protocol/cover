@@ -11,19 +11,38 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface PoolsharkErrorsInterface extends ethers.utils.Interface {
-  functions: {};
+interface ConcentratedFactoryMockInterface extends ethers.utils.Interface {
+  functions: {
+    "feeTierTickSpacing(uint24)": FunctionFragment;
+    "getPool(address,address,uint24)": FunctionFragment;
+  };
+
+  encodeFunctionData(
+    functionFragment: "feeTierTickSpacing",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPool",
+    values: [string, string, BigNumberish]
+  ): string;
+
+  decodeFunctionResult(
+    functionFragment: "feeTierTickSpacing",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getPool", data: BytesLike): Result;
 
   events: {};
 }
 
-export class PoolsharkErrors extends BaseContract {
+export class ConcentratedFactoryMock extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -64,15 +83,75 @@ export class PoolsharkErrors extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: PoolsharkErrorsInterface;
+  interface: ConcentratedFactoryMockInterface;
 
-  functions: {};
+  functions: {
+    feeTierTickSpacing(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number]>;
 
-  callStatic: {};
+    getPool(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+  };
+
+  feeTierTickSpacing(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<number>;
+
+  getPool(
+    arg0: string,
+    arg1: string,
+    arg2: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  callStatic: {
+    feeTierTickSpacing(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    getPool(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+  };
 
   filters: {};
 
-  estimateGas: {};
+  estimateGas: {
+    feeTierTickSpacing(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
-  populateTransaction: {};
+    getPool(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    feeTierTickSpacing(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getPool(
+      arg0: string,
+      arg1: string,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

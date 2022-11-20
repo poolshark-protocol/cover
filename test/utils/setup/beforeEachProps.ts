@@ -1,12 +1,14 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 import { getNonce } from "../../../tasks/utils";
-import { PoolsharkHedgePool, PoolsharkHedgePoolFactory, Token20 } from "../../../typechain";
+import { ConcentratedFactoryMock, ConcentratedPoolMock, PoolsharkHedgePool, PoolsharkHedgePoolFactory, Token20 } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
 
 export interface BeforeEachProps {
     hedgePool: PoolsharkHedgePool;
     hedgePoolFactory: PoolsharkHedgePoolFactory;
+    concentratedFactoryMock: ConcentratedFactoryMock;
+    concentratedPoolMock: ConcentratedPoolMock;
     token0: Token20;
     token1: Token20;
     token20: Token20;
@@ -39,6 +41,8 @@ export class GetBeforeEach {
     public retrieveProps(): BeforeEachProps {
         let hedgePool: PoolsharkHedgePool;
         let hedgePoolFactory: PoolsharkHedgePoolFactory;
+        let concentratedFactoryMock: ConcentratedFactoryMock;
+        let concentratedPoolMock: ConcentratedPoolMock;
         let token0: Token20;
         let token1: Token20;
         let token20: Token20;
@@ -49,6 +53,8 @@ export class GetBeforeEach {
         return {
             hedgePool,
             hedgePoolFactory,
+            concentratedFactoryMock,
+            concentratedPoolMock,
             token0,
             token1,
             token20,

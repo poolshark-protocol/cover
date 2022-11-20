@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber, ContractReceipt } from "ethers";
 import { once } from "events";
 import { getNonce, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, PoolsharkHedgePoolFactory__factory } from "../../../typechain";
+import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -49,7 +49,24 @@ export class InitialSetup {
             hre.network.config.chainId
         );
 
-        hre.props.hedgePoolFactory = await new PoolsharkHedgePoolFactory__factory(hre.props.alice).deploy({nonce: nonce});
+        hre.props.concentratedFactoryMock = await new ConcentratedFactoryMock__factory(hre.props.alice)
+                                                        .deploy(
+                                                            hre.props.token0.address,
+                                                            hre.props.token1.address,
+                                                            {nonce: nonce}
+                                                        )
+        nonce += 1;
+        const ticksLib = await new Ticks__factory(hre.props.alice).deploy();
+        nonce += 1;
+        const tickMathLib = await new TickMath__factory(hre.props.alice).deploy();
+        nonce += 1;
+        hre.props.hedgePoolFactory = await new PoolsharkHedgePoolFactory__factory(
+                                        {
+                                            "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address, 
+                                            "contracts/libraries/DyDxMath.sol:DyDxMath": tickMathLib.address
+                                        }, 
+                                        hre.props.alice
+                                    ).deploy(hre.props.concentratedFactoryMock.address, {nonce: nonce});
         nonce += 1;
 
         writeDeploymentsFile(
