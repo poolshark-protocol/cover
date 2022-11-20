@@ -533,20 +533,20 @@ contract PoolsharkHedgePool is
             nextPrice: uint256(sqrtPrice),
             currentLiquidity: uint256(liquidity),
             amountIn: 0,
-            amountOut: 0
+            amountOut: 0,
+            amountInUnfilled: 0
         });
-        uint128 amountInUnfilled; int24 stopTick;
+        uint128 amountInUnfilled; int24 stopTick; int24 nextTickUpdate;
         {
             uint256 currentPrice = uint256(TickMath.getSqrtRatioAtTick(ticks[nearestTick].previousTick));
-            amountInUnfilled = uint128(DyDxMath.getDy(cache.currentLiquidity, cache.nextPrice, currentPrice, false));
+            cache.amountInUnfilled = uint128(DyDxMath.getDy(cache.currentLiquidity, cache.nextPrice, currentPrice, false));
             
             // update the TWAP with the most current
             // if TWAP moves up then we need to accumulate everything up to that
             // if TWAP moves down there is no need to do anything
             stopTick = latestTick;
-            int24 nextTickUpdate = calculateAverageTick(IConcentratedPool(inputPool));
-            nearestTick = nextTickUpdate;
-            sqrtPrice = TickMath.getSqrtRatioAtTick(nextTickUpdate);
+            nextTickUpdate = calculateAverageTick(IConcentratedPool(inputPool));
+
             if (nextTickUpdate > latestTick){
                 stopTick = nextTickUpdate;
             }
@@ -572,6 +572,12 @@ contract PoolsharkHedgePool is
             cache.amountIn  += amountInCarryover; 
             cache.amountOut += amountOutCarryover;
 
+            if (cache.currentTick > latestTick) {
+                uint256 latestTickPrice     = TickMath.getSqrtRatioAtTick(latestTick);
+                uint256 nextTickUpdatePrice = TickMath.getSqrtRatioAtTick(nextTickUpdate);
+                amountInUnfilled += uint128(DyDxMath.getDy(cache.currentLiquidity, latestTickPrice, nextTickUpdatePrice, false));
+            }
+
             // zero out liquidity because everything has been filled
             ticks[cache.prevTick].liquidity = 0;
 
@@ -587,6 +593,11 @@ contract PoolsharkHedgePool is
 
         // once current tick is crossed, all liquidity is removed
         ticks[cache.prevTick].liquidity = uint128(cache.currentLiquidity);
+        
+        ticks[cache.prevTick].amountInUnfilled = amountInUnfilled;
+
+        nearestTick = nextTickUpdate;
+        sqrtPrice = TickMath.getSqrtRatioAtTick(nextTickUpdate);
 
     }
 

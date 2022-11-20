@@ -58,6 +58,7 @@ interface IPoolsharkHedgePoolStructs {
         uint256 currentLiquidity;
         uint128 amountIn;
         uint128 amountOut;
+        uint128 amountInUnfilled;
     }
 }
     
