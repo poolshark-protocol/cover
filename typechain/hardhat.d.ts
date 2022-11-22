@@ -69,10 +69,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IPositionManager__factory>;
     getContractFactory(
-      name: "DyDxMath",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DyDxMath__factory>;
-    getContractFactory(
       name: "SafeTransfers",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SafeTransfers__factory>;
@@ -81,9 +77,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TickMath__factory>;
     getContractFactory(
-      name: "Ticks",
+      name: "TicksLibrary",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Ticks__factory>;
+    ): Promise<Contracts.TicksLibrary__factory>;
     getContractFactory(
       name: "PoolsharkHedgePool",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -112,6 +108,10 @@ declare module "hardhat/types/runtime" {
       name: "PoolsharkHedgePoolFactoryErrors",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkHedgePoolFactoryErrors__factory>;
+    getContractFactory(
+      name: "PoolsharkMiscErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PoolsharkMiscErrors__factory>;
     getContractFactory(
       name: "PoolsharkPositionErrors",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -196,11 +196,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IPositionManager>;
     getContractAt(
-      name: "DyDxMath",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.DyDxMath>;
-    getContractAt(
       name: "SafeTransfers",
       address: string,
       signer?: ethers.Signer
@@ -211,10 +206,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TickMath>;
     getContractAt(
-      name: "Ticks",
+      name: "TicksLibrary",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.Ticks>;
+    ): Promise<Contracts.TicksLibrary>;
     getContractAt(
       name: "PoolsharkHedgePool",
       address: string,
@@ -250,6 +245,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.PoolsharkHedgePoolFactoryErrors>;
+    getContractAt(
+      name: "PoolsharkMiscErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PoolsharkMiscErrors>;
     getContractAt(
       name: "PoolsharkPositionErrors",
       address: string,

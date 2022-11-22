@@ -4,22 +4,19 @@ pragma solidity ^0.8.13;
 import "./TickMath.sol";
 import "../interfaces/IPoolsharkHedgePoolStructs.sol";
 import "../utils/PoolsharkErrors.sol";
+import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
-library Ticks {
+abstract contract TicksLibrary is 
+    PoolsharkTicksErrors, 
+    PoolsharkMiscErrors 
+{
 
-    error WrongTickOrder();
-    error WrongTickLowerRange();
-    error WrongTickUpperRange();
-    error WrongTickLowerOrder();
-    error WrongTickUpperOrder();
-    error NotImplementedYet();
-
-    function getMaxLiquidity(uint24 _tickSpacing) public pure returns (uint128) {
+    function getMaxLiquidity(uint24 _tickSpacing) internal pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(_tickSpacing)));
     }
 
-    function cross(
+    function tickCross(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 currentTick,
         int24 nextTickToCross,
@@ -54,7 +51,7 @@ library Ticks {
         return (currentLiquidity, currentTick, nextTickToCross);
     }
 
-    function insert(
+    function tickInsert(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         uint256 feeGrowthGlobal,
         uint160 secondsGrowthGlobal,
@@ -65,7 +62,7 @@ library Ticks {
         uint128 amount,
         int24 nearestTick,
         uint160 currentPrice
-    ) public returns (int24) {
+    ) internal returns (int24) {
         if (lower >= upper || lowerOld >= upperOld) {
             revert WrongTickOrder();
         }
@@ -77,6 +74,8 @@ library Ticks {
         }
         {
             uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(lower));
+            //TODO: only insert tick if greater than current TWAP
+            //TODO: if tick is lower than latestTick adjust the liquidity when the current tick is crossed
             if (priceLower > currentPrice){
                     // Stack overflow.
                 uint128 currentLowerLiquidity = ticks[lower].liquidity;
@@ -112,6 +111,7 @@ library Ticks {
             uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper)); 
             if(priceUpper > currentPrice){
                 uint128 currentUpperLiquidity = ticks[upper].liquidity;
+                console.logInt(upper);
                 if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
                     // We are adding liquidity to an existing tick.
                     ticks[upper].liquidity = currentUpperLiquidity + amount;
@@ -120,7 +120,11 @@ library Ticks {
                     IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
                     int24 oldNextTick = old.nextTick;
                     
-                    if ((old.liquidity == 0 || oldNextTick <= upper) || (upperOld >= upper)){
+                    if ((old.liquidity == 0 && upperOld != TickMath.MAX_TICK) || upperOld <= upper || upper >= oldNextTick){
+                        console.log('hi');
+                        console.logInt(oldNextTick);
+                        console.logInt(upper);
+                        console.logInt(upperOld);
                         revert WrongTickUpperOrder();
                     }
 
@@ -151,13 +155,13 @@ library Ticks {
         return nearestTick;
     }
 
-    function remove(
+    function tickRemove(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 lower,
         int24 upper,
         uint128 amount,
         int24 nearestTick
-    ) public returns (int24) {
+    ) internal returns (int24) {
         IPoolsharkHedgePoolStructs.Tick storage current = ticks[lower];
 
         if (lower != TickMath.MIN_TICK && current.liquidity == amount) {

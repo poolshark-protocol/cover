@@ -14,6 +14,7 @@ import "./libraries/Ticks.sol";
 import "./libraries/SafeTransfers.sol";
 import "./base/oracle/TwapOracle.sol";
 import "./utils/PoolsharkErrors.sol";
+import "hardhat/console.sol";
 
 /// @notice Trident Concentrated liquidity pool implementation.
 /// @dev SafeTransfers contains PoolsharkHedgePoolErrors
@@ -23,9 +24,11 @@ contract PoolsharkHedgePool is
     PoolsharkHedgePoolEvents,
     PoolsharkHedgePoolView,
     PoolsharkTicksErrors,
+    PoolsharkMiscErrors,
     PoolsharkPositionErrors,
     SafeTransfers,
-    TwapOracle
+    TwapOracle,
+    TicksLibrary
 {
     uint24 internal immutable tickSpacing;
     uint24 internal immutable swapFee; /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
@@ -42,8 +45,6 @@ contract PoolsharkHedgePool is
         _;
         unlocked = 1;
     }
-
-    using Ticks for mapping(int24 => Tick);
 
     constructor(bytes memory _poolParams) {
         (
@@ -66,6 +67,7 @@ contract PoolsharkHedgePool is
                 bool
             )
         );
+        if(_lpZeroForOne) revert NotImplementedYet();
 
         // check for invalid params
         if (_tokenIn == address(0) || _tokenIn == address(this)) revert InvalidToken();
@@ -82,7 +84,7 @@ contract PoolsharkHedgePool is
 
         // extrapolate other state variables
         feeTo = IPoolsharkHedgePoolFactory(_factory).owner();
-        MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpacing);
+        MAX_TICK_LIQUIDITY = getMaxLiquidity(_tickSpacing);
         ticks[TickMath.MIN_TICK] = Tick(
             TickMath.MIN_TICK, TickMath.MAX_TICK, 
             0, 0,
@@ -104,6 +106,8 @@ contract PoolsharkHedgePool is
 
         // set default initial values
         nearestTick = calculateAverageTick(IConcentratedPool(inputPool));
+        console.log("starting latestTick:");
+        console.logInt(int256(nearestTick));
         sqrtPrice = TickMath.getSqrtRatioAtTick(nearestTick);
         unlocked = 1;
         lastObservation = uint32(block.timestamp);
@@ -128,6 +132,9 @@ contract PoolsharkHedgePool is
         if (mintParams.amountDesired == 0) { revert InvalidPosition(); }
         priceEntry = priceUpper;
 
+        console.log("amount of tokens added:", mintParams.amountDesired);
+
+        //TODO: given upper, lower, and amount, solve for other amount
         liquidityMinted = DyDxMath.getLiquidityForAmounts(
             priceLower,
             priceUpper,
@@ -135,6 +142,7 @@ contract PoolsharkHedgePool is
             0,
             uint256(mintParams.amountDesired)
         );
+        console.log("amount of liquidity minted:", liquidityMinted);
 
         // Ensure no overflow happens when we cast from uint256 to int128.
         if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
@@ -153,7 +161,7 @@ contract PoolsharkHedgePool is
             if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
         }
 
-        nearestTick = Ticks.insert(
+        nearestTick = tickInsert(
             ticks,
             feeGrowthGlobal,
             secondsGrowthGlobal,
@@ -173,8 +181,6 @@ contract PoolsharkHedgePool is
             liquidityMinted,
             true
         );
-
-        IPositionManager(msg.sender).mintCallback(tokenIn, tokenOut, amountInActual, amountOutActual, mintParams.native);
 
         emit Mint(msg.sender, amountInActual, amountOutActual);
     }
@@ -220,7 +226,7 @@ contract PoolsharkHedgePool is
         uint256 amountIn;
         uint256 amountOut;
 
-        nearestTick = Ticks.remove(ticks, lower, upper, amount, nearestTick);
+        nearestTick = tickRemove(ticks, lower, upper, amount, nearestTick);
 
         // get token amounts from _updatePosition return values
         emit Burn(msg.sender, amountIn, amountOut);
@@ -346,7 +352,7 @@ contract PoolsharkHedgePool is
                 cache.feeGrowthGlobal
             );
             if (cross) {
-                (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
+                (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = tickCross(
                     ticks,
                     cache.currentTick,
                     cache.nextTickToCross,
@@ -359,7 +365,7 @@ contract PoolsharkHedgePool is
                 if (cache.currentLiquidity == 0) {
                     // We step into a zone that has liquidity - or we reach the end of the linked list.
                     cache.currentPrice= uint256(TickMath.getSqrtRatioAtTick(cache.nextTickToCross));
-                    (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
+                    (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = tickCross(
                         ticks,
                         cache.currentTick,
                         cache.nextTickToCross,
@@ -413,6 +419,7 @@ contract PoolsharkHedgePool is
 
     function _ensureTickSpacing(int24 lower, int24 upper) internal view {
         if (lower % int24(tickSpacing) != 0) revert InvalidTick();
+        //TODO: is LowerEven needed for this protocol?
         if ((lower / int24(tickSpacing)) % 2 != 0) revert LowerEven();
         if (upper % int24(tickSpacing) != 0) revert InvalidTick();
         if ((upper / int24(tickSpacing)) % 2 == 0) revert UpperOdd();
@@ -619,7 +626,7 @@ contract PoolsharkHedgePool is
         uint256 claimPrice   = uint256(TickMath.getSqrtRatioAtTick(claim));
 
         // user cannot claim twice from the same part of the curve
-        if (claimPrice <= position.claimPriceLast) revert InvalidClaimTick();
+        if (position.claimPriceLast > claimPrice) revert InvalidClaimTick();
 
         // handle claims
         if(ticks[claim].feeGrowthGlobal > position.feeGrowthGlobalLast) {
@@ -653,6 +660,8 @@ contract PoolsharkHedgePool is
                 position.claimPriceLast = uint160(claimPrice);
                 position.feeGrowthGlobalLast = feeGrowthGlobal;
             }
+        } else if (position.claimPriceLast == 0) {
+            position.claimPriceLast = uint160(priceLower);
         }
 
         // update liquidity at claim tick

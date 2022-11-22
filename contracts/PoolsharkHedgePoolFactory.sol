@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./PoolsharkHedgePool.sol";
 import "./interfaces/IPoolsharkHedgePoolFactory.sol";
-import "hardhat/console.sol";
 import "./interfaces/IConcentratedFactory.sol";
+import "hardhat/console.sol";
 
 contract PoolsharkHedgePoolFactory is 
     IPoolsharkHedgePoolFactory
@@ -25,7 +25,7 @@ contract PoolsharkHedgePoolFactory is
         address fromToken,
         address destToken,
         uint256 swapFee
-    ) external override returns (address book) {
+    ) external override returns (address pool) {
         
         // validate token pair
         if (fromToken == destToken) {
@@ -47,17 +47,13 @@ contract PoolsharkHedgePoolFactory is
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
         }
-            //         address _factory,
-            // address _twapSource,
-            // address _token0, 
-            // address _token1, 
-            // uint24  _swapFee, 
-            // uint24  _tickSpacing
 
-        address inputPool = getPool(token0, token1, swapFee);
+        address inputPool = getInputPool(token0, token1, swapFee);
+
+        console.log("factory input pool:", inputPool);
 
         // launch pool and save address
-        address pool = address(
+        pool = address(
             new PoolsharkHedgePool(
                 abi.encode(
                     address(this),
@@ -65,11 +61,13 @@ contract PoolsharkHedgePoolFactory is
                     token0,
                     token1,
                     uint24(swapFee),
-                    uint24(tickSpacing)
+                    uint24(tickSpacing),
+                    false
                 )
             )
         );
-        poolMapping[key] = book;
+        console.log("factory hedge pool:", pool);
+        poolMapping[key] = pool;
         poolList.push(pool);
 
         // emit event for indexers
@@ -92,7 +90,7 @@ contract PoolsharkHedgePoolFactory is
         return poolMapping[key];
     }
 
-    function getPool(
+    function getInputPool(
         address fromToken,
         address destToken,
         uint256 swapFee

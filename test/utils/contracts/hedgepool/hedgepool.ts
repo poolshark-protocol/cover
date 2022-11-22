@@ -14,3 +14,15 @@ export async function validateSwap(
     // const sqrtPrice = hre.props[sqrtPriceLimitX96];
     // const address = hre.props[recipient];
 }
+
+export async function validateMint(
+    lowerOld: BigNumber,
+    lower: BigNumber,
+    upperOld: BigNumber,
+    upper: BigNumber,
+    amountDesired: BigNumber,
+    zeroForOne: boolean,
+    native: boolean
+) {
+    
+}

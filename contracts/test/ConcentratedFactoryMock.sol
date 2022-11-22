@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/IConcentratedFactory.sol";
 import "./ConcentratedPoolMock.sol";
+import "hardhat/console.sol";
 
 contract ConcentratedFactoryMock is IConcentratedFactory {
 
@@ -23,7 +24,11 @@ contract ConcentratedFactoryMock is IConcentratedFactory {
         feeTierTickSpacing[3000] = 60;
         feeTierTickSpacing[10000] = 200;
 
-        mockPool = address(new ConcentratedPoolMock(tokenA, tokenB, 100));
+        mockPool = address(new ConcentratedPoolMock(tokenA, tokenB, 500));
+
+        getPool[tokenA][tokenB][500] = mockPool;
+
+        console.log("mock factory:", mockPool);
     }
 
 

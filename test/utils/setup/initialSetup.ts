@@ -56,16 +56,9 @@ export class InitialSetup {
                                                             {nonce: nonce}
                                                         )
         nonce += 1;
-        const ticksLib = await new Ticks__factory(hre.props.alice).deploy();
-        nonce += 1;
-        const tickMathLib = await new TickMath__factory(hre.props.alice).deploy();
-        nonce += 1;
+
         hre.props.hedgePoolFactory = await new PoolsharkHedgePoolFactory__factory(
-                                        {
-                                            "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address, 
-                                            "contracts/libraries/DyDxMath.sol:DyDxMath": tickMathLib.address
-                                        }, 
-                                        hre.props.alice
+                                         hre.props.alice
                                     ).deploy(hre.props.concentratedFactoryMock.address, {nonce: nonce});
         nonce += 1;
 
@@ -74,9 +67,20 @@ export class InitialSetup {
             hre.props.hedgePoolFactory.address,
             hre.network.config.chainId
         );
-        nonce += 1;
 
-        hre.props.hedgePoolFactory = await ethers.getContractAt("PoolsharkHedgePoolFactory", hre.props.hedgePoolFactory.address);
+        const createPoolTxn = await hre.props.hedgePoolFactory.createHedgePool(
+                                    hre.props.token0.address,
+                                    hre.props.token1.address,
+                                    "500"
+                                );
+        await createPoolTxn.wait();
+        
+        const hedgePoolAddress = await hre.props.hedgePoolFactory.getHedgePool(
+                                    hre.props.token0.address,
+                                    hre.props.token1.address,
+                                    "500"
+                                );
+        hre.props.hedgePool = await hre.ethers.getContractAt("PoolsharkHedgePool", hedgePoolAddress);
 
         return nonce;
     }

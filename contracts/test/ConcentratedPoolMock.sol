@@ -3,11 +3,13 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/IConcentratedPool.sol";
 import "./ConcentratedPoolMock.sol";
+import "hardhat/console.sol";
 
 contract ConcentratedPoolMock is IConcentratedPool {
 
     address token0;
     address token1;
+    uint256 swapFee;
 
     uint16 observationCardinality;
     uint16 observationCardinalityNext;
@@ -15,15 +17,16 @@ contract ConcentratedPoolMock is IConcentratedPool {
     constructor(
         address tokenA,
         address tokenB,
-        uint24 fee
+        uint24 _swapFee
     ) {
         require(tokenA < tokenB, "wrong token order");
         token0 = tokenA;
         token1 = tokenB;
+        swapFee = _swapFee;
     }
 
     function slot0()
-    external view
+    external pure
     returns (
         uint160 sqrtPriceX96,
         int24 tick,
@@ -52,10 +55,14 @@ contract ConcentratedPoolMock is IConcentratedPool {
         int56[] memory tickCumulatives,
         uint160[] memory secondsPerLiquidityCumulativeX128s
     ) {
-        tickCumulatives[0] = -8880594632141;
-        tickCumulatives[1] = -8880569762981;
-        secondsPerLiquidityCumulativeX128s[0] = 949568451203788412348119;
-        secondsPerLiquidityCumulativeX128s[1] = 949568438263103965182699;
+        secondsAgos;
+        console.log("test");
+        tickCumulatives = new int56[](secondsAgos.length);
+        tickCumulatives[0] = int56(0);
+        tickCumulatives[1] = int56(0);
+        secondsPerLiquidityCumulativeX128s = new uint160[](secondsAgos.length);
+        secondsPerLiquidityCumulativeX128s[0] = uint160(949568451203788412348119);
+        secondsPerLiquidityCumulativeX128s[1] = uint160(949568438263103965182699);
     }
 
     function increaseObservationCardinalityNext(
