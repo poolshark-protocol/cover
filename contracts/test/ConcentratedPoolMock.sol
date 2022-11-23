@@ -56,7 +56,6 @@ contract ConcentratedPoolMock is IConcentratedPool {
         uint160[] memory secondsPerLiquidityCumulativeX128s
     ) {
         secondsAgos;
-        console.log("test");
         tickCumulatives = new int56[](secondsAgos.length);
         tickCumulatives[0] = int56(0);
         tickCumulatives[1] = int56(0);

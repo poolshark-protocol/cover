@@ -22,9 +22,16 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
   functions: {
     "feeGrowthGlobal()": FunctionFragment;
     "feeGrowthGlobalLast()": FunctionFragment;
+    "lastBlockNumber()": FunctionFragment;
+    "latestTick()": FunctionFragment;
     "liquidity()": FunctionFragment;
+    "nearestTick()": FunctionFragment;
     "positions(address,int24,int24)": FunctionFragment;
+    "secondsGrowthGlobal()": FunctionFragment;
+    "sqrtPrice()": FunctionFragment;
     "ticks(int24)": FunctionFragment;
+    "tokenInProtocolFee()": FunctionFragment;
+    "tokenOutProtocolFee()": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -35,12 +42,37 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
     functionFragment: "feeGrowthGlobalLast",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "lastBlockNumber",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "latestTick",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "liquidity", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "nearestTick",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "positions",
     values: [string, BigNumberish, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "secondsGrowthGlobal",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "sqrtPrice", values?: undefined): string;
   encodeFunctionData(functionFragment: "ticks", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "tokenInProtocolFee",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "tokenOutProtocolFee",
+    values?: undefined
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "feeGrowthGlobal",
@@ -50,9 +82,31 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
     functionFragment: "feeGrowthGlobalLast",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "lastBlockNumber",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "latestTick", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidity", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "nearestTick",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "positions", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "secondsGrowthGlobal",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "sqrtPrice", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "tokenInProtocolFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "tokenOutProtocolFee",
+    data: BytesLike
+  ): Result;
 
   events: {};
 }
@@ -105,7 +159,13 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
 
     feeGrowthGlobalLast(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    lastBlockNumber(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    latestTick(overrides?: CallOverrides): Promise<[number]>;
+
     liquidity(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    nearestTick(overrides?: CallOverrides): Promise<[number]>;
 
     positions(
       arg0: string,
@@ -121,6 +181,10 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
         amountOut: BigNumber;
       }
     >;
+
+    secondsGrowthGlobal(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    sqrtPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     ticks(
       arg0: BigNumberish,
@@ -150,13 +214,23 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
         secondsGrowthOutside: BigNumber;
       }
     >;
+
+    tokenInProtocolFee(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    tokenOutProtocolFee(overrides?: CallOverrides): Promise<[BigNumber]>;
   };
 
   feeGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
 
   feeGrowthGlobalLast(overrides?: CallOverrides): Promise<BigNumber>;
 
+  lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
+
+  latestTick(overrides?: CallOverrides): Promise<number>;
+
   liquidity(overrides?: CallOverrides): Promise<BigNumber>;
+
+  nearestTick(overrides?: CallOverrides): Promise<number>;
 
   positions(
     arg0: string,
@@ -172,6 +246,10 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       amountOut: BigNumber;
     }
   >;
+
+  secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
+
+  sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
   ticks(
     arg0: BigNumberish,
@@ -202,12 +280,22 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
     }
   >;
 
+  tokenInProtocolFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+  tokenOutProtocolFee(overrides?: CallOverrides): Promise<BigNumber>;
+
   callStatic: {
     feeGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
 
     feeGrowthGlobalLast(overrides?: CallOverrides): Promise<BigNumber>;
 
+    lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
+
+    latestTick(overrides?: CallOverrides): Promise<number>;
+
     liquidity(overrides?: CallOverrides): Promise<BigNumber>;
+
+    nearestTick(overrides?: CallOverrides): Promise<number>;
 
     positions(
       arg0: string,
@@ -223,6 +311,10 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
         amountOut: BigNumber;
       }
     >;
+
+    secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
+
+    sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     ticks(
       arg0: BigNumberish,
@@ -252,6 +344,10 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
         secondsGrowthOutside: BigNumber;
       }
     >;
+
+    tokenInProtocolFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    tokenOutProtocolFee(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   filters: {};
@@ -261,7 +357,13 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
 
     feeGrowthGlobalLast(overrides?: CallOverrides): Promise<BigNumber>;
 
+    lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
+
+    latestTick(overrides?: CallOverrides): Promise<BigNumber>;
+
     liquidity(overrides?: CallOverrides): Promise<BigNumber>;
+
+    nearestTick(overrides?: CallOverrides): Promise<BigNumber>;
 
     positions(
       arg0: string,
@@ -270,7 +372,15 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
+
+    sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
+
     ticks(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    tokenInProtocolFee(overrides?: CallOverrides): Promise<BigNumber>;
+
+    tokenOutProtocolFee(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -280,7 +390,13 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    lastBlockNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    latestTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     liquidity(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    nearestTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     positions(
       arg0: string,
@@ -289,8 +405,22 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    secondsGrowthGlobal(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    sqrtPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     ticks(
       arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    tokenInProtocolFee(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    tokenOutProtocolFee(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

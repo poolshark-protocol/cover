@@ -66,7 +66,7 @@ contract PoolsharkHedgePoolFactory is
                 )
             )
         );
-        console.log("factory hedge pool:", pool);
+
         poolMapping[key] = pool;
         poolList.push(pool);
 

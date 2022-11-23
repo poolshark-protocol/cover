@@ -103,12 +103,51 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "lastBlockNumber",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "latestTick",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "liquidity",
     outputs: [
       {
         internalType: "uint128",
         name: "",
         type: "uint128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "nearestTick",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
       },
     ],
     stateMutability: "view",
@@ -158,6 +197,32 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "secondsGrowthGlobal",
+    outputs: [
+      {
+        internalType: "uint160",
+        name: "",
+        type: "uint160",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "sqrtPrice",
+    outputs: [
+      {
+        internalType: "uint160",
+        name: "",
+        type: "uint160",
       },
     ],
     stateMutability: "view",
@@ -222,6 +287,32 @@ const _abi = [
         internalType: "uint160",
         name: "secondsGrowthOutside",
         type: "uint160",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "tokenInProtocolFee",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "",
+        type: "uint128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "tokenOutProtocolFee",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "",
+        type: "uint128",
       },
     ],
     stateMutability: "view",

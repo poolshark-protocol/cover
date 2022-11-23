@@ -110,7 +110,7 @@ contract PoolsharkHedgePool is
         console.logInt(int256(nearestTick));
         sqrtPrice = TickMath.getSqrtRatioAtTick(nearestTick);
         unlocked = 1;
-        lastObservation = uint32(block.timestamp);
+        lastBlockNumber = uint32(block.number);
     }
 
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
@@ -254,9 +254,9 @@ contract PoolsharkHedgePool is
 
     function _updateSecondsPerLiquidity(uint256 currentLiquidity) internal {
         unchecked {
-            uint256 diff = block.timestamp - uint256(lastObservation);
+            uint256 diff = block.number - uint256(lastBlockNumber);
             if (diff > 0 && currentLiquidity > 0) {
-                lastObservation = uint32(block.timestamp); // Overfyarnlow in 2106. Don't do staking rewards in the year 2106.
+                lastBlockNumber = uint32(block.number); // Overfyarnlow in 2106. Don't do staking rewards in the year 2106.
                 secondsGrowthGlobal += uint160((diff << 128) / currentLiquidity);
             }
         }
@@ -274,7 +274,7 @@ contract PoolsharkHedgePool is
 
         TickMath.validatePrice(sqrtPriceLimitX96);
 
-        if(block.timestamp != lastBlockTimestamp) {
+        if(block.number != lastBlockNumber) {
             _accumulateLastBlock();
         }
 
@@ -687,6 +687,7 @@ contract PoolsharkHedgePool is
             // easiest option is to just reset the position
             // and store the leftover amounts in the position
             // or transfer the leftover balance to the owner
+            //TODO: handle double minting of position
             if(position.liquidity > 0) revert NotImplementedYet();
             position.liquidity += uint128(amount);
             // Prevents a global liquidity overflow in even if all ticks are initialised.

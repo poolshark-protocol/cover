@@ -11,7 +11,7 @@ export class InitialSetup {
 
     constructor() {}
 
-    public async initialSetup20AndPool(nonce: number): Promise<number> {
+    public async initialHedgePoolSetup(nonce: number): Promise<number> {
 
         const tokenA = await new Token20__factory(hre.props.alice).deploy(
             "Token20A",

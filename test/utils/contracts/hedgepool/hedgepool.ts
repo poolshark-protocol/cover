@@ -3,6 +3,29 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 
+export const Q64x96 = BigNumber.from("2").pow(96)
+export const BN_ZERO = BigNumber.from("0")
+export interface Position {
+    liquidity: BigNumber,
+    feeGrowthGlobalLast: BigNumber,
+    claimPriceLast: BigNumber,
+    amountIn: BigNumber,
+    amountOut: BigNumber
+}
+
+export interface Tick {
+    previousTick: BigNumber,
+    nextTick: BigNumber,
+    amountIn: BigNumber,
+    amountOut: BigNumber,
+    amountInGrowth: BigNumber,
+    amountInGrowthLast: BigNumber,
+    liquidity: BigNumber,
+    feeGrowthGlobal: BigNumber,
+    amountInUnfilled: BigNumber,
+    secondsGrowthOutside: BigNumber
+}
+
 export async function validateSwap(
     recipient: string,
     signer: SignerWithAddress,

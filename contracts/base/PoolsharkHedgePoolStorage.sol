@@ -16,20 +16,19 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
 
     uint128 public liquidity;
 
-    uint160 internal secondsGrowthGlobal; /// @dev Multiplied by 2^128.
-    uint32 internal lastObservation;
-    uint256 internal lastBlockTimestamp;
+    uint160 public secondsGrowthGlobal; /// @dev Multiplied by 2^128.
+    uint256 public lastBlockNumber;
 
     uint256 public feeGrowthGlobal; /// @dev All fee growth counters are multiplied by 2^128.
     uint256 public feeGrowthGlobalLast;
 
-    uint128 internal tokenInProtocolFee;
-    uint128 internal tokenOutProtocolFee;
+    uint128 public tokenInProtocolFee;
+    uint128 public tokenOutProtocolFee;
 
-    uint160 internal sqrtPrice; /// @dev Sqrt of price aka. √(y/x), multiplied by 2^96.
+    uint160 public sqrtPrice; /// @dev Sqrt of price aka. √(y/x), multiplied by 2^96.
     
-    int24 internal latestTick;  /// @dev Tick externally sourced at the latest block.
-    int24 internal nearestTick; /// @dev Tick that is just below the current price.
+    int24 public latestTick;  /// @dev Tick externally sourced at the latest block.
+    int24 public nearestTick; /// @dev Tick that is just below the current price.
 
     mapping(int24 => Tick) public ticks;
     mapping(address => mapping(int24 => mapping(int24 => Position))) public positions;

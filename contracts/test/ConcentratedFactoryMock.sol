@@ -28,7 +28,7 @@ contract ConcentratedFactoryMock is IConcentratedFactory {
 
         getPool[tokenA][tokenB][500] = mockPool;
 
-        console.log("mock factory:", mockPool);
+        console.log("mock pool:", mockPool);
     }
 
 

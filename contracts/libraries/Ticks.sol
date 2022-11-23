@@ -86,6 +86,7 @@ abstract contract TicksLibrary is
                     // We are inserting a new tick.
                     IPoolsharkHedgePoolStructs.Tick storage old = ticks[lowerOld];
                     int24 oldNextTick = old.nextTick;
+                    if (upper < oldNextTick) oldNextTick = upper;
 
                     if ((old.liquidity == 0 && lowerOld != TickMath.MIN_TICK) || lowerOld >= lower || lower >= oldNextTick){
                         revert WrongTickLowerOrder();
@@ -106,12 +107,12 @@ abstract contract TicksLibrary is
                     ticks[oldNextTick].previousTick = lower;
                 }
             }
+            // else the liquidity gets added at the next tick above
         }
         {
             uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper)); 
             if(priceUpper > currentPrice){
                 uint128 currentUpperLiquidity = ticks[upper].liquidity;
-                console.logInt(upper);
                 if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
                     // We are adding liquidity to an existing tick.
                     ticks[upper].liquidity = currentUpperLiquidity + amount;
@@ -121,12 +122,10 @@ abstract contract TicksLibrary is
                     int24 oldNextTick = old.nextTick;
                     
                     if ((old.liquidity == 0 && upperOld != TickMath.MAX_TICK) || upperOld <= upper || upper >= oldNextTick){
-                        console.log('hi');
-                        console.logInt(oldNextTick);
-                        console.logInt(upper);
-                        console.logInt(upperOld);
                         revert WrongTickUpperOrder();
                     }
+
+                    if (old.previousTick < lower) upperOld = lower;
 
                     ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                         upperOld,
@@ -138,10 +137,14 @@ abstract contract TicksLibrary is
                         0,
                         secondsGrowthGlobal
                     );
+
                     old.nextTick = upper;
                     ticks[oldNextTick].previousTick = upper;
                 }
             }
+        }
+        {
+            //handle upper 
         }
 
         //TODO: update nearestTick if between TWAP and currentPrice
