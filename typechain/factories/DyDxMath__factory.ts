@@ -2,11 +2,123 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
-import { Provider, TransactionRequest } from "@ethersproject/providers";
+import { Contract, Signer, utils } from "ethers";
+import { Provider } from "@ethersproject/providers";
 import type { DyDxMath, DyDxMathInterface } from "../DyDxMath";
 
 const _abi = [
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "priceLower",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "priceUpper",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "currentPrice",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "liquidityAmount",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "roundUp",
+        type: "bool",
+      },
+    ],
+    name: "getAmountsForLiquidity",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "token0amount",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "token1amount",
+        type: "uint128",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "liquidity",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "priceLower",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "priceUpper",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "roundUp",
+        type: "bool",
+      },
+    ],
+    name: "getDx",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "dx",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "liquidity",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "priceLower",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "priceUpper",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "roundUp",
+        type: "bool",
+      },
+    ],
+    name: "getDy",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "dy",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
   {
     inputs: [
       {
@@ -46,39 +158,105 @@ const _abi = [
     stateMutability: "pure",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "a",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "b",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "denominator",
+        type: "uint256",
+      },
+    ],
+    name: "mulDiv",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "a",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "b",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "denominator",
+        type: "uint256",
+      },
+    ],
+    name: "mulDivRoundingUp",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "y",
+        type: "uint256",
+      },
+    ],
+    name: "toUint128",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "z",
+        type: "uint128",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "y",
+        type: "uint256",
+      },
+    ],
+    name: "toUint160",
+    outputs: [
+      {
+        internalType: "uint160",
+        name: "z",
+        type: "uint160",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
 ];
 
-const _bytecode =
-  "0x6101e661003a600b82828239805160001a60731461002d57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600436106100355760003560e01c8063aec6cbfe1461003a575b600080fd5b61004d610048366004610175565b61005f565b60405190815260200160405180910390f35b60008385116100805761007983600160601b8888036100c2565b90506100b9565b8584116100a2576100798261009a8888600160601b6100c2565b8888036100c2565b60006100b584600160601b8988036100c2565b9150505b95945050505050565b60008080600019858709858702925082811083820303915050806000036100fb57600084116100f057600080fd5b50829004905061016e565b80841161010757600080fd5b6000848688096000868103871696879004966002600389028118808a02820302808a02820302808a02820302808a02820302808a02820302808a02909103029181900381900460010186841190950394909402919094039290920491909117919091029150505b9392505050565b600080600080600060a0868803121561018d57600080fd5b50508335956020850135955060408501359460608101359450608001359250905056fea26469706673582212209e3f61a4444952d8eadde8307259a2a7c0a60f3474cb569e84e4160cf8366e7864736f6c634300080d0033";
-
-export class DyDxMath__factory extends ContractFactory {
-  constructor(
-    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
-  ) {
-    if (args.length === 1) {
-      super(_abi, _bytecode, args[0]);
-    } else {
-      super(...args);
-    }
-  }
-
-  deploy(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<DyDxMath> {
-    return super.deploy(overrides || {}) as Promise<DyDxMath>;
-  }
-  getDeployTransaction(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): TransactionRequest {
-    return super.getDeployTransaction(overrides || {});
-  }
-  attach(address: string): DyDxMath {
-    return super.attach(address) as DyDxMath;
-  }
-  connect(signer: Signer): DyDxMath__factory {
-    return super.connect(signer) as DyDxMath__factory;
-  }
-  static readonly bytecode = _bytecode;
+export class DyDxMath__factory {
   static readonly abi = _abi;
   static createInterface(): DyDxMathInterface {
     return new utils.Interface(_abi) as DyDxMathInterface;

@@ -61,12 +61,12 @@
     },
     "31337": {
         "Token0": {
-            "address": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-            "created": "2022-11-23T04:59:27.310Z"
+            "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+            "created": "2022-11-24T21:51:36.848Z"
         },
         "Token1": {
-            "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-            "created": "2022-11-23T04:59:27.315Z"
+            "address": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+            "created": "2022-11-24T21:51:36.853Z"
         },
         "OrderBook20Factory": {
             "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
@@ -101,8 +101,8 @@
             "created": "2022-09-26T01:25:06.171Z"
         },
         "PoolSharkHedgePoolFactory": {
-            "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-            "created": "2022-11-23T04:59:27.372Z"
+            "address": "0x9A676e781A523b5d0C0e43731313A708CB607508",
+            "created": "2022-11-24T21:51:36.944Z"
         }
     }
 }

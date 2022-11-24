@@ -7,6 +7,7 @@ abstract contract IPoolsharkHedgePoolFactory {
 
     address public owner;
     address public concentratedFactory;
+    address public libraries;
 
     mapping(bytes32 => address) public poolMapping;
     address[] public poolList;

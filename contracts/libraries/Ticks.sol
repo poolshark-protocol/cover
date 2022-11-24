@@ -7,16 +7,22 @@ import "../utils/PoolsharkErrors.sol";
 import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
-abstract contract TicksLibrary is 
-    PoolsharkTicksErrors, 
-    PoolsharkMiscErrors 
+library Ticks
 {
 
-    function getMaxLiquidity(uint24 _tickSpacing) internal pure returns (uint128) {
+    error NotImplementedYet();
+    error WrongTickOrder();
+    error WrongTickLowerRange();
+    error WrongTickUpperRange();
+    error WrongTickLowerOrder();
+    error WrongTickUpperOrder();
+
+    function getMaxLiquidity(uint24 _tickSpacing) external pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(_tickSpacing)));
     }
 
-    function tickCross(
+    //maybe call ticks on msg.sender to get tick
+    function cross(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 currentTick,
         int24 nextTickToCross,
@@ -25,12 +31,12 @@ abstract contract TicksLibrary is
         uint256 feeGrowthGlobal,
         bool zeroForOne,
         uint24 tickSpacing
-    ) internal returns (uint256, int24, int24) {
+    ) external returns (uint256, int24, int24) {
         ticks[nextTickToCross].secondsGrowthOutside = secondsGrowthGlobal - ticks[nextTickToCross].secondsGrowthOutside;
 
         if (zeroForOne) {
             // Moving backwards through the linked list.
-            // Liquidity cannot overflow due to the MAX_TICK_LIQUIDITY requirement.
+            // Liquidity cannot overflow due to the TickMath.MAX_TICK_LIQUIDITY requirement.
             unchecked {
                 //if price is decreasing, liquidity is only removed
                 // do all the ticks crosses at the first txn of the block
@@ -51,7 +57,7 @@ abstract contract TicksLibrary is
         return (currentLiquidity, currentTick, nextTickToCross);
     }
 
-    function tickInsert(
+    function insert(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         uint256 feeGrowthGlobal,
         uint160 secondsGrowthGlobal,
@@ -61,8 +67,9 @@ abstract contract TicksLibrary is
         int24 upper,
         uint128 amount,
         int24 nearestTick,
-        uint160 currentPrice
-    ) internal returns (int24) {
+        uint160 currentPrice,
+        int24 tickAtPrice
+    ) external returns (int24) {
         if (lower >= upper || lowerOld >= upperOld) {
             revert WrongTickOrder();
         }
@@ -73,10 +80,9 @@ abstract contract TicksLibrary is
             revert WrongTickUpperRange();
         }
         {
-            uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(lower));
             //TODO: only insert tick if greater than current TWAP
             //TODO: if tick is lower than latestTick adjust the liquidity when the current tick is crossed
-            if (priceLower > currentPrice){
+            if (uint256(TickMath.getSqrtRatioAtTick(lower)) > currentPrice) {
                     // Stack overflow.
                 uint128 currentLowerLiquidity = ticks[lower].liquidity;
                 if (currentLowerLiquidity != 0 || lower == TickMath.MIN_TICK) {
@@ -110,8 +116,7 @@ abstract contract TicksLibrary is
             // else the liquidity gets added at the next tick above
         }
         {
-            uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper)); 
-            if(priceUpper > currentPrice){
+            if(uint256(TickMath.getSqrtRatioAtTick(upper)) > currentPrice){
                 uint128 currentUpperLiquidity = ticks[upper].liquidity;
                 if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
                     // We are adding liquidity to an existing tick.
@@ -148,7 +153,6 @@ abstract contract TicksLibrary is
         }
 
         //TODO: update nearestTick if between TWAP and currentPrice
-        int24 tickAtPrice = TickMath.getTickAtSqrtRatio(currentPrice);
         if (nearestTick < upper && upper <= tickAtPrice) {
             nearestTick = upper;
         } else if (nearestTick < lower && lower <= tickAtPrice) {
@@ -158,13 +162,13 @@ abstract contract TicksLibrary is
         return nearestTick;
     }
 
-    function tickRemove(
+    function remove(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 lower,
         int24 upper,
         uint128 amount,
         int24 nearestTick
-    ) internal returns (int24) {
+    ) external returns (int24) {
         IPoolsharkHedgePoolStructs.Tick storage current = ticks[lower];
 
         if (lower != TickMath.MIN_TICK && current.liquidity == amount) {

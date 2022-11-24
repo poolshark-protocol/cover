@@ -1,15 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "../interfaces/utils/IFullPrecisionMath.sol";
+
 /// @notice Math library that facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision.
-library FullPrecisionMath {
+abstract contract FullPrecisionMath is
+    IFullPrecisionMath
+{
+    function mulDiv(
+        uint256 a,
+        uint256 b,
+        uint256 denominator
+    ) external pure returns (uint256 result) {
+        return _mulDiv(a, b, denominator);
+    }
+
+    function mulDivRoundingUp(
+        uint256 a,
+        uint256 b,
+        uint256 denominator
+    ) external pure returns (uint256 result) {
+        return _mulDivRoundingUp(a, b, denominator);
+    }
+
     /// @notice Calculates floor(a×b÷denominator) with full precision - throws if result overflows an uint256 or denominator == 0.
     /// @param a The multiplicand.
     /// @param b The multiplier.
     /// @param denominator The divisor.
     /// @return result The 256-bit result.
     /// @dev Credit to Remco Bloemen under MIT license https://xn--2-umb.com/21/muldiv.
-    function mulDiv(
+    function _mulDiv(
         uint256 a,
         uint256 b,
         uint256 denominator
@@ -102,12 +122,12 @@ library FullPrecisionMath {
     /// @param b The multiplier.
     /// @param denominator The divisor.
     /// @return result The 256-bit result.
-    function mulDivRoundingUp(
+    function _mulDivRoundingUp(
         uint256 a,
         uint256 b,
         uint256 denominator
     ) internal pure returns (uint256 result) {
-        result = mulDiv(a, b, denominator);
+        result = _mulDiv(a, b, denominator);
         unchecked {
             if (mulmod(a, b, denominator) != 0) {
                 require(result < type(uint256).max);

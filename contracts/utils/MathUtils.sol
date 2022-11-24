@@ -1,10 +1,33 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-/// @notice Trident sqrt helper library.
-library SqrtMath {
+import "../interfaces/utils/IMathUtils.sol";
+
+/// @notice A library that contains functions for calculating differences between two uint256.
+/// @author Adapted from https://github.com/saddle-finance/saddle-contract/blob/master/contracts/MathUtils.sol.
+abstract contract MathUtils is IMathUtils {
+    function within1(uint256 a, uint256 b) external pure returns (bool) {
+        return _within1(a, b);
+    }
+
+    function sqrt(uint256 x) external pure returns (uint256 z) {
+        return _sqrt(x);
+    }
+    
+    /// @notice Compares a and b and returns 'true' if the difference between a and b
+    /// is less than 1 or equal to each other.
+    /// @param a uint256 to compare with.
+    /// @param b uint256 to compare with.
+    function _within1(uint256 a, uint256 b) internal pure returns (bool) {
+        unchecked {
+            if (a > b) {
+                return a - b <= 1;
+            }
+            return b - a <= 1;
+        }
+    }
     /// @dev Modified from Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/utils/FixedPointMathLib.sol)
-    function sqrt(uint256 x) internal pure returns (uint256 z) {
+    function _sqrt(uint256 x) internal pure returns (uint256 z) {
         assembly {
             // This segment is to get a reasonable initial estimate for the Babylonian method.
             // If the initial estimate is bad, the number of correct bits increases ~linearly

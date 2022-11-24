@@ -87,7 +87,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
     const liquidityAmount = BigNumber.from('200260154054812998151852');
-    
+    await hre.props.token1.approve(hre.props.hedgePool.address, amount);
     const txn = await hre.props.hedgePool.mint(
       {
         lowerOld: lowerOld,
@@ -144,7 +144,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
   });
 
-  it('Should allow swap', async function () {
+  it('Should swap with zero output', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -191,33 +191,28 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
   });
 
-  // it('Should mint new LP position and then burn', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
-  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-  //   const txn = await hre.props.hedgePool.mint(
-  //     {
-  //       lowerOld: lowerOld,
-  //       lower: lower,
-  //       upperOld: upperOld,
-  //       upper: upper,
-  //       amountDesired: amount,
-  //       zeroForOne: false,
-  //       native: false
-  //     }
-  //   );
-  //   await txn.wait();
-  //   console.log(await hre.props.hedgePool.positions(
-  //     hre.props.alice.address,
-  //     lower,
-  //     upper
-  //   ));
-  //   // validateMint(
+  it('Should burn existing LP position and withdraw liquidity', async function () {
+    const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+    const lower    = hre.ethers.utils.parseUnits("20", 0);
+    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+    const txn = await hre.props.hedgePool.burn(
+      lower,
+      upper,
+      lower,
+      amount
+    );
+    await txn.wait();
+    console.log(await hre.props.hedgePool.positions(
+      hre.props.alice.address,
+      lower,
+      upper
+    ));
+    // validateMint(
 
-  //   // )
-  // });
+    // )
+  });
 
   // it('Should mint new LP position swap and then claim', async function () {
   //   const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);

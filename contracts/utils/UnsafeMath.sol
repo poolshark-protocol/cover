@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 /// @notice Math library that contains methods that perform common math functions but do not do any overflow or underflow checks.
 /// @author Adapted from https://github.com/Uniswap/uniswap-v3-core/blob/main/contracts/libraries/UnsafeMath.sol.
-library UnsafeMath {
+abstract contract UnsafeMath {
     /// @notice Returns ceil(x / y).
     /// @dev Division by 0 has unspecified behavior, and must be checked externally.
     /// @param x The dividend.

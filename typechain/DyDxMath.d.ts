@@ -20,9 +20,28 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface DyDxMathInterface extends ethers.utils.Interface {
   functions: {
+    "getAmountsForLiquidity(uint256,uint256,uint256,uint256,bool)": FunctionFragment;
+    "getDx(uint256,uint256,uint256,bool)": FunctionFragment;
+    "getDy(uint256,uint256,uint256,bool)": FunctionFragment;
     "getLiquidityForAmounts(uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
+    "mulDiv(uint256,uint256,uint256)": FunctionFragment;
+    "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
+    "toUint128(uint256)": FunctionFragment;
+    "toUint160(uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "getAmountsForLiquidity",
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDx",
+    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDy",
+    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
+  ): string;
   encodeFunctionData(
     functionFragment: "getLiquidityForAmounts",
     values: [
@@ -33,11 +52,40 @@ interface DyDxMathInterface extends ethers.utils.Interface {
       BigNumberish
     ]
   ): string;
+  encodeFunctionData(
+    functionFragment: "mulDiv",
+    values: [BigNumberish, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mulDivRoundingUp",
+    values: [BigNumberish, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "toUint128",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "toUint160",
+    values: [BigNumberish]
+  ): string;
 
+  decodeFunctionResult(
+    functionFragment: "getAmountsForLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getDx", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getDy", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getLiquidityForAmounts",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "mulDiv", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "mulDivRoundingUp",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "toUint128", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "toUint160", data: BytesLike): Result;
 
   events: {};
 }
@@ -86,6 +134,36 @@ export class DyDxMath extends BaseContract {
   interface: DyDxMathInterface;
 
   functions: {
+    getAmountsForLiquidity(
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      currentPrice: BigNumberish,
+      liquidityAmount: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & {
+        token0amount: BigNumber;
+        token1amount: BigNumber;
+      }
+    >;
+
+    getDx(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { dx: BigNumber }>;
+
+    getDy(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { dy: BigNumber }>;
+
     getLiquidityForAmounts(
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
@@ -94,7 +172,61 @@ export class DyDxMath extends BaseContract {
       dx: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { liquidity: BigNumber }>;
+
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { result: BigNumber }>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { result: BigNumber }>;
+
+    toUint128(
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { z: BigNumber }>;
+
+    toUint160(
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { z: BigNumber }>;
   };
+
+  getAmountsForLiquidity(
+    priceLower: BigNumberish,
+    priceUpper: BigNumberish,
+    currentPrice: BigNumberish,
+    liquidityAmount: BigNumberish,
+    roundUp: boolean,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber] & {
+      token0amount: BigNumber;
+      token1amount: BigNumber;
+    }
+  >;
+
+  getDx(
+    liquidity: BigNumberish,
+    priceLower: BigNumberish,
+    priceUpper: BigNumberish,
+    roundUp: boolean,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  getDy(
+    liquidity: BigNumberish,
+    priceLower: BigNumberish,
+    priceUpper: BigNumberish,
+    roundUp: boolean,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   getLiquidityForAmounts(
     priceLower: BigNumberish,
@@ -105,7 +237,55 @@ export class DyDxMath extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  mulDiv(
+    a: BigNumberish,
+    b: BigNumberish,
+    denominator: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  mulDivRoundingUp(
+    a: BigNumberish,
+    b: BigNumberish,
+    denominator: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  toUint128(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+  toUint160(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
   callStatic: {
+    getAmountsForLiquidity(
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      currentPrice: BigNumberish,
+      liquidityAmount: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & {
+        token0amount: BigNumber;
+        token1amount: BigNumber;
+      }
+    >;
+
+    getDx(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getDy(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getLiquidityForAmounts(
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
@@ -114,11 +294,54 @@ export class DyDxMath extends BaseContract {
       dx: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    toUint128(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    toUint160(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   filters: {};
 
   estimateGas: {
+    getAmountsForLiquidity(
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      currentPrice: BigNumberish,
+      liquidityAmount: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getDx(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getDy(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getLiquidityForAmounts(
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
@@ -127,15 +350,82 @@ export class DyDxMath extends BaseContract {
       dx: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    toUint128(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    toUint160(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
+    getAmountsForLiquidity(
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      currentPrice: BigNumberish,
+      liquidityAmount: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getDx(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getDy(
+      liquidity: BigNumberish,
+      priceLower: BigNumberish,
+      priceUpper: BigNumberish,
+      roundUp: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getLiquidityForAmounts(
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
       currentPrice: BigNumberish,
       dy: BigNumberish,
       dx: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    toUint128(
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    toUint160(
+      y: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

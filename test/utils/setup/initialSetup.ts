@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber, ContractReceipt } from "ethers";
 import { once } from "events";
 import { getNonce, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory } from "../../../typechain";
+import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, PoolsharkHedgePoolLibraries, PoolsharkHedgePoolLibraries__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -57,9 +57,33 @@ export class InitialSetup {
                                                         )
         nonce += 1;
 
+        const libraries = await new PoolsharkHedgePoolLibraries__factory(hre.props.alice)
+                                                        .deploy(
+                                                            {nonce: nonce}
+                                                        );
+
+        nonce += 1;
+
+        const tickMathLib = await new TickMath__factory(hre.props.alice).deploy();
+        nonce += 1;
+        const ticksLib = await new Ticks__factory(
+                                        {
+                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
+                                        },
+                                        hre.props.alice
+                        ).deploy();
+        nonce += 1;
+
         hre.props.hedgePoolFactory = await new PoolsharkHedgePoolFactory__factory(
-                                         hre.props.alice
-                                    ).deploy(hre.props.concentratedFactoryMock.address, {nonce: nonce});
+                                        {
+                                            "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address,
+                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
+                                        }, 
+                                        hre.props.alice
+                                    ).deploy(hre.props.concentratedFactoryMock.address,
+                                             libraries.address,
+                                             {nonce: nonce}
+                                    );
         nonce += 1;
 
         writeDeploymentsFile(

@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
@@ -18,7 +19,37 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TickMathInterface extends ethers.utils.Interface {
-  functions: {};
+  functions: {
+    "getSqrtRatioAtTick(int24)": FunctionFragment;
+    "getTickAtSqrtRatio(uint160)": FunctionFragment;
+    "validatePrice(uint160)": FunctionFragment;
+  };
+
+  encodeFunctionData(
+    functionFragment: "getSqrtRatioAtTick",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getTickAtSqrtRatio",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "validatePrice",
+    values: [BigNumberish]
+  ): string;
+
+  decodeFunctionResult(
+    functionFragment: "getSqrtRatioAtTick",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getTickAtSqrtRatio",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "validatePrice",
+    data: BytesLike
+  ): Result;
 
   events: {};
 }
@@ -66,13 +97,85 @@ export class TickMath extends BaseContract {
 
   interface: TickMathInterface;
 
-  functions: {};
+  functions: {
+    getSqrtRatioAtTick(
+      tick: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { getSqrtPriceX96: BigNumber }>;
 
-  callStatic: {};
+    getTickAtSqrtRatio(
+      sqrtPriceX96: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number] & { tick: number }>;
+
+    validatePrice(
+      price: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+  };
+
+  getSqrtRatioAtTick(
+    tick: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  getTickAtSqrtRatio(
+    sqrtPriceX96: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<number>;
+
+  validatePrice(price: BigNumberish, overrides?: CallOverrides): Promise<void>;
+
+  callStatic: {
+    getSqrtRatioAtTick(
+      tick: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getTickAtSqrtRatio(
+      sqrtPriceX96: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    validatePrice(
+      price: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {};
 
-  estimateGas: {};
+  estimateGas: {
+    getSqrtRatioAtTick(
+      tick: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
-  populateTransaction: {};
+    getTickAtSqrtRatio(
+      sqrtPriceX96: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    validatePrice(
+      price: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    getSqrtRatioAtTick(
+      tick: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getTickAtSqrtRatio(
+      sqrtPriceX96: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    validatePrice(
+      price: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

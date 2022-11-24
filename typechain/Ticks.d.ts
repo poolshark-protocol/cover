@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
@@ -18,7 +19,19 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
-  functions: {};
+  functions: {
+    "getMaxLiquidity(uint24)": FunctionFragment;
+  };
+
+  encodeFunctionData(
+    functionFragment: "getMaxLiquidity",
+    values: [BigNumberish]
+  ): string;
+
+  decodeFunctionResult(
+    functionFragment: "getMaxLiquidity",
+    data: BytesLike
+  ): Result;
 
   events: {};
 }
@@ -66,13 +79,38 @@ export class Ticks extends BaseContract {
 
   interface: TicksInterface;
 
-  functions: {};
+  functions: {
+    getMaxLiquidity(
+      _tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+  };
 
-  callStatic: {};
+  getMaxLiquidity(
+    _tickSpacing: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  callStatic: {
+    getMaxLiquidity(
+      _tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
 
   filters: {};
 
-  estimateGas: {};
+  estimateGas: {
+    getMaxLiquidity(
+      _tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
 
-  populateTransaction: {};
+  populateTransaction: {
+    getMaxLiquidity(
+      _tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

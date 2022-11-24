@@ -3,13 +3,15 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/IPoolsharkHedgePoolStructs.sol";
 import "../interfaces/IPoolsharkHedgePoolFactory.sol";
+import "../interfaces/IPoolsharkUtils.sol";
 import "../utils/PoolsharkErrors.sol";
 import "../libraries/Ticks.sol";
 
 abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, PoolsharkHedgePoolErrors {
     uint256 internal unlocked;
 
-    address internal feeTo;
+    IPoolsharkUtils public utils;
+    address public feeTo;
 
     uint24 internal constant MAX_FEE = 10000; /// @dev Equivalent to 1%.
     /// @dev Reference: tickSpacing of 100 -> 2% between ticks.
@@ -32,7 +34,6 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
 
     mapping(int24 => Tick) public ticks;
     mapping(address => mapping(int24 => mapping(int24 => Position))) public positions;
-    
 }
     
     

@@ -25,6 +25,7 @@ interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
     "createHedgePool(address,address,uint256)": FunctionFragment;
     "feeTierTickSpacing(uint256)": FunctionFragment;
     "getHedgePool(address,address,uint256)": FunctionFragment;
+    "libraries()": FunctionFragment;
     "owner()": FunctionFragment;
     "poolList(uint256)": FunctionFragment;
     "poolMapping(bytes32)": FunctionFragment;
@@ -46,6 +47,7 @@ interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
     functionFragment: "getHedgePool",
     values: [string, string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "libraries", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "poolList",
@@ -72,6 +74,7 @@ interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
     functionFragment: "getHedgePool",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "libraries", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "poolList", data: BytesLike): Result;
   decodeFunctionResult(
@@ -161,6 +164,8 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    libraries(overrides?: CallOverrides): Promise<[string]>;
+
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     poolList(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
@@ -189,6 +194,8 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
+  libraries(overrides?: CallOverrides): Promise<string>;
+
   owner(overrides?: CallOverrides): Promise<string>;
 
   poolList(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
@@ -216,6 +223,8 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fee: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    libraries(overrides?: CallOverrides): Promise<string>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -282,6 +291,8 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    libraries(overrides?: CallOverrides): Promise<BigNumber>;
+
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     poolList(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
@@ -312,6 +323,8 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fee: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    libraries(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

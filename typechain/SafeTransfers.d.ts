@@ -11,6 +11,8 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
+  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
@@ -18,7 +20,25 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SafeTransfersInterface extends ethers.utils.Interface {
-  functions: {};
+  functions: {
+    "transferIn(address,uint256)": FunctionFragment;
+    "transferOut(address,address,uint256)": FunctionFragment;
+  };
+
+  encodeFunctionData(
+    functionFragment: "transferIn",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferOut",
+    values: [string, string, BigNumberish]
+  ): string;
+
+  decodeFunctionResult(functionFragment: "transferIn", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "transferOut",
+    data: BytesLike
+  ): Result;
 
   events: {};
 }
@@ -66,13 +86,78 @@ export class SafeTransfers extends BaseContract {
 
   interface: SafeTransfersInterface;
 
-  functions: {};
+  functions: {
+    transferIn(
+      token: string,
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
-  callStatic: {};
+    transferOut(
+      to: string,
+      token: string,
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+  };
+
+  transferIn(
+    token: string,
+    amount: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  transferOut(
+    to: string,
+    token: string,
+    amount: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  callStatic: {
+    transferIn(
+      token: string,
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    transferOut(
+      to: string,
+      token: string,
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {};
 
-  estimateGas: {};
+  estimateGas: {
+    transferIn(
+      token: string,
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
-  populateTransaction: {};
+    transferOut(
+      to: string,
+      token: string,
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    transferIn(
+      token: string,
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    transferOut(
+      to: string,
+      token: string,
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+  };
 }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./PoolsharkHedgePool.sol";
 import "./interfaces/IPoolsharkHedgePoolFactory.sol";
 import "./interfaces/IConcentratedFactory.sol";
-import "hardhat/console.sol";
+import "./interfaces/IPoolsharkUtils.sol";
 
 contract PoolsharkHedgePoolFactory is 
     IPoolsharkHedgePoolFactory
@@ -15,10 +15,12 @@ contract PoolsharkHedgePoolFactory is
     error FeeTierNotSupported();
     
     constructor(
-        address _concentratedFactory
+        address _concentratedFactory,
+        address _libraries
     ) {
         owner = msg.sender;
         concentratedFactory = _concentratedFactory;
+        libraries = _libraries;
     }
 
     function createHedgePool(
@@ -33,8 +35,8 @@ contract PoolsharkHedgePoolFactory is
         }
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
-        if(ERC20(token0).decimals() == 0) revert("ERROR: token0 decimals are zero.");
-        if(ERC20(token1).decimals() == 0) revert("ERROR: token1 decimals are zero.");
+        // if(ERC20(token0).decimals() == 0) revert("ERROR: token0 decimals are zero.");
+        // if(ERC20(token1).decimals() == 0) revert("ERROR: token1 decimals are zero.");
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(token0, token1, swapFee));
@@ -50,7 +52,7 @@ contract PoolsharkHedgePoolFactory is
 
         address inputPool = getInputPool(token0, token1, swapFee);
 
-        console.log("factory input pool:", inputPool);
+        // console.log("factory input pool:", inputPool);
 
         // launch pool and save address
         pool = address(
@@ -58,6 +60,7 @@ contract PoolsharkHedgePoolFactory is
                 abi.encode(
                     address(this),
                     inputPool,
+                    libraries,
                     token0,
                     token1,
                     uint24(swapFee),

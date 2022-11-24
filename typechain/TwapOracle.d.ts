@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -20,16 +21,52 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TwapOracleInterface extends ethers.utils.Interface {
   functions: {
+    "calculateAverageTick(address)": FunctionFragment;
     "concentratedFactory()": FunctionFragment;
+    "getSqrtPriceLimitX96(bool)": FunctionFragment;
+    "increaseV3Observation(address)": FunctionFragment;
+    "isPoolObservationsEnough(address)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "calculateAverageTick",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "concentratedFactory",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "getSqrtPriceLimitX96",
+    values: [boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "increaseV3Observation",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isPoolObservationsEnough",
+    values: [string]
+  ): string;
 
   decodeFunctionResult(
+    functionFragment: "calculateAverageTick",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "concentratedFactory",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSqrtPriceLimitX96",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "increaseV3Observation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isPoolObservationsEnough",
     data: BytesLike
   ): Result;
 
@@ -80,23 +117,123 @@ export class TwapOracle extends BaseContract {
   interface: TwapOracleInterface;
 
   functions: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<[number] & { averageTick: number }>;
+
     concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    increaseV3Observation(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
   };
+
+  calculateAverageTick(
+    pool: string,
+    overrides?: CallOverrides
+  ): Promise<number>;
 
   concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
+  getSqrtPriceLimitX96(
+    zeroForOne: boolean,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  increaseV3Observation(
+    pool: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  isPoolObservationsEnough(
+    pool: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   callStatic: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
     concentratedFactory(overrides?: CallOverrides): Promise<string>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    increaseV3Observation(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
   };
 
   filters: {};
 
   estimateGas: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    increaseV3Observation(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     concentratedFactory(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    increaseV3Observation(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

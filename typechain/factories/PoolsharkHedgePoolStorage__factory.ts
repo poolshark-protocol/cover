@@ -103,6 +103,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "feeTo",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "lastBlockNumber",
     outputs: [
       {
@@ -313,6 +326,19 @@ const _abi = [
         internalType: "uint128",
         name: "",
         type: "uint128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "utils",
+    outputs: [
+      {
+        internalType: "contract IPoolsharkUtils",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",

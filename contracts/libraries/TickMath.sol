@@ -10,19 +10,27 @@ library TickMath {
     /// @dev The maximum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**128 - 1.
     int24 internal constant MAX_TICK = -MIN_TICK;
     /// @dev The minimum value that can be returned from #getSqrtRatioAtTick - equivalent to getSqrtRatioAtTick(MIN_TICK).
-    uint160 internal constant MIN_SQRT_RATIO = 4295128739;
+    uint160 internal constant MIN_SQRT_RATIO = 4294967296;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick - equivalent to getSqrtRatioAtTick(MAX_TICK).
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
     error TickOutOfBounds();
-    error PriceOutOfBounds();
+    error PriceOutOfBounds(); 
+
+    function getSqrtRatioAtTick(int24 tick) external pure returns (uint160 getSqrtPriceX96) {
+        return _getSqrtRatioAtTick(tick);
+    }
+
+    function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24 tick) {
+        return _getTickAtSqrtRatio(sqrtPriceX96);
+    }
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96.
     /// @dev Throws if |tick| > max tick.
     /// @param tick The input tick for the above formula.
     /// @return sqrtPriceX96 Fixed point Q64.96 number representing the sqrt of the ratio of the two assets (token1/token0)
     /// at the given tick.
-    function getSqrtRatioAtTick(int24 tick) internal pure returns (uint160 sqrtPriceX96) {
+    function _getSqrtRatioAtTick(int24 tick) internal pure returns (uint160 sqrtPriceX96) {
         uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
         if (absTick > uint256(uint24(MAX_TICK))) revert TickOutOfBounds();
         unchecked {
@@ -55,7 +63,7 @@ library TickMath {
         }
     }
 
-    function validatePrice(uint160 price) internal pure {
+    function validatePrice(uint160 price) external pure {
         if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert PriceOutOfBounds();
     }
 
@@ -64,7 +72,7 @@ library TickMath {
     /// ever return.
     /// @param sqrtPriceX96 The sqrt ratio for which to compute the tick as a Q64.96.
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
-    function getTickAtSqrtRatio(uint160 sqrtPriceX96) internal pure returns (int24 tick) {
+    function _getTickAtSqrtRatio(uint160 sqrtPriceX96) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
         if (sqrtPriceX96 < MIN_SQRT_RATIO || sqrtPriceX96 >= MAX_SQRT_RATIO) revert PriceOutOfBounds();
         uint256 ratio = uint256(sqrtPriceX96) << 32;
@@ -206,7 +214,7 @@ library TickMath {
             int24 tickLow = int24((log_sqrt10001 - 3402992956809132418596140100660247210) >> 128);
             int24 tickHi = int24((log_sqrt10001 + 291339464771989622907027621153398088495) >> 128);
 
-            tick = tickLow == tickHi ? tickLow : getSqrtRatioAtTick(tickHi) <= sqrtPriceX96 ? tickHi : tickLow;
+            tick = tickLow == tickHi ? tickLow : _getSqrtRatioAtTick(tickHi) <= sqrtPriceX96 ? tickHi : tickLow;
         }
     }
 }

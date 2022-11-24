@@ -7,7 +7,7 @@ struct Rebase {
 }
 
 /// @notice A rebasing library
-library RebaseLibrary {
+abstract contract RebaseLibrary {
     /// @notice Calculates the base value in relationship to `elastic` and `total`.
     function toBase(Rebase memory total, uint256 elastic) internal pure returns (uint256 base) {
         if (total.elastic == 0) {
