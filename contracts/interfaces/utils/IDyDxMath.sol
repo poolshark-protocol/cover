@@ -30,5 +30,5 @@ interface IDyDxMath {
         uint256 currentPrice,
         uint256 liquidityAmount,
         bool roundUp
-    ) external pure returns (uint128 token0amount, uint128 token1amount);
+    ) external view returns (uint128 token0amount, uint128 token1amount);
 }

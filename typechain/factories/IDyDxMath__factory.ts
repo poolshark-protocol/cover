@@ -48,7 +48,7 @@ const _abi = [
         type: "uint128",
       },
     ],
-    stateMutability: "pure",
+    stateMutability: "view",
     type: "function",
   },
   {

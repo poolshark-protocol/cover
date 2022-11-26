@@ -56,6 +56,12 @@ export class InitialSetup {
                                                             {nonce: nonce}
                                                         )
         nonce += 1;
+        const mockPoolAddress = await hre.props.concentratedFactoryMock.getPool(
+                                                                            hre.props.token0.address,
+                                                                            hre.props.token1.address,
+                                                                            "500"
+                                                                        );
+        hre.props.concentratedPoolMock = await hre.ethers.getContractAt("ConcentratedPoolMock", mockPoolAddress);
 
         const libraries = await new PoolsharkHedgePoolLibraries__factory(hre.props.alice)
                                                         .deploy(

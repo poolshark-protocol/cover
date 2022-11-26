@@ -23,6 +23,7 @@ interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
   functions: {
     "increaseObservationCardinalityNext(uint16)": FunctionFragment;
     "observe(uint32[])": FunctionFragment;
+    "setTickCumulatives(int56,int56)": FunctionFragment;
     "slot0()": FunctionFragment;
   };
 
@@ -34,6 +35,10 @@ interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
     functionFragment: "observe",
     values: [BigNumberish[]]
   ): string;
+  encodeFunctionData(
+    functionFragment: "setTickCumulatives",
+    values: [BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "slot0", values?: undefined): string;
 
   decodeFunctionResult(
@@ -41,6 +46,10 @@ interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "observe", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setTickCumulatives",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "slot0", data: BytesLike): Result;
 
   events: {};
@@ -105,6 +114,12 @@ export class ConcentratedPoolMock extends BaseContract {
       }
     >;
 
+    setTickCumulatives(
+      _tickCumulative0: BigNumberish,
+      _tickCumulative1: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     slot0(
       overrides?: CallOverrides
     ): Promise<
@@ -134,6 +149,12 @@ export class ConcentratedPoolMock extends BaseContract {
       secondsPerLiquidityCumulativeX128s: BigNumber[];
     }
   >;
+
+  setTickCumulatives(
+    _tickCumulative0: BigNumberish,
+    _tickCumulative1: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   slot0(
     overrides?: CallOverrides
@@ -165,6 +186,12 @@ export class ConcentratedPoolMock extends BaseContract {
       }
     >;
 
+    setTickCumulatives(
+      _tickCumulative0: BigNumberish,
+      _tickCumulative1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     slot0(
       overrides?: CallOverrides
     ): Promise<
@@ -193,6 +220,12 @@ export class ConcentratedPoolMock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    setTickCumulatives(
+      _tickCumulative0: BigNumberish,
+      _tickCumulative1: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     slot0(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
@@ -205,6 +238,12 @@ export class ConcentratedPoolMock extends BaseContract {
     observe(
       secondsAgos: BigNumberish[],
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    setTickCumulatives(
+      _tickCumulative0: BigNumberish,
+      _tickCumulative1: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     slot0(overrides?: CallOverrides): Promise<PopulatedTransaction>;

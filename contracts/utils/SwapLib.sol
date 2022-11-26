@@ -31,8 +31,7 @@ abstract contract SwapLib is
         totalFeeAmount += feeAmount;
 
         amountOut += output - feeAmount;
-        console.log(currentLiquidity);
-        console.log(feeAmount);
+
         if(currentLiquidity > 0){
             feeGrowthGlobal += _mulDiv(feeAmount, 0x100000000000000000000000000000000, currentLiquidity);
         }

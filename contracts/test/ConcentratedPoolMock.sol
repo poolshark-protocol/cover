@@ -14,6 +14,9 @@ contract ConcentratedPoolMock is IConcentratedPool {
     uint16 observationCardinality;
     uint16 observationCardinalityNext;
 
+    int56 tickCumulative0;
+    int56 tickCumulative1;
+
     constructor(
         address tokenA,
         address tokenB,
@@ -57,8 +60,8 @@ contract ConcentratedPoolMock is IConcentratedPool {
     ) {
         secondsAgos;
         tickCumulatives = new int56[](secondsAgos.length);
-        tickCumulatives[0] = int56(0);
-        tickCumulatives[1] = int56(0);
+        tickCumulatives[0] = int56(tickCumulative0);
+        tickCumulatives[1] = int56(tickCumulative1);
         secondsPerLiquidityCumulativeX128s = new uint160[](secondsAgos.length);
         secondsPerLiquidityCumulativeX128s[0] = uint160(949568451203788412348119);
         secondsPerLiquidityCumulativeX128s[1] = uint160(949568438263103965182699);
@@ -68,5 +71,13 @@ contract ConcentratedPoolMock is IConcentratedPool {
         uint16 cardinalityNext
     ) external {
         observationCardinalityNext = cardinalityNext;
+    }
+
+    function setTickCumulatives(
+        int56 _tickCumulative0,
+        int56 _tickCumulative1
+    ) external {
+        tickCumulative0 = _tickCumulative0;
+        tickCumulative1 = _tickCumulative1;
     }
 }

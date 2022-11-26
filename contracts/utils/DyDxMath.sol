@@ -5,6 +5,7 @@ import "./SafeCast.sol";
 import "./UnsafeMath.sol";
 import "./FullPrecisionMath.sol";
 import "../interfaces/utils/IDyDxMath.sol";
+import "hardhat/console.sol";
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 abstract contract DyDxMath is
@@ -90,17 +91,19 @@ abstract contract DyDxMath is
         uint256 currentPrice,
         uint256 liquidityAmount,
         bool roundUp
-    ) external pure returns (uint128 token0amount, uint128 token1amount) {
+    ) external view returns (uint128 token0amount, uint128 token1amount) {
         if (priceUpper <= currentPrice) {
             // Only supply `token1` (`token1` is Y).
-            token1amount = _toUint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
+            token0amount = _toUint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
         } else if (currentPrice <= priceLower) {
             // Only supply `token0` (`token0` is X).
-            token0amount = _toUint128(_getDx(liquidityAmount, priceLower, priceUpper, roundUp));
+            token1amount = _toUint128(_getDx(liquidityAmount, priceLower, priceUpper, roundUp));
         } else {
             // Supply both tokens.
-            token0amount = _toUint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
-            token1amount = _toUint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
+            token1amount = _toUint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
+            token0amount = _toUint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
         }
+        console.log("tokenIn amount:        ", token0amount);
+        console.log("tokenOut amount:       ", token1amount);
     }
 }

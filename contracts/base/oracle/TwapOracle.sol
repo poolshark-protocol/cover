@@ -7,6 +7,7 @@ import "../../interfaces/IConcentratedFactory.sol";
 import "../../interfaces/IConcentratedPool.sol";
 import "../../utils/SafeTransfers.sol";
 import "../../libraries/TickMath.sol";
+import "hardhat/console.sol";
 
 // will the blockTimestamp be consistent across the entire block?
 abstract contract TwapOracle is 
@@ -23,6 +24,8 @@ abstract contract TwapOracle is
         secondsAgos[1] = blockTime * observationsLength;
         (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
+        console.log("average tick:");
+        console.logInt(averageTick);
     }
 
     function isPoolObservationsEnough(IConcentratedPool pool) external view returns (bool){

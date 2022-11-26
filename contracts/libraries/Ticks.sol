@@ -125,7 +125,6 @@ library Ticks
                     // Inserting a new tick.
                     IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
                     int24 oldNextTick = old.nextTick;
-                    
                     if ((old.liquidity == 0 && upperOld != TickMath.MAX_TICK) || upperOld <= upper || upper >= oldNextTick){
                         revert WrongTickUpperOrder();
                     }
@@ -143,7 +142,7 @@ library Ticks
                         secondsGrowthGlobal
                     );
 
-                    old.nextTick = upper;
+                    old.previousTick = upper;
                     ticks[oldNextTick].previousTick = upper;
                 }
             }
@@ -170,18 +169,23 @@ library Ticks
         int24 nearestTick
     ) external returns (int24) {
         IPoolsharkHedgePoolStructs.Tick storage current = ticks[lower];
-
+        //TODO: delete at end
         if (lower != TickMath.MIN_TICK && current.liquidity == amount) {
             // Delete lower tick.
             IPoolsharkHedgePoolStructs.Tick storage previous = ticks[current.previousTick];
             IPoolsharkHedgePoolStructs.Tick storage next = ticks[current.nextTick];
 
-            previous.nextTick = current.nextTick;
-            next.previousTick = current.previousTick;
-
+            if(current.nextTick != upper) {
+                previous.nextTick = current.nextTick;
+                next.previousTick = current.previousTick;
+            } else {
+                int24 upperNextTick = ticks[upper].nextTick;
+                previous.nextTick = upperNextTick;
+                ticks[upperNextTick].previousTick = current.previousTick;
+            }
+            
             if (nearestTick == lower) nearestTick = current.previousTick;
 
-            delete ticks[lower];
         } else {
             unchecked {
                 current.liquidity -= amount;
@@ -195,8 +199,14 @@ library Ticks
             IPoolsharkHedgePoolStructs.Tick storage previous = ticks[current.previousTick];
             IPoolsharkHedgePoolStructs.Tick storage next = ticks[current.nextTick];
 
-            previous.nextTick = current.nextTick;
-            next.previousTick = current.previousTick;
+            if(current.previousTick != lower) {
+                previous.nextTick = current.nextTick;
+                next.previousTick = current.previousTick;
+            } else {
+                int24 lowerPrevTick = ticks[lower].previousTick;
+                ticks[lowerPrevTick].nextTick = current.nextTick;
+                next.previousTick = lowerPrevTick;
+            }
 
             if (nearestTick == upper) nearestTick = current.previousTick;
 
@@ -207,6 +217,9 @@ library Ticks
             }
         }
 
+        if (lower != TickMath.MIN_TICK && current.liquidity == amount) {
+
+        }
         return nearestTick;
     }
 }
