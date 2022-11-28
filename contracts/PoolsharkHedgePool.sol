@@ -85,22 +85,7 @@ contract PoolsharkHedgePool is
         // extrapolate other state variables
         feeTo = IPoolsharkHedgePoolFactory(_factory).owner();
         MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpacing);
-        ticks[TickMath.MIN_TICK] = Tick(
-            TickMath.MIN_TICK, TickMath.MAX_TICK, 
-            0, 0,
-            0,0,0,
-            0,
-            0,
-            0
-        );
-        ticks[TickMath.MAX_TICK] = Tick(
-            TickMath.MIN_TICK, TickMath.MAX_TICK, 
-            0, 0,
-            0,0,0,
-            0,
-            0,
-            0
-        );
+
 
         //TODO: validate observationCardinalityNext
 
@@ -108,11 +93,20 @@ contract PoolsharkHedgePool is
         latestTick = utils.calculateAverageTick(IConcentratedPool(inputPool));
         ticks[latestTick] = Tick(
            TickMath.MIN_TICK, TickMath.MAX_TICK, 
-            0, 0,
-            0,0,0,
-            0,
-            0,
-            0 
+            0,0,
+            0,0,0
+        );
+        // if latestTick != MIN_TICK
+        ticks[TickMath.MIN_TICK] = Tick(
+            TickMath.MIN_TICK, latestTick, 
+            0,0,
+            0,0,0
+        );
+        // if latestTick != MAX_TICK
+        ticks[TickMath.MAX_TICK] = Tick(
+            latestTick, TickMath.MAX_TICK, 
+            0,0,
+            0,0,0
         );
         nearestTick = latestTick;
         // console.log("starting latestTick:");
@@ -148,9 +142,9 @@ contract PoolsharkHedgePool is
         liquidityMinted = utils.getLiquidityForAmounts(
             priceLower,
             priceUpper,
-            currentPrice,
-            0,
-            uint256(mintParams.amountDesired)
+            priceUpper,
+            uint256(mintParams.amountDesired),
+            0
         );
 
         if(!mintParams.zeroForOne){
@@ -187,14 +181,14 @@ contract PoolsharkHedgePool is
             mintParams.upper,
             uint128(liquidityMinted),
             nearestTick,
-            uint160(currentPrice),
-            TickMath.getTickAtSqrtRatio(uint160(currentPrice))
+            latestTick,
+            uint160(currentPrice)
         );
 
         (uint128 amountInActual, uint128 amountOutActual) = utils.getAmountsForLiquidity(
             priceLower,
             priceUpper,
-            priceLower,
+            priceUpper,
             liquidityMinted,
             true
         );
@@ -308,13 +302,20 @@ contract PoolsharkHedgePool is
             nextTickToCross: ticks[nearestTick].previousTick
         });
 
+        console.log('starting tick:');
+        console.logInt(cache.currentTick);
+        console.log("liquidity:", cache.currentLiquidity);
+        console.logInt(cache.nextTickToCross);
+
         _updateSecondsPerLiquidity(cache.currentLiquidity);
+
+        uint256 output = 0;
 
         while (cache.input != 0) {
             uint256 nextTickSqrtPrice = uint256(TickMath.getSqrtRatioAtTick(cache.nextTickToCross));
             uint256 nextSqrtPrice = nextTickSqrtPrice;
             // console.log("next price:", nextSqrtPrice);
-            uint256 output = 0;
+            
             bool cross = false;
 
             if (zeroForOne) {
@@ -323,7 +324,7 @@ contract PoolsharkHedgePool is
                 // Maximum input amount within current tick range: Δx = Δ(1/√𝑃) · L.
                 if (nextSqrtPrice < sqrtPriceLimitX96) { nextSqrtPrice = sqrtPriceLimitX96; }
                 uint256 maxDx = utils.getDx(cache.currentLiquidity, nextSqrtPrice, cache.currentPrice, false);
-                // console.log("max dx:", maxDx);
+                console.log("max dx:", maxDx);
                 if (cache.input <= maxDx) {
                     // We can swap within the current range.
                     uint256 liquidityPadded = cache.currentLiquidity << 96;
@@ -342,25 +343,28 @@ contract PoolsharkHedgePool is
                     }
                     // Based on the sqrtPricedifference calculate the output of th swap: Δy = Δ√P · L.
                     output = utils.getDy(cache.currentLiquidity, newSqrtPrice, cache.currentPrice, false);
+                    console.log("dtokenOut:", output);
                     cache.currentPrice= newSqrtPrice;
                     //TODO: should be current tick
-                    ticks[cache.nextTickToCross].amountInGrowth += uint128(cache.input);
+                    ticks[cache.nextTickToCross].amountIn += uint128(cache.input);
                     cache.input = 0;
                 } else {
                     // Execute swap step and cross the tick.
+                    console.log('nextsqrtprice:', nextSqrtPrice);
+                    console.log('currentprice:', cache.currentPrice);
                     output = utils.getDy(cache.currentLiquidity, nextSqrtPrice, cache.currentPrice, false);
+                    console.log("dtokenOut:", output);
                     cache.currentPrice= nextSqrtPrice;
                     if (nextSqrtPrice == nextTickSqrtPrice) { cross = true; }
                     //TODO: should be current tick
-                    ticks[cache.currentTick].amountInGrowth += uint128(maxDx);
+                    ticks[cache.currentTick].amountIn += uint128(maxDx);
                     cache.input -= maxDx;
                 }
             } else {
                 revert NotImplementedYet();
             }
 
-            // console.log("output:", output);
-
+            console.log("liquidity:", cache.currentLiquidity);
             // cache.feeGrowthGlobal is the feeGrowthGlobal counter for the output token.
             // It increases each swap step.
             (cache.totalFeeAmount, amountOut, cache.protocolFee, cache.feeGrowthGlobal) = utils.handleFees(
@@ -373,6 +377,9 @@ contract PoolsharkHedgePool is
                 cache.feeGrowthGlobal
             );
             if (cross) {
+                console.log('crossing tick');
+                console.logInt(cache.currentTick);
+                console.logInt(cache.nextTickToCross);
                 (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
                     ticks,
                     cache.currentTick,
@@ -387,8 +394,11 @@ contract PoolsharkHedgePool is
                     // We step into a zone that has liquidity - or we reach the end of the linked list.
                     // console.log("current tick:");
                     // console.logInt(cache.currentTick);
+                    console.log('out of liquidity');
+                    cache.currentPrice = uint256(TickMath.getSqrtRatioAtTick(cache.nextTickToCross));
+                    
                     if(cache.currentTick == TickMath.MIN_TICK) break;
-                    cache.currentPrice= uint256(TickMath.getSqrtRatioAtTick(cache.nextTickToCross));
+                    
                     (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
                         ticks,
                         cache.currentTick,
@@ -418,10 +428,21 @@ contract PoolsharkHedgePool is
             revert NotImplementedYet();
         }
 
+        console.log('fee growth:', cache.feeGrowthGlobal);
+        console.log('output:');
+        console.log(amountOut);
+        console.log('new price:', sqrtPrice);
+        console.log('current tick:');
+        console.log(cache.currentLiquidity);
+        console.logInt( cache.currentTick);
+        console.log('new nearest tick:');
+        console.logInt(nearestTick);
         _updateFees(zeroForOne, cache.feeGrowthGlobal, uint128(cache.protocolFee));
 
         if (zeroForOne) {
+            console.log('tokenOut balance before:', ERC20(tokenOut).balanceOf(address(this)));
             _transferOut(recipient, tokenOut, amountOut);
+            console.log('tokenOut balance after:', ERC20(tokenOut).balanceOf(address(this)));
             emit Swap(recipient, tokenIn, tokenOut, amountIn, amountOut);
         } else {
             _transferOut(recipient, tokenIn, amountOut);
@@ -555,84 +576,99 @@ contract PoolsharkHedgePool is
             tokenInProtocolFee += protocolFee;
         }
     }
-
+    //TODO: zap into LP position
     //TODO: use bitmaps to naiively search for the tick closest to the new TWAP
+    //TODO: assume everything will get filled for now
+    //TODO: remove old latest tick if necessary
+    //TODO: after accumulation, all liquidity below old latest tick is removed
     function _accumulateLastBlock() internal {
-        // start from the current nearest tick
-        AccumulateCache memory cache = AccumulateCache({
-            feeGrowthGlobal: ticks[nearestTick].feeGrowthGlobal,
-            currentTick: nearestTick,
-            prevTick: ticks[nearestTick].previousTick,
-            currentPrice: uint256(sqrtPrice),
-            nextPrice: uint256(TickMath.getSqrtRatioAtTick(ticks[nearestTick].nextTick)),
-            currentLiquidity: uint256(liquidity),
-            amountIn: 0,
-            amountOut: 0,
-            amountInUnfilled: 0
-        });
-        uint128 amountInUnfilled; uint256 oldLatestTickPrice; int24 nextLatestTick;
+        console.log("-- START ACCUMULATE LAST BLOCK --");
+        // get the next price update
+        uint256 oldLatestTickPrice; int24 nextLatestTick;
         {
-            uint256 currentPrice = uint256(TickMath.getSqrtRatioAtTick(ticks[nearestTick].previousTick));
-            cache.amountInUnfilled = uint128(utils.getDy(cache.currentLiquidity, cache.nextPrice, currentPrice, false));
-            // update the TWAP with the most current
-            // if TWAP moves up then we need to accumulate everything up to that
-            // if TWAP moves down there is no need to do anything
             nextLatestTick = utils.calculateAverageTick(IConcentratedPool(inputPool));
-            console.logInt(nextLatestTick);
             oldLatestTickPrice = uint256(TickMath.getSqrtRatioAtTick(latestTick));
         }
-        console.log(cache.currentPrice);
-        console.log(oldLatestTickPrice);
+
+        console.log('starting tick');
+        console.logInt(nearestTick);
+
+        AccumulateCache memory cache = AccumulateCache({
+            currentTick: nearestTick,
+            currentPrice: sqrtPrice,
+            currentLiquidity: uint256(liquidity),
+            amountIn: 0,
+            nextTickToCross: ticks[nearestTick].nextTick,
+            feeGrowthGlobal: feeGrowthGlobal
+        });
+
         while(cache.currentPrice < oldLatestTickPrice) {
-            // console.log("current price:", cache.currentPrice);
-            // console.log("latest tick price:", oldLatestTickPrice);
-             // take amountInPending
-            // push it to the previous tick
-            // carry over based on percent of liquidity between the two ticks 
-            uint128 carryPercent = 1e18 - (ticks[cache.currentTick].liquidity * 1e18) / ticks[cache.prevTick].liquidity;
-            uint128 amountInGrowthDiff  = ticks[cache.prevTick].amountInGrowthLast - ticks[cache.prevTick].amountInGrowth;
-            uint128 amountInCarryover = uint128(amountInGrowthDiff * carryPercent / 1e18);
-            uint128 amountOutCarryover = amountInUnfilled / ticks[cache.prevTick].amountIn * ticks[cache.prevTick].amountOut;
-            //TODO: keep going to next tick until carryPercent isn't 1e18
-            if (carryPercent < 1e18) {
-                ticks[cache.currentTick].amountIn  += amountInCarryover;
-                ticks[cache.currentTick].amountOut += amountOutCarryover;
-            }
-            ticks[cache.prevTick].amountIn  -= amountInCarryover;
-            ticks[cache.prevTick].amountOut -= amountOutCarryover;
-            ticks[cache.prevTick].amountInGrowthLast += amountInGrowthDiff;
-
-            cache.amountIn  += amountInCarryover; 
-            cache.amountOut += amountOutCarryover;
-
-            if (cache.currentTick > latestTick) {
-                uint256 latestTickPrice     = TickMath.getSqrtRatioAtTick(latestTick);
-                uint256 nextTickUpdatePrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
-                amountInUnfilled += uint128(utils.getDy(cache.currentLiquidity, latestTickPrice, nextTickUpdatePrice, false));
-            }
-
-            // zero out liquidity because everything has been filled
-            ticks[cache.prevTick].liquidity = 0;
-
-            cache.prevTick = cache.currentTick;
-            cache.currentTick = ticks[cache.currentTick].nextTick;
-            // handle liquidity removal and add with +/-
-            // + -> upper tick of DAI liquidity curve
-            // - -> lower tick of DAI liquidity curve
-            cache.currentLiquidity -= ticks[cache.currentTick].liquidity;
-            
+            // carry over amountIn
+            (
+              cache.currentLiquidity, 
+              cache.currentTick,
+              cache.nextTickToCross, 
+              cache.amountIn
+            ) = Ticks.accumulate(
+                ticks,
+                cache.currentTick,
+                cache.nextTickToCross,
+                cache.currentLiquidity,
+                tickSpacing,
+                swapFee
+            );
+            console.log('next tick');
+            console.logInt(ticks[20].nextTick);
+            break;
             // repeat until we capture everything up to the previous TWAP
         }
 
-        // once current tick is crossed, all liquidity is removed
-        ticks[cache.prevTick].liquidity = uint128(cache.currentLiquidity);
-        
-        ticks[cache.prevTick].amountInUnfilled = amountInUnfilled;
+        console.log('accumulate last tick touched');
+        console.logInt(cache.currentTick);
+        console.logInt(cache.nextTickToCross);
+        console.logInt(nextLatestTick);
 
-        nearestTick = nextLatestTick;
+        // iterate to new latest tick
+        while (cache.nextTickToCross < nextLatestTick) {
+            // only iterate to the new TWAP and update liquidity
+            (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
+                ticks,
+                cache.currentTick,
+                cache.nextTickToCross,
+                secondsGrowthGlobal,
+                cache.currentLiquidity,
+                feeGrowthGlobal,
+                false,
+                tickSpacing
+            );
+            console.log('next tick after 20');
+            console.logInt(ticks[20].nextTick);
+            console.log('liquidity:', cache.currentLiquidity);
+        }
+
+        // insert new latest tick
+        if (cache.currentTick != nextLatestTick) {
+            ticks[nextLatestTick] = Tick(
+                cache.currentTick, cache.nextTickToCross, 
+                0,0,
+                0,0,0
+            );
+            ticks[cache.currentTick].nextTick         = nextLatestTick;
+            ticks[cache.nextTickToCross].previousTick = nextLatestTick;
+
+            latestTick = nextLatestTick;
+            nearestTick = nextLatestTick;
+            sqrtPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
+        }
+
+        console.log('cross last tick touched');
+        console.logInt(ticks[cache.currentTick].nextTick );
+        // insert new latest tick
+        console.logInt(ticks[cache.nextTickToCross].previousTick);
         console.logInt(nearestTick);
-        sqrtPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
+        console.log(sqrtPrice);
 
+        console.log("-- END ACCUMULATE LAST BLOCK --");
     }
 
     function _updatePosition(
@@ -662,12 +698,9 @@ contract PoolsharkHedgePool is
             if(claim != lower){
                 // calculate what is claimable
                 {
-                    (uint256 amountInTotal,)     = utils.getAmountsForLiquidity(priceLower, priceUpper, claimPrice, position.liquidity, false);
+                    (uint256 amountInTotal,)   = utils.getAmountsForLiquidity(priceLower, priceUpper, claimPrice, position.liquidity, false);
                     (uint256 amountInClaimed,) = utils.getAmountsForLiquidity(priceLower, priceUpper, position.claimPriceLast, uint128(amount), false);
-                    amountInClaimable  = uint128(amountInTotal  - amountInClaimed); //TODO: factor in fees as well
-                    uint128 amountInUnfilled = amountInClaimable * uint128(ticks[claim].amountInUnfilled * 1e18 / ticks[claim].amountIn) / 1e18;
-                    amountInClaimable -= amountInUnfilled;
-                    amountOutClaimable = amountInClaimable * 1e18 / ticks[claim].amountIn * ticks[claim].amountOut / 1e18;
+                    amountInClaimable  = uint128(amountInTotal  - amountInClaimed) * (1e6 + swapFee) / 1e6; //factors in fees
                 }
                 // verify user passed highest tick with growth
                 if (claim != upper){
@@ -679,12 +712,10 @@ contract PoolsharkHedgePool is
                 }
                 // update amounts claimable at tick
                 ticks[claim].amountIn  -= uint128(amountInClaimable);
-                ticks[claim].amountOut -= uint128(amountOutClaimable);
 
                 //TODO: store in position or transfer to user?
                 // update position values
                 position.amountIn      += amountInClaimable;
-                position.amountOut     += amountOutClaimable;
                 position.claimPriceLast = uint160(claimPrice);
                 position.feeGrowthGlobalLast = feeGrowthGlobal;
             }
@@ -695,7 +726,15 @@ contract PoolsharkHedgePool is
         // update liquidity at claim tick
         if (amount < 0) {
             // calculate amount to transfer out
-            ( , uint256 amountOutRemoved) = utils.getAmountsForLiquidity(priceLower, priceUpper, claimPrice, uint128(-amount), false);
+            // if claimPrice is lower, pass priceUpper
+            // somehow we have to do the inverse side of the curve
+            uint256 amountOutRemoved = utils.getDy(
+                uint128(-amount),
+                claimPrice,
+                priceUpper,
+                false
+            );
+            console.log('amount out removed:', amountOutRemoved);
             // will underflow if too much liquidity withdrawn
             uint128 liquidityAmount = uint128(-amount);
             position.liquidity -= liquidityAmount;

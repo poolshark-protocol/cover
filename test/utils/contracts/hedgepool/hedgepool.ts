@@ -17,12 +17,9 @@ export interface Tick {
     previousTick: BigNumber,
     nextTick: BigNumber,
     amountIn: BigNumber,
-    amountOut: BigNumber,
-    amountInGrowth: BigNumber,
-    amountInGrowthLast: BigNumber,
     liquidity: BigNumber,
     feeGrowthGlobal: BigNumber,
-    amountInUnfilled: BigNumber,
+    feeGrowthGlobalLast: BigNumber,
     secondsGrowthOutside: BigNumber
 }
 

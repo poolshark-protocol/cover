@@ -7,12 +7,9 @@ interface IPoolsharkHedgePoolStructs {
         int24 previousTick;
         int24 nextTick;
         uint128 amountIn; // Claimable token amounts
-        uint128 amountOut;
-        uint128 amountInGrowth;
-        uint128 amountInGrowthLast;
         uint128 liquidity; // represent LPs for token0 -> token1
         uint256 feeGrowthGlobal; // Used to check for claim updates
-        uint128 amountInUnfilled; //percent of removed liquidity
+        uint256 feeGrowthGlobalLast;
         uint160 secondsGrowthOutside;
     }
 
@@ -50,15 +47,12 @@ interface IPoolsharkHedgePoolStructs {
     }
 
     struct AccumulateCache {
-        uint256 feeGrowthGlobal;
-        int24 currentTick;
-        int24 prevTick;
+        int24   currentTick;
         uint256 currentPrice;
-        uint256 nextPrice;
         uint256 currentLiquidity;
         uint128 amountIn;
-        uint128 amountOut;
-        uint128 amountInUnfilled;
+        int24   nextTickToCross;
+        uint256 feeGrowthGlobal;
     }
 }
     

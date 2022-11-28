@@ -23,7 +23,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   let bob: SignerWithAddress;
   let carol: SignerWithAddress;
 
-  const liquidityAmount = BigNumber.from('200260154054812998151852');
+  const liquidityAmount = BigNumber.from('199760153929825488153727');
 
   before(async function () {
     await gBefore();
@@ -70,14 +70,14 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   });
 
   this.beforeEach(async function () {
+
   });
 
   it('Should mint new LP position', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
-    const liquidityAmount = BigNumber.from('200260154054812998151852');
     await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
     const txn = await hre.props.hedgePool.mint(
       {
@@ -118,34 +118,21 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(lowerTick.previousTick).to.be.equal(lowerOld);
     expect(lowerTick.nextTick).to.be.equal(upper);
     expect(lowerTick.amountIn).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountOut).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowthLast).to.be.equal(BN_ZERO);
     expect(lowerTick.liquidity).to.be.equal(liquidityAmount);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
 
     expect(upperTick.previousTick).to.be.equal(lower);
     expect(upperTick.nextTick).to.be.equal(upperOld);
     expect(upperTick.amountIn).to.be.equal(BN_ZERO);
-    expect(upperTick.amountOut).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowthLast).to.be.equal(BN_ZERO);
     expect(upperTick.liquidity).to.be.equal(liquidityAmount);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
   });
 
   it('Should swap with zero output', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-    
-    
+
     let txn = await hre.props.hedgePool.swap(
       hre.props.alice.address,
       true,
@@ -165,24 +152,12 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(lowerTick.previousTick).to.be.equal(lowerOld);
     expect(lowerTick.nextTick).to.be.equal(upper);
     expect(lowerTick.amountIn).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountOut).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowthLast).to.be.equal(BN_ZERO);
     expect(lowerTick.liquidity).to.be.equal(liquidityAmount);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(lowerTick.amountInGrowth).to.be.equal(BN_ZERO);
 
     expect(upperTick.previousTick).to.be.equal(lower);
     expect(upperTick.nextTick).to.be.equal(upperOld);
     expect(upperTick.amountIn).to.be.equal(BN_ZERO);
-    expect(upperTick.amountOut).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowthLast).to.be.equal(BN_ZERO);
     expect(upperTick.liquidity).to.be.equal(liquidityAmount);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
-    expect(upperTick.amountInGrowth).to.be.equal(BN_ZERO);
   });
 
   it('Should burn LP position and withdraw all liquidity', async function () {
@@ -219,7 +194,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   });
 
   it('Should move TWAP and do a successful swap', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
@@ -242,13 +217,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
     expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
     txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-      50,
-      50
+      6000,
+      3000
     );
     txn = await hre.props.hedgePool.swap(
       hre.props.alice.address,
       true,
-      token0Amount.div(10),
+      token0Amount,
       currentPrice
     );
     console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
@@ -257,18 +232,18 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     // )
   });
 
-
-  //TODO: move TWAP and do a successful swap; add in swap fee
-  //TODO: claim liquidity filled
-  //TODO: move TWAP again and fill remaining
-  //TODO: claim final amount and burn LP position
-  //TODO: mint LP position with priceLower < currentPrice
-  //TODO: P1 larger range; P2 smaller range; execute swap and validate amount returned by claiming
-  //TODO: smaller range claims first; larger range claims first
-  //TODO: move TWAP down and allow for new positions to be entered
+  //TODO: set tickCumulatives before and after mint
+  // // TODO: move TWAP and do a successful swap; add in swap fee - DONE
+  // // TODO: claim liquidity filled
+  // // TODO: move TWAP again and fill remaining
+  // // TODO: claim final amount and burn LP position
+  // // TODO: mint LP position with priceLower < currentPrice
+  // // TODO: P1 larger range; P2 smaller range; execute swap and validate amount returned by claiming
+  // // TODO: smaller range claims first; larger range claims first
+  // // TODO: move TWAP down and allow for new positions to be entered
 
   // it('Should mint new LP position swap and then claim', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
   //   const lower    = hre.ethers.utils.parseUnits("20", 0);
   //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
   //   const upper    = hre.ethers.utils.parseUnits("30", 0);

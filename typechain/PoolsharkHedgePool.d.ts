@@ -346,20 +346,14 @@ export class PoolsharkHedgePool extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
         BigNumber
       ] & {
         previousTick: number;
         nextTick: number;
         amountIn: BigNumber;
-        amountOut: BigNumber;
-        amountInGrowth: BigNumber;
-        amountInGrowthLast: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobal: BigNumber;
-        amountInUnfilled: BigNumber;
+        feeGrowthGlobalLast: BigNumber;
         secondsGrowthOutside: BigNumber;
       }
     >;
@@ -454,27 +448,13 @@ export class PoolsharkHedgePool extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [
-      number,
-      number,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber
-    ] & {
+    [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       previousTick: number;
       nextTick: number;
       amountIn: BigNumber;
-      amountOut: BigNumber;
-      amountInGrowth: BigNumber;
-      amountInGrowthLast: BigNumber;
       liquidity: BigNumber;
       feeGrowthGlobal: BigNumber;
-      amountInUnfilled: BigNumber;
+      feeGrowthGlobalLast: BigNumber;
       secondsGrowthOutside: BigNumber;
     }
   >;
@@ -583,20 +563,14 @@ export class PoolsharkHedgePool extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
         BigNumber
       ] & {
         previousTick: number;
         nextTick: number;
         amountIn: BigNumber;
-        amountOut: BigNumber;
-        amountInGrowth: BigNumber;
-        amountInGrowthLast: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobal: BigNumber;
-        amountInUnfilled: BigNumber;
+        feeGrowthGlobalLast: BigNumber;
         secondsGrowthOutside: BigNumber;
       }
     >;

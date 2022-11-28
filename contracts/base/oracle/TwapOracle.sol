@@ -24,8 +24,6 @@ abstract contract TwapOracle is
         secondsAgos[1] = blockTime * observationsLength;
         (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
-        console.log("average tick:");
-        console.logInt(averageTick);
     }
 
     function isPoolObservationsEnough(IConcentratedPool pool) external view returns (bool){

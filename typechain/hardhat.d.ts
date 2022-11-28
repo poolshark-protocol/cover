@@ -105,6 +105,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IUnsafeMath__factory>;
     getContractFactory(
+      name: "FullPrecisionMath",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FullPrecisionMath__factory>;
+    getContractFactory(
       name: "TickMath",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TickMath__factory>;
@@ -300,6 +304,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IUnsafeMath>;
+    getContractAt(
+      name: "FullPrecisionMath",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FullPrecisionMath>;
     getContractAt(
       name: "TickMath",
       address: string,
