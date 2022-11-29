@@ -123,6 +123,11 @@ contract PoolsharkHedgePool is
         if (mintParams.amountDesired == 0) { revert InvalidPosition(); }
         if (mintParams.lower >= mintParams.upper) { revert InvalidPosition(); }
 
+        if(block.number != lastBlockNumber) {
+            console.log("accumulating last block");
+            _accumulateLastBlock();
+        }
+
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
         uint256 currentPrice;
@@ -213,6 +218,11 @@ contract PoolsharkHedgePool is
         uint160 priceUpper = TickMath.getSqrtRatioAtTick(upper);
         uint160 currentPrice= sqrtPrice;
 
+        if(block.number != lastBlockNumber) {
+            console.log("accumulating last block");
+            _accumulateLastBlock();
+        }
+
         _updateSecondsPerLiquidity(uint256(liquidity));
 
         // only remove liquidity if lower if below currentPrice
@@ -288,6 +298,10 @@ contract PoolsharkHedgePool is
         if(block.number != lastBlockNumber) {
             console.log("accumulating last block");
             _accumulateLastBlock();
+            console.logInt(ticks[50].previousTick);
+            console.logInt(ticks[30].previousTick);
+            console.logInt(ticks[20].previousTick);
+            console.logInt(ticks[0].previousTick);
         }
 
         SwapCache memory cache = SwapCache({
@@ -328,11 +342,7 @@ contract PoolsharkHedgePool is
                 if (cache.input <= maxDx) {
                     // We can swap within the current range.
                     uint256 liquidityPadded = cache.currentLiquidity << 96;
-                    // Calculate new sqrtPriceafter swap: √𝑃[new] =  L · √𝑃 / (L + Δx · √𝑃)
-                    // This is derived from Δ(1/√𝑃) = Δx/L
-                    // where Δ(1/√𝑃) is 1/√𝑃[old] - 1/√𝑃[new] and we solve for √𝑃[new].
-                    // In case of an overflow we can use: √𝑃[new] = L / (L / √𝑃 + Δx).
-                    // This is derived by dividing the original fraction by √𝑃 on both sides.
+                    // calculate price after swap
                     uint256 newSqrtPrice = uint256(
                         utils.mulDivRoundingUp(liquidityPadded, cache.currentPrice, liquidityPadded + cache.currentPrice * cache.input)
                     );
@@ -395,10 +405,8 @@ contract PoolsharkHedgePool is
                     // console.log("current tick:");
                     // console.logInt(cache.currentTick);
                     console.log('out of liquidity');
-                    cache.currentPrice = uint256(TickMath.getSqrtRatioAtTick(cache.nextTickToCross));
-                    
                     if(cache.currentTick == TickMath.MIN_TICK) break;
-                    
+                    cache.currentPrice = uint256(TickMath.getSqrtRatioAtTick(cache.nextTickToCross));
                     (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
                         ticks,
                         cache.currentTick,
@@ -409,8 +417,8 @@ contract PoolsharkHedgePool is
                         true,
                         tickSpacing
                     );
-
                 }
+                if(cache.currentPrice == sqrtPriceLimitX96) break;
             } else {
                 // console.log("breaking");
                 break;
@@ -593,6 +601,9 @@ contract PoolsharkHedgePool is
         console.log('starting tick');
         console.logInt(nearestTick);
 
+        console.log('next latest tick');
+        console.logInt(nextLatestTick);
+
         AccumulateCache memory cache = AccumulateCache({
             currentTick: nearestTick,
             currentPrice: sqrtPrice,
@@ -601,7 +612,8 @@ contract PoolsharkHedgePool is
             nextTickToCross: ticks[nearestTick].nextTick,
             feeGrowthGlobal: feeGrowthGlobal
         });
-
+        console.log('next tick');
+        console.logInt(ticks[cache.currentTick].nextTick);
         while(cache.currentPrice < oldLatestTickPrice) {
             // carry over amountIn
             (
@@ -617,16 +629,13 @@ contract PoolsharkHedgePool is
                 tickSpacing,
                 swapFee
             );
-            console.log('next tick');
-            console.logInt(ticks[20].nextTick);
-            break;
+            cache.currentPrice = TickMath.getSqrtRatioAtTick(cache.currentTick);
             // repeat until we capture everything up to the previous TWAP
         }
 
         console.log('accumulate last tick touched');
         console.logInt(cache.currentTick);
         console.logInt(cache.nextTickToCross);
-        console.logInt(nextLatestTick);
 
         // iterate to new latest tick
         while (cache.nextTickToCross < nextLatestTick) {
@@ -641,10 +650,15 @@ contract PoolsharkHedgePool is
                 false,
                 tickSpacing
             );
-            console.log('next tick after 20');
-            console.logInt(ticks[20].nextTick);
+            console.log('next tick after');
+            console.logInt(cache.currentTick);
+            console.logInt(ticks[cache.currentTick].nextTick);
             console.log('liquidity:', cache.currentLiquidity);
         }
+
+        console.log('cross last tick touched');
+        console.logInt(cache.currentTick);
+        console.logInt(ticks[cache.currentTick].nextTick );
 
         // insert new latest tick
         if (cache.currentTick != nextLatestTick) {
@@ -661,14 +675,13 @@ contract PoolsharkHedgePool is
             sqrtPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
         }
 
-        console.log('cross last tick touched');
-        console.logInt(ticks[cache.currentTick].nextTick );
-        // insert new latest tick
-        console.logInt(ticks[cache.nextTickToCross].previousTick);
-        console.logInt(nearestTick);
-        console.log(sqrtPrice);
 
+        // insert new latest tick
+        console.log('updated tick after insert');
+        console.logInt(ticks[cache.nextTickToCross].previousTick);
         console.log("-- END ACCUMULATE LAST BLOCK --");
+
+        lastBlockNumber = block.number;
     }
 
     function _updatePosition(
