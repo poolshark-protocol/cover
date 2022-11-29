@@ -232,44 +232,42 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     // )
   });
 
-  // it('Should claim partial range fill', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
-  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-  //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-  //   await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
-  //   expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
-  //   let txn = await hre.props.hedgePool.burn(
-  //     lower,
-  //     upper,
+  it('Should claim entire range', async function () {
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+    const lower    = hre.ethers.utils.parseUnits("20", 0);
+    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+    let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+    await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
+    //expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2));
+    let txn = await hre.props.hedgePool.burn(
+      lower,
+      upper,
+      upper,
+      liquidityAmount
+    );
+    await txn.wait();
+    token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+    // expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
+    txn = await hre.props.hedgePool.swap(
+      hre.props.alice.address,
+      true,
+      token0Amount,
+      currentPrice
+    );
+    console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
+    // validateMint(
 
-  //   );
-  //   await txn.wait();
-  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-  //   expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
-  //   txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-  //     6000,
-  //     3000
-  //   );
-  //   txn = await hre.props.hedgePool.swap(
-  //     hre.props.alice.address,
-  //     true,
-  //     token0Amount,
-  //     currentPrice
-  //   );
-  //   console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
-  //   // validateMint(
-
-  //   // )
-  // });
+    // )
+  });
 
   //TODO: set tickCumulatives before and after mint
   // // TODO: move TWAP and do a successful swap; add in swap fee - DONE
 
 
   // // TODO: claim liquidity filled
+  //TODO: empty swap at price limit higher than current price
   // // TODO: move TWAP again and fill remaining
   // // TODO: claim final amount and burn LP position
   // // TODO: mint LP position with priceLower < currentPrice

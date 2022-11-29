@@ -298,10 +298,6 @@ contract PoolsharkHedgePool is
         if(block.number != lastBlockNumber) {
             console.log("accumulating last block");
             _accumulateLastBlock();
-            console.logInt(ticks[50].previousTick);
-            console.logInt(ticks[30].previousTick);
-            console.logInt(ticks[20].previousTick);
-            console.logInt(ticks[0].previousTick);
         }
 
         SwapCache memory cache = SwapCache({
@@ -662,6 +658,7 @@ contract PoolsharkHedgePool is
 
         // insert new latest tick
         if (cache.currentTick != nextLatestTick) {
+            //TODO: move to insertSingle function
             ticks[nextLatestTick] = Tick(
                 cache.currentTick, cache.nextTickToCross, 
                 0,0,

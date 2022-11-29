@@ -256,34 +256,47 @@ library Ticks
     ) external returns (uint256, int24, int24, uint128) {
 
         //assume tick index is increasing as we acccumulate
-        uint128 carryPercent;
+        uint256 carryPercent;
         if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
             //TODO: make sure casting is safe
             carryPercent = 1e18;
             currentLiquidity += ticks[nextTickToCross].liquidity;
         } else {
             if (currentLiquidity > 0) {
-                carryPercent  = 1e18 - (ticks[nextTickToCross].liquidity * 1e18) / uint128(currentLiquidity);
+                carryPercent  = 1e18 - uint256(ticks[nextTickToCross].liquidity) * 1e18 / uint256(currentLiquidity);
+                console.log('carry percent:', carryPercent);
             } else {
                 carryPercent = 1e18;
             }
             currentLiquidity -= ticks[nextTickToCross].liquidity;
+
             //TODO: take fee in tokenIn for direct conversion
         }
         // accumulate amountIn to carryover
         // adding liquidity
         // carry over everything
         uint256 feeGrowthDiff = ticks[currentTick].feeGrowthGlobal - ticks[currentTick].feeGrowthGlobalLast;
-        uint256 amountInDiff  = FullPrecisionMath._mulDiv(
-                                    feeGrowthDiff,
-                                    currentLiquidity,
-                                    Q128
-                                ) * 1e6 / swapFee;
-        // calculate how much to continue carrying over
-        uint128 amountInCarry = uint128(amountInDiff * carryPercent / 1e18);
-        // update current and next ticks amountIn
-        ticks[nextTickToCross].amountIn += uint128(amountInDiff - amountInCarry);
-        ticks[currentTick].amountIn -= uint128(amountInDiff);
+        uint256 amountInCarry;
+        if (feeGrowthDiff > 0){
+            //TODO: rounding up might solve precision issues
+            uint256 amountInDiff  = FullPrecisionMath._mulDiv(
+                                        feeGrowthDiff,
+                                        currentLiquidity,
+                                        Q128
+                                    ) * 1e6 / swapFee * (1e6 - swapFee) / 1e6;
+
+            // calculate how much to continue carrying over
+            console.log(feeGrowthDiff);
+            amountInCarry = amountInDiff * carryPercent / 1e18;
+            console.log(amountInDiff);
+            console.log(amountInCarry);
+            //TODO: need to know last time carried over
+            //TODO: update fee growth of next tick and current tick
+            // update current and next ticks amountIn
+            ticks[nextTickToCross].amountIn += uint128(amountInCarry);
+            ticks[currentTick].amountIn += uint128(amountInDiff - amountInCarry);
+        }
+
         ticks[nextTickToCross].feeGrowthGlobalLast = ticks[nextTickToCross].feeGrowthGlobal;
 
         // set return values
@@ -291,6 +304,6 @@ library Ticks
         nextTickToCross = ticks[nextTickToCross].nextTick;
         // liquidity delta already handled
 
-        return (uint256(currentLiquidity), currentTick, nextTickToCross, amountInCarry);
+        return (uint256(currentLiquidity), currentTick, nextTickToCross, uint128(amountInCarry));
     }
 }
