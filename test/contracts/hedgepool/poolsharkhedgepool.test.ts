@@ -132,7 +132,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-
+    await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
     let txn = await hre.props.hedgePool.swap(
       hre.props.alice.address,
       true,
@@ -220,6 +220,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       6000,
       3000
     );
+    await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
     txn = await hre.props.hedgePool.swap(
       hre.props.alice.address,
       true,
@@ -238,9 +239,9 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+    const feeTaken = hre.ethers.utils.parseUnits("5", 16);
     let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
-    //expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2));
+    expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2).sub(feeTaken));
     let txn = await hre.props.hedgePool.burn(
       lower,
       upper,
@@ -249,7 +250,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     );
     await txn.wait();
     token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    // expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
+    expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2).sub(feeTaken));
+    await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
     txn = await hre.props.hedgePool.swap(
       hre.props.alice.address,
       true,
@@ -261,6 +263,36 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
     // )
   });
+
+  // it('Should fail on second claim', async function () {
+  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
+  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
+  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
+  //   //expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2));
+  //   let txn = await hre.props.hedgePool.burn(
+  //     lower,
+  //     upper,
+  //     upper,
+  //     liquidityAmount
+  //   );
+  //   await txn.wait();
+  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   // expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
+  //   txn = await hre.props.hedgePool.swap(
+  //     hre.props.alice.address,
+  //     true,
+  //     token0Amount,
+  //     currentPrice
+  //   );
+  //   console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
+  //   // validateMint(
+
+  //   // )
+  // });
 
   //TODO: set tickCumulatives before and after mint
   // // TODO: move TWAP and do a successful swap; add in swap fee - DONE

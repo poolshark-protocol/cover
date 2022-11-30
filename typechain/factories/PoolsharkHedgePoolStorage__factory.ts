@@ -42,7 +42,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "LowerEven",
+    name: "LowerNotEvenTick",
     type: "error",
   },
   {
@@ -72,7 +72,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "UpperOdd",
+    name: "UpperNotOddTick",
     type: "error",
   },
   {

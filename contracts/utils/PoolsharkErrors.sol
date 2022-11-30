@@ -10,8 +10,8 @@ abstract contract PoolsharkHedgePoolErrors {
     error Token0Missing();
     error Token1Missing();
     error InvalidTick();
-    error LowerEven();
-    error UpperOdd();
+    error LowerNotEvenTick();
+    error UpperNotOddTick();
     error MaxTickLiquidity();
     error Overflow();
     error NotEnoughOutputLiquidity();

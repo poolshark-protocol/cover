@@ -47,7 +47,7 @@ library Ticks
                     currentLiquidity += ticks[nextTickToCross].liquidity;
                 }
             }
-            ticks[nextTickToCross].feeGrowthGlobal = feeGrowthGlobal;
+            ticks[currentTick].feeGrowthGlobal += feeGrowthGlobal;
             currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].previousTick;
         } else {
@@ -58,7 +58,7 @@ library Ticks
                     currentLiquidity -= ticks[nextTickToCross].liquidity;
                 }
             }
-            ticks[nextTickToCross].feeGrowthGlobal = feeGrowthGlobal;
+            ticks[currentTick].feeGrowthGlobal += feeGrowthGlobal;
             currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].nextTick;
         }
@@ -177,7 +177,7 @@ library Ticks
 
         return nearestTick;
     }
-
+    //TODO: assert whether removing ticks completely is worth it
     function remove(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 lower,
@@ -240,8 +240,8 @@ library Ticks
             delete ticks[upper];
         }
 
-        console.log('removed lower liquidity:', ticks[lower].liquidity);
-        console.log('removed upper liquidity:', ticks[upper].liquidity);
+        console.log('removed lower liquidity:', amount);
+        console.log('removed upper liquidity:', amount);
 
         return nearestTick;
     }
@@ -253,30 +253,38 @@ library Ticks
         uint256 currentLiquidity,
         uint24 tickSpacing,
         uint24 swapFee
-    ) external returns (uint256, int24, int24, uint128) {
+    ) external returns (uint256, int24, int24) {
 
         //assume tick index is increasing as we acccumulate
         uint256 carryPercent;
+        // lower tick
         if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
             //TODO: make sure casting is safe
+            console.log('tick accumulated to');
+            console.logInt(nextTickToCross);
             carryPercent = 1e18;
             currentLiquidity += ticks[nextTickToCross].liquidity;
         } else {
-            if (currentLiquidity > 0) {
-                carryPercent  = 1e18 - uint256(ticks[nextTickToCross].liquidity) * 1e18 / uint256(currentLiquidity);
+            uint128 liquidityDelta = ticks[nextTickToCross].liquidity;
+            if (liquidityDelta > 0) {
+                carryPercent  = uint256(liquidityDelta) * 1e18 / uint256(currentLiquidity);
+                console.log(liquidityDelta);
+                console.log(currentLiquidity);
                 console.log('carry percent:', carryPercent);
             } else {
                 carryPercent = 1e18;
             }
-            currentLiquidity -= ticks[nextTickToCross].liquidity;
+            currentLiquidity -= liquidityDelta;
 
             //TODO: take fee in tokenIn for direct conversion
         }
         // accumulate amountIn to carryover
         // adding liquidity
         // carry over everything
-        uint256 feeGrowthDiff = ticks[currentTick].feeGrowthGlobal - ticks[currentTick].feeGrowthGlobalLast;
-        uint256 amountInCarry;
+        console.log(ticks[currentTick].feeGrowthGlobal);
+        console.log(ticks[currentTick].feeGrowthGlobalLast);
+        uint256 feeGrowthDiff = ticks[currentTick].feeGrowthGlobal 
+                                  - ticks[currentTick].feeGrowthGlobalLast;
         if (feeGrowthDiff > 0){
             //TODO: rounding up might solve precision issues
             uint256 amountInDiff  = FullPrecisionMath._mulDiv(
@@ -287,7 +295,7 @@ library Ticks
 
             // calculate how much to continue carrying over
             console.log(feeGrowthDiff);
-            amountInCarry = amountInDiff * carryPercent / 1e18;
+            uint256 amountInCarry = amountInDiff * carryPercent / 1e18;
             console.log(amountInDiff);
             console.log(amountInCarry);
             //TODO: need to know last time carried over
@@ -296,14 +304,20 @@ library Ticks
             ticks[nextTickToCross].amountIn += uint128(amountInCarry);
             ticks[currentTick].amountIn += uint128(amountInDiff - amountInCarry);
         }
-
-        ticks[nextTickToCross].feeGrowthGlobalLast = ticks[nextTickToCross].feeGrowthGlobal;
-
+        ticks[currentTick].feeGrowthGlobalLast += feeGrowthDiff;
+        console.log('current tick fee growth');
+        console.log(ticks[currentTick].feeGrowthGlobal);
+        console.log(ticks[currentTick].feeGrowthGlobalLast);
+        ticks[nextTickToCross].feeGrowthGlobalLast += feeGrowthDiff;
+        console.log('next tick fee growth');
+        console.logInt(nextTickToCross);
+        console.log(ticks[nextTickToCross].feeGrowthGlobal);
+        console.log(ticks[nextTickToCross].feeGrowthGlobalLast);
         // set return values
         currentTick = nextTickToCross;
         nextTickToCross = ticks[nextTickToCross].nextTick;
         // liquidity delta already handled
 
-        return (uint256(currentLiquidity), currentTick, nextTickToCross, uint128(amountInCarry));
+        return (uint256(currentLiquidity), currentTick, nextTickToCross);
     }
 }

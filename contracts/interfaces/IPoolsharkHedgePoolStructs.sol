@@ -50,7 +50,6 @@ interface IPoolsharkHedgePoolStructs {
         int24   currentTick;
         uint256 currentPrice;
         uint256 currentLiquidity;
-        uint128 amountIn;
         int24   nextTickToCross;
         uint256 feeGrowthGlobal;
     }
