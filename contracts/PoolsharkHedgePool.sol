@@ -235,7 +235,7 @@ contract PoolsharkHedgePool is
         if (amount > uint128(type(int128).max)) revert Overflow();
 
         // _updatePosition(msg.sender, lower, upper, -int128(amount));
-        (tokenInAmount, tokenOutAmount) = _updatePosition(
+        _updatePosition(
             msg.sender,
             lower,
             upper,
@@ -700,7 +700,7 @@ contract PoolsharkHedgePool is
         int24 upper,
         int24 claim,
         int128 amount
-    ) internal returns (uint128 amountInClaimable, uint128 amountOutClaimable) {
+    ) internal {
         // load position into memory
         Position memory position = positions[owner][lower][upper];
         // validate removal amount is less than position liquidity
@@ -725,6 +725,7 @@ contract PoolsharkHedgePool is
             // skip claim if lower == claim
             if(claim != lower){
                 // calculate what is claimable
+                uint128 amountInClaimable;
                 {
                     uint256 amountInTotal   = utils.getDx(
                                                             position.liquidity, 
