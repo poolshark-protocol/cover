@@ -126,143 +126,184 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(upperTick.liquidity).to.be.equal(liquidityAmount);
   });
 
-  it('Should swap with zero output', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-    const lower    = hre.ethers.utils.parseUnits("20", 0);
-    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
-    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-    await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
-    let txn = await hre.props.hedgePool.swap(
-      hre.props.alice.address,
-      true,
-      token0Amount.div(10),
-      currentPrice
-    );
-    // validate upper and lower ticks
-    const lowerTick = await hre.props.hedgePool.ticks(
-      lower
-    );
-    const upperTick = await hre.props.hedgePool.ticks(
-      upper
-    );
-    // console.log("lower", lowerTick.toString());
-    // console.log("upper:", upperTick.toString());
+  // it('Should swap with zero output', async function () {
+  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
+  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
+  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //   await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
+  //   let txn = await hre.props.hedgePool.swap(
+  //     hre.props.alice.address,
+  //     true,
+  //     token0Amount.div(10),
+  //     currentPrice
+  //   );
+  //   // validate upper and lower ticks
+  //   const lowerTick = await hre.props.hedgePool.ticks(
+  //     lower
+  //   );
+  //   const upperTick = await hre.props.hedgePool.ticks(
+  //     upper
+  //   );
+  //   // console.log("lower", lowerTick.toString());
+  //   // console.log("upper:", upperTick.toString());
 
-    expect(lowerTick.previousTick).to.be.equal(lowerOld);
-    expect(lowerTick.nextTick).to.be.equal(upper);
-    expect(lowerTick.amountIn).to.be.equal(BN_ZERO);
-    expect(lowerTick.liquidity).to.be.equal(liquidityAmount);
+  //   expect(lowerTick.previousTick).to.be.equal(lowerOld);
+  //   expect(lowerTick.nextTick).to.be.equal(upper);
+  //   expect(lowerTick.amountIn).to.be.equal(BN_ZERO);
+  //   expect(lowerTick.liquidity).to.be.equal(liquidityAmount);
 
-    expect(upperTick.previousTick).to.be.equal(lower);
-    expect(upperTick.nextTick).to.be.equal(upperOld);
-    expect(upperTick.amountIn).to.be.equal(BN_ZERO);
-    expect(upperTick.liquidity).to.be.equal(liquidityAmount);
-  });
+  //   expect(upperTick.previousTick).to.be.equal(lower);
+  //   expect(upperTick.nextTick).to.be.equal(upperOld);
+  //   expect(upperTick.amountIn).to.be.equal(BN_ZERO);
+  //   expect(upperTick.liquidity).to.be.equal(liquidityAmount);
+  // });
 
-  it('Should burn LP position and withdraw all liquidity', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
-    const lower    = hre.ethers.utils.parseUnits("20", 0);
-    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
-    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-    let upperTick = await hre.props.hedgePool.ticks(
-      upper
-    );
-    let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    expect(token1Balance).to.be.equal(token1Amount.mul(9));
-    const txn = await hre.props.hedgePool.burn(
-      lower,
-      upper,
-      lower,
-      liquidityAmount
-    );
-    await txn.wait();
-    upperTick = await hre.props.hedgePool.ticks(
-      upper
-    );
-    // console.log(await hre.props.hedgePool.positions(
-    //   hre.props.alice.address,
-    //   lower,
-    //   upper
-    // ));
-    token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
-    // validateMint(
+  // it('Should burn LP position and withdraw all liquidity', async function () {
+  //   const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
+  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
+  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //   let upperTick = await hre.props.hedgePool.ticks(
+  //     upper
+  //   );
+  //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(9));
+  //   const txn = await hre.props.hedgePool.burn(
+  //     lower,
+  //     upper,
+  //     lower,
+  //     liquidityAmount
+  //   );
+  //   await txn.wait();
+  //   upperTick = await hre.props.hedgePool.ticks(
+  //     upper
+  //   );
+  //   // console.log(await hre.props.hedgePool.positions(
+  //   //   hre.props.alice.address,
+  //   //   lower,
+  //   //   upper
+  //   // ));
+  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
+  //   // validateMint(
 
-    // )
-  });
+  //   // )
+  // });
 
-  it('Should move TWAP and do a successful swap', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-    const lower    = hre.ethers.utils.parseUnits("20", 0);
-    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
-    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-    let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
-    expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
-    let txn = await hre.props.hedgePool.mint(
-      {
-        lowerOld: lowerOld,
-        lower: lower,
-        upperOld: upperOld,
-        upper: upper,
-        amountDesired: token1Amount,
-        zeroForOne: false,
-        native: false
-      }
-    );
-    await txn.wait();
-    token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
-    txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-      6000,
-      3000
-    );
-    await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
-    txn = await hre.props.hedgePool.swap(
-      hre.props.alice.address,
-      true,
-      token0Amount,
-      currentPrice
-    );
-    console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
-    // validateMint(
+  // //TODO: allow partial position placement and refund liquidity not being used
+  // it('Should move TWAP before mint and do a successful swap', async function () {
+  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
+  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
+  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
+  //   let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
+  //     6000,
+  //     3000
+  //   );
+  //   txn = await hre.props.hedgePool.mint(
+  //     {
+  //       lowerOld: lowerOld,
+  //       lower: lower, 
+  //       upperOld: upperOld,
+  //       upper: upper,
+  //       amountDesired: token1Amount,
+  //       zeroForOne: false,
+  //       native: false
+  //     }
+  //   );
+  //   await txn.wait();
+  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
+  //   await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
+  //   txn = await hre.props.hedgePool.swap(
+  //     hre.props.alice.address,
+  //     true,
+  //     token0Amount,
+  //     currentPrice
+  //   );
+  //   console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
+  //   // validateMint(
 
-    // )
-  });
+  //   // )
+  // });
 
-  it('Should claim entire range', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-    const lower    = hre.ethers.utils.parseUnits("20", 0);
-    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
-    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-    const feeTaken = hre.ethers.utils.parseUnits("5", 16);
-    let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2).sub(feeTaken));
-    let txn = await hre.props.hedgePool.burn(
-      lower,
-      upper,
-      upper,
-      liquidityAmount
-    );
-    await txn.wait();
-    token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-    expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2).sub(feeTaken));
-    await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
-    txn = await hre.props.hedgePool.swap(
-      hre.props.alice.address,
-      true,
-      token0Amount,
-      currentPrice
-    );
-    console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
-    // validateMint(
+  // it('Should move TWAP after mint and do a successful swap', async function () {
+  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
+  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
+  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
+  //   let txn = await hre.props.hedgePool.mint(
+  //     {
+  //       lowerOld: lowerOld,
+  //       lower: lower,
+  //       upperOld: upperOld,
+  //       upper: upper,
+  //       amountDesired: token1Amount,
+  //       zeroForOne: false,
+  //       native: false
+  //     }
+  //   );
+  //   await txn.wait();
+  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
+  //   txn = await hre.props.concentratedPoolMock.setTickCumulatives(
+  //     6000,
+  //     3000
+  //   );
+  //   await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
+  //   txn = await hre.props.hedgePool.swap(
+  //     hre.props.alice.address,
+  //     true,
+  //     token0Amount,
+  //     currentPrice
+  //   );
+  //   console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
+  //   // validateMint(
 
-    // )
-  });
+  //   // )
+  // });
+
+  // it('Should claim entire range', async function () {
+  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
+  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
+  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //   const feeTaken = hre.ethers.utils.parseUnits("5", 16);
+  //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(1));
+  //   let txn = await hre.props.hedgePool.burn(
+  //     lower,
+  //     upper,
+  //     upper,
+  //     liquidityAmount
+  //   );
+  //   await txn.wait();
+  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
+  //   expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2).sub(feeTaken));
+  //   await hre.props.token0.approve(hre.props.hedgePool.address, token0Amount);
+  //   txn = await hre.props.hedgePool.swap(
+  //     hre.props.alice.address,
+  //     true,
+  //     token0Amount,
+  //     currentPrice
+  //   );
+  //   console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
+  //   // validateMint(
+
+  //   // )
+  // });
 
   // it('Should fail on second claim', async function () {
   //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
@@ -273,22 +314,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   //   let token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
   //   await hre.props.token1.approve(hre.props.hedgePool.address, token1Amount);
   //   //expect(token1Balance).to.be.equal(token1Amount.mul(10).sub(2));
-  //   let txn = await hre.props.hedgePool.burn(
+  //   await expect(hre.props.hedgePool.burn(
   //     lower,
   //     upper,
   //     upper,
   //     liquidityAmount
-  //   );
-  //   await txn.wait();
-  //   token1Balance = await hre.props.token1.balanceOf(hre.props.alice.address);
-  //   // expect(token1Balance).to.be.equal(token1Amount.mul(9).sub(1));
-  //   txn = await hre.props.hedgePool.swap(
-  //     hre.props.alice.address,
-  //     true,
-  //     token0Amount,
-  //     currentPrice
-  //   );
-  //   console.log((await hre.props.token0.balanceOf(hre.props.alice.address)).toString())
+  //   )).to.be.revertedWith("NotEnoughPositionLiquidity()");
+    
   //   // validateMint(
 
   //   // )

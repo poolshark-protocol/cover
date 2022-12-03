@@ -717,6 +717,7 @@ contract PoolsharkHedgePool is
         if (position.claimPriceLast > claimPrice) revert InvalidClaimTick();
 
         // handle claims
+        //TODO: accumulate on claim tick if feeGrowth and feeGrowthLast differ
         console.log('fee growth compare');
             console.log(ticks[ticks[claim].previousTick].feeGrowthGlobal);
             console.log(ticks[claim].feeGrowthGlobal);
