@@ -93,7 +93,7 @@ library Ticks
             if (uint256(TickMath.getSqrtRatioAtTick(lower)) > currentPrice) {
                     // Stack overflow.
                 uint128 currentLowerLiquidity = ticks[lower].liquidity;
-                console.log('current lower liquidity:', currentLowerLiquidity);
+                // console.log('current lower liquidity:', currentLowerLiquidity);
                 //TODO: handle lower = latestTick
                 if (currentLowerLiquidity != 0 || lower == TickMath.MIN_TICK) {
                     // We are adding liquidity to an existing tick.
@@ -128,7 +128,7 @@ library Ticks
         {
             if(uint256(TickMath.getSqrtRatioAtTick(upper)) > currentPrice){
                 uint128 currentUpperLiquidity = ticks[upper].liquidity;
-                console.log('current upper liquidity:', currentUpperLiquidity);
+                // console.log('current upper liquidity:', currentUpperLiquidity);
                 if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
                     // We are adding liquidity to an existing tick.
                     ticks[upper].liquidity = currentUpperLiquidity + amount;
@@ -137,8 +137,13 @@ library Ticks
                     IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
                     int24 oldNextTick = old.nextTick;
 
+                                        console.logInt(upperOld);
+                    console.logInt(upper);
+                    console.logInt(oldNextTick);
+                    console.log(old.liquidity);
+
                     //TODO: handle new TWAP being in between upperOld and upper
-                    if ((old.liquidity == 0 && upperOld != TickMath.MAX_TICK) || upperOld <= upper || upper >= oldNextTick){
+                    if ((old.liquidity == 0 && upperOld != TickMath.MAX_TICK && upperOld != latestTick) || upperOld <= upper || upper >= oldNextTick){
                         revert WrongTickUpperOrder();
                     }
 
@@ -172,8 +177,8 @@ library Ticks
         } else if (nearestTick < lower && lower <= tickAtPrice) {
             nearestTick = lower;
         }
-        console.log('inserted tick after zero:');
-        console.logInt(ticks[0].nextTick);
+        // console.log('inserted tick after zero:');
+        // console.logInt(ticks[0].nextTick);
 
         return nearestTick;
     }
