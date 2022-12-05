@@ -90,26 +90,35 @@ contract PoolsharkHedgePool is
 
         // set default initial values
         latestTick = utils.calculateAverageTick(IConcentratedPool(inputPool));
-        ticks[latestTick] = Tick(
-           TickMath.MIN_TICK, TickMath.MAX_TICK, 
-            0,0,
-            0,0,0
-        );
-        // if latestTick != MIN_TICK
-        ticks[TickMath.MIN_TICK] = Tick(
-            TickMath.MIN_TICK, latestTick, 
-            0,0,
-            0,0,0
-        );
-        // if latestTick != MAX_TICK
-        ticks[TickMath.MAX_TICK] = Tick(
-            latestTick, TickMath.MAX_TICK, 
-            0,0,
-            0,0,0
-        );
+        if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
+            ticks[latestTick] = Tick(
+                TickMath.MIN_TICK, TickMath.MAX_TICK, 
+                0,0,
+                0,0,0
+            );
+            ticks[TickMath.MIN_TICK] = Tick(
+                TickMath.MIN_TICK, latestTick, 
+                0,0,
+                0,0,0
+            );
+            ticks[TickMath.MAX_TICK] = Tick(
+                latestTick, TickMath.MAX_TICK, 
+                0,0,
+                0,0,0
+            );
+        } else if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) {
+            ticks[TickMath.MIN_TICK] = Tick(
+                TickMath.MIN_TICK, TickMath.MAX_TICK, 
+                0,0,
+                0,0,0
+            );
+            ticks[TickMath.MAX_TICK] = Tick(
+                TickMath.MIN_TICK, TickMath.MAX_TICK, 
+                0,0,
+                0,0,0
+            );
+        }
         nearestTick = latestTick;
-        // console.log("starting latestTick:");
-        // console.logInt(int256(nearestTick));
         sqrtPrice = TickMath.getSqrtRatioAtTick(nearestTick);
         unlocked = 1;
         lastBlockNumber = uint32(block.number);
@@ -126,22 +135,11 @@ contract PoolsharkHedgePool is
             _accumulateLastBlock();
         }
 
+        if (mintParams.upper <= latestTick) { revert InvalidPosition(); }
+
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
-        uint256 currentPrice;
-        uint256 priceEntry;
 
-        //TODO: liquidity cannot be added to the current tick 
-
-        currentPrice = uint256(sqrtPrice);
-        if (mintParams.upper <= latestTick) { revert InvalidPosition(); }
-        if (mintParams.amountDesired == 0) { revert InvalidPosition(); }
-        //TODO: handle priceLower < currentPrice
-        priceEntry = priceLower;
-
-        console.log("amount of tokens added:", mintParams.amountDesired);
-
-        //TODO: given upper, lower, and amount, solve for other amount
         liquidityMinted = utils.getLiquidityForAmounts(
             priceLower,
             priceUpper,
@@ -150,17 +148,24 @@ contract PoolsharkHedgePool is
             0
         );
 
+        // Ensure no overflow happens when we cast from uint256 to int128.
+        if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
+
+        _updateSecondsPerLiquidity(uint256(liquidity));
+
+        if (!mintParams.zeroForOne && mintParams.lower < latestTick ) {
+            // subtract balance from amountDesired
+            mintParams.lower = latestTick;
+            mintParams.lowerOld = ticks[latestTick].previousTick;
+            uint256 priceLatestTick = TickMath.getSqrtRatioAtTick(mintParams.lower);
+            mintParams.amountDesired -= uint128(utils.getDy(liquidityMinted, priceLower, priceLatestTick, false));
+        }
+
         if(!mintParams.zeroForOne){
             _transferIn(tokenOut, mintParams.amountDesired);
         } else {
             revert NotImplementedYet();
         }
-        console.log("amount of liquidity minted:", liquidityMinted);
-
-        // Ensure no overflow happens when we cast from uint256 to int128.
-        if (liquidityMinted > uint128(type(int128).max)) revert Overflow();
-
-        _updateSecondsPerLiquidity(uint256(liquidity));
 
         unchecked {
             _updatePosition(
@@ -170,8 +175,9 @@ contract PoolsharkHedgePool is
                 mintParams.lower,
                 int128(uint128(liquidityMinted))
             );
-            // liquidity should always be out of range initially
-            if (priceLower <= currentPrice && currentPrice < priceUpper) liquidity += uint128(liquidityMinted);
+            // only increase liquidity if nearestTick and lower are equal to latestTick
+            // this should be the only case where that is true
+            if (mintParams.lower == nearestTick) liquidity += uint128(liquidityMinted);
         }
 
         nearestTick = Ticks.insert(
@@ -185,7 +191,7 @@ contract PoolsharkHedgePool is
             uint128(liquidityMinted),
             nearestTick,
             latestTick,
-            uint160(currentPrice)
+            uint160(sqrtPrice)
         );
 
         (uint128 amountInActual, uint128 amountOutActual) = utils.getAmountsForLiquidity(

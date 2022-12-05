@@ -14,8 +14,8 @@ export interface Position {
 }
 
 export interface Tick {
-    previousTick: BigNumber,
-    nextTick: BigNumber,
+    previousTick: number,
+    nextTick: number,
     amountIn: BigNumber,
     liquidity: BigNumber,
     feeGrowthGlobal: BigNumber,
@@ -24,25 +24,177 @@ export interface Tick {
 }
 
 export async function validateSwap(
-    recipient: string,
     signer: SignerWithAddress,
+    recipient: string,
     zeroForOne: boolean,
     amountIn: BigNumber,
-    sqrtPriceLimitX96: BigNumber 
+    sqrtPriceLimitX96: BigNumber,
+    balanceInDecrease: BigNumber,
+    balanceOutIncrease: BigNumber,
+    liquidityAfterExpected: BigNumber
 ) {
-    // const inLiquidity = hre.props[amountIn];
-    // const sqrtPrice = hre.props[sqrtPriceLimitX96];
-    // const address = hre.props[recipient];
-}
+    let balanceInBefore; let balanceOutBefore;
+    if(zeroForOne){
+        balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
+        await hre.props.token0.approve(hre.props.hedgePool.address, amountIn);
+    } else {
+        balanceInBefore  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token0.balanceOf(signer.address);
+        await hre.props.token1.approve(hre.props.hedgePool.address, amountIn);
+    }
 
+    const liquidityBefore           = await hre.props.hedgePool.liquidity();
+    const secondsGrowthGlobalBefore = await hre.props.hedgePool.secondsGrowthGlobal();
+    const lastBlockNumberBefore     = await hre.props.hedgePool.lastBlockNumber();
+    const feeGrowthGlobalBefore     = await hre.props.hedgePool.feeGrowthGlobal();
+    const latestTickBefore          = await hre.props.hedgePool.latestTick();
+    const nearestTickBefore         = await hre.props.hedgePool.nearestTick();
+    const priceBefore               = await hre.props.hedgePool.sqrtPrice();
+
+    let txn = await hre.props.hedgePool.swap(
+        signer.address,
+        true,
+        amountIn,
+        sqrtPriceLimitX96
+    );
+    await txn.wait();
+
+    let balanceInAfter; let balanceOutAfter;
+    if(zeroForOne){
+        balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token1.balanceOf(signer.address);
+    } else {
+        balanceInAfter  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token0.balanceOf(signer.address);
+    }
+
+    expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
+    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
+
+    const liquidityAfter           = await hre.props.hedgePool.liquidity();
+    const secondsGrowthGlobalAfter = await hre.props.hedgePool.secondsGrowthGlobal();
+    const lastBlockNumberAfter     = await hre.props.hedgePool.lastBlockNumber();
+    const feeGrowthGlobalAfter     = await hre.props.hedgePool.feeGrowthGlobal();
+    const latestTickAfter          = await hre.props.hedgePool.latestTick();
+    const nearestTickAfter         = await hre.props.hedgePool.nearestTick();
+    const priceAfter               = await hre.props.hedgePool.sqrtPrice();
+}
+//TODO: approve/mint with signer
 export async function validateMint(
+    signer: SignerWithAddress,
+    recipient: string,
     lowerOld: BigNumber,
     lower: BigNumber,
     upperOld: BigNumber,
     upper: BigNumber,
     amountDesired: BigNumber,
     zeroForOne: boolean,
-    native: boolean
+    balanceInDecrease: BigNumber,
+    liquidityIncrease: BigNumber
 ) {
-    
+    let balanceInBefore; let balanceOutBefore;
+    if(zeroForOne){
+        balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
+        await hre.props.token0.approve(hre.props.hedgePool.address, amountDesired);
+    } else {
+        balanceInBefore  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token0.balanceOf(signer.address);
+        await hre.props.token1.approve(hre.props.hedgePool.address, amountDesired);
+    }
+
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks(lowerOld);
+    const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks(lower);
+    const upperOldTickBefore: Tick = await hre.props.hedgePool.ticks(upperOld);
+    const upperTickBefore:    Tick = await hre.props.hedgePool.ticks(upper);
+    const positionBefore:     Position = await hre.props.hedgePool.positions(
+        recipient,
+        lower,
+        upper
+    );
+
+    const txn = await hre.props.hedgePool.connect(signer).mint(
+      {
+        lowerOld: lowerOld,
+        lower: lower,
+        upperOld: upperOld,
+        upper: upper,
+        amountDesired: amountDesired,
+        zeroForOne: zeroForOne,
+        native: false
+      }
+    );
+    await txn.wait();
+
+    let balanceInAfter; let balanceOutAfter;
+    if(zeroForOne){
+        balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token1.balanceOf(signer.address);
+    } else {
+        balanceInAfter  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token0.balanceOf(signer.address);
+    }
+
+    expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
+
+    console.log('balance in after:', balanceInAfter.toString());
+
+    const lowerOldTickAfter: Tick = await hre.props.hedgePool.ticks(lowerOld);
+    const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks(lower);
+    const upperOldTickAfter: Tick = await hre.props.hedgePool.ticks(upperOld);
+    const upperTickAfter:    Tick = await hre.props.hedgePool.ticks(upper);
+    const positionAfter:     Position = await hre.props.hedgePool.positions(
+        recipient,
+        lower,
+        upper
+    );
+
+    expect(lowerTickAfter.liquidity.sub(lowerOldTickBefore.liquidity)).to.be.equal(liquidityIncrease);
+    expect(upperTickAfter.liquidity.sub(upperOldTickBefore.liquidity)).to.be.equal(liquidityIncrease);
+    expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease);
+}   
+
+export async function validateBurn(
+    signer: SignerWithAddress,
+    lowerOld: BigNumber,
+    lower: BigNumber,
+    upperOld: BigNumber,
+    upper: BigNumber,
+    amountDesired: BigNumber,
+    zeroForOne: boolean,
+    balanceInIncrease: BigNumber,
+    balanceOutIncrease: BigNumber
+) {
+    let balanceInBefore; let balanceOutBefore;
+    if(zeroForOne){
+        balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
+    } else {
+        balanceInBefore  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token0.balanceOf(signer.address);
+    }
+
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks(lowerOld);
+    const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks(lower);
+    const upperOldTickBefore: Tick = await hre.props.hedgePool.ticks(upperOld);
+    const upperTickBefore:    Tick = await hre.props.hedgePool.ticks(upper);
+
+    let balanceInAfter; let balanceOutAfter;
+    if(zeroForOne){
+        balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token1.balanceOf(signer.address);
+    } else {
+        balanceInAfter  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token0.balanceOf(signer.address);
+    }
+
+    expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease);
+    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
+
+    const lowerOldTickAfter: Tick = await hre.props.hedgePool.ticks(lowerOld);
+    const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks(lower);
+    const upperOldTickAfter: Tick = await hre.props.hedgePool.ticks(upperOld);
+    const upperTickAfter:    Tick = await hre.props.hedgePool.ticks(upper);
+
 }
