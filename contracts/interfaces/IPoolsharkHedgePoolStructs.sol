@@ -19,8 +19,8 @@ interface IPoolsharkHedgePoolStructs {
         uint128 liquidity;           // expected amount to be used not actual
         uint256 feeGrowthGlobalLast; // last feeGrowth this position was updated at
         uint160 claimPriceLast;      // highest price claimed at
-        uint128 amountIn;             // token amount already claimed; balance
-        uint128 amountOut;
+        uint128 amountIn;            // token amount already claimed; balance
+        uint128 amountOut;           // necessary for non-custodial positions
     }
 
     //TODO: should we have a recipient field here?
@@ -34,11 +34,9 @@ interface IPoolsharkHedgePoolStructs {
         bool native;
     }
 
+    //TODO: optimize this struct
     struct SwapCache {
         uint256 feeAmount;
-        uint256 totalFeeAmount;
-        uint256 protocolFee;
-        uint256 feeGrowthGlobal;
         int24   currentTick;
         uint256 currentPrice;
         uint256 currentLiquidity;

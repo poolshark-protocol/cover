@@ -21,12 +21,9 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
     uint160 public secondsGrowthGlobal; /// @dev Multiplied by 2^128.
     uint256 public lastBlockNumber;
 
-    uint256 public feeGrowthGlobal; /// @dev All fee growth counters are multiplied by 2^128.
-    uint256 public feeGrowthGlobalLast;
-
-    uint128 public tokenInProtocolFee;
-    uint128 public tokenOutProtocolFee;
-
+    uint256 public feeGrowthGlobalIn; /// @dev All fee growth counters are multiplied by 2^128.
+    uint256 public feeGrowthGlobalOut;
+    
     uint160 public sqrtPrice; /// @dev Sqrt of price aka. √(y/x), multiplied by 2^96.
     
     int24 public latestTick;  /// @dev Tick externally sourced at the latest block.

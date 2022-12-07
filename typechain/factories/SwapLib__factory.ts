@@ -21,27 +21,12 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "currentLiquidity",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
         name: "totalFeeAmount",
         type: "uint256",
       },
       {
         internalType: "uint256",
         name: "amountOut",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "protocolFee",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "feeGrowthGlobal",
         type: "uint256",
       },
     ],
@@ -57,18 +42,8 @@ const _abi = [
         name: "",
         type: "uint256",
       },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
     ],
-    stateMutability: "view",
+    stateMutability: "pure",
     type: "function",
   },
   {

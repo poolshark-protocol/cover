@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "./FullPrecisionMath.sol";
-import "hardhat/console.sol";
 
 /// @notice Math library that facilitates fee handling for Trident Concentrated Liquidity Pools.
 abstract contract SwapLib is
@@ -11,31 +10,18 @@ abstract contract SwapLib is
     function handleFees(
         uint256 output,
         uint24 swapFee,
-        uint256 currentLiquidity,
         uint256 totalFeeAmount,
-        uint256 amountOut,
-        uint256 protocolFee,
-        uint256 feeGrowthGlobal
+        uint256 amountOut
     )
         external
-        view
+        pure
         returns (
-            uint256,
-            uint256,
             uint256,
             uint256
         )
     {
-        uint256 feeAmount = _mulDivRoundingUp(output, swapFee, 1e6);
+        amountOut += output; // @dev fee is taken on input amount
 
-        totalFeeAmount += feeAmount;
-
-        amountOut += output - feeAmount;
-
-        if(currentLiquidity > 0){
-            feeGrowthGlobal += _mulDiv(feeAmount, 0x100000000000000000000000000000000, currentLiquidity);
-        }
-
-        return (totalFeeAmount, amountOut, protocolFee, feeGrowthGlobal);
+        return (totalFeeAmount, amountOut);
     }
 }

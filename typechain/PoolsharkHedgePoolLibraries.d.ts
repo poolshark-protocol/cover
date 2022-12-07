@@ -28,7 +28,7 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
     "getDy(uint256,uint256,uint256,bool)": FunctionFragment;
     "getLiquidityForAmounts(uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
     "getSqrtPriceLimitX96(bool)": FunctionFragment;
-    "handleFees(uint256,uint24,uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
+    "handleFees(uint256,uint24,uint256,uint256)": FunctionFragment;
     "increaseV3Observation(address)": FunctionFragment;
     "isPoolObservationsEnough(address)": FunctionFragment;
     "mulDiv(uint256,uint256,uint256)": FunctionFragment;
@@ -75,15 +75,7 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "handleFees",
-    values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ]
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "increaseV3Observation",
@@ -257,13 +249,10 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+    ): Promise<[BigNumber, BigNumber]>;
 
     increaseV3Observation(
       pool: string,
@@ -365,13 +354,10 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
   handleFees(
     output: BigNumberish,
     swapFee: BigNumberish,
-    currentLiquidity: BigNumberish,
     totalFeeAmount: BigNumberish,
     amountOut: BigNumberish,
-    protocolFee: BigNumberish,
-    feeGrowthGlobal: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+  ): Promise<[BigNumber, BigNumber]>;
 
   increaseV3Observation(
     pool: string,
@@ -464,13 +450,10 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+    ): Promise<[BigNumber, BigNumber]>;
 
     increaseV3Observation(
       pool: string,
@@ -561,11 +544,8 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -658,11 +638,8 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

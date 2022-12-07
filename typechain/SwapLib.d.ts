@@ -20,22 +20,14 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface SwapLibInterface extends ethers.utils.Interface {
   functions: {
-    "handleFees(uint256,uint24,uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
+    "handleFees(uint256,uint24,uint256,uint256)": FunctionFragment;
     "mulDiv(uint256,uint256,uint256)": FunctionFragment;
     "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "handleFees",
-    values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ]
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "mulDiv",
@@ -103,13 +95,10 @@ export class SwapLib extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+    ): Promise<[BigNumber, BigNumber]>;
 
     mulDiv(
       a: BigNumberish,
@@ -129,13 +118,10 @@ export class SwapLib extends BaseContract {
   handleFees(
     output: BigNumberish,
     swapFee: BigNumberish,
-    currentLiquidity: BigNumberish,
     totalFeeAmount: BigNumberish,
     amountOut: BigNumberish,
-    protocolFee: BigNumberish,
-    feeGrowthGlobal: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+  ): Promise<[BigNumber, BigNumber]>;
 
   mulDiv(
     a: BigNumberish,
@@ -155,13 +141,10 @@ export class SwapLib extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+    ): Promise<[BigNumber, BigNumber]>;
 
     mulDiv(
       a: BigNumberish,
@@ -184,11 +167,8 @@ export class SwapLib extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -211,11 +191,8 @@ export class SwapLib extends BaseContract {
     handleFees(
       output: BigNumberish,
       swapFee: BigNumberish,
-      currentLiquidity: BigNumberish,
       totalFeeAmount: BigNumberish,
       amountOut: BigNumberish,
-      protocolFee: BigNumberish,
-      feeGrowthGlobal: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

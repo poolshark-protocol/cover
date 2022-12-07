@@ -89,6 +89,7 @@ contract PoolsharkHedgePool is
         //TODO: validate observationCardinalityNext
 
         // set default initial values
+        //TODO: insertSingle or pass MAX_TICK as upper
         latestTick = utils.calculateAverageTick(IConcentratedPool(inputPool));
         if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
             ticks[latestTick] = Tick(
@@ -135,7 +136,7 @@ contract PoolsharkHedgePool is
             _accumulateLastBlock();
         }
 
-        if (mintParams.upper <= latestTick) { revert InvalidPosition(); }
+        if (mintParams.lower <= latestTick) { revert InvalidPosition(); }
 
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
@@ -154,7 +155,7 @@ contract PoolsharkHedgePool is
         _updateSecondsPerLiquidity(uint256(liquidity));
 
         if (!mintParams.zeroForOne && mintParams.lower < latestTick ) {
-            // subtract balance from amountDesired
+            // handle partial mints
             mintParams.lower = latestTick;
             mintParams.lowerOld = ticks[latestTick].previousTick;
             uint256 priceLatestTick = TickMath.getSqrtRatioAtTick(mintParams.lower);
@@ -182,7 +183,7 @@ contract PoolsharkHedgePool is
 
         nearestTick = Ticks.insert(
             ticks,
-            feeGrowthGlobal,
+            feeGrowthGlobalIn,
             secondsGrowthGlobal,
             mintParams.lowerOld,
             mintParams.lower,
@@ -222,15 +223,15 @@ contract PoolsharkHedgePool is
         uint160 priceUpper = TickMath.getSqrtRatioAtTick(upper);
         uint160 currentPrice= sqrtPrice;
 
-                console.log('zero previous tick:');
-        console.logInt(ticks[0].previousTick);
+        // console.log('zero previous tick:');
+        // console.logInt(ticks[0].previousTick);
 
         if(block.number != lastBlockNumber) {
             console.log("accumulating last block");
             _accumulateLastBlock();
         }
-        console.log('zero previous tick:');
-        console.logInt(ticks[0].previousTick);
+        // console.log('zero previous tick:');
+        // console.logInt(ticks[0].previousTick);
 
         _updateSecondsPerLiquidity(uint256(liquidity));
 
@@ -311,15 +312,14 @@ contract PoolsharkHedgePool is
             _accumulateLastBlock();
         }
 
+        feeGrowthGlobalIn += utils.mulDivRoundingUp(amountIn, swapFee, 1e6);
+
         SwapCache memory cache = SwapCache({
-            feeAmount: 0,
-            totalFeeAmount: 0,
-            protocolFee: 0,
-            feeGrowthGlobal: feeGrowthGlobal,
+            feeAmount: utils.mulDivRoundingUp(amountIn, swapFee, 1e6),
             currentTick: nearestTick,
             currentPrice: uint256(sqrtPrice),
             currentLiquidity: uint256(liquidity),
-            input: amountIn,
+            input: amountIn - utils.mulDivRoundingUp(amountIn, swapFee, 1e6),
             nextTickToCross: ticks[nearestTick].previousTick
         });
 
@@ -382,28 +382,19 @@ contract PoolsharkHedgePool is
             }
 
             // console.log("liquidity:", cache.currentLiquidity);
-            // cache.feeGrowthGlobal is the feeGrowthGlobal counter for the output token.
             // It increases each swap step.
-            (cache.totalFeeAmount, amountOut, cache.protocolFee, cache.feeGrowthGlobal) = utils.handleFees(
-                output,
-                swapFee,
-                cache.currentLiquidity,
-                cache.totalFeeAmount,
-                amountOut,
-                cache.protocolFee,
-                cache.feeGrowthGlobal
-            );
+            amountOut += output;
             if (cross) {
-                console.log('crossing tick');
-                console.logInt(cache.currentTick);
-                console.logInt(cache.nextTickToCross);
+                // console.log('crossing tick');
+                // console.logInt(cache.currentTick);
+                // console.logInt(cache.nextTickToCross);
                 (cache.currentLiquidity, cache.currentTick, cache.nextTickToCross) = Ticks.cross(
                     ticks,
                     cache.currentTick,
                     cache.nextTickToCross,
                     secondsGrowthGlobal,
                     cache.currentLiquidity,
-                    cache.feeGrowthGlobal,
+                    0,
                     true,
                     tickSpacing
                 );
@@ -420,7 +411,7 @@ contract PoolsharkHedgePool is
                         cache.nextTickToCross,
                         secondsGrowthGlobal,
                         cache.currentLiquidity,
-                        cache.feeGrowthGlobal,
+                        0,
                         true,
                         tickSpacing
                     );
@@ -452,33 +443,32 @@ contract PoolsharkHedgePool is
         // console.logInt( cache.currentTick);
         // console.log('new nearest tick:');
         // console.logInt(nearestTick);
-        _updateFees(zeroForOne, cache.feeGrowthGlobal, uint128(cache.protocolFee));
 
         if (zeroForOne) {
-            // console.log('tokenOut balance before:', ERC20(tokenOut).balanceOf(address(this)));
             if(cache.input > 0) {
-                _transferOut(recipient, tokenIn, cache.input);
+                uint128 feeReturn = uint128(
+                                            cache.input * 1e18 
+                                            / (amountIn - cache.feeAmount) 
+                                            * cache.feeAmount / 1e18
+                                           );
+                feeGrowthGlobalIn -= feeReturn;
+                _transferOut(recipient, tokenIn, cache.input + feeReturn);
             }
             _transferOut(recipient, tokenOut, amountOut);
-            // console.log('tokenOut balance after:', ERC20(tokenOut).balanceOf(address(this)));
             emit Swap(recipient, tokenIn, tokenOut, amountIn, amountOut);
         } else {
-            _transferOut(recipient, tokenIn, amountOut);
-            emit Swap(recipient, tokenOut, tokenIn, amountIn, amountOut);
-        }
-    }
-
-    /// @dev Collects fees for Poolshark protocol.
-    function collectProtocolFee() public lock returns (uint128 amountIn, uint128 amountOut) {
-        if (tokenInProtocolFee > 1) {
-            amountIn = tokenInProtocolFee - 1;
-            tokenInProtocolFee = 1;
-            _transferOut(feeTo, tokenIn, amountIn);
-        }
-        if (tokenOutProtocolFee > 1) {
-            amountOut = tokenOutProtocolFee - 1;
-            tokenOutProtocolFee = 1;
-            _transferOut(feeTo, tokenOut, amountOut);
+            // if(cache.input > 0) {
+            //     uint128 feeReturn = uint128(
+            //                             cache.input * 1e18 
+            //                             / (amountIn - cache.feeAmount) 
+            //                             * cache.feeAmount / 1e18
+            //                            );
+            //     feeGrowthGlobalOut -= feeReturn;
+            //     _transferOut(recipient, tokenOut, cache.input + feeReturn);
+            // }
+            // _transferOut(recipient, tokenIn, amountOut);
+            // emit Swap(recipient, tokenOut, tokenIn, amountIn, amountOut);
+            revert NotImplementedYet();
         }
     }
 
@@ -581,19 +571,6 @@ contract PoolsharkHedgePool is
         _transferOut(to, tokenOut, shares1);
     }
 
-    function _updateFees(
-        bool zeroForOne,
-        uint256 feeGrowthGlobal,
-        uint128 protocolFee
-    ) internal {
-        if (zeroForOne) {
-            feeGrowthGlobal = feeGrowthGlobal;
-            tokenOutProtocolFee += protocolFee;
-        } else {
-            feeGrowthGlobal = feeGrowthGlobal;
-            tokenInProtocolFee += protocolFee;
-        }
-    }
     //TODO: zap into LP position
     //TODO: use bitmaps to naiively search for the tick closest to the new TWAP
     //TODO: assume everything will get filled for now
@@ -608,21 +585,27 @@ contract PoolsharkHedgePool is
             oldLatestTickPrice = uint256(TickMath.getSqrtRatioAtTick(latestTick));
         }
 
-        console.log('starting tick');
-        console.logInt(nearestTick);
+        // console.log('starting tick');
+        // console.logInt(nearestTick);
 
-        console.log('next latest tick');
-        console.logInt(nextLatestTick);
+        // console.log('next latest tick');
+        // console.logInt(nextLatestTick);
 
         AccumulateCache memory cache = AccumulateCache({
             currentTick: nearestTick,
             currentPrice: sqrtPrice,
             currentLiquidity: uint256(liquidity),
             nextTickToCross: ticks[nearestTick].nextTick,
-            feeGrowthGlobal: feeGrowthGlobal
+            feeGrowthGlobal: feeGrowthGlobalIn
         });
-        console.log('next tick');
-        console.logInt(ticks[cache.currentTick].nextTick);
+        // console.log('next tick');
+        // console.logInt(ticks[cache.currentTick].nextTick);
+
+        // first tick might have unfilled amount
+        uint160 priceAtTick = TickMath.getSqrtRatioAtTick(TickMath.getTickAtSqrtRatio(sqrtPrice));
+        if (sqrtPrice != priceAtTick) {
+
+        }
 
         while(cache.currentPrice < oldLatestTickPrice) {
             // carry over amountIn
@@ -668,7 +651,7 @@ contract PoolsharkHedgePool is
                 cache.nextTickToCross,
                 secondsGrowthGlobal,
                 cache.currentLiquidity,
-                feeGrowthGlobal,
+                feeGrowthGlobalIn,
                 false,
                 tickSpacing
             );
@@ -806,7 +789,7 @@ contract PoolsharkHedgePool is
                 console.log('amount in claimable:', amountInClaimable);
                 _transferOut(owner, tokenIn, amountInClaimable);
                 position.claimPriceLast = uint160(claimPrice);
-                position.feeGrowthGlobalLast = feeGrowthGlobal;
+                position.feeGrowthGlobalLast = feeGrowthGlobalIn;
             }
         } else if (position.claimPriceLast == 0) {
             //TODO: maybe this should be done initially?

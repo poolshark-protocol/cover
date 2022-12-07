@@ -77,7 +77,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobal",
+    name: "feeGrowthGlobalIn",
     outputs: [
       {
         internalType: "uint256",
@@ -90,7 +90,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobalLast",
+    name: "feeGrowthGlobalOut",
     outputs: [
       {
         internalType: "uint256",
@@ -285,32 +285,6 @@ const _abi = [
         internalType: "uint160",
         name: "secondsGrowthOutside",
         type: "uint160",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "tokenInProtocolFee",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "tokenOutProtocolFee",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
       },
     ],
     stateMutability: "view",

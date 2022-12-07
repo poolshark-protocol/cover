@@ -265,17 +265,17 @@ library Ticks
         // lower tick
         if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
             //TODO: make sure casting is safe
-            console.log('tick accumulated to');
-            console.logInt(nextTickToCross);
+            // console.log('tick accumulated to');
+            // console.logInt(nextTickToCross);
             carryPercent = 1e18;
             currentLiquidity += ticks[nextTickToCross].liquidity;
         } else {
             uint128 liquidityDelta = ticks[nextTickToCross].liquidity;
             if (liquidityDelta > 0) {
                 carryPercent  = uint256(liquidityDelta) * 1e18 / uint256(currentLiquidity);
-                console.log(liquidityDelta);
-                console.log(currentLiquidity);
-                console.log('carry percent:', carryPercent);
+                // console.log(liquidityDelta);
+                // console.log(currentLiquidity);
+                // console.log('carry percent:', carryPercent);
             } else {
                 carryPercent = 1e18;
             }
