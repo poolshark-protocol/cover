@@ -6,6 +6,7 @@ import "../interfaces/IPoolsharkHedgePoolStructs.sol";
 import "../utils/PoolsharkErrors.sol";
 import "hardhat/console.sol";
 import "./FullPrecisionMath.sol";
+import "./DyDxMath.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -47,7 +48,6 @@ library Ticks
                     currentLiquidity += ticks[nextTickToCross].liquidity;
                 }
             }
-            ticks[currentTick].feeGrowthGlobal += feeGrowthGlobal;
             currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].previousTick;
         } else {
@@ -58,7 +58,6 @@ library Ticks
                     currentLiquidity -= ticks[nextTickToCross].liquidity;
                 }
             }
-            ticks[currentTick].feeGrowthGlobal += feeGrowthGlobal;
             currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].nextTick;
         }
@@ -112,10 +111,10 @@ library Ticks
                     ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                         lowerOld,
                         oldNextTick,
-                        0,
                         amount,
                         feeGrowthGlobal,
-                        feeGrowthGlobal,
+                        0,
+                        0,
                         secondsGrowthGlobal
                     );
 
@@ -153,36 +152,30 @@ library Ticks
                     ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                         upperOld,
                         oldNextTick,
-                        0,
                         amount,
                         feeGrowthGlobal,
-                        feeGrowthGlobal,
+                        0,
+                        0,
                         secondsGrowthGlobal
                     );
-
                     old.previousTick = upper;
                     ticks[oldNextTick].previousTick = upper;
                 }
             }
         }
-        {
-            //handle upper 
-        }
 
         int24 tickAtPrice = TickMath.getTickAtSqrtRatio(currentPrice);
 
-        //TODO: update nearestTick if between TWAP and currentPrice
+        // update nearestTick if between TWAP and currentPrice
         if (nearestTick < upper && upper <= tickAtPrice) {
             nearestTick = upper;
         } else if (nearestTick < lower && lower <= tickAtPrice) {
             nearestTick = lower;
         }
-        // console.log('inserted tick after zero:');
-        // console.logInt(ticks[0].nextTick);
 
         return nearestTick;
     }
-    //TODO: assert whether removing ticks completely is worth it
+
     function remove(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 lower,
@@ -256,73 +249,94 @@ library Ticks
         int24 currentTick,
         int24 nextTickToCross,
         uint256 currentLiquidity,
-        uint24 tickSpacing,
-        uint24 swapFee
+        uint256 feeGrowthGlobal,
+        uint24 tickSpacing
     ) external returns (uint256, int24, int24) {
 
         //assume tick index is increasing as we acccumulate
         uint256 carryPercent;
         // lower tick
         if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-            //TODO: make sure casting is safe
-            // console.log('tick accumulated to');
-            // console.logInt(nextTickToCross);
             carryPercent = 1e18;
             currentLiquidity += ticks[nextTickToCross].liquidity;
         } else {
-            uint128 liquidityDelta = ticks[nextTickToCross].liquidity;
+            uint128 liquidityDelta = ticks[currentTick].liquidity;
             if (liquidityDelta > 0) {
                 carryPercent  = uint256(liquidityDelta) * 1e18 / uint256(currentLiquidity);
-                // console.log(liquidityDelta);
-                // console.log(currentLiquidity);
                 // console.log('carry percent:', carryPercent);
             } else {
                 carryPercent = 1e18;
             }
-            currentLiquidity -= liquidityDelta;
+            currentLiquidity -= ticks[nextTickToCross].liquidity;
 
             //TODO: take fee in tokenIn for direct conversion
         }
         // accumulate amountIn to carryover
         // adding liquidity
         // carry over everything
-        console.log(ticks[currentTick].feeGrowthGlobal);
-        console.log(ticks[currentTick].feeGrowthGlobalLast);
-        uint256 feeGrowthDiff = ticks[currentTick].feeGrowthGlobal 
-                                  - ticks[currentTick].feeGrowthGlobalLast;
-        if (feeGrowthDiff > 0){
+        console.log(ticks[currentTick].feeGrowthGlobalIn);
+        console.log(ticks[nextTickToCross].feeGrowthGlobalIn);
+        // no point to updating current tick if 100% is carried
+        if (carryPercent < 1e18){
             //TODO: rounding up might solve precision issues
-            uint256 amountInDiff  = FullPrecisionMath._mulDiv(
-                                        feeGrowthDiff,
-                                        currentLiquidity,
-                                        Q128
-                                    ) * 1e6 / swapFee * (1e6 - swapFee) / 1e6;
-
-            // calculate how much to continue carrying over
-            console.log(feeGrowthDiff);
-            uint256 amountInCarry = amountInDiff * carryPercent / 1e18;
-            console.log(amountInDiff);
-            console.log(amountInCarry);
-            //TODO: need to know last time carried over
-            //TODO: update fee growth of next tick and current tick
-            // update current and next ticks amountIn
-            ticks[nextTickToCross].amountIn += uint128(amountInCarry);
-            ticks[currentTick].amountIn += uint128(amountInDiff - amountInCarry);
+            ticks[currentTick].feeGrowthGlobalIn = feeGrowthGlobal;
         }
-        ticks[currentTick].feeGrowthGlobalLast += feeGrowthDiff;
-        console.log('current tick fee growth');
-        console.log(ticks[currentTick].feeGrowthGlobal);
-        console.log(ticks[currentTick].feeGrowthGlobalLast);
-        ticks[nextTickToCross].feeGrowthGlobalLast += feeGrowthDiff;
-        console.log('next tick fee growth');
-        console.logInt(nextTickToCross);
-        console.log(ticks[nextTickToCross].feeGrowthGlobal);
-        console.log(ticks[nextTickToCross].feeGrowthGlobalLast);
         // set return values
         currentTick = nextTickToCross;
         nextTickToCross = ticks[nextTickToCross].nextTick;
         // liquidity delta already handled
 
         return (uint256(currentLiquidity), currentTick, nextTickToCross);
+    }
+
+    function rollover(
+        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        int24 currentTick,
+        int24 nextTickToCross,
+        uint256 currentPrice,
+        uint256 currentLiquidity,
+        uint256 feeGrowthGlobal,
+        uint24 tickSpacing
+    ) external returns (uint256, int24, int24) {
+        
+        uint160 nextPrice = TickMath.getSqrtRatioAtTick(nextTickToCross);
+
+        if(currentPrice != nextPrice) {
+            //handle liquidity rollover
+            uint160 priceAtTick = TickMath.getSqrtRatioAtTick(currentTick);
+            uint256 dxUnfilled = DyDxMath.getDx(
+                currentLiquidity,
+                priceAtTick,
+                currentPrice,
+                false
+            );
+            uint256 dyLeftover = DyDxMath.getDy(
+                currentLiquidity,
+                priceAtTick,
+                currentPrice,
+                false
+            );
+            if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
+                currentLiquidity += ticks[nextTickToCross].liquidity;
+            } else {
+                currentLiquidity -= ticks[nextTickToCross].liquidity;
+            }
+            //TODO: ensure this will not overflow with 32 bits
+            ticks[nextTickToCross].amountInDeltaX96 -= int128(uint128(
+                                                        FullPrecisionMath.mulDiv(
+                                                            dxUnfilled,
+                                                            0x1000000000000000000000000, 
+                                                            currentLiquidity
+                                                        )));
+            ticks[nextTickToCross].amountOutDeltaX96 += int128(uint128(
+                                                        FullPrecisionMath.mulDiv(
+                                                            dxUnfilled,
+                                                            0x1000000000000000000000000, 
+                                                            currentLiquidity
+                                                        )));
+            //TODO: next handle amount deltas in accumulate function
+            //TODO: next handle amount deltas in claim function
+
+        }
     }
 }

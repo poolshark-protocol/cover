@@ -101,12 +101,10 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
     expect(lowerTick.previousTick).to.be.equal(lowerOld);
     expect(lowerTick.nextTick).to.be.equal(upper);
-    expect(lowerTick.amountIn).to.be.equal(BN_ZERO);
     expect(lowerTick.liquidity).to.be.equal(liquidityAmount);
 
     expect(upperTick.previousTick).to.be.equal(lower);
     expect(upperTick.nextTick).to.be.equal(upperOld);
-    expect(upperTick.amountIn).to.be.equal(BN_ZERO);
     expect(upperTick.liquidity).to.be.equal(liquidityAmount);
   });
 

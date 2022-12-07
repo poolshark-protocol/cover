@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber, ContractReceipt } from "ethers";
 import { once } from "events";
 import { getNonce, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, PoolsharkHedgePoolLibraries, PoolsharkHedgePoolLibraries__factory } from "../../../typechain";
+import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, PoolsharkHedgePoolLibraries, PoolsharkHedgePoolLibraries__factory, DyDxMath__factory, FullPrecisionMath__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -72,8 +72,19 @@ export class InitialSetup {
 
         const tickMathLib = await new TickMath__factory(hre.props.alice).deploy();
         nonce += 1;
+        const fullPrecisionMathLib = await new FullPrecisionMath__factory(hre.props.alice).deploy();
+        nonce += 1;
+        const dydxMathLib = await new DyDxMath__factory(
+                                        {
+                                            "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address
+                                        },
+                                        hre.props.alice
+                            ).deploy();
+        nonce += 1;
         const ticksLib = await new Ticks__factory(
                                         {
+                                            "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address,
+                                            "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
                                             "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
                                         },
                                         hre.props.alice

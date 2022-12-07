@@ -6,10 +6,10 @@ interface IPoolsharkHedgePoolStructs {
     struct Tick {
         int24 previousTick;
         int24 nextTick;
-        uint128 amountIn; // Claimable token amounts
         uint128 liquidity; // represent LPs for token0 -> token1
-        uint256 feeGrowthGlobal; // Used to check for claim updates
-        uint256 feeGrowthGlobalLast;
+        uint256 feeGrowthGlobalIn; // Used to check for claim updates
+        int128 amountInDeltaX96;
+        int128 amountOutDeltaX96;
         uint160 secondsGrowthOutside;
     }
 

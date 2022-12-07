@@ -93,30 +93,25 @@ contract PoolsharkHedgePool is
         latestTick = utils.calculateAverageTick(IConcentratedPool(inputPool));
         if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
             ticks[latestTick] = Tick(
-                TickMath.MIN_TICK, TickMath.MAX_TICK, 
-                0,0,
-                0,0,0
+                TickMath.MIN_TICK, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
             ticks[TickMath.MIN_TICK] = Tick(
-                TickMath.MIN_TICK, latestTick, 
-                0,0,
-                0,0,0
+                TickMath.MIN_TICK, latestTick,
+                0,0,0,0,0
             );
             ticks[TickMath.MAX_TICK] = Tick(
-                latestTick, TickMath.MAX_TICK, 
-                0,0,
-                0,0,0
+                latestTick, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
         } else if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) {
             ticks[TickMath.MIN_TICK] = Tick(
-                TickMath.MIN_TICK, TickMath.MAX_TICK, 
-                0,0,
-                0,0,0
+                TickMath.MIN_TICK, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
             ticks[TickMath.MAX_TICK] = Tick(
-                TickMath.MIN_TICK, TickMath.MAX_TICK, 
-                0,0,
-                0,0,0
+                TickMath.MIN_TICK, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
         }
         nearestTick = latestTick;
@@ -362,8 +357,6 @@ contract PoolsharkHedgePool is
                     output = utils.getDy(cache.currentLiquidity, newSqrtPrice, cache.currentPrice, false);
                     // console.log("dtokenOut:", output);
                     cache.currentPrice= newSqrtPrice;
-                    //TODO: should be current tick
-                    ticks[cache.nextTickToCross].amountIn += uint128(cache.input);
                     cache.input = 0;
                 } else {
                     // Execute swap step and cross the tick.
@@ -373,8 +366,6 @@ contract PoolsharkHedgePool is
                     // console.log("dtokenOut:", output);
                     cache.currentPrice= nextSqrtPrice;
                     if (nextSqrtPrice == nextTickSqrtPrice) { cross = true; }
-                    //TODO: should be current tick
-                    ticks[cache.currentTick].amountIn += uint128(maxDx);
                     cache.input -= maxDx;
                 }
             } else {
@@ -590,7 +581,6 @@ contract PoolsharkHedgePool is
 
         // console.log('next latest tick');
         // console.logInt(nextLatestTick);
-
         AccumulateCache memory cache = AccumulateCache({
             currentTick: nearestTick,
             currentPrice: sqrtPrice,
@@ -602,9 +592,23 @@ contract PoolsharkHedgePool is
         // console.logInt(ticks[cache.currentTick].nextTick);
 
         // first tick might have unfilled amount
-        uint160 priceAtTick = TickMath.getSqrtRatioAtTick(TickMath.getTickAtSqrtRatio(sqrtPrice));
-        if (sqrtPrice != priceAtTick) {
-
+        if(cache.currentPrice != oldLatestTickPrice) {
+            uint160 priceAtTick = TickMath.getSqrtRatioAtTick(TickMath.getTickAtSqrtRatio(sqrtPrice));
+            if (cache.currentLiquidity > 0) {
+                (
+                    cache.currentLiquidity, 
+                    cache.currentTick,
+                    cache.nextTickToCross
+                ) = Ticks.rollover(
+                    ticks,
+                    cache.currentTick,
+                    cache.nextTickToCross,
+                    cache.currentPrice,
+                    cache.currentLiquidity,
+                    feeGrowthGlobalIn,
+                    tickSpacing
+                );
+            }
         }
 
         while(cache.currentPrice < oldLatestTickPrice) {
@@ -618,20 +622,21 @@ contract PoolsharkHedgePool is
                 cache.currentTick,
                 cache.nextTickToCross,
                 cache.currentLiquidity,
-                tickSpacing,
-                swapFee
+                feeGrowthGlobalIn,
+                tickSpacing
             );
             cache.currentPrice = uint256(TickMath.getSqrtRatioAtTick(cache.currentTick));
             // repeat until we capture everything up to the previous TWAP
         }
+
         // rollover old latest tick without updating local vars
         Ticks.accumulate(
             ticks,
             cache.currentTick,
             cache.nextTickToCross,
             cache.currentLiquidity,
-            tickSpacing,
-            swapFee
+            feeGrowthGlobalIn,
+            tickSpacing
         );
 
         cache.currentPrice = oldLatestTickPrice;
@@ -670,9 +675,8 @@ contract PoolsharkHedgePool is
             //TODO: move to insertSingle function
             //TODO: don't replace existing tick like this
             ticks[nextLatestTick] = Tick(
-                ticks[cache.currentTick].previousTick, cache.nextTickToCross, 
-                0,0,
-                0,0,0
+                ticks[cache.currentTick].previousTick, cache.nextTickToCross,
+                0,0,0,0,0
             );
             // Ticks.insert(
             //     ticks,
@@ -719,6 +723,7 @@ contract PoolsharkHedgePool is
         lastBlockNumber = block.number;
     }
 
+    //TODO: handle zeroForOne
     function _updatePosition(
         address owner,
         int24 lower,
@@ -729,78 +734,49 @@ contract PoolsharkHedgePool is
         // load position into memory
         Position memory position = positions[owner][lower][upper];
         // validate removal amount is less than position liquidity
-        // console.log("position liquidity:", position.liquidity);
-        // console.log(uint128(-amount));
         if (amount < 0 && uint128(-amount) > position.liquidity) revert NotEnoughPositionLiquidity();
 
         uint256 priceLower   = uint256(TickMath.getSqrtRatioAtTick(lower));
         uint256 priceUpper   = uint256(TickMath.getSqrtRatioAtTick(upper));
         uint256 claimPrice   = uint256(TickMath.getSqrtRatioAtTick(claim));
 
-        // user cannot claim twice from the same part of the curve
-        // ..or just don't claim?
+        if (position.claimPriceLast == 0) {
+            position.feeGrowthGlobalLast = feeGrowthGlobalIn;
+            position.claimPriceLast = uint160(priceLower);
+        }
         if (position.claimPriceLast > claimPrice) revert InvalidClaimTick();
 
         // handle claims
-        //TODO: accumulate on claim tick if feeGrowth and feeGrowthLast differ
-        // console.log('fee growth compare');
-        //     console.log(ticks[ticks[claim].previousTick].feeGrowthGlobal);
-        //     console.log(ticks[claim].feeGrowthGlobal);
-        // console.log(position.feeGrowthGlobalLast);
-        if(ticks[claim].feeGrowthGlobal > position.feeGrowthGlobalLast) {
+        if(ticks[claim].feeGrowthGlobalIn > position.feeGrowthGlobalLast) {
             // skip claim if lower == claim
             if(claim != lower){
                 // calculate what is claimable
-                uint128 amountInClaimable;
-                {
-                    uint256 amountInTotal   = utils.getDx(
-                                                            position.liquidity, 
-                                                            priceLower,
-                                                            claimPrice, 
-                                                            false
-                                                        );
-                    uint256 amountInClaimed = utils.getDx(
-                                                            position.liquidity, 
-                                                            priceLower,
-                                                            position.claimPriceLast,
-                                                            false
-                                                        );
-                    console.log('amount being claimed:');
-                    console.log(amountInTotal);
-                    console.log(amountInClaimed);
-                    amountInClaimable  = uint128(amountInTotal  - amountInClaimed);// * (1e6 + swapFee) / 1e6; //factors in fees
-                    console.log(amountInClaimable);
-                    console.log('balance in contract:');
-                    console.log(ERC20(tokenIn).balanceOf(address(this)));
-                }
+                uint256 amountInClaimable  = utils.getDx(
+                                                        position.liquidity, 
+                                                        position.claimPriceLast,
+                                                        claimPrice, 
+                                                        false
+                                                    );// * (1e6 + swapFee) / 1e6; //factors in fees
                 // verify user passed highest tick with growth
                 if (claim != upper){
                     {
                         // next tick should not have any fee growth
                         int24 claimNextTick = ticks[claim].nextTick;
-                        if (ticks[claimNextTick].feeGrowthGlobal > position.feeGrowthGlobalLast) revert WrongTickClaimedAt();
+                        if (ticks[claimNextTick].feeGrowthGlobalIn > position.feeGrowthGlobalLast) revert WrongTickClaimedAt();
                     }
                 }
-                // update amounts claimable at tick
-                ticks[claim].amountIn  -= uint128(amountInClaimable);
 
-                //TODO: store in position or transfer to user?
-                // update position values
-                console.log('amount in claimable:', amountInClaimable);
+                //TODO: store in position
                 _transferOut(owner, tokenIn, amountInClaimable);
                 position.claimPriceLast = uint160(claimPrice);
                 position.feeGrowthGlobalLast = feeGrowthGlobalIn;
             }
-        } else if (position.claimPriceLast == 0) {
-            //TODO: maybe this should be done initially?
-            position.claimPriceLast = uint160(priceLower);
-        }
+        }   
 
-        // update liquidity at claim tick
+        // liquidity updated in burn() function
         if (amount < 0) {
             // calculate amount to transfer out
-            // if claimPrice is lower, pass priceUpper
-            // somehow we have to do the inverse side of the curve
+            // TODO: ensure no liquidity above has been touched
             uint256 amountOutRemoved = utils.getDy(
                 uint128(-amount),
                 claimPrice,

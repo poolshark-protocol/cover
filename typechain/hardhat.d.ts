@@ -105,6 +105,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IUnsafeMath__factory>;
     getContractFactory(
+      name: "DyDxMath",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.DyDxMath__factory>;
+    getContractFactory(
       name: "FullPrecisionMath",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.FullPrecisionMath__factory>;
@@ -304,6 +308,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IUnsafeMath>;
+    getContractAt(
+      name: "DyDxMath",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.DyDxMath>;
     getContractAt(
       name: "FullPrecisionMath",
       address: string,

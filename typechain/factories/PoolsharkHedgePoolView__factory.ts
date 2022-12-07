@@ -263,23 +263,23 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "amountIn",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "liquidity",
         type: "uint128",
       },
       {
         internalType: "uint256",
-        name: "feeGrowthGlobal",
+        name: "feeGrowthGlobalIn",
         type: "uint256",
       },
       {
-        internalType: "uint256",
-        name: "feeGrowthGlobalLast",
-        type: "uint256",
+        internalType: "int128",
+        name: "amountInDeltaX96",
+        type: "int128",
+      },
+      {
+        internalType: "int128",
+        name: "amountOutDeltaX96",
+        type: "int128",
       },
       {
         internalType: "uint160",
