@@ -94,6 +94,7 @@ export class InitialSetup {
         hre.props.hedgePoolFactory = await new PoolsharkHedgePoolFactory__factory(
                                         {
                                             "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address,
+                                            "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
                                             "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
                                         }, 
                                         hre.props.alice

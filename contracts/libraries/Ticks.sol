@@ -32,7 +32,6 @@ library Ticks
         int24 nextTickToCross,
         uint160 secondsGrowthGlobal,
         uint256 currentLiquidity,
-        uint256 feeGrowthGlobal,
         bool zeroForOne,
         uint24 tickSpacing
     ) external returns (uint256, int24, int24) {
@@ -251,42 +250,41 @@ library Ticks
         uint256 currentLiquidity,
         uint256 feeGrowthGlobal,
         uint24 tickSpacing
-    ) external returns (uint256, int24, int24) {
+    ) external {
 
         //assume tick index is increasing as we acccumulate
-        uint256 carryPercent;
+        int256 carryPercent;
         // lower tick
         if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
             carryPercent = 1e18;
-            currentLiquidity += ticks[nextTickToCross].liquidity;
         } else {
-            uint128 liquidityDelta = ticks[currentTick].liquidity;
+            uint256 liquidityDelta = ticks[currentTick].liquidity;
             if (liquidityDelta > 0) {
-                carryPercent  = uint256(liquidityDelta) * 1e18 / uint256(currentLiquidity);
+                carryPercent  = int256(liquidityDelta) * 1e18 / int256(currentLiquidity);
                 // console.log('carry percent:', carryPercent);
             } else {
                 carryPercent = 1e18;
             }
-            currentLiquidity -= ticks[nextTickToCross].liquidity;
-
-            //TODO: take fee in tokenIn for direct conversion
         }
-        // accumulate amountIn to carryover
-        // adding liquidity
-        // carry over everything
         console.log(ticks[currentTick].feeGrowthGlobalIn);
         console.log(ticks[nextTickToCross].feeGrowthGlobalIn);
-        // no point to updating current tick if 100% is carried
-        if (carryPercent < 1e18){
-            //TODO: rounding up might solve precision issues
-            ticks[currentTick].feeGrowthGlobalIn = feeGrowthGlobal;
-        }
-        // set return values
-        currentTick = nextTickToCross;
-        nextTickToCross = ticks[nextTickToCross].nextTick;
-        // liquidity delta already handled
+        if (currentLiquidity > 0){
+            // update fee growth
+            ticks[nextTickToCross].feeGrowthGlobalIn = feeGrowthGlobal;
 
-        return (uint256(currentLiquidity), currentTick, nextTickToCross);
+            // handle amount in delta
+            int256 amountInDelta = ticks[currentTick].amountInDeltaX96 * carryPercent / 1e18;
+            if (amountInDelta > 0) {
+                ticks[nextTickToCross].amountInDeltaX96 += int128(amountInDelta);
+                ticks[currentTick].amountInDeltaX96 -= int128(amountInDelta);
+            }
+            // handle amount out delta
+            int256 amountOutDelta = ticks[currentTick].amountOutDeltaX96 * carryPercent / 1e18;
+            if (amountOutDelta > 0) {
+                ticks[nextTickToCross].amountOutDeltaX96 += int128(amountOutDelta);
+                ticks[currentTick].amountOutDeltaX96 -= int128(amountOutDelta);
+            }
+        }
     }
 
     function rollover(
@@ -294,10 +292,8 @@ library Ticks
         int24 currentTick,
         int24 nextTickToCross,
         uint256 currentPrice,
-        uint256 currentLiquidity,
-        uint256 feeGrowthGlobal,
-        uint24 tickSpacing
-    ) external returns (uint256, int24, int24) {
+        uint256 currentLiquidity
+    ) external {
         
         uint160 nextPrice = TickMath.getSqrtRatioAtTick(nextTickToCross);
 
@@ -316,11 +312,6 @@ library Ticks
                 currentPrice,
                 false
             );
-            if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                currentLiquidity += ticks[nextTickToCross].liquidity;
-            } else {
-                currentLiquidity -= ticks[nextTickToCross].liquidity;
-            }
             //TODO: ensure this will not overflow with 32 bits
             ticks[nextTickToCross].amountInDeltaX96 -= int128(uint128(
                                                         FullPrecisionMath.mulDiv(
@@ -330,13 +321,11 @@ library Ticks
                                                         )));
             ticks[nextTickToCross].amountOutDeltaX96 += int128(uint128(
                                                         FullPrecisionMath.mulDiv(
-                                                            dxUnfilled,
+                                                            dyLeftover,
                                                             0x1000000000000000000000000, 
                                                             currentLiquidity
                                                         )));
-            //TODO: next handle amount deltas in accumulate function
             //TODO: next handle amount deltas in claim function
-
         }
     }
 }

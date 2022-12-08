@@ -385,7 +385,6 @@ contract PoolsharkHedgePool is
                     cache.nextTickToCross,
                     secondsGrowthGlobal,
                     cache.currentLiquidity,
-                    0,
                     true,
                     tickSpacing
                 );
@@ -402,7 +401,6 @@ contract PoolsharkHedgePool is
                         cache.nextTickToCross,
                         secondsGrowthGlobal,
                         cache.currentLiquidity,
-                        0,
                         true,
                         tickSpacing
                     );
@@ -595,34 +593,37 @@ contract PoolsharkHedgePool is
         if(cache.currentPrice != oldLatestTickPrice) {
             uint160 priceAtTick = TickMath.getSqrtRatioAtTick(TickMath.getTickAtSqrtRatio(sqrtPrice));
             if (cache.currentLiquidity > 0) {
-                (
-                    cache.currentLiquidity, 
-                    cache.currentTick,
-                    cache.nextTickToCross
-                ) = Ticks.rollover(
+                Ticks.rollover(
                     ticks,
                     cache.currentTick,
                     cache.nextTickToCross,
                     cache.currentPrice,
-                    cache.currentLiquidity,
-                    feeGrowthGlobalIn,
-                    tickSpacing
+                    cache.currentLiquidity
                 );
             }
         }
 
         while(cache.currentPrice < oldLatestTickPrice) {
             // carry over amountIn
-            (
-              cache.currentLiquidity, 
-              cache.currentTick,
-              cache.nextTickToCross
-            ) = Ticks.accumulate(
+            Ticks.accumulate(
                 ticks,
                 cache.currentTick,
                 cache.nextTickToCross,
                 cache.currentLiquidity,
                 feeGrowthGlobalIn,
+                tickSpacing
+            );
+            (
+              cache.currentLiquidity, 
+              cache.currentTick,
+              cache.nextTickToCross
+            ) = Ticks.cross(
+                ticks,
+                cache.currentTick,
+                cache.nextTickToCross,
+                secondsGrowthGlobal,
+                cache.currentLiquidity,
+                false,
                 tickSpacing
             );
             cache.currentPrice = uint256(TickMath.getSqrtRatioAtTick(cache.currentTick));
@@ -656,7 +657,6 @@ contract PoolsharkHedgePool is
                 cache.nextTickToCross,
                 secondsGrowthGlobal,
                 cache.currentLiquidity,
-                feeGrowthGlobalIn,
                 false,
                 tickSpacing
             );
@@ -750,13 +750,6 @@ contract PoolsharkHedgePool is
         if(ticks[claim].feeGrowthGlobalIn > position.feeGrowthGlobalLast) {
             // skip claim if lower == claim
             if(claim != lower){
-                // calculate what is claimable
-                uint256 amountInClaimable  = utils.getDx(
-                                                        position.liquidity, 
-                                                        position.claimPriceLast,
-                                                        claimPrice, 
-                                                        false
-                                                    );// * (1e6 + swapFee) / 1e6; //factors in fees
                 // verify user passed highest tick with growth
                 if (claim != upper){
                     {
@@ -765,11 +758,50 @@ contract PoolsharkHedgePool is
                         if (ticks[claimNextTick].feeGrowthGlobalIn > position.feeGrowthGlobalLast) revert WrongTickClaimedAt();
                     }
                 }
-
-                //TODO: store in position
-                _transferOut(owner, tokenIn, amountInClaimable);
                 position.claimPriceLast = uint160(claimPrice);
                 position.feeGrowthGlobalLast = feeGrowthGlobalIn;
+                {
+                    // calculate what is claimable
+                    uint256 amountInClaimable  = utils.getDx(
+                                                        position.liquidity, 
+                                                        position.claimPriceLast,
+                                                        claimPrice, 
+                                                        false
+                                                    );// * (1e6 + swapFee) / 1e6; //factors in fees
+                    int128 amountInDelta = ticks[claim].amountInDeltaX96;
+                    if (amountInDelta > 0) {
+                        amountInClaimable += FullPrecisionMath.mulDiv(
+                                                                        uint128(amountInDelta),
+                                                                        position.liquidity, 
+                                                                        Ticks.Q128
+                                                                    );
+                    } else if (amountInDelta < 0) {
+                        //TODO: handle underflow here
+                        amountInClaimable -= FullPrecisionMath.mulDiv(
+                                                                        uint128(-amountInDelta),
+                                                                        position.liquidity, 
+                                                                        Ticks.Q128
+                                                                    );
+                    }
+                    //TODO: add to position
+                    if (amountInClaimable > 0) {
+                        _transferOut(owner, tokenIn, amountInClaimable);
+                    }
+                }
+                {
+                    int128 amountOutDelta = ticks[claim].amountOutDeltaX96;
+                    uint256 amountOutClaimable;
+                    if (amountOutDelta > 0) {
+                        amountOutClaimable = FullPrecisionMath.mulDiv(
+                                                                        uint128(amountOutDelta),
+                                                                        position.liquidity, 
+                                                                        Ticks.Q128
+                                                                    );
+                        _transferOut(owner, tokenIn, amountOutClaimable);
+                    }
+                    //TODO: add to position
+                    
+                }
             }
         }   
 
