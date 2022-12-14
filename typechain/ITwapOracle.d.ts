@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -21,15 +22,33 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface ITwapOracleInterface extends ethers.utils.Interface {
   functions: {
     "calculateAverageTick(address)": FunctionFragment;
+    "initializePoolObservations(address)": FunctionFragment;
+    "isPoolObservationsEnough(address)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "calculateAverageTick",
     values: [string]
   ): string;
+  encodeFunctionData(
+    functionFragment: "initializePoolObservations",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isPoolObservationsEnough",
+    values: [string]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "calculateAverageTick",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "initializePoolObservations",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isPoolObservationsEnough",
     data: BytesLike
   ): Result;
 
@@ -84,6 +103,16 @@ export class ITwapOracle extends BaseContract {
       pool: string,
       overrides?: CallOverrides
     ): Promise<[number] & { averageTick: number }>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
   };
 
   calculateAverageTick(
@@ -91,11 +120,31 @@ export class ITwapOracle extends BaseContract {
     overrides?: CallOverrides
   ): Promise<number>;
 
+  initializePoolObservations(
+    pool: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  isPoolObservationsEnough(
+    pool: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   callStatic: {
     calculateAverageTick(
       pool: string,
       overrides?: CallOverrides
     ): Promise<number>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
   };
 
   filters: {};
@@ -105,10 +154,30 @@ export class ITwapOracle extends BaseContract {
       pool: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    isPoolObservationsEnough(
       pool: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

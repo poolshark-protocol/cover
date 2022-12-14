@@ -18,6 +18,7 @@ library Ticks
     error WrongTickUpperRange();
     error WrongTickLowerOrder();
     error WrongTickUpperOrder();
+    error NoLiquidityToRollover();
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
@@ -30,34 +31,19 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 currentTick,
         int24 nextTickToCross,
-        uint160 secondsGrowthGlobal,
         uint256 currentLiquidity,
-        bool zeroForOne,
-        uint24 tickSpacing
-    ) external returns (uint256, int24, int24) {
-        ticks[nextTickToCross].secondsGrowthOutside = secondsGrowthGlobal - ticks[nextTickToCross].secondsGrowthOutside;
-
+        bool zeroForOne
+    ) external view returns (uint256, int24, int24) {
+        currentTick = nextTickToCross;
+        int128 liquidityDelta = ticks[nextTickToCross].liquidityDelta;
+        if(liquidityDelta > 0) {
+            currentLiquidity += uint128(liquidityDelta);
+        } else {
+            currentLiquidity -= uint128(-liquidityDelta);
+        }
         if (zeroForOne) {
-            // Moving backwards through the linked list.
-            // Liquidity cannot overflow due to the TickMath.MAX_TICK_LIQUIDITY requirement.
-            unchecked {
-                if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                    currentLiquidity -= ticks[nextTickToCross].liquidity;
-                } else {
-                    currentLiquidity += ticks[nextTickToCross].liquidity;
-                }
-            }
-            currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].previousTick;
         } else {
-            unchecked {
-                if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
-                    currentLiquidity += ticks[nextTickToCross].liquidity;
-                } else {
-                    currentLiquidity -= ticks[nextTickToCross].liquidity;
-                }
-            }
-            currentTick = nextTickToCross;
             nextTickToCross = ticks[nextTickToCross].nextTick;
         }
         return (currentLiquidity, currentTick, nextTickToCross);
@@ -66,7 +52,6 @@ library Ticks
     function insert(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         uint256 feeGrowthGlobal,
-        uint160 secondsGrowthGlobal,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
@@ -90,31 +75,37 @@ library Ticks
             //TODO: if tick is lower than latestTick adjust the liquidity when the current tick is crossed
             if (uint256(TickMath.getSqrtRatioAtTick(lower)) > currentPrice) {
                     // Stack overflow.
-                uint128 currentLowerLiquidity = ticks[lower].liquidity;
+                int128 currentLowerLiquidity = ticks[lower].liquidityDelta;
                 // console.log('current lower liquidity:', currentLowerLiquidity);
                 //TODO: handle lower = latestTick
-                if (currentLowerLiquidity != 0 || lower == TickMath.MIN_TICK) {
+                if (currentLowerLiquidity != 0 || ticks[lower].liquidityDeltaMinus != 0 || lower == TickMath.MIN_TICK) {
                     // We are adding liquidity to an existing tick.
-                    ticks[lower].liquidity = currentLowerLiquidity + amount;
+                    //TODO: ensure amount < type(int128).max()
+                    ticks[lower].liquidityDelta = currentLowerLiquidity + int128(amount);
                 } else {
                     // We are inserting a new tick.
                     IPoolsharkHedgePoolStructs.Tick storage old = ticks[lowerOld];
                     int24 oldNextTick = old.nextTick;
                     if (upper < oldNextTick) oldNextTick = upper;
-
+                    console.log('tick check');
+                    console.logInt(oldNextTick);
+                    console.logInt(lowerOld);
+                    console.logInt(lower);
                     //TODO: handle new TWAP being in between lowerOld and lower
-                    if ((old.liquidity == 0 && lowerOld != TickMath.MIN_TICK && lowerOld != latestTick) || lowerOld >= lower || lower >= oldNextTick){
+                    if ((old.liquidityDelta == 0 && old.liquidityDeltaMinus == 0 && lowerOld != TickMath.MIN_TICK && lowerOld != latestTick) 
+                         || lowerOld >= lower 
+                         || lower >= oldNextTick) {
                         revert WrongTickLowerOrder();
                     }
 
                     ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                         lowerOld,
                         oldNextTick,
-                        amount,
+                        int128(amount),
+                        0,
                         feeGrowthGlobal,
                         0,
-                        0,
-                        secondsGrowthGlobal
+                        0
                     );
 
                     old.nextTick = lower;
@@ -125,23 +116,25 @@ library Ticks
         }
         {
             if(uint256(TickMath.getSqrtRatioAtTick(upper)) > currentPrice){
-                uint128 currentUpperLiquidity = ticks[upper].liquidity;
+                uint128 currentUpperLiquidity = ticks[upper].liquidityDeltaMinus;
                 // console.log('current upper liquidity:', currentUpperLiquidity);
-                if (currentUpperLiquidity != 0 || upper == TickMath.MAX_TICK) {
+                if (currentUpperLiquidity != 0 || ticks[upper].liquidityDelta != 0 || upper == TickMath.MAX_TICK) {
                     // We are adding liquidity to an existing tick.
-                    ticks[upper].liquidity = currentUpperLiquidity + amount;
+                    ticks[upper].liquidityDelta -= int128(amount);
+                    ticks[upper].liquidityDeltaMinus += amount;
                 } else {
                     // Inserting a new tick.
                     IPoolsharkHedgePoolStructs.Tick storage old = ticks[upperOld];
                     int24 oldNextTick = old.nextTick;
 
-                                        console.logInt(upperOld);
+                    console.logInt(upperOld);
                     console.logInt(upper);
                     console.logInt(oldNextTick);
-                    console.log(old.liquidity);
+                    console.logInt(old.liquidityDelta);
 
                     //TODO: handle new TWAP being in between upperOld and upper
-                    if ((old.liquidity == 0 && upperOld != TickMath.MAX_TICK && upperOld != latestTick) || upperOld <= upper || upper >= oldNextTick){
+                    if ((old.liquidityDelta == 0 && old.liquidityDeltaMinus == 0 && upperOld != TickMath.MAX_TICK && upperOld != latestTick) 
+                         || upperOld <= upper || upper >= oldNextTick) {
                         revert WrongTickUpperOrder();
                     }
 
@@ -151,11 +144,11 @@ library Ticks
                     ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                         upperOld,
                         oldNextTick,
+                        -int128(amount),
                         amount,
                         feeGrowthGlobal,
                         0,
-                        0,
-                        secondsGrowthGlobal
+                        0
                     );
                     old.previousTick = upper;
                     ticks[oldNextTick].previousTick = upper;
@@ -184,7 +177,8 @@ library Ticks
     ) external returns (int24) {
         IPoolsharkHedgePoolStructs.Tick storage current = ticks[lower];
         //TODO: delete at end
-        if (lower != TickMath.MIN_TICK && current.liquidity == amount) {
+        bool deleteLowerTick = lower != TickMath.MIN_TICK && current.liquidityDeltaMinus == amount && current.liquidityDelta == -int128(amount);
+        if (deleteLowerTick) {
             // Delete lower tick.
             IPoolsharkHedgePoolStructs.Tick storage previous = ticks[current.previousTick];
             IPoolsharkHedgePoolStructs.Tick storage next = ticks[current.nextTick];
@@ -202,13 +196,15 @@ library Ticks
 
         } else {
             unchecked {
-                current.liquidity -= amount;
+                current.liquidityDeltaMinus -= amount;
+                current.liquidityDelta += int128(amount);
             }
         }
 
         current = ticks[upper];
 
-        if (upper != TickMath.MAX_TICK && current.liquidity == amount) {
+        bool deleteUpperTick = upper != TickMath.MAX_TICK && current.liquidityDeltaMinus == 0 && amount == uint128(current.liquidityDelta);
+        if (deleteUpperTick) {
             // Delete upper tick.
             IPoolsharkHedgePoolStructs.Tick storage previous = ticks[current.previousTick];
             IPoolsharkHedgePoolStructs.Tick storage next = ticks[current.nextTick];
@@ -225,15 +221,15 @@ library Ticks
             if (nearestTick == upper) nearestTick = current.previousTick;
         } else {
             unchecked {
-                current.liquidity -= amount;
+                current.liquidityDelta -= int128(amount);
             }
         }
 
-        if (lower != TickMath.MIN_TICK && current.liquidity == amount) {
+        if (deleteLowerTick) {
             delete ticks[lower];
         }
 
-        if (upper != TickMath.MAX_TICK && current.liquidity == amount) {
+        if (deleteUpperTick) {
             delete ticks[upper];
         }
 
@@ -258,7 +254,7 @@ library Ticks
         if ((nextTickToCross / int24(tickSpacing)) % 2 == 0) {
             carryPercent = 1e18;
         } else {
-            uint256 liquidityDelta = ticks[currentTick].liquidity;
+            uint256 liquidityDelta = ticks[currentTick].liquidityDeltaMinus;
             if (liquidityDelta > 0) {
                 carryPercent  = int256(liquidityDelta) * 1e18 / int256(currentLiquidity);
                 // console.log('carry percent:', carryPercent);
@@ -294,7 +290,7 @@ library Ticks
         uint256 currentPrice,
         uint256 currentLiquidity
     ) external {
-        
+        if (currentLiquidity == 0) { revert NoLiquidityToRollover(); }
         uint160 nextPrice = TickMath.getSqrtRatioAtTick(nextTickToCross);
 
         if(currentPrice != nextPrice) {
@@ -325,7 +321,6 @@ library Ticks
                                                             0x1000000000000000000000000, 
                                                             currentLiquidity
                                                         )));
-            //TODO: next handle amount deltas in claim function
         }
     }
 }

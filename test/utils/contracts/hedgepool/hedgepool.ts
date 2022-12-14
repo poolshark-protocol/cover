@@ -16,11 +16,11 @@ export interface Position {
 export interface Tick {
     previousTick: number,
     nextTick: number,
-    amountIn: BigNumber,
-    liquidity: BigNumber,
-    feeGrowthGlobal: BigNumber,
-    feeGrowthGlobalLast: BigNumber,
-    secondsGrowthOutside: BigNumber
+    liquidityDelta: BigNumber,
+    liquidityDeltaMinus: BigNumber,
+    feeGrowthGlobalIn: BigNumber,
+    amountInDeltaX96: BigNumber,
+    amountOutDeltaX96: BigNumber
 }
 
 export async function validateSwap(
@@ -46,7 +46,6 @@ export async function validateSwap(
     }
 
     const liquidityBefore           = await hre.props.hedgePool.liquidity();
-    const secondsGrowthGlobalBefore = await hre.props.hedgePool.secondsGrowthGlobal();
     const lastBlockNumberBefore     = await hre.props.hedgePool.lastBlockNumber();
     const feeGrowthGlobalBefore     = await hre.props.hedgePool.feeGrowthGlobalIn();
     const latestTickBefore          = await hre.props.hedgePool.latestTick();
@@ -74,7 +73,6 @@ export async function validateSwap(
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
 
     const liquidityAfter           = await hre.props.hedgePool.liquidity();
-    const secondsGrowthGlobalAfter = await hre.props.hedgePool.secondsGrowthGlobal();
     const lastBlockNumberAfter     = await hre.props.hedgePool.lastBlockNumber();
     const feeGrowthGlobalAfter     = await hre.props.hedgePool.feeGrowthGlobalIn();
     const latestTickAfter          = await hre.props.hedgePool.latestTick();
@@ -168,9 +166,13 @@ export async function validateMint(
         lower,
         upper
     );
-
-    expect(lowerTickAfter.liquidity.sub(lowerOldTickBefore.liquidity)).to.be.equal(liquidityIncrease);
-    expect(upperTickAfter.liquidity.sub(upperOldTickBefore.liquidity)).to.be.equal(liquidityIncrease);
+    //TODO: handle lower and/or upper below TWAP
+    //TODO: does this handle negative values okay?
+    // console.log('liquidity negative delta:', upperTickAfter.liquidityDelta.toString());
+    expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(liquidityIncrease);
+    expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+    expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityIncrease));
+    expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(liquidityIncrease);
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease);
 }   
 

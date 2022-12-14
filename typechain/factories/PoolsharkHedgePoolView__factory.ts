@@ -77,6 +77,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "WaitUntilEnoughObservations",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "feeGrowthGlobalIn",
     outputs: [
       {
@@ -217,19 +222,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "secondsGrowthGlobal",
-    outputs: [
-      {
-        internalType: "uint160",
-        name: "",
-        type: "uint160",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "sqrtPrice",
     outputs: [
       {
@@ -262,8 +254,13 @@ const _abi = [
         type: "int24",
       },
       {
+        internalType: "int128",
+        name: "liquidityDelta",
+        type: "int128",
+      },
+      {
         internalType: "uint128",
-        name: "liquidity",
+        name: "liquidityDeltaMinus",
         type: "uint128",
       },
       {
@@ -280,11 +277,6 @@ const _abi = [
         internalType: "int128",
         name: "amountOutDeltaX96",
         type: "int128",
-      },
-      {
-        internalType: "uint160",
-        name: "secondsGrowthOutside",
-        type: "uint160",
       },
     ],
     stateMutability: "view",

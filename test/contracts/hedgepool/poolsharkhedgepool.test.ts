@@ -8,7 +8,7 @@ import { BigNumber } from 'ethers';
 import { gasUsed } from '../../utils/blocks';
 import { TEXT_COLOR } from '../../utils/colors';
 import { mintSigners20 } from '../../utils/token';
-import { validateMint, Position, Q64x96, BN_ZERO, validateSwap, validateBurn } from '../../utils/contracts/hedgepool/hedgepool';
+import { validateMint, Position, Q64x96, BN_ZERO, validateSwap, validateBurn, Tick } from '../../utils/contracts/hedgepool/hedgepool';
 
 alice: SignerWithAddress;
 describe('PoolsharkHedgePool Basic Tests', function () {
@@ -31,14 +31,12 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     //TODO: maybe just have one view function that grabs all these
     //TODO: map it to an interface
     const liquidity           = await hre.props.hedgePool.liquidity();
-    const secondsGrowthGlobal = await hre.props.hedgePool.secondsGrowthGlobal();
     const lastBlockNumber     = await hre.props.hedgePool.lastBlockNumber();
     const feeGrowthGlobalIn     = await hre.props.hedgePool.feeGrowthGlobalIn();
     const latestTick          = await hre.props.hedgePool.latestTick();
     const nearestTick         = await hre.props.hedgePool.nearestTick();
 
     expect(liquidity).to.be.equal(BN_ZERO);
-    expect(secondsGrowthGlobal).to.be.equal(BN_ZERO);
     expect(lastBlockNumber).to.be.equal(currentBlock);
     expect(feeGrowthGlobalIn).to.be.equal(BN_ZERO);
     expect(latestTick).to.be.equal(BN_ZERO);
@@ -101,11 +99,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
     expect(lowerTick.previousTick).to.be.equal(lowerOld);
     expect(lowerTick.nextTick).to.be.equal(upper);
-    expect(lowerTick.liquidity).to.be.equal(liquidityAmount);
+    expect(lowerTick.liquidityDelta).to.be.equal(liquidityAmount);
 
     expect(upperTick.previousTick).to.be.equal(lower);
     expect(upperTick.nextTick).to.be.equal(upperOld);
-    expect(upperTick.liquidity).to.be.equal(liquidityAmount);
+    expect(upperTick.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityAmount));
   });
 
   it('Should swap with zero output', async function () {
@@ -145,18 +143,18 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     );
   });
 
-  //TODO: allow partial position placement and refund liquidity not being used
   it('Should move TWAP before mint and do a successful swap', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("50", 0);
+    const lowerOld = hre.ethers.utils.parseUnits("30", 0);
     const lower    = hre.ethers.utils.parseUnits("60", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("90", 0);
     const burnAmount = hre.ethers.utils.parseUnits("66420461859385355519898", 0);
-
+    let lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks(upperOld);
+    console.log('max tick:', lowerOldTickBefore.toString());
     // move TWAP to tick 50
     let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-      6000,
-      3000
+      3600,
+      1800
     );
     await txn.wait();
 
@@ -174,7 +172,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       burnAmount,
       ""
     );
-
+    lowerOldTickBefore = await hre.props.hedgePool.ticks(upperOld);
+    console.log('max tick:', lowerOldTickBefore.toString());
     await validateSwap(
       hre.props.alice,
       hre.props.alice.address,
@@ -206,6 +205,9 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("50", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
 
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks(lowerOld);
+    console.log('zero tick:', lowerOldTickBefore.toString());
+
     await validateMint(
       hre.props.alice,
       hre.props.alice.address,
@@ -234,6 +236,9 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       0
     );
     await txn.wait();
+
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks(lowerOld);
+    console.log('zero tick:', lowerOldTickBefore.toString());
 
     await validateMint(
       hre.props.alice,
@@ -274,20 +279,20 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     )
   });
 
-  // it('Should fail on second claim', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
-  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  it('Should fail on second claim', async function () {
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+    const lower    = hre.ethers.utils.parseUnits("20", 0);
+    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
 
-  //   await expect(hre.props.hedgePool.burn(
-  //     lower,
-  //     upper,
-  //     upper,
-  //     liquidityAmount
-  //   )).to.be.revertedWith("NotEnoughPositionLiquidity()");
-  // });
+    await expect(hre.props.hedgePool.burn(
+      lower,
+      upper,
+      upper,
+      liquidityAmount
+    )).to.be.revertedWith("NotEnoughPositionLiquidity()");
+  });
 
   // TODO: partial mint
   // TODO: claim liquidity filled
@@ -298,6 +303,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   // TODO: P1 larger range; P2 smaller range; execute swap and validate amount returned by claiming
   // TODO: smaller range claims first; larger range claims first
   // TODO: move TWAP down and allow for new positions to be entered
+  // TODO: no one can mint until observations are sufficient
+  // TODO: fill tick, move TWAP down, claim, move TWAP higher, fill again, claim again
 
   // it('Should mint new LP position swap and then claim', async function () {
   //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);

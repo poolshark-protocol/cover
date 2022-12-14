@@ -61,13 +61,19 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
+        internalType: "contract IConcentratedPool",
         name: "pool",
         type: "address",
       },
     ],
-    name: "increaseV3Observation",
-    outputs: [],
+    name: "initializePoolObservations",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "startingTick",
+        type: "int24",
+      },
+    ],
     stateMutability: "nonpayable",
     type: "function",
   },

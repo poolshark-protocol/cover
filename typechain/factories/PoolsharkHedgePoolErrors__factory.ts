@@ -75,6 +75,11 @@ const _abi = [
     name: "UpperNotOddTick",
     type: "error",
   },
+  {
+    inputs: [],
+    name: "WaitUntilEnoughObservations",
+    type: "error",
+  },
 ];
 
 export class PoolsharkHedgePoolErrors__factory {

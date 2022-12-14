@@ -15,7 +15,7 @@ abstract contract PoolsharkHedgePoolErrors {
     error MaxTickLiquidity();
     error Overflow();
     error NotEnoughOutputLiquidity();
-
+    error WaitUntilEnoughObservations();
 }
 
 abstract contract PoolsharkTicksErrors {

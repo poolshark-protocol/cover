@@ -26,6 +26,44 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "contract IConcentratedPool",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "initializePoolObservations",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "startingTick",
+        type: "int24",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "contract IConcentratedPool",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "isPoolObservationsEnough",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
 export class ITwapOracle__factory {

@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -27,6 +28,8 @@ interface IPoolsharkUtilsInterface extends ethers.utils.Interface {
     "getDy(uint256,uint256,uint256,bool)": FunctionFragment;
     "getLiquidityForAmounts(uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
     "handleFees(uint256,uint24,uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
+    "initializePoolObservations(address)": FunctionFragment;
+    "isPoolObservationsEnough(address)": FunctionFragment;
     "mulDiv(uint256,uint256,uint256)": FunctionFragment;
     "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
     "sqrt(uint256)": FunctionFragment;
@@ -80,6 +83,14 @@ interface IPoolsharkUtilsInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "initializePoolObservations",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isPoolObservationsEnough",
+    values: [string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "mulDiv",
     values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
@@ -128,6 +139,14 @@ interface IPoolsharkUtilsInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "handleFees", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "initializePoolObservations",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isPoolObservationsEnough",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "mulDiv", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "mulDivRoundingUp",
@@ -255,6 +274,16 @@ export class IPoolsharkUtils extends BaseContract {
       }
     >;
 
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -371,6 +400,16 @@ export class IPoolsharkUtils extends BaseContract {
     }
   >;
 
+  initializePoolObservations(
+    pool: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  isPoolObservationsEnough(
+    pool: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   mulDiv(
     a: BigNumberish,
     b: BigNumberish,
@@ -478,6 +517,16 @@ export class IPoolsharkUtils extends BaseContract {
       }
     >;
 
+    initializePoolObservations(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -576,6 +625,16 @@ export class IPoolsharkUtils extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -669,6 +728,16 @@ export class IPoolsharkUtils extends BaseContract {
       amountOut: BigNumberish,
       protocolFee: BigNumberish,
       feeGrowthGlobal: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

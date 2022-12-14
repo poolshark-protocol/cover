@@ -17,8 +17,6 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
     /// @dev Reference: tickSpacing of 100 -> 2% between ticks.
 
     uint128 public liquidity;
-
-    uint160 public secondsGrowthGlobal; /// @dev Multiplied by 2^128.
     uint256 public lastBlockNumber;
 
     uint256 public feeGrowthGlobalIn; /// @dev All fee growth counters are multiplied by 2^128.

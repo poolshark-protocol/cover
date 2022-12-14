@@ -4,13 +4,13 @@ pragma solidity ^0.8.13;
 interface IPoolsharkHedgePoolStructs {
 
     struct Tick {
-        int24 previousTick;
-        int24 nextTick;
-        uint128 liquidity; // represent LPs for token0 -> token1
+        int24   previousTick;
+        int24   nextTick;
+        int128  liquidityDelta;
+        uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint256 feeGrowthGlobalIn; // Used to check for claim updates
-        int128 amountInDeltaX96;
-        int128 amountOutDeltaX96;
-        uint160 secondsGrowthOutside;
+        int128  amountInDeltaX96;
+        int128  amountOutDeltaX96;
     }
 
     // feeGrowthGlobalInitial 

@@ -31,7 +31,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     "mint((int24,int24,int24,int24,uint128,bool,bool))": FunctionFragment;
     "nearestTick()": FunctionFragment;
     "positions(address,int24,int24)": FunctionFragment;
-    "secondsGrowthGlobal()": FunctionFragment;
     "sqrtPrice()": FunctionFragment;
     "swap(address,bool,uint256,uint160)": FunctionFragment;
     "ticks(int24)": FunctionFragment;
@@ -84,10 +83,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     functionFragment: "positions",
     values: [string, BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "secondsGrowthGlobal",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "sqrtPrice", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "swap",
@@ -126,10 +121,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "positions", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "secondsGrowthGlobal",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "sqrtPrice", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks", data: BytesLike): Result;
@@ -292,8 +283,6 @@ export class PoolsharkHedgePool extends BaseContract {
       }
     >;
 
-    secondsGrowthGlobal(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     sqrtPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     swap(
@@ -319,11 +308,11 @@ export class PoolsharkHedgePool extends BaseContract {
       ] & {
         previousTick: number;
         nextTick: number;
-        liquidity: BigNumber;
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDeltaX96: BigNumber;
         amountOutDeltaX96: BigNumber;
-        secondsGrowthOutside: BigNumber;
       }
     >;
 
@@ -393,8 +382,6 @@ export class PoolsharkHedgePool extends BaseContract {
     }
   >;
 
-  secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
-
   sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
   swap(
@@ -412,11 +399,11 @@ export class PoolsharkHedgePool extends BaseContract {
     [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       previousTick: number;
       nextTick: number;
-      liquidity: BigNumber;
+      liquidityDelta: BigNumber;
+      liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
       amountInDeltaX96: BigNumber;
       amountOutDeltaX96: BigNumber;
-      secondsGrowthOutside: BigNumber;
     }
   >;
 
@@ -491,8 +478,6 @@ export class PoolsharkHedgePool extends BaseContract {
       }
     >;
 
-    secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
-
     sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     swap(
@@ -518,11 +503,11 @@ export class PoolsharkHedgePool extends BaseContract {
       ] & {
         previousTick: number;
         nextTick: number;
-        liquidity: BigNumber;
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDeltaX96: BigNumber;
         amountOutDeltaX96: BigNumber;
-        secondsGrowthOutside: BigNumber;
       }
     >;
 
@@ -695,8 +680,6 @@ export class PoolsharkHedgePool extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
-
     sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     swap(
@@ -767,10 +750,6 @@ export class PoolsharkHedgePool extends BaseContract {
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    secondsGrowthGlobal(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

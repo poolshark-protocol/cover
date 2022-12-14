@@ -24,7 +24,7 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     "calculateAverageTick(address)": FunctionFragment;
     "concentratedFactory()": FunctionFragment;
     "getSqrtPriceLimitX96(bool)": FunctionFragment;
-    "increaseV3Observation(address)": FunctionFragment;
+    "initializePoolObservations(address)": FunctionFragment;
     "isPoolObservationsEnough(address)": FunctionFragment;
   };
 
@@ -41,7 +41,7 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     values: [boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "increaseV3Observation",
+    functionFragment: "initializePoolObservations",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -62,7 +62,7 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "increaseV3Observation",
+    functionFragment: "initializePoolObservations",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -129,7 +129,7 @@ export class TwapOracle extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    increaseV3Observation(
+    initializePoolObservations(
       pool: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -152,7 +152,7 @@ export class TwapOracle extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  increaseV3Observation(
+  initializePoolObservations(
     pool: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -175,10 +175,10 @@ export class TwapOracle extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    increaseV3Observation(
+    initializePoolObservations(
       pool: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<number>;
 
     isPoolObservationsEnough(
       pool: string,
@@ -201,7 +201,7 @@ export class TwapOracle extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    increaseV3Observation(
+    initializePoolObservations(
       pool: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -227,7 +227,7 @@ export class TwapOracle extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    increaseV3Observation(
+    initializePoolObservations(
       pool: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

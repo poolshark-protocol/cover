@@ -28,7 +28,6 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
     "liquidity()": FunctionFragment;
     "nearestTick()": FunctionFragment;
     "positions(address,int24,int24)": FunctionFragment;
-    "secondsGrowthGlobal()": FunctionFragment;
     "sqrtPrice()": FunctionFragment;
     "ticks(int24)": FunctionFragment;
     "utils()": FunctionFragment;
@@ -60,10 +59,6 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
     functionFragment: "positions",
     values: [string, BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "secondsGrowthGlobal",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "sqrtPrice", values?: undefined): string;
   encodeFunctionData(functionFragment: "ticks", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "utils", values?: undefined): string;
@@ -88,10 +83,6 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "positions", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "secondsGrowthGlobal",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "sqrtPrice", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "utils", data: BytesLike): Result;
@@ -172,8 +163,6 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       }
     >;
 
-    secondsGrowthGlobal(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     sqrtPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     ticks(
@@ -191,11 +180,11 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       ] & {
         previousTick: number;
         nextTick: number;
-        liquidity: BigNumber;
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDeltaX96: BigNumber;
         amountOutDeltaX96: BigNumber;
-        secondsGrowthOutside: BigNumber;
       }
     >;
 
@@ -231,8 +220,6 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
     }
   >;
 
-  secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
-
   sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
   ticks(
@@ -242,11 +229,11 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
     [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       previousTick: number;
       nextTick: number;
-      liquidity: BigNumber;
+      liquidityDelta: BigNumber;
+      liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
       amountInDeltaX96: BigNumber;
       amountOutDeltaX96: BigNumber;
-      secondsGrowthOutside: BigNumber;
     }
   >;
 
@@ -282,8 +269,6 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       }
     >;
 
-    secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
-
     sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     ticks(
@@ -301,11 +286,11 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       ] & {
         previousTick: number;
         nextTick: number;
-        liquidity: BigNumber;
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDeltaX96: BigNumber;
         amountOutDeltaX96: BigNumber;
-        secondsGrowthOutside: BigNumber;
       }
     >;
 
@@ -336,8 +321,6 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    secondsGrowthGlobal(overrides?: CallOverrides): Promise<BigNumber>;
-
     sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     ticks(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
@@ -366,10 +349,6 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    secondsGrowthGlobal(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

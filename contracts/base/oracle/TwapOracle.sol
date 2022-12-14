@@ -17,8 +17,23 @@ abstract contract TwapOracle is
     IConcentratedFactory public concentratedFactory;
     uint16 private constant observationsLength = 5;
     uint16 private constant blockTime = 12;
+    int24  private constant invalidTick = -887273;
 
-    function calculateAverageTick(IConcentratedPool pool) external view returns (int24 averageTick){
+    // @dev increase pool observations if not sufficient
+    // @dev must be deterministic since called externally
+    function initializePoolObservations(IConcentratedPool pool) external returns (int24 startingTick) {
+        if (!_isPoolObservationsEnough(pool)) {
+            _increaseV3Observations(address(pool));
+            return invalidTick;
+        }
+        return _calculateAverageTick(pool);
+    }
+
+    function calculateAverageTick(IConcentratedPool pool) external view returns (int24 averageTick) {
+        return _calculateAverageTick(pool);
+    }
+
+    function _calculateAverageTick(IConcentratedPool pool) internal view returns (int24 averageTick) {
         uint32[] memory secondsAgos = new uint32[](3);
         secondsAgos[0] = 0;
         secondsAgos[1] = blockTime * observationsLength;
@@ -26,12 +41,16 @@ abstract contract TwapOracle is
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
     }
 
-    function isPoolObservationsEnough(IConcentratedPool pool) external view returns (bool){
-        (,,,,uint16 count,,) = pool.slot0();
-        return count >= observationsLength;
+    function isPoolObservationsEnough(IConcentratedPool pool) external view returns (bool) {
+        return _isPoolObservationsEnough(pool);
     }
 
-    function increaseV3Observation(address pool) external {
+    function _isPoolObservationsEnough(IConcentratedPool pool) internal view returns (bool){
+        (,,,,uint16 observationsCount,,) = pool.slot0();
+        return observationsCount >= observationsLength;
+    }
+
+    function _increaseV3Observations(address pool) internal {
         IConcentratedPool(pool).increaseObservationCardinalityNext(observationsLength);
     }
 
