@@ -17,7 +17,7 @@ abstract contract TwapOracle is
     IConcentratedFactory public concentratedFactory;
     uint16 private constant observationsLength = 5;
     uint16 private constant blockTime = 12;
-    int24  private constant invalidTick = -887273;
+    int24  private constant invalidTick = TickMath.MIN_TICK - 1;
 
     // @dev increase pool observations if not sufficient
     // @dev must be deterministic since called externally

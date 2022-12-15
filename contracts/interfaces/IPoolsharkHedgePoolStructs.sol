@@ -3,14 +3,24 @@ pragma solidity ^0.8.13;
 
 interface IPoolsharkHedgePoolStructs {
 
+    struct PoolState {
+        int24   nearestTick;     /// @dev Tick below current price
+        uint160 price;           /// @dev Starting price current
+        uint128 liquidity;       /// @dev Liquidity currently active
+        uint256 feeGrowthGlobal; /// @dev Global fee growth per liquidity unit
+    }
+
     struct Tick {
-        int24   previousTick;
-        int24   nextTick;
+        int24    previousTick;
+        int24    nextTick;
+    }
+
+    struct TickData {
         int128  liquidityDelta;
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
-        uint256 feeGrowthGlobalIn; // Used to check for claim updates
-        int128  amountInDeltaX96;
-        int128  amountOutDeltaX96;
+        uint256 feeGrowthGlobalIn;   // Used to check for claim updates
+        int128  amountInDelta; 
+        int128  amountOutDelta;
     }
 
     // feeGrowthGlobalInitial 

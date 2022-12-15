@@ -183,8 +183,8 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
-        amountInDeltaX96: BigNumber;
-        amountOutDeltaX96: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
       }
     >;
 
@@ -232,8 +232,8 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
-      amountInDeltaX96: BigNumber;
-      amountOutDeltaX96: BigNumber;
+      amountInDelta: BigNumber;
+      amountOutDelta: BigNumber;
     }
   >;
 
@@ -289,8 +289,8 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
-        amountInDeltaX96: BigNumber;
-        amountOutDeltaX96: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
       }
     >;
 

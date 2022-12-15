@@ -29,6 +29,7 @@ library Ticks
     //maybe call ticks on msg.sender to get tick
     function cross(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => IPoolsharkHedgePoolStructs.TickData) storage tickData,
         int24 currentTick,
         int24 nextTickToCross,
         uint256 currentLiquidity,
@@ -51,6 +52,7 @@ library Ticks
     //TODO: ALL TICKS NEED TO BE CREATED WITH 
     function insert(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => IPoolsharkHedgePoolStructs.TickData) storage tickData,
         uint256 feeGrowthGlobal,
         int24 lowerOld,
         int24 lower,
@@ -170,6 +172,7 @@ library Ticks
 
     function remove(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => IPoolsharkHedgePoolStructs.TickData) storage tickData,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -241,6 +244,7 @@ library Ticks
 
     function accumulate(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => IPoolsharkHedgePoolStructs.TickData) storage tickData,
         int24 currentTick,
         int24 nextTickToCross,
         uint256 currentLiquidity,
@@ -269,22 +273,23 @@ library Ticks
             ticks[nextTickToCross].feeGrowthGlobalIn = feeGrowthGlobal;
 
             // handle amount in delta
-            int256 amountInDelta = ticks[currentTick].amountInDeltaX96 * carryPercent / 1e18;
+            int256 amountInDelta = ticks[currentTick].amountInDelta * carryPercent / 1e18;
             if (amountInDelta > 0) {
-                ticks[nextTickToCross].amountInDeltaX96 += int128(amountInDelta);
-                ticks[currentTick].amountInDeltaX96 -= int128(amountInDelta);
+                ticks[nextTickToCross].amountInDelta += int128(amountInDelta);
+                ticks[currentTick].amountInDelta -= int128(amountInDelta);
             }
             // handle amount out delta
-            int256 amountOutDelta = ticks[currentTick].amountOutDeltaX96 * carryPercent / 1e18;
+            int256 amountOutDelta = ticks[currentTick].amountOutDelta * carryPercent / 1e18;
             if (amountOutDelta > 0) {
-                ticks[nextTickToCross].amountOutDeltaX96 += int128(amountOutDelta);
-                ticks[currentTick].amountOutDeltaX96 -= int128(amountOutDelta);
+                ticks[nextTickToCross].amountOutDelta += int128(amountOutDelta);
+                ticks[currentTick].amountOutDelta -= int128(amountOutDelta);
             }
         }
     }
 
     function rollover(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => IPoolsharkHedgePoolStructs.TickData) storage tickData,
         int24 currentTick,
         int24 nextTickToCross,
         uint256 currentPrice,
@@ -309,13 +314,13 @@ library Ticks
                 false
             );
             //TODO: ensure this will not overflow with 32 bits
-            ticks[nextTickToCross].amountInDeltaX96 -= int128(uint128(
+            ticks[nextTickToCross].amountInDelta -= int128(uint128(
                                                         FullPrecisionMath.mulDiv(
                                                             dxUnfilled,
                                                             0x1000000000000000000000000, 
                                                             currentLiquidity
                                                         )));
-            ticks[nextTickToCross].amountOutDeltaX96 += int128(uint128(
+            ticks[nextTickToCross].amountOutDelta += int128(uint128(
                                                         FullPrecisionMath.mulDiv(
                                                             dyLeftover,
                                                             0x1000000000000000000000000, 

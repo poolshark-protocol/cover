@@ -3,12 +3,9 @@ const hardhat = require('hardhat');
 const { expect } = require("chai");
 import { gBefore } from '../../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { hrtime } from "process";
 import { BigNumber } from 'ethers';
-import { gasUsed } from '../../utils/blocks';
-import { TEXT_COLOR } from '../../utils/colors';
 import { mintSigners20 } from '../../utils/token';
-import { validateMint, Position, Q64x96, BN_ZERO, validateSwap, validateBurn, Tick } from '../../utils/contracts/hedgepool/hedgepool';
+import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick } from '../../utils/contracts/hedgepool/hedgepool';
 
 alice: SignerWithAddress;
 describe('PoolsharkHedgePool Basic Tests', function () {

@@ -64,8 +64,7 @@ contract PoolsharkHedgePoolFactory is
                     token0,
                     token1,
                     uint24(swapFee),
-                    uint24(tickSpacing),
-                    false
+                    uint24(tickSpacing)
                 )
             )
         );

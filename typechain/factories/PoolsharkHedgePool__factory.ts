@@ -621,12 +621,12 @@ const _abi = [
       },
       {
         internalType: "int128",
-        name: "amountInDeltaX96",
+        name: "amountInDelta",
         type: "int128",
       },
       {
         internalType: "int128",
-        name: "amountOutDeltaX96",
+        name: "amountOutDelta",
         type: "int128",
       },
     ],

@@ -19,8 +19,8 @@ export interface Tick {
     liquidityDelta: BigNumber,
     liquidityDeltaMinus: BigNumber,
     feeGrowthGlobalIn: BigNumber,
-    amountInDeltaX96: BigNumber,
-    amountOutDeltaX96: BigNumber
+    amountInDelta: BigNumber,
+    amountOutDelta: BigNumber
 }
 
 export async function validateSwap(
