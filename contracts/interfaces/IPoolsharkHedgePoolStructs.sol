@@ -13,10 +13,7 @@ interface IPoolsharkHedgePoolStructs {
     struct Tick {
         int24    previousTick;
         int24    nextTick;
-    }
-
-    struct TickData {
-        int128  liquidityDelta;
+        int128  liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint256 feeGrowthGlobalIn;   // Used to check for claim updates
         int128  amountInDelta; 
@@ -46,20 +43,19 @@ interface IPoolsharkHedgePoolStructs {
 
     //TODO: optimize this struct
     struct SwapCache {
+        uint256 price;
+        uint256 liquidity;
         uint256 feeAmount;
-        int24   currentTick;
-        uint256 currentPrice;
-        uint256 currentLiquidity;
         uint256 input;
-        int24 nextTickToCross;
     }
 
     struct AccumulateCache {
-        int24   currentTick;
-        uint256 currentPrice;
-        uint256 currentLiquidity;
+        int24   tick;
+        uint256 price;
+        uint256 liquidity;
         int24   nextTickToCross;
-        uint256 feeGrowthGlobal;
+        int24   nextTickToAccum;
+        uint256 feeGrowthGlobalIn;
     }
 }
     
