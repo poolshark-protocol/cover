@@ -58,9 +58,8 @@ library Ticks
         int24 upper,
         uint128 amount,
         int24 latestTick,
-        uint160 currentPrice,
         bool isPool0
-    ) external returns (int24) {
+    ) external {
         if (lower >= upper || lowerOld >= upperOld) {
             revert WrongTickOrder();
         }

@@ -86,7 +86,7 @@ contract PoolsharkHedgePool is
             _initialize(true); 
             _initialize(false);
             unlocked = 1;
-            lastBlockNumber = uint32(block.number);
+            lastBlockNumber = block.number;
         }
     }
 
@@ -97,7 +97,7 @@ contract PoolsharkHedgePool is
                 _initialize(true);
                 _initialize(false);
                 unlocked = 1;
-                lastBlockNumber = uint32(block.number);
+                lastBlockNumber = block.number;
 
             }
             revert WaitUntilEnoughObservations(); 
@@ -111,20 +111,25 @@ contract PoolsharkHedgePool is
         PoolState memory pool = isPool0 ? pool0 : pool1;
         if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
             ticks[latestTick] = Tick(
-                TickMath.MIN_TICK, TickMath.MAX_TICK
+                TickMath.MIN_TICK, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
             ticks[TickMath.MIN_TICK] = Tick(
-                TickMath.MIN_TICK, latestTick
+                TickMath.MIN_TICK, latestTick,
+                0,0,0,0,0
             );
             ticks[TickMath.MAX_TICK] = Tick(
-                latestTick, TickMath.MAX_TICK
+                latestTick, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
         } else if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) {
             ticks[TickMath.MIN_TICK] = Tick(
-                TickMath.MIN_TICK, TickMath.MAX_TICK
+                TickMath.MIN_TICK, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
             ticks[TickMath.MAX_TICK] = Tick(
-                TickMath.MIN_TICK, TickMath.MAX_TICK
+                TickMath.MIN_TICK, TickMath.MAX_TICK,
+                0,0,0,0,0
             );
         }
 
@@ -204,15 +209,14 @@ contract PoolsharkHedgePool is
             mintParams.upperOld,
             mintParams.upper,
             uint128(liquidityMinted),
-            mintParams.zeroForOne ? pool0.nearestTick : pool1.nearestTick,
             latestTick,
-            mintParams.zeroForOne ? uint160(pool0.price) : uint160(pool1.price)
+            mintParams.zeroForOne
         );
 
         (uint128 amountInActual, uint128 amountOutActual) = utils.getAmountsForLiquidity(
             priceLower,
             priceUpper,
-            MintParams.zeroForOne ? priceLower : priceUpper,
+            mintParams.zeroForOne ? priceLower : priceUpper,
             liquidityMinted,
             true
         );
@@ -264,7 +268,14 @@ contract PoolsharkHedgePool is
         uint256 amountIn;
         uint256 amountOut;
         console.logInt(zeroForOne ? ticks1[latestTick].nextTick : ticks1[latestTick].nextTick);
-        Ticks.remove(zeroForOne ? ticks0 : ticks1, lower, upper, amount, latestTick);
+        Ticks.remove(
+            zeroForOne ? ticks0 : ticks1,
+            lower,
+            upper,
+            amount,
+            latestTick,
+            zeroForOne
+        );
 
         //TODO: get token amounts from _updatePosition return values
         emit Burn(msg.sender, amountIn, amountOut);
@@ -307,7 +318,7 @@ contract PoolsharkHedgePool is
 
         if(block.number != lastBlockNumber) {
             console.log("accumulating last block");
-            _accumulateLastBlock();
+            _accumulateLastBlock(zeroForOne);
         }
 
         SwapCache memory cache = SwapCache({
@@ -326,8 +337,8 @@ contract PoolsharkHedgePool is
         /// @dev - liquidity range is limited to one tick within latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to latestTick
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(latestTick - tickSpacing)) :
-                                             uint256(TickMath.getSqrtRatioAtTick(latestTick + tickSpacing)) ;
+        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(latestTick - int24(tickSpacing))) :
+                                             uint256(TickMath.getSqrtRatioAtTick(latestTick + int24(tickSpacing))) ;
         uint256 nextPrice = nextTickPrice;
         // console.log("next price:", nextPrice);
 
@@ -463,8 +474,8 @@ contract PoolsharkHedgePool is
         /// @dev - liquidity range is limited to one tick within latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to latestTick
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(latestTick - tickSpacing)) :
-                                             uint256(TickMath.getSqrtRatioAtTick(latestTick + tickSpacing)) ;
+        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(latestTick - int24(tickSpacing))) :
+                                             uint256(TickMath.getSqrtRatioAtTick(latestTick + int24(tickSpacing))) ;
         uint256 nextPrice = nextTickPrice;
         // console.log("next price:", nextPrice);
 
