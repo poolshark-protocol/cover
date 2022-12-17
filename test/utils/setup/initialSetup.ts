@@ -105,7 +105,7 @@ export class InitialSetup {
         nonce += 1;
 
         writeDeploymentsFile(
-            "PoolSharkHedgePoolFactory",
+            "PoolsharkHedgePoolFactory",
             hre.props.hedgePoolFactory.address,
             hre.network.config.chainId
         );
@@ -123,6 +123,12 @@ export class InitialSetup {
                                     "500"
                                 );
         hre.props.hedgePool = await hre.ethers.getContractAt("PoolsharkHedgePool", hedgePoolAddress);
+
+        writeDeploymentsFile(
+            "PoolsharkHedgePool",
+            hre.props.hedgePool.address,
+            hre.network.config.chainId
+        );
 
         return nonce;
     }
