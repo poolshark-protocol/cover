@@ -11,7 +11,6 @@ import "./DyDxMath.sol";
 /// @notice Tick management library for ranged liquidity.
 library Ticks
 {
-
     error NotImplementedYet();
     error WrongTickOrder();
     error WrongTickLowerRange();
@@ -22,8 +21,8 @@ library Ticks
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    function getMaxLiquidity(uint24 _tickSpacing) external pure returns (uint128) {
-        return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(_tickSpacing)));
+    function getMaxLiquidity(int24 tickSpacing) external pure returns (uint128) {
+        return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(tickSpacing)));
     }
 
     //maybe call ticks on msg.sender to get tick
@@ -255,8 +254,7 @@ library Ticks
         int24 currentTick,
         int24 nextTickToAccum,
         uint256 currentLiquidity,
-        uint256 feeGrowthGlobal,
-        uint24 tickSpacing
+        uint256 feeGrowthGlobal
     ) external {
         //assume tick index is increasing as we acccumulate
         int256 carryPercent;
@@ -272,7 +270,6 @@ library Ticks
         if (currentLiquidity > 0){
             // update fee growth
             ticks[nextTickToAccum].feeGrowthGlobalIn = feeGrowthGlobal;
-
             // handle amount in delta
             int256 amountInDelta = ticks[currentTick].amountInDelta * carryPercent / 1e18;
             if (amountInDelta > 0) {

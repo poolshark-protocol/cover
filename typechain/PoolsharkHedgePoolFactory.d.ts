@@ -83,7 +83,7 @@ interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   ): Result;
 
   events: {
-    "PoolCreated(address,address,uint24,uint24,address)": EventFragment;
+    "PoolCreated(address,address,uint24,int24,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "PoolCreated"): EventFragment;
@@ -234,7 +234,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
   };
 
   filters: {
-    "PoolCreated(address,address,uint24,uint24,address)"(
+    "PoolCreated(address,address,uint24,int24,address)"(
       token0?: string | null,
       token1?: string | null,
       fee?: BigNumberish | null,

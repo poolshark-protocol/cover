@@ -95,7 +95,8 @@ export class InitialSetup {
                                         {
                                             "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address,
                                             "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
-                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
+                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address,
+                                            "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address
                                         }, 
                                         hre.props.alice
                                     ).deploy(hre.props.concentratedFactoryMock.address,

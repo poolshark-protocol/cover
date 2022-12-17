@@ -24,7 +24,7 @@ interface PoolsharkHedgePoolEventsInterface extends ethers.utils.Interface {
     "Burn(address,uint256,uint256)": EventFragment;
     "Collect(address,uint256,uint256)": EventFragment;
     "Mint(address,uint256,uint256)": EventFragment;
-    "PoolCreated(address,address,address,uint256)": EventFragment;
+    "PoolCreated(address,address,address,uint24,int24)": EventFragment;
     "Swap(address,address,address,uint256,uint256)": EventFragment;
   };
 
@@ -60,11 +60,12 @@ export type MintEvent = TypedEvent<
 >;
 
 export type PoolCreatedEvent = TypedEvent<
-  [string, string, string, BigNumber] & {
+  [string, string, string, number, number] & {
     pool: string;
     token0: string;
     token1: string;
-    fee: BigNumber;
+    fee: number;
+    tickSpacing: number;
   }
 >;
 
@@ -180,24 +181,38 @@ export class PoolsharkHedgePoolEvents extends BaseContract {
       { owner: string; amount0: BigNumber; amount1: BigNumber }
     >;
 
-    "PoolCreated(address,address,address,uint256)"(
+    "PoolCreated(address,address,address,uint24,int24)"(
       pool?: null,
       token0?: null,
       token1?: null,
-      fee?: null
+      fee?: null,
+      tickSpacing?: null
     ): TypedEventFilter<
-      [string, string, string, BigNumber],
-      { pool: string; token0: string; token1: string; fee: BigNumber }
+      [string, string, string, number, number],
+      {
+        pool: string;
+        token0: string;
+        token1: string;
+        fee: number;
+        tickSpacing: number;
+      }
     >;
 
     PoolCreated(
       pool?: null,
       token0?: null,
       token1?: null,
-      fee?: null
+      fee?: null,
+      tickSpacing?: null
     ): TypedEventFilter<
-      [string, string, string, BigNumber],
-      { pool: string; token0: string; token1: string; fee: BigNumber }
+      [string, string, string, number, number],
+      {
+        pool: string;
+        token0: string;
+        token1: string;
+        fee: number;
+        tickSpacing: number;
+      }
     >;
 
     "Swap(address,address,address,uint256,uint256)"(

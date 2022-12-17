@@ -33,9 +33,9 @@ const _abi = [
       },
       {
         indexed: false,
-        internalType: "uint24",
+        internalType: "int24",
         name: "tickSpacing",
-        type: "uint24",
+        type: "int24",
       },
       {
         indexed: false,

@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "getMaxLiquidity(uint24)": FunctionFragment;
+    "getMaxLiquidity(int24)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -81,19 +81,19 @@ export class Ticks extends BaseContract {
 
   functions: {
     getMaxLiquidity(
-      _tickSpacing: BigNumberish,
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
   };
 
   getMaxLiquidity(
-    _tickSpacing: BigNumberish,
+    tickSpacing: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
   callStatic: {
     getMaxLiquidity(
-      _tickSpacing: BigNumberish,
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -102,14 +102,14 @@ export class Ticks extends BaseContract {
 
   estimateGas: {
     getMaxLiquidity(
-      _tickSpacing: BigNumberish,
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     getMaxLiquidity(
-      _tickSpacing: BigNumberish,
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

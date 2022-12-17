@@ -108,9 +108,15 @@ const _abi = [
       },
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "uint24",
         name: "fee",
-        type: "uint256",
+        type: "uint24",
+      },
+      {
+        indexed: false,
+        internalType: "int24",
+        name: "tickSpacing",
+        type: "int24",
       },
     ],
     name: "PoolCreated",

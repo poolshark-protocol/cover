@@ -82,7 +82,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobalIn",
+    name: "feeGrowthGlobalIn0",
     outputs: [
       {
         internalType: "uint256",
@@ -95,7 +95,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobalOut",
+    name: "feeGrowthGlobalIn1",
     outputs: [
       {
         internalType: "uint256",
@@ -147,12 +147,27 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "liquidity",
+    name: "pool0",
     outputs: [
       {
+        internalType: "int24",
+        name: "nearestTick",
+        type: "int24",
+      },
+      {
+        internalType: "uint160",
+        name: "price",
+        type: "uint160",
+      },
+      {
         internalType: "uint128",
-        name: "",
+        name: "liquidity",
         type: "uint128",
+      },
+      {
+        internalType: "uint256",
+        name: "feeGrowthGlobal",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -160,12 +175,27 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "nearestTick",
+    name: "pool1",
     outputs: [
       {
         internalType: "int24",
-        name: "",
+        name: "nearestTick",
         type: "int24",
+      },
+      {
+        internalType: "uint160",
+        name: "price",
+        type: "uint160",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidity",
+        type: "uint128",
+      },
+      {
+        internalType: "uint256",
+        name: "feeGrowthGlobal",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -189,7 +219,7 @@ const _abi = [
         type: "int24",
       },
     ],
-    name: "positions",
+    name: "positions0",
     outputs: [
       {
         internalType: "uint128",
@@ -221,13 +251,49 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "sqrtPrice",
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
+      },
+    ],
+    name: "positions1",
     outputs: [
       {
+        internalType: "uint128",
+        name: "liquidity",
+        type: "uint128",
+      },
+      {
+        internalType: "uint256",
+        name: "feeGrowthGlobalLast",
+        type: "uint256",
+      },
+      {
         internalType: "uint160",
-        name: "",
+        name: "claimPriceLast",
         type: "uint160",
+      },
+      {
+        internalType: "uint128",
+        name: "amountIn",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOut",
+        type: "uint128",
       },
     ],
     stateMutability: "view",
@@ -241,7 +307,56 @@ const _abi = [
         type: "int24",
       },
     ],
-    name: "ticks",
+    name: "ticks0",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "previousTick",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "nextTick",
+        type: "int24",
+      },
+      {
+        internalType: "int128",
+        name: "liquidityDelta",
+        type: "int128",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidityDeltaMinus",
+        type: "uint128",
+      },
+      {
+        internalType: "uint256",
+        name: "feeGrowthGlobalIn",
+        type: "uint256",
+      },
+      {
+        internalType: "int128",
+        name: "amountInDelta",
+        type: "int128",
+      },
+      {
+        internalType: "int128",
+        name: "amountOutDelta",
+        type: "int128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
+      },
+    ],
+    name: "ticks1",
     outputs: [
       {
         internalType: "int24",

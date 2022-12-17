@@ -14,11 +14,9 @@ interface IPoolsharkHedgePool is  IPoolsharkHedgePoolStructs {
         int24 lower,
         int24 upper,
         int24 claim,
+        bool zeroForOne,
         uint128 amount
-    ) external returns (
-        uint256 token0Amount,
-        uint256 token1Amount
-    );
+    ) external;
 
     function swap(
         address recipient,
