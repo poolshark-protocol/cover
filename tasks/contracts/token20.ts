@@ -1,8 +1,9 @@
 import { ethers } from "hardhat";
 import { task } from "hardhat/config";
+import { MINT_TOKENS } from "../constants/taskNames";
 import { getWalletAddress, getNonce, readDeploymentsFile } from "../utils";
 
-task("Token20:mint", "mint tokens for user")
+task(MINT_TOKENS, "mint tokens for user")
 .addParam("address", "address to mint to")
 .addParam("amount", "amount to mint")
 .setAction(async (args, hre) => {
@@ -12,9 +13,9 @@ task("Token20:mint", "mint tokens for user")
   const accountAddress = await getWalletAddress(hre, process.env.PRIVATE_KEY);
   let nonce = await getNonce(hre, accountAddress);
 
-  const tokenA = await readDeploymentsFile("Token20A", hre.network.config.chainId);
+  const tokenA = await readDeploymentsFile("Token0", hre.network.config.chainId);
 
-  const tokenB = await readDeploymentsFile("Token20B", hre.network.config.chainId);
+  const tokenB = await readDeploymentsFile("Token1", hre.network.config.chainId);
 
   const tokenAContract = await ethers.getContractAt("Token20", tokenA);
 

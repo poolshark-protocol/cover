@@ -7,3 +7,6 @@ export const COVERAGE_TEST_ARG = 'coverage';
 
 /* Deploy */
 export const DEPLOY_HEDGEPOOLS = 'deploy-hedgepools';
+
+/* Utils */
+export const MINT_TOKENS = 'mint-tokens';

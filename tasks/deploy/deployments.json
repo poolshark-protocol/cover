@@ -7,60 +7,14 @@
         "PoolsharkHedgePool": {
             "address": "0xbCcb45492338E57cb016F6B69Af122D4A5bb6d8A",
             "created": "2022-12-17T14:39:38.554Z"
-        }
-    },
-    "31337": {
+        },
         "Token0": {
-            "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-            "created": "2022-12-17T14:27:50.110Z"
+            "address": "0x4d3C8BC1564574296869DD18656C5AbeD05Ba7b2",
+            "created": "2022-12-17T14:37:50.759Z"
         },
         "Token1": {
-            "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-            "created": "2022-12-17T14:27:50.115Z"
-        },
-        "OrderBook20Factory": {
-            "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-            "created": "2022-09-29T18:31:49.301Z"
-        },
-        "OrderBook20Router": {
-            "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-            "created": "2022-09-29T18:31:49.319Z"
-        },
-        "OrderBook20": {
-            "address": "0x191e8141A73263BAD8283E4d2164A68938186bEB",
-            "created": "2022-09-26T01:25:06.040Z"
-        },
-        "Token1155": {
-            "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-            "created": "2022-09-26T13:39:38.681Z"
-        },
-        "Token20": {
-            "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-            "created": "2022-09-26T13:39:38.682Z"
-        },
-        "OrderBook1155To20Factory": {
-            "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-            "created": "2022-09-26T13:39:38.719Z"
-        },
-        "OrderBook1155To20Router": {
-            "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-            "created": "2022-09-26T13:39:38.719Z"
-        },
-        "OrderBook1155To20": {
-            "address": "0x425CAA15dE175eB20c3f6e6f0186726d1FA52bf7",
-            "created": "2022-09-26T01:25:06.171Z"
-        },
-        "PoolSharkHedgePoolFactory": {
-            "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
-            "created": "2022-12-17T14:18:22.584Z"
-        },
-        "PoolsharkHedgePoolFactory": {
-            "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-            "created": "2022-12-17T14:27:50.285Z"
-        },
-        "PoolsharkHedgePool": {
-            "address": "0x94099942864EA81cCF197E9D71ac53310b1468D8",
-            "created": "2022-12-17T14:27:50.414Z"
+            "address": "0xB99e23dcD47930d6ba7eCaDF8299A1F6b920b6F4",
+            "created": "2022-12-17T14:37:50.763Z"
         }
     }
 }

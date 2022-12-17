@@ -15,7 +15,7 @@ class DeployHedgePoolsTask {
 }
 
 task(DEPLOY_HEDGEPOOLS)
-    .setDescription('Deploys OceanBook')
+    .setDescription('Deploys Hedge Pools')
     .setAction(async function ({
         ethers
     }) {
@@ -31,3 +31,4 @@ task(DEPLOY_HEDGEPOOLS)
 
         console.log('Hedge pool deployment complete.\n');
 });
+
