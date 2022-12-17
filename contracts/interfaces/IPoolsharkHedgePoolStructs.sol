@@ -51,6 +51,7 @@ interface IPoolsharkHedgePoolStructs {
 
     struct AccumulateCache {
         int24   tick;
+        mapping(int24 => Tick) ticks;
         uint256 price;
         uint256 liquidity;
         int24   nextTickToCross;

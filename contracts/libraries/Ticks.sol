@@ -96,12 +96,10 @@ library Ticks
                     || lower >= oldNextTick) {
                 revert WrongTickLowerOrder();
             }
-            ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
-                lowerOld,
-                oldNextTick
-            );
             if (isPool0) {
-                ticks[lower] = IPoolsharkHedgePoolStructs.TickData(
+                ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                    lowerOld,
+                    oldNextTick,
                     -int128(amount),
                     amount,
                     feeGrowthGlobalIn,
@@ -109,7 +107,9 @@ library Ticks
                     0
                 );
             } else {
-                ticks[lower] = IPoolsharkHedgePoolStructs.TickData(
+                ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                    lowerOld,
+                    oldNextTick,
                     int128(amount),
                     0,
                     feeGrowthGlobalIn,
@@ -146,12 +146,10 @@ library Ticks
                 revert WrongTickUpperOrder();
             }
             //TODO: set feeGrowth to 1 initially
-            ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
-                upperOld,
-                oldNextTick
-            );
             if (isPool0) {
-                ticks[upper] = IPoolsharkHedgePoolStructs.TickData(
+                ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
+                    upperOld,
+                    oldNextTick,
                     int128(amount),
                     0,
                     feeGrowthGlobalIn,
@@ -159,7 +157,9 @@ library Ticks
                     0
                 );
             } else {
-                ticks[lower] = IPoolsharkHedgePoolStructs.TickData(
+                ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                    upperOld,
+                    oldNextTick,
                     -int128(amount),
                     amount,
                     feeGrowthGlobalIn,
