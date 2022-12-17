@@ -20,16 +20,31 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface MathUtilsInterface extends ethers.utils.Interface {
   functions: {
+    "mulDiv(uint256,uint256,uint256)": FunctionFragment;
+    "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
     "sqrt(uint256)": FunctionFragment;
     "within1(uint256,uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "mulDiv",
+    values: [BigNumberish, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mulDivRoundingUp",
+    values: [BigNumberish, BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "sqrt", values: [BigNumberish]): string;
   encodeFunctionData(
     functionFragment: "within1",
     values: [BigNumberish, BigNumberish]
   ): string;
 
+  decodeFunctionResult(functionFragment: "mulDiv", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "mulDivRoundingUp",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "sqrt", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "within1", data: BytesLike): Result;
 
@@ -80,6 +95,20 @@ export class MathUtils extends BaseContract {
   interface: MathUtilsInterface;
 
   functions: {
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { result: BigNumber }>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { result: BigNumber }>;
+
     sqrt(
       x: BigNumberish,
       overrides?: CallOverrides
@@ -92,6 +121,20 @@ export class MathUtils extends BaseContract {
     ): Promise<[boolean]>;
   };
 
+  mulDiv(
+    a: BigNumberish,
+    b: BigNumberish,
+    denominator: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  mulDivRoundingUp(
+    a: BigNumberish,
+    b: BigNumberish,
+    denominator: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   sqrt(x: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
   within1(
@@ -101,6 +144,20 @@ export class MathUtils extends BaseContract {
   ): Promise<boolean>;
 
   callStatic: {
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     sqrt(x: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     within1(
@@ -113,6 +170,20 @@ export class MathUtils extends BaseContract {
   filters: {};
 
   estimateGas: {
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     sqrt(x: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     within1(
@@ -123,6 +194,20 @@ export class MathUtils extends BaseContract {
   };
 
   populateTransaction: {
+    mulDiv(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    mulDivRoundingUp(
+      a: BigNumberish,
+      b: BigNumberish,
+      denominator: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     sqrt(
       x: BigNumberish,
       overrides?: CallOverrides

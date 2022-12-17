@@ -7,7 +7,8 @@ interface IPoolsharkHedgePoolStructs {
         int24   nearestTick;     /// @dev Tick below current price
         uint160 price;           /// @dev Starting price current
         uint128 liquidity;       /// @dev Liquidity currently active
-        uint256 feeGrowthGlobal; /// @dev Global fee growth per liquidity unit
+        uint256 lastBlockNumber;
+        uint256 feeGrowthGlobalIn; /// @dev Global fee growth per liquidity unit
     }
 
     struct Tick {

@@ -20,10 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
   functions: {
-    "feeGrowthGlobalIn0()": FunctionFragment;
-    "feeGrowthGlobalIn1()": FunctionFragment;
     "feeTo()": FunctionFragment;
-    "lastBlockNumber()": FunctionFragment;
     "latestTick()": FunctionFragment;
     "pool0()": FunctionFragment;
     "pool1()": FunctionFragment;
@@ -34,19 +31,7 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
     "utils()": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "feeGrowthGlobalIn0",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "feeGrowthGlobalIn1",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "feeTo", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "lastBlockNumber",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "latestTick",
     values?: undefined
@@ -71,19 +56,7 @@ interface PoolsharkHedgePoolStorageInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "utils", values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "feeGrowthGlobalIn0",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "feeGrowthGlobalIn1",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "feeTo", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "lastBlockNumber",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "latestTick", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pool0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pool1", data: BytesLike): Result;
@@ -140,35 +113,31 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
   interface: PoolsharkHedgePoolStorageInterface;
 
   functions: {
-    feeGrowthGlobalIn0(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    feeGrowthGlobalIn1(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     feeTo(overrides?: CallOverrides): Promise<[string]>;
-
-    lastBlockNumber(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     latestTick(overrides?: CallOverrides): Promise<[number]>;
 
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
         price: BigNumber;
         liquidity: BigNumber;
-        feeGrowthGlobal: BigNumber;
+        lastBlockNumber: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
       }
     >;
 
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
         price: BigNumber;
         liquidity: BigNumber;
-        feeGrowthGlobal: BigNumber;
+        lastBlockNumber: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
       }
     >;
 
@@ -251,35 +220,31 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
     utils(overrides?: CallOverrides): Promise<[string]>;
   };
 
-  feeGrowthGlobalIn0(overrides?: CallOverrides): Promise<BigNumber>;
-
-  feeGrowthGlobalIn1(overrides?: CallOverrides): Promise<BigNumber>;
-
   feeTo(overrides?: CallOverrides): Promise<string>;
-
-  lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
 
   latestTick(overrides?: CallOverrides): Promise<number>;
 
   pool0(
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber] & {
+    [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
       nearestTick: number;
       price: BigNumber;
       liquidity: BigNumber;
-      feeGrowthGlobal: BigNumber;
+      lastBlockNumber: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
     }
   >;
 
   pool1(
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber] & {
+    [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
       nearestTick: number;
       price: BigNumber;
       liquidity: BigNumber;
-      feeGrowthGlobal: BigNumber;
+      lastBlockNumber: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
     }
   >;
 
@@ -346,35 +311,31 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
   utils(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
-    feeGrowthGlobalIn0(overrides?: CallOverrides): Promise<BigNumber>;
-
-    feeGrowthGlobalIn1(overrides?: CallOverrides): Promise<BigNumber>;
-
     feeTo(overrides?: CallOverrides): Promise<string>;
-
-    lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
 
     latestTick(overrides?: CallOverrides): Promise<number>;
 
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
         price: BigNumber;
         liquidity: BigNumber;
-        feeGrowthGlobal: BigNumber;
+        lastBlockNumber: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
       }
     >;
 
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, BigNumber, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
         price: BigNumber;
         liquidity: BigNumber;
-        feeGrowthGlobal: BigNumber;
+        lastBlockNumber: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
       }
     >;
 
@@ -460,13 +421,7 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
   filters: {};
 
   estimateGas: {
-    feeGrowthGlobalIn0(overrides?: CallOverrides): Promise<BigNumber>;
-
-    feeGrowthGlobalIn1(overrides?: CallOverrides): Promise<BigNumber>;
-
     feeTo(overrides?: CallOverrides): Promise<BigNumber>;
-
-    lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
 
     latestTick(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -496,17 +451,7 @@ export class PoolsharkHedgePoolStorage extends BaseContract {
   };
 
   populateTransaction: {
-    feeGrowthGlobalIn0(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    feeGrowthGlobalIn1(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     feeTo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    lastBlockNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     latestTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

@@ -42,7 +42,6 @@ export type { PoolsharkTicksErrors } from "./PoolsharkTicksErrors";
 export type { PoolsharkTransferErrors } from "./PoolsharkTransferErrors";
 export type { SafeCast } from "./SafeCast";
 export type { SafeTransfers } from "./SafeTransfers";
-export type { SwapLib } from "./SwapLib";
 
 export { ERC20__factory } from "./factories/ERC20__factory";
 export { ERC20Burnable__factory } from "./factories/ERC20Burnable__factory";
@@ -85,4 +84,3 @@ export { PoolsharkTicksErrors__factory } from "./factories/PoolsharkTicksErrors_
 export { PoolsharkTransferErrors__factory } from "./factories/PoolsharkTransferErrors__factory";
 export { SafeCast__factory } from "./factories/SafeCast__factory";
 export { SafeTransfers__factory } from "./factories/SafeTransfers__factory";
-export { SwapLib__factory } from "./factories/SwapLib__factory";

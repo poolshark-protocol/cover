@@ -82,51 +82,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "feeGrowthGlobalIn0",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "feeGrowthGlobalIn1",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "feeTo",
     outputs: [
       {
         internalType: "address",
         name: "",
         type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "lastBlockNumber",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -166,7 +127,12 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "feeGrowthGlobal",
+        name: "lastBlockNumber",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "feeGrowthGlobalIn",
         type: "uint256",
       },
     ],
@@ -194,7 +160,12 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "feeGrowthGlobal",
+        name: "lastBlockNumber",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "feeGrowthGlobalIn",
         type: "uint256",
       },
     ],

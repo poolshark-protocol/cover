@@ -145,14 +145,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Token20__factory>;
     getContractFactory(
-      name: "DyDxMath",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DyDxMath__factory>;
-    getContractFactory(
-      name: "FullPrecisionMath",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.FullPrecisionMath__factory>;
-    getContractFactory(
       name: "MathUtils",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MathUtils__factory>;
@@ -188,10 +180,6 @@ declare module "hardhat/types/runtime" {
       name: "SafeTransfers",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SafeTransfers__factory>;
-    getContractFactory(
-      name: "SwapLib",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SwapLib__factory>;
 
     getContractAt(
       name: "ERC20",
@@ -359,16 +347,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Token20>;
     getContractAt(
-      name: "DyDxMath",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.DyDxMath>;
-    getContractAt(
-      name: "FullPrecisionMath",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.FullPrecisionMath>;
-    getContractAt(
       name: "MathUtils",
       address: string,
       signer?: ethers.Signer
@@ -413,11 +391,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SafeTransfers>;
-    getContractAt(
-      name: "SwapLib",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SwapLib>;
 
     // default types
     getContractFactory(
