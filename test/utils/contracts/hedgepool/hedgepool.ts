@@ -195,7 +195,7 @@ export async function validateBurn(
     lower: BigNumber,
     upper: BigNumber,
     claim: BigNumber,
-    amountDesired: BigNumber,
+    liquidityAmount: BigNumber,
     zeroForOne: boolean,
     balanceInIncrease: BigNumber,
     balanceOutIncrease: BigNumber,
@@ -219,7 +219,7 @@ export async function validateBurn(
             upper,
             claim,
             zeroForOne,
-            amountDesired
+            liquidityAmount
           );
         await txn.wait();
     } else {
@@ -228,7 +228,7 @@ export async function validateBurn(
             upper,
             claim,
             zeroForOne,
-            amountDesired
+            liquidityAmount
           )).to.be.revertedWith(revertMessage);
         return;
     }
@@ -248,5 +248,17 @@ export async function validateBurn(
 
     const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks1(lower);
     const upperTickAfter:    Tick = await hre.props.hedgePool.ticks1(upper);
+
+    //dependent on zeroForOne
+    if (!zeroForOne) {
+        //liquidity change for lower should be -liquidityAmount
+        expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+        expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+        expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(liquidityAmount);
+        expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+    } else {
+        
+    }
+    
 
 }

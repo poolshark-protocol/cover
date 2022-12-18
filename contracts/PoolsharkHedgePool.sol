@@ -120,8 +120,13 @@ contract PoolsharkHedgePool is
         _ensureInitialized();
         PoolState memory pool = mintParams.zeroForOne ? pool0 : pool1;
         if(block.number != pool.lastBlockNumber) {
+            console.log('accumulating');
+            console.logInt(utils.calculateAverageTick(inputPool));
+                        console.log('min latest max');
+            console.logInt(tickNodes[-887272].nextTick);
+            console.logInt(tickNodes[-887272].previousTick);
             pool.lastBlockNumber = block.number;
-            Ticks.accumulateLastBlock(
+            (pool, latestTick) = Ticks.accumulateLastBlock(
                 mintParams.zeroForOne ? ticks0 : ticks1,
                 tickNodes,
                 pool,
@@ -130,6 +135,11 @@ contract PoolsharkHedgePool is
                 utils.calculateAverageTick(inputPool),
                 tickSpacing
             );
+              console.log('min latest max');
+            console.logInt(tickNodes[-887272].nextTick);
+            console.logInt(tickNodes[-887272].previousTick);
+        } else {
+            console.log('not accumulating');
         }
         //TODO: handle upperOld and lowerOld being invalid
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
@@ -185,13 +195,13 @@ contract PoolsharkHedgePool is
         Ticks.insert(
             mintParams.zeroForOne ? ticks0 : ticks1,
             tickNodes,
+            latestTick,
             pool.feeGrowthGlobalIn,
             mintParams.lowerOld,
             mintParams.lower,
             mintParams.upperOld,
             mintParams.upper,
             uint128(liquidityMinted),
-            latestTick,
             mintParams.zeroForOne
         );
 
@@ -225,7 +235,7 @@ contract PoolsharkHedgePool is
         if(block.number != pool.lastBlockNumber) {
             console.log("accumulating last block");
             pool.lastBlockNumber = block.number;
-            Ticks.accumulateLastBlock(
+            (pool, latestTick) = Ticks.accumulateLastBlock(
                 zeroForOne ? ticks0 : ticks1,
                 tickNodes,
                 pool,
@@ -306,7 +316,10 @@ contract PoolsharkHedgePool is
 
         if(block.number != pool.lastBlockNumber) {
             pool.lastBlockNumber = block.number;
-            Ticks.accumulateLastBlock(
+            console.log('min latest max');
+            console.logInt(tickNodes[-887272].nextTick);
+            console.logInt(tickNodes[-887272].previousTick);
+            (pool, latestTick) = Ticks.accumulateLastBlock(
                 zeroForOne ? ticks1 : ticks0,
                 tickNodes,
                 pool,
@@ -443,7 +456,10 @@ contract PoolsharkHedgePool is
         if (mintParams.zeroForOne) {
             if (mintParams.lower >= latestTick) revert InvalidPosition();
         } else {
-            if (mintParams.lower <= latestTick) revert InvalidPosition();
+            console.log('upper param');
+            console.logInt(mintParams.upper);
+            console.logInt(latestTick);
+            if (mintParams.upper <= latestTick) revert InvalidPosition();
         }
     }
 

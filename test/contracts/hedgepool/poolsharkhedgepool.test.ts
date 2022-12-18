@@ -5,7 +5,7 @@ import { gBefore } from '../../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
 import { mintSigners20 } from '../../utils/token';
-import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState } from '../../utils/contracts/hedgepool/hedgepool';
+import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode } from '../../utils/contracts/hedgepool/hedgepool';
 
 alice: SignerWithAddress;
 describe('PoolsharkHedgePool Basic Tests', function () {
@@ -21,6 +21,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   let carol: SignerWithAddress;
 
   const liquidityAmount = BigNumber.from('199760153929825488153727');
+  const minTickIdx = BigNumber.from('-887272');
+  const maxTickIdx = BigNumber.from('887272');
 
   before(async function () {
     await gBefore();
@@ -73,7 +75,12 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
-
+    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
     await validateMint(
       hre.props.alice,
       hre.props.alice.address,
@@ -105,19 +112,22 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(lowerTickNode.previousTick).to.be.equal(lowerOld);
     expect(lowerTickNode.nextTick).to.be.equal(upper);
     expect(lowerTick.liquidityDelta).to.be.equal(liquidityAmount);
+    expect(lowerTick.liquidityDeltaMinus).to.be.equal(BN_ZERO);
 
     expect(upperTickNode.previousTick).to.be.equal(lower);
     expect(upperTickNode.nextTick).to.be.equal(upperOld);
     expect(upperTick.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityAmount));
+    expect(upperTick.liquidityDeltaMinus).to.be.equal(liquidityAmount);
   });
 
   it('Should swap with zero output', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-    const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
-    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-
+    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
     await validateSwap(
       hre.props.alice,
       hre.props.alice.address,
@@ -134,7 +144,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   it('Should burn LP position and withdraw all liquidity', async function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
-
+    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
     await validateBurn(
       hre.props.alice,
       lower,
@@ -154,8 +170,12 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("90", 0);
     const burnAmount = hre.ethers.utils.parseUnits("66420461859385355519898", 0);
-    let lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1(upperOld);
-    console.log('max tick:', lowerOldTickBefore.toString());
+    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
     // move TWAP to tick 50
     let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
       3600,
@@ -177,8 +197,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       burnAmount,
       ""
     );
-    lowerOldTickBefore = await hre.props.hedgePool.ticks1(upperOld);
-    console.log('max tick:', lowerOldTickBefore.toString());
+
     await validateSwap(
       hre.props.alice,
       hre.props.alice.address,
@@ -202,6 +221,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       token1Amount.sub(1),
       ""
     )
+
+    minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
   });
 
   it('Should not mint position with lower below TWAP', async function () {
@@ -209,9 +235,6 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lower    = hre.ethers.utils.parseUnits("0", 0);
     const upperOld = hre.ethers.utils.parseUnits("50", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
-
-    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1(lowerOld);
-    console.log('zero tick:', lowerOldTickBefore.toString());
 
     await validateMint(
       hre.props.alice,
@@ -226,6 +249,14 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       liquidityAmount,
       "InvalidPosition()"
     );
+
+    
+    let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
   });
 
   it('Should mint, swap, and then claim entire range', async function () {
@@ -242,8 +273,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     );
     await txn.wait();
 
-    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1(lowerOld);
-    console.log('zero tick:', lowerOldTickBefore.toString());
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1("0");
+    console.log('min tick:', lowerOldTickBefore.toString());
 
     await validateMint(
       hre.props.alice,
@@ -258,6 +289,14 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       liquidityAmount,
       ""
     );
+
+    
+    let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    console.log('latest tick:', latestTick.toString());
+    let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
 
     await validateSwap(
       hre.props.alice,
