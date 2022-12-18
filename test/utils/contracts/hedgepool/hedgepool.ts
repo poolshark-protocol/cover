@@ -13,9 +13,20 @@ export interface Position {
     amountOut: BigNumber
 }
 
-export interface Tick {
+export interface PoolState {
+    nearestTick: number,
+    price: BigNumber,
+    liquidity: BigNumber,
+    lastBlockNumber: BigNumber,
+    feeGrowthGlobalIn: BigNumber
+}
+
+export interface TickNode {
     previousTick: number,
     nextTick: number,
+}
+
+export interface Tick {
     liquidityDelta: BigNumber,
     liquidityDeltaMinus: BigNumber,
     feeGrowthGlobalIn: BigNumber,
@@ -45,12 +56,14 @@ export async function validateSwap(
         await hre.props.token1.approve(hre.props.hedgePool.address, amountIn);
     }
 
-    const liquidityBefore           = await hre.props.hedgePool.liquidity();
-    const lastBlockNumberBefore     = await hre.props.hedgePool.lastBlockNumber();
-    const feeGrowthGlobalBefore     = await hre.props.hedgePool.feeGrowthGlobalIn();
+
+    const pool0Before: PoolState    = await hre.props.hedgePool.pool0();
+    const liquidityBefore           = pool0Before.liquidity;
+    const lastBlockNumberBefore     = pool0Before.lastBlockNumber;
+    const feeGrowthGlobalBefore     = pool0Before.feeGrowthGlobalIn;
+    const nearestTickBefore         = pool0Before.nearestTick;
+    const priceBefore               = pool0Before.price;
     const latestTickBefore          = await hre.props.hedgePool.latestTick();
-    const nearestTickBefore         = await hre.props.hedgePool.nearestTick();
-    const priceBefore               = await hre.props.hedgePool.sqrtPrice();
 
     let txn = await hre.props.hedgePool.swap(
         signer.address,
@@ -72,12 +85,13 @@ export async function validateSwap(
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
 
-    const liquidityAfter           = await hre.props.hedgePool.liquidity();
-    const lastBlockNumberAfter     = await hre.props.hedgePool.lastBlockNumber();
-    const feeGrowthGlobalAfter     = await hre.props.hedgePool.feeGrowthGlobalIn();
+    const pool0After: PoolState    = await hre.props.hedgePool.pool0();
+    const liquidityAfter           = pool0After.liquidity;
+    const lastBlockNumberAfter     = pool0After.lastBlockNumber;
+    const feeGrowthGlobalAfter     = pool0After.feeGrowthGlobalIn;
+    const nearestTickAfter         = pool0After.nearestTick;
+    const priceAfter               = pool0After.price;
     const latestTickAfter          = await hre.props.hedgePool.latestTick();
-    const nearestTickAfter         = await hre.props.hedgePool.nearestTick();
-    const priceAfter               = await hre.props.hedgePool.sqrtPrice();
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
     // expect(priceAfter).to.be.equal(finalPrice);
@@ -108,11 +122,11 @@ export async function validateMint(
         await hre.props.token1.approve(hre.props.hedgePool.address, amountDesired);
     }
 
-    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks(lowerOld);
-    const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks(lower);
-    const upperOldTickBefore: Tick = await hre.props.hedgePool.ticks(upperOld);
-    const upperTickBefore:    Tick = await hre.props.hedgePool.ticks(upper);
-    const positionBefore:     Position = await hre.props.hedgePool.positions(
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1(lowerOld);
+    const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks1(lower);
+    const upperOldTickBefore: Tick = await hre.props.hedgePool.ticks1(upperOld);
+    const upperTickBefore:    Tick = await hre.props.hedgePool.ticks1(upper);
+    const positionBefore:     Position = await hre.props.hedgePool.positions1(
         recipient,
         lower,
         upper
@@ -157,11 +171,11 @@ export async function validateMint(
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
 
-    const lowerOldTickAfter: Tick = await hre.props.hedgePool.ticks(lowerOld);
-    const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks(lower);
-    const upperOldTickAfter: Tick = await hre.props.hedgePool.ticks(upperOld);
-    const upperTickAfter:    Tick = await hre.props.hedgePool.ticks(upper);
-    const positionAfter:     Position = await hre.props.hedgePool.positions(
+    const lowerOldTickAfter: Tick = await hre.props.hedgePool.ticks1(lowerOld);
+    const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks1(lower);
+    const upperOldTickAfter: Tick = await hre.props.hedgePool.ticks1(upperOld);
+    const upperTickAfter:    Tick = await hre.props.hedgePool.ticks1(upper);
+    const positionAfter:     Position = await hre.props.hedgePool.positions1(
         recipient,
         lower,
         upper
@@ -196,14 +210,15 @@ export async function validateBurn(
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
     }
 
-    const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks(lower);
-    const upperTickBefore:    Tick = await hre.props.hedgePool.ticks(upper);
+    const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks1(lower);
+    const upperTickBefore:    Tick = await hre.props.hedgePool.ticks1(upper);
 
     if (revertMessage == ""){
         const txn = await hre.props.hedgePool.connect(signer).burn(
             lower,
             upper,
             claim,
+            zeroForOne,
             amountDesired
           );
         await txn.wait();
@@ -212,6 +227,7 @@ export async function validateBurn(
             lower,
             upper,
             claim,
+            zeroForOne,
             amountDesired
           )).to.be.revertedWith(revertMessage);
         return;
@@ -230,7 +246,7 @@ export async function validateBurn(
     expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease);
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
 
-    const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks(lower);
-    const upperTickAfter:    Tick = await hre.props.hedgePool.ticks(upper);
+    const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks1(lower);
+    const upperTickAfter:    Tick = await hre.props.hedgePool.ticks1(upper);
 
 }

@@ -26,6 +26,7 @@ interface PoolsharkHedgePoolViewInterface extends ethers.utils.Interface {
     "pool1()": FunctionFragment;
     "positions0(address,int24,int24)": FunctionFragment;
     "positions1(address,int24,int24)": FunctionFragment;
+    "tickNodes(int24)": FunctionFragment;
     "ticks0(int24)": FunctionFragment;
     "ticks1(int24)": FunctionFragment;
     "utils()": FunctionFragment;
@@ -47,6 +48,10 @@ interface PoolsharkHedgePoolViewInterface extends ethers.utils.Interface {
     values: [string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "tickNodes",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "ticks0",
     values: [BigNumberish]
   ): string;
@@ -62,6 +67,7 @@ interface PoolsharkHedgePoolViewInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "pool1", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "positions0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "positions1", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "tickNodes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks1", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "utils", data: BytesLike): Result;
@@ -171,21 +177,16 @@ export class PoolsharkHedgePoolView extends BaseContract {
       }
     >;
 
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, number] & { previousTick: number; nextTick: number }>;
+
     ticks0(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        previousTick: number;
-        nextTick: number;
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -198,17 +199,7 @@ export class PoolsharkHedgePoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        previousTick: number;
-        nextTick: number;
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -278,13 +269,16 @@ export class PoolsharkHedgePoolView extends BaseContract {
     }
   >;
 
+  tickNodes(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[number, number] & { previousTick: number; nextTick: number }>;
+
   ticks0(
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
-      previousTick: number;
-      nextTick: number;
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
@@ -297,9 +291,7 @@ export class PoolsharkHedgePoolView extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
-      previousTick: number;
-      nextTick: number;
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
@@ -369,21 +361,16 @@ export class PoolsharkHedgePoolView extends BaseContract {
       }
     >;
 
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, number] & { previousTick: number; nextTick: number }>;
+
     ticks0(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        previousTick: number;
-        nextTick: number;
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -396,17 +383,7 @@ export class PoolsharkHedgePoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        previousTick: number;
-        nextTick: number;
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -443,6 +420,11 @@ export class PoolsharkHedgePoolView extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     ticks0(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     ticks1(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
@@ -470,6 +452,11 @@ export class PoolsharkHedgePoolView extends BaseContract {
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    tickNodes(
+      arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

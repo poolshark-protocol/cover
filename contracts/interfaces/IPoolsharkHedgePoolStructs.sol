@@ -11,14 +11,17 @@ interface IPoolsharkHedgePoolStructs {
         uint256 feeGrowthGlobalIn; /// @dev Global fee growth per liquidity unit
     }
 
-    struct Tick {
+    struct TickNode {
         int24    previousTick;
         int24    nextTick;
-        int128  liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
-        uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
-        uint256 feeGrowthGlobalIn;   // Used to check for claim updates
-        int128  amountInDelta; 
-        int128  amountOutDelta;
+    }
+
+    struct Tick {
+        int128   liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
+        uint128  liquidityDeltaMinus; // represent LPs for token0 -> token1
+        uint256  feeGrowthGlobalIn;   // Used to check for claim updates
+        int128   amountInDelta; 
+        int128   amountOutDelta;
     }
 
     // feeGrowthGlobalInitial 

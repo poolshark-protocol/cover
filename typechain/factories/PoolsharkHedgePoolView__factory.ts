@@ -278,7 +278,7 @@ const _abi = [
         type: "int24",
       },
     ],
-    name: "ticks0",
+    name: "tickNodes",
     outputs: [
       {
         internalType: "int24",
@@ -290,6 +290,20 @@ const _abi = [
         name: "nextTick",
         type: "int24",
       },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
+      },
+    ],
+    name: "ticks0",
+    outputs: [
       {
         internalType: "int128",
         name: "liquidityDelta",
@@ -329,16 +343,6 @@ const _abi = [
     ],
     name: "ticks1",
     outputs: [
-      {
-        internalType: "int24",
-        name: "previousTick",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "nextTick",
-        type: "int24",
-      },
       {
         internalType: "int128",
         name: "liquidityDelta",

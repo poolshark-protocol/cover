@@ -105,12 +105,12 @@ contract PoolsharkHedgePool is
         int24 initLatestTick = utils.initializePoolObservations(IConcentratedPool(inputPool));
         latestTick = initLatestTick / int24(tickSpacing) * int24(tickSpacing);
         mapping(int24 => Tick) storage ticks = isPool0 ? ticks0 : ticks1;
-        PoolState storage pool = isPool0 ? pool0 : pool1;
         Ticks.initialize(
             ticks,
-            pool,
-            initLatestTick,
-            isPool0
+            tickNodes,
+            pool0,
+            pool1,
+            initLatestTick
         );
     }
 
@@ -123,6 +123,7 @@ contract PoolsharkHedgePool is
             pool.lastBlockNumber = block.number;
             Ticks.accumulateLastBlock(
                 mintParams.zeroForOne ? ticks0 : ticks1,
+                tickNodes,
                 pool,
                 mintParams.zeroForOne,
                 latestTick,
@@ -139,7 +140,7 @@ contract PoolsharkHedgePool is
             mintParams.upper = latestTick - int24(tickSpacing);
             mintParams.upperOld = latestTick;
             uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(mintParams.upper);
-            mintParams.amountDesired -= uint128(utils.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
+            mintParams.amountDesired -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
             priceUpper = priceNewUpper;
         }
         if (!mintParams.zeroForOne && mintParams.lower <= latestTick) {
@@ -152,7 +153,7 @@ contract PoolsharkHedgePool is
 
         _validatePosition(mintParams);
 
-        liquidityMinted = utils.getLiquidityForAmounts(
+        liquidityMinted = DyDxMath.getLiquidityForAmounts(
             priceLower,
             priceUpper,
             mintParams.zeroForOne ? priceLower : priceUpper,
@@ -183,6 +184,7 @@ contract PoolsharkHedgePool is
 
         Ticks.insert(
             mintParams.zeroForOne ? ticks0 : ticks1,
+            tickNodes,
             pool.feeGrowthGlobalIn,
             mintParams.lowerOld,
             mintParams.lower,
@@ -193,7 +195,7 @@ contract PoolsharkHedgePool is
             mintParams.zeroForOne
         );
 
-        (uint128 amountInActual, uint128 amountOutActual) = utils.getAmountsForLiquidity(
+        (uint128 amountInActual, uint128 amountOutActual) = DyDxMath.getAmountsForLiquidity(
             priceLower,
             priceUpper,
             mintParams.zeroForOne ? priceLower : priceUpper,
@@ -225,6 +227,7 @@ contract PoolsharkHedgePool is
             pool.lastBlockNumber = block.number;
             Ticks.accumulateLastBlock(
                 zeroForOne ? ticks0 : ticks1,
+                tickNodes,
                 pool,
                 zeroForOne,
                 latestTick,
@@ -254,6 +257,7 @@ contract PoolsharkHedgePool is
         uint256 amountOut;
         Ticks.remove(
             zeroForOne ? ticks0 : ticks1,
+            tickNodes,
             lower,
             upper,
             amount,
@@ -304,6 +308,7 @@ contract PoolsharkHedgePool is
             pool.lastBlockNumber = block.number;
             Ticks.accumulateLastBlock(
                 zeroForOne ? ticks1 : ticks0,
+                tickNodes,
                 pool,
                 !zeroForOne,
                 latestTick,
@@ -471,7 +476,7 @@ contract PoolsharkHedgePool is
             // Trading token 0 (x) for token 1 (y).
             // price  is decreasing.
             if (nextPrice < priceLimit) { nextPrice = priceLimit; }
-            uint256 maxDx = utils.getDx(cache.liquidity, nextPrice, cache.price, false);
+            uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
             console.log("max dx:", maxDx);
             if (cache.input <= maxDx) {
                 // We can swap within the current range.
@@ -592,7 +597,7 @@ contract PoolsharkHedgePool is
                 if (claim != upper){
                     {
                         // next tick should not have any fee growth
-                        int24 claimNextTick = zeroForOne ? ticks[claim].previousTick : ticks[claim].nextTick;
+                        int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
                         if (ticks[claimNextTick].feeGrowthGlobalIn > position.feeGrowthGlobalLast) revert WrongTickClaimedAt();
                     }
                 }
@@ -607,7 +612,7 @@ contract PoolsharkHedgePool is
                                                         position.claimPriceLast,
                                                         false
                                                     )
-                                                  : utils.getDx(
+                                                  : DyDxMath.getDx(
                                                         position.liquidity, 
                                                         position.claimPriceLast,
                                                         claimPrice, 
@@ -656,7 +661,7 @@ contract PoolsharkHedgePool is
             // calculate amount to transfer out
             // TODO: ensure no liquidity above has been touched
             uint256 amountOutRemoved = zeroForOne ? 
-                                            utils.getDx(
+                                            DyDxMath.getDx(
                                                 uint128(-amount),
                                                 priceLower,
                                                 claimPrice,

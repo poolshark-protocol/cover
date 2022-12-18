@@ -61,8 +61,6 @@ contract PoolsharkHedgePoolFactory is
                     address(this),
                     inputPool,
                     libraries,
-                    token0,
-                    token1,
                     uint24(swapFee),
                     tickSpacing
                 )
