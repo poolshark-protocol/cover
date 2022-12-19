@@ -119,27 +119,20 @@ contract PoolsharkHedgePool is
         /// @dev - don't allow mints until we have enough observations from inputPool
         _ensureInitialized();
         PoolState memory pool = mintParams.zeroForOne ? pool0 : pool1;
+        //TODO: move tick update check here
         if(block.number != pool.lastBlockNumber) {
-            console.log('accumulating');
-            console.logInt(utils.calculateAverageTick(inputPool));
-                        console.log('min latest max');
-            console.logInt(tickNodes[-887272].nextTick);
-            console.logInt(tickNodes[-887272].previousTick);
             pool.lastBlockNumber = block.number;
-            (pool, latestTick) = Ticks.accumulateLastBlock(
-                mintParams.zeroForOne ? ticks0 : ticks1,
+            //can save a couple 100 gas if we skip this when no update
+            (pool0, pool1, latestTick) = Ticks.accumulateLastBlock(
+                ticks0,
+                ticks1,
                 tickNodes,
-                pool,
-                mintParams.zeroForOne,
+                pool0,
+                pool1,
                 latestTick,
                 utils.calculateAverageTick(inputPool),
                 tickSpacing
             );
-              console.log('min latest max');
-            console.logInt(tickNodes[-887272].nextTick);
-            console.logInt(tickNodes[-887272].previousTick);
-        } else {
-            console.log('not accumulating');
         }
         //TODO: handle upperOld and lowerOld being invalid
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
@@ -235,11 +228,12 @@ contract PoolsharkHedgePool is
         if(block.number != pool.lastBlockNumber) {
             console.log("accumulating last block");
             pool.lastBlockNumber = block.number;
-            (pool, latestTick) = Ticks.accumulateLastBlock(
-                zeroForOne ? ticks0 : ticks1,
+            (pool0, pool1, latestTick) = Ticks.accumulateLastBlock(
+                ticks0,
+                ticks1,
                 tickNodes,
-                pool,
-                zeroForOne,
+                pool0,
+                pool1,
                 latestTick,
                 utils.calculateAverageTick(inputPool),
                 tickSpacing
@@ -319,11 +313,12 @@ contract PoolsharkHedgePool is
             console.log('min latest max');
             console.logInt(tickNodes[-887272].nextTick);
             console.logInt(tickNodes[-887272].previousTick);
-            (pool, latestTick) = Ticks.accumulateLastBlock(
-                zeroForOne ? ticks1 : ticks0,
+            (pool0, pool1, latestTick) = Ticks.accumulateLastBlock(
+                ticks0,
+                ticks1,
                 tickNodes,
-                pool,
-                !zeroForOne,
+                pool0,
+                pool1,
                 latestTick,
                 utils.calculateAverageTick(inputPool),
                 tickSpacing

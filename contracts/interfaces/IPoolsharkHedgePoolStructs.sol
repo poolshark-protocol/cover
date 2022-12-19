@@ -54,12 +54,21 @@ interface IPoolsharkHedgePoolStructs {
     }
 
     struct AccumulateCache {
-        int24   tick;
-        uint256 price;
-        uint256 liquidity;
-        int24   nextTickToCross;
-        int24   nextTickToAccum;
-        uint256 feeGrowthGlobalIn;
+        int24   nextTickToCross0;
+        int24   nextTickToCross1;
+        int24   nextTickToAccum0;
+        int24   nextTickToAccum1;
+        int24   stopTick0;
+        int24   stopTick1;
+        uint160 price0;
+        uint160 price1;
+        uint128 liquidity0;
+        uint128 liquidity1;
+        int128   amountInDelta0; 
+        int128   amountInDelta1; 
+        int128   amountOutDelta0;
+        int128   amountOutDelta1;
+
     }
 }
     
