@@ -129,9 +129,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PoolsharkHedgePoolFactory__factory>;
     getContractFactory(
-      name: "PoolsharkHedgePoolLibraries",
+      name: "PoolsharkHedgePoolUtils",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolLibraries__factory>;
+    ): Promise<Contracts.PoolsharkHedgePoolUtils__factory>;
     getContractFactory(
       name: "ConcentratedFactoryMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -327,10 +327,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.PoolsharkHedgePoolFactory>;
     getContractAt(
-      name: "PoolsharkHedgePoolLibraries",
+      name: "PoolsharkHedgePoolUtils",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolLibraries>;
+    ): Promise<Contracts.PoolsharkHedgePoolUtils>;
     getContractAt(
       name: "ConcentratedFactoryMock",
       address: string,

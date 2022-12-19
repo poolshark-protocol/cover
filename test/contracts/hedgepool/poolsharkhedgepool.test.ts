@@ -69,7 +69,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   this.beforeEach(async function () {
 
   });
-  //TODO: mint with signer
+
   it('Should mint new LP position', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);

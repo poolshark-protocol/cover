@@ -79,8 +79,7 @@ contract PoolsharkHedgePool is
         // @dev increase pool observations if not sufficient
         latestTick = utils.initializePoolObservations(IConcentratedPool(inputPool));
         if (latestTick >= TickMath.MIN_TICK) {
-            _initialize(true); 
-            _initialize(false);
+            _initialize();
             unlocked = 1;
             pool0.lastBlockNumber = block.number;
             pool1.lastBlockNumber = block.number;
@@ -91,8 +90,7 @@ contract PoolsharkHedgePool is
     function _ensureInitialized() internal {
         if (latestTick < TickMath.MIN_TICK) {
             if(utils.isPoolObservationsEnough(IConcentratedPool(inputPool))) {
-                _initialize(true);
-                _initialize(false);
+                _initialize();
                 unlocked = 1;
                 pool0.lastBlockNumber = block.number;
                 pool1.lastBlockNumber = block.number;
@@ -101,12 +99,10 @@ contract PoolsharkHedgePool is
         }
     }
 
-    function _initialize(bool isPool0) internal {
+    function _initialize() internal {
         int24 initLatestTick = utils.initializePoolObservations(IConcentratedPool(inputPool));
         latestTick = initLatestTick / int24(tickSpacing) * int24(tickSpacing);
-        mapping(int24 => Tick) storage ticks = isPool0 ? ticks0 : ticks1;
         Ticks.initialize(
-            ticks,
             tickNodes,
             pool0,
             pool1,
@@ -226,7 +222,7 @@ contract PoolsharkHedgePool is
         // console.logInt(ticks[0].previousTick);
 
         if(block.number != pool.lastBlockNumber) {
-            console.log("accumulating last block");
+            // console.log("accumulating last block");
             pool.lastBlockNumber = block.number;
             (pool0, pool1, latestTick) = Ticks.accumulateLastBlock(
                 ticks0,
@@ -310,9 +306,9 @@ contract PoolsharkHedgePool is
 
         if(block.number != pool.lastBlockNumber) {
             pool.lastBlockNumber = block.number;
-            console.log('min latest max');
-            console.logInt(tickNodes[-887272].nextTick);
-            console.logInt(tickNodes[-887272].previousTick);
+            // console.log('min latest max');
+            // console.logInt(tickNodes[-887272].nextTick);
+            // console.logInt(tickNodes[-887272].previousTick);
             (pool0, pool1, latestTick) = Ticks.accumulateLastBlock(
                 ticks0,
                 ticks1,
@@ -333,9 +329,9 @@ contract PoolsharkHedgePool is
             input: amountIn - utils.mulDivRoundingUp(amountIn, swapFee, 1e6)
         });
 
-        console.log('starting tick:');
-        console.logInt(latestTick);
-        console.log("liquidity:", cache.liquidity);
+        // console.log('starting tick:');
+        // console.logInt(latestTick);
+        // console.log("liquidity:", cache.liquidity);
 
         /// @dev - liquidity range is limited to one tick within latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
@@ -350,7 +346,7 @@ contract PoolsharkHedgePool is
             // price  is decreasing.
             if (nextPrice < priceLimit) { nextPrice = priceLimit; }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
-            console.log("max dx:", maxDx);
+            // console.log("max dx:", maxDx);
             if (cache.input <= maxDx) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
@@ -379,7 +375,7 @@ contract PoolsharkHedgePool is
             // Price is increasing.
             if (nextPrice > priceLimit) { nextPrice = priceLimit; }
             uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
-            console.log("max dy:", maxDy);
+            // console.log("max dy:", maxDy);
             if (cache.input <= maxDy) {
                 // We can swap within the current range.
                 // Calculate new price after swap: ΔP = Δy/L.
@@ -451,9 +447,9 @@ contract PoolsharkHedgePool is
         if (mintParams.zeroForOne) {
             if (mintParams.lower >= latestTick) revert InvalidPosition();
         } else {
-            console.log('upper param');
-            console.logInt(mintParams.upper);
-            console.logInt(latestTick);
+            // console.log('upper param');
+            // console.logInt(mintParams.upper);
+            // console.logInt(latestTick);
             if (mintParams.upper <= latestTick) revert InvalidPosition();
         }
     }
@@ -472,9 +468,9 @@ contract PoolsharkHedgePool is
             input: amountIn - utils.mulDivRoundingUp(amountIn, swapFee, 1e6)
         });
 
-        console.log('starting tick:');
-        console.logInt(latestTick);
-        console.log("liquidity:", cache.liquidity);
+        // console.log('starting tick:');
+        // console.logInt(latestTick);
+        // console.log("liquidity:", cache.liquidity);
         /// @dev - liquidity range is limited to one tick within latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to latestTick
@@ -488,7 +484,7 @@ contract PoolsharkHedgePool is
             // price  is decreasing.
             if (nextPrice < priceLimit) { nextPrice = priceLimit; }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
-            console.log("max dx:", maxDx);
+            // console.log("max dx:", maxDx);
             if (cache.input <= maxDx) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
@@ -514,7 +510,7 @@ contract PoolsharkHedgePool is
             // Price is increasing.
             if (nextPrice > priceLimit) { nextPrice = priceLimit; }
             uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
-            console.log("max dy:", maxDy);
+            // console.log("max dy:", maxDy);
             if (cache.input <= maxDy) {
                 // We can swap within the current range.
                 // Calculate new price after swap: ΔP = Δy/L.
@@ -684,7 +680,7 @@ contract PoolsharkHedgePool is
                                                 priceUpper,
                                                 false
                                             );
-            console.log('amount out removed:', amountOutRemoved);
+            // console.log('amount out removed:', amountOutRemoved);
             // will underflow if too much liquidity withdrawn
             uint128 liquidityAmount = uint128(-amount);
             position.liquidity -= liquidityAmount;
