@@ -16,7 +16,7 @@ abstract contract IPoolsharkHedgePoolFactory {
         address indexed token0,
         address indexed token1,
         uint24 indexed fee,
-        uint24 tickSpacing,
+        int24 tickSpacing,
         address pool
     );
 

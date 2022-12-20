@@ -11,6 +11,7 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -18,14 +19,39 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface MathUtilsInterface extends ethers.utils.Interface {
+interface PoolsharkHedgePoolUtilsInterface extends ethers.utils.Interface {
   functions: {
+    "calculateAverageTick(address)": FunctionFragment;
+    "concentratedFactory()": FunctionFragment;
+    "getSqrtPriceLimitX96(bool)": FunctionFragment;
+    "initializePoolObservations(address)": FunctionFragment;
+    "isPoolObservationsEnough(address)": FunctionFragment;
     "mulDiv(uint256,uint256,uint256)": FunctionFragment;
     "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
     "sqrt(uint256)": FunctionFragment;
     "within1(uint256,uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "calculateAverageTick",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "concentratedFactory",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSqrtPriceLimitX96",
+    values: [boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initializePoolObservations",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isPoolObservationsEnough",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "mulDiv",
     values: [BigNumberish, BigNumberish, BigNumberish]
@@ -40,6 +66,26 @@ interface MathUtilsInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "calculateAverageTick",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "concentratedFactory",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSqrtPriceLimitX96",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "initializePoolObservations",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isPoolObservationsEnough",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "mulDiv", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "mulDivRoundingUp",
@@ -51,7 +97,7 @@ interface MathUtilsInterface extends ethers.utils.Interface {
   events: {};
 }
 
-export class MathUtils extends BaseContract {
+export class PoolsharkHedgePoolUtils extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -92,9 +138,31 @@ export class MathUtils extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: MathUtilsInterface;
+  interface: PoolsharkHedgePoolUtilsInterface;
 
   functions: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<[number] & { averageTick: number }>;
+
+    concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -121,6 +189,28 @@ export class MathUtils extends BaseContract {
     ): Promise<[boolean]>;
   };
 
+  calculateAverageTick(
+    pool: string,
+    overrides?: CallOverrides
+  ): Promise<number>;
+
+  concentratedFactory(overrides?: CallOverrides): Promise<string>;
+
+  getSqrtPriceLimitX96(
+    zeroForOne: boolean,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  initializePoolObservations(
+    pool: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  isPoolObservationsEnough(
+    pool: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   mulDiv(
     a: BigNumberish,
     b: BigNumberish,
@@ -144,6 +234,28 @@ export class MathUtils extends BaseContract {
   ): Promise<boolean>;
 
   callStatic: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    concentratedFactory(overrides?: CallOverrides): Promise<string>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -170,6 +282,28 @@ export class MathUtils extends BaseContract {
   filters: {};
 
   estimateGas: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -194,6 +328,30 @@ export class MathUtils extends BaseContract {
   };
 
   populateTransaction: {
+    calculateAverageTick(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    concentratedFactory(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getSqrtPriceLimitX96(
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initializePoolObservations(
+      pool: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    isPoolObservationsEnough(
+      pool: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,

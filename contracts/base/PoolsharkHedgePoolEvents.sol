@@ -33,6 +33,7 @@ abstract contract PoolsharkHedgePoolEvents {
         address pool,
         address token0,
         address token1,
-        uint256 fee
+        uint24 fee,
+        int24 tickSpacing
     );
 }

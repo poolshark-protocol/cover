@@ -1,8 +1,8 @@
 /* eslint-disable no-var */
-import { PsharksRuntimeEnvironment } from "./CustomHardhatEnvironment";
+import { PoolsharkRuntimeEnvironment } from "./CustomHardhatEnvironment";
 
 declare global {
-    var hre: PsharksRuntimeEnvironment;
+    var hre: PoolsharkRuntimeEnvironment;
     var ethers: any; // FIXME: mock out
 }
 

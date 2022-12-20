@@ -61,11 +61,8 @@ contract PoolsharkHedgePoolFactory is
                     address(this),
                     inputPool,
                     libraries,
-                    token0,
-                    token1,
                     uint24(swapFee),
-                    uint24(tickSpacing),
-                    false
+                    tickSpacing
                 )
             )
         );
@@ -74,7 +71,7 @@ contract PoolsharkHedgePoolFactory is
         poolList.push(pool);
 
         // emit event for indexers
-        emit PoolCreated(token0, token1, uint24(swapFee), uint24(tickSpacing), pool);
+        emit PoolCreated(token0, token1, uint24(swapFee), tickSpacing, pool);
     }
 
     function getHedgePool(

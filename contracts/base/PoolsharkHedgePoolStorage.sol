@@ -16,19 +16,17 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
     uint24 internal constant MAX_FEE = 10000; /// @dev Equivalent to 1%.
     /// @dev Reference: tickSpacing of 100 -> 2% between ticks.
 
-    uint128 public liquidity;
+    PoolState public pool0; /// @dev State for token0 as output
+    PoolState public pool1; /// @dev State for token1 as output
+    int24 public latestTick; /// @dev Latest updated inputPool price tick
+    //TODO: size correctly
     uint256 public lastBlockNumber;
-
-    uint256 public feeGrowthGlobalIn; /// @dev All fee growth counters are multiplied by 2^128.
-    uint256 public feeGrowthGlobalOut;
     
-    uint160 public sqrtPrice; /// @dev Sqrt of price aka. √(y/x), multiplied by 2^96.
-    
-    int24 public latestTick;  /// @dev Tick externally sourced at the latest block.
-    int24 public nearestTick; /// @dev Tick that is just below the current price.
-
-    mapping(int24 => Tick) public ticks;
-    mapping(address => mapping(int24 => mapping(int24 => Position))) public positions;
+    mapping(int24 => TickNode) public tickNodes;  /// @dev Tick nodes in linked list
+    mapping(int24 => Tick) public ticks0;         /// @dev Ticks containing token0 as output
+    mapping(int24 => Tick) public ticks1;         /// @dev Ticks containing token1 as output
+    mapping(address => mapping(int24 => mapping(int24 => Position))) public positions0; //positions with token0 deposited
+    mapping(address => mapping(int24 => mapping(int24 => Position))) public positions1; //positions with token1 deposited
 }
     
     

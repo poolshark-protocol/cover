@@ -20,27 +20,19 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PoolsharkHedgePoolViewInterface extends ethers.utils.Interface {
   functions: {
-    "feeGrowthGlobalIn()": FunctionFragment;
-    "feeGrowthGlobalOut()": FunctionFragment;
     "feeTo()": FunctionFragment;
     "lastBlockNumber()": FunctionFragment;
     "latestTick()": FunctionFragment;
-    "liquidity()": FunctionFragment;
-    "nearestTick()": FunctionFragment;
-    "positions(address,int24,int24)": FunctionFragment;
-    "sqrtPrice()": FunctionFragment;
-    "ticks(int24)": FunctionFragment;
+    "pool0()": FunctionFragment;
+    "pool1()": FunctionFragment;
+    "positions0(address,int24,int24)": FunctionFragment;
+    "positions1(address,int24,int24)": FunctionFragment;
+    "tickNodes(int24)": FunctionFragment;
+    "ticks0(int24)": FunctionFragment;
+    "ticks1(int24)": FunctionFragment;
     "utils()": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "feeGrowthGlobalIn",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "feeGrowthGlobalOut",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "feeTo", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "lastBlockNumber",
@@ -50,41 +42,43 @@ interface PoolsharkHedgePoolViewInterface extends ethers.utils.Interface {
     functionFragment: "latestTick",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "liquidity", values?: undefined): string;
+  encodeFunctionData(functionFragment: "pool0", values?: undefined): string;
+  encodeFunctionData(functionFragment: "pool1", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "nearestTick",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "positions",
+    functionFragment: "positions0",
     values: [string, BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "sqrtPrice", values?: undefined): string;
-  encodeFunctionData(functionFragment: "ticks", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "positions1",
+    values: [string, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "tickNodes",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ticks0",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ticks1",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "utils", values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "feeGrowthGlobalIn",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "feeGrowthGlobalOut",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "feeTo", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "lastBlockNumber",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "latestTick", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "liquidity", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "nearestTick",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "positions", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "sqrtPrice", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "ticks", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "pool0", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "pool1", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "positions0", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "positions1", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "tickNodes", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "ticks0", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "ticks1", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "utils", data: BytesLike): Result;
 
   events: {};
@@ -134,21 +128,35 @@ export class PoolsharkHedgePoolView extends BaseContract {
   interface: PoolsharkHedgePoolViewInterface;
 
   functions: {
-    feeGrowthGlobalIn(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    feeGrowthGlobalOut(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     feeTo(overrides?: CallOverrides): Promise<[string]>;
 
     lastBlockNumber(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     latestTick(overrides?: CallOverrides): Promise<[number]>;
 
-    liquidity(overrides?: CallOverrides): Promise<[BigNumber]>;
+    pool0(
+      overrides?: CallOverrides
+    ): Promise<
+      [number, BigNumber, BigNumber, BigNumber] & {
+        nearestTick: number;
+        price: BigNumber;
+        liquidity: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+      }
+    >;
 
-    nearestTick(overrides?: CallOverrides): Promise<[number]>;
+    pool1(
+      overrides?: CallOverrides
+    ): Promise<
+      [number, BigNumber, BigNumber, BigNumber] & {
+        nearestTick: number;
+        price: BigNumber;
+        liquidity: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+      }
+    >;
 
-    positions(
+    positions0(
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
@@ -156,44 +164,61 @@ export class PoolsharkHedgePoolView extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
-        feeGrowthGlobalLast: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
         claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
       }
     >;
 
-    sqrtPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
+    positions1(
+      arg0: string,
+      arg1: BigNumberish,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        liquidity: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+        claimPriceLast: BigNumber;
+        amountIn: BigNumber;
+        amountOut: BigNumber;
+      }
+    >;
 
-    ticks(
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, number] & { previousTick: number; nextTick: number }>;
+
+    ticks0(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        previousTick: number;
-        nextTick: number;
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
-        amountInDeltaX96: BigNumber;
-        amountOutDeltaX96: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+      }
+    >;
+
+    ticks1(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
       }
     >;
 
     utils(overrides?: CallOverrides): Promise<[string]>;
   };
-
-  feeGrowthGlobalIn(overrides?: CallOverrides): Promise<BigNumber>;
-
-  feeGrowthGlobalOut(overrides?: CallOverrides): Promise<BigNumber>;
 
   feeTo(overrides?: CallOverrides): Promise<string>;
 
@@ -201,11 +226,29 @@ export class PoolsharkHedgePoolView extends BaseContract {
 
   latestTick(overrides?: CallOverrides): Promise<number>;
 
-  liquidity(overrides?: CallOverrides): Promise<BigNumber>;
+  pool0(
+    overrides?: CallOverrides
+  ): Promise<
+    [number, BigNumber, BigNumber, BigNumber] & {
+      nearestTick: number;
+      price: BigNumber;
+      liquidity: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
+    }
+  >;
 
-  nearestTick(overrides?: CallOverrides): Promise<number>;
+  pool1(
+    overrides?: CallOverrides
+  ): Promise<
+    [number, BigNumber, BigNumber, BigNumber] & {
+      nearestTick: number;
+      price: BigNumber;
+      liquidity: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
+    }
+  >;
 
-  positions(
+  positions0(
     arg0: string,
     arg1: BigNumberish,
     arg2: BigNumberish,
@@ -213,48 +256,91 @@ export class PoolsharkHedgePoolView extends BaseContract {
   ): Promise<
     [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       liquidity: BigNumber;
-      feeGrowthGlobalLast: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
       claimPriceLast: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
     }
   >;
 
-  sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
+  positions1(
+    arg0: string,
+    arg1: BigNumberish,
+    arg2: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      liquidity: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
+      claimPriceLast: BigNumber;
+      amountIn: BigNumber;
+      amountOut: BigNumber;
+    }
+  >;
 
-  ticks(
+  tickNodes(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[number, number] & { previousTick: number; nextTick: number }>;
+
+  ticks0(
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
-      previousTick: number;
-      nextTick: number;
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
-      amountInDeltaX96: BigNumber;
-      amountOutDeltaX96: BigNumber;
+      amountInDelta: BigNumber;
+      amountOutDelta: BigNumber;
+    }
+  >;
+
+  ticks1(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      liquidityDelta: BigNumber;
+      liquidityDeltaMinus: BigNumber;
+      feeGrowthGlobalIn: BigNumber;
+      amountInDelta: BigNumber;
+      amountOutDelta: BigNumber;
     }
   >;
 
   utils(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
-    feeGrowthGlobalIn(overrides?: CallOverrides): Promise<BigNumber>;
-
-    feeGrowthGlobalOut(overrides?: CallOverrides): Promise<BigNumber>;
-
     feeTo(overrides?: CallOverrides): Promise<string>;
 
     lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
 
     latestTick(overrides?: CallOverrides): Promise<number>;
 
-    liquidity(overrides?: CallOverrides): Promise<BigNumber>;
+    pool0(
+      overrides?: CallOverrides
+    ): Promise<
+      [number, BigNumber, BigNumber, BigNumber] & {
+        nearestTick: number;
+        price: BigNumber;
+        liquidity: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+      }
+    >;
 
-    nearestTick(overrides?: CallOverrides): Promise<number>;
+    pool1(
+      overrides?: CallOverrides
+    ): Promise<
+      [number, BigNumber, BigNumber, BigNumber] & {
+        nearestTick: number;
+        price: BigNumber;
+        liquidity: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+      }
+    >;
 
-    positions(
+    positions0(
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
@@ -262,35 +348,56 @@ export class PoolsharkHedgePoolView extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
-        feeGrowthGlobalLast: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
         claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
       }
     >;
 
-    sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
+    positions1(
+      arg0: string,
+      arg1: BigNumberish,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        liquidity: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+        claimPriceLast: BigNumber;
+        amountIn: BigNumber;
+        amountOut: BigNumber;
+      }
+    >;
 
-    ticks(
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[number, number] & { previousTick: number; nextTick: number }>;
+
+    ticks0(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        previousTick: number;
-        nextTick: number;
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
-        amountInDeltaX96: BigNumber;
-        amountOutDeltaX96: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+      }
+    >;
+
+    ticks1(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
+        feeGrowthGlobalIn: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
       }
     >;
 
@@ -300,61 +407,78 @@ export class PoolsharkHedgePoolView extends BaseContract {
   filters: {};
 
   estimateGas: {
-    feeGrowthGlobalIn(overrides?: CallOverrides): Promise<BigNumber>;
-
-    feeGrowthGlobalOut(overrides?: CallOverrides): Promise<BigNumber>;
-
     feeTo(overrides?: CallOverrides): Promise<BigNumber>;
 
     lastBlockNumber(overrides?: CallOverrides): Promise<BigNumber>;
 
     latestTick(overrides?: CallOverrides): Promise<BigNumber>;
 
-    liquidity(overrides?: CallOverrides): Promise<BigNumber>;
+    pool0(overrides?: CallOverrides): Promise<BigNumber>;
 
-    nearestTick(overrides?: CallOverrides): Promise<BigNumber>;
+    pool1(overrides?: CallOverrides): Promise<BigNumber>;
 
-    positions(
+    positions0(
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    sqrtPrice(overrides?: CallOverrides): Promise<BigNumber>;
+    positions1(
+      arg0: string,
+      arg1: BigNumberish,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
-    ticks(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    ticks0(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
+    ticks1(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     utils(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    feeGrowthGlobalIn(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    feeGrowthGlobalOut(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     feeTo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     lastBlockNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     latestTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    liquidity(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    pool0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    nearestTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    pool1(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    positions(
+    positions0(
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    sqrtPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    positions1(
+      arg0: string,
+      arg1: BigNumberish,
+      arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
-    ticks(
+    tickNodes(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    ticks0(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    ticks1(
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

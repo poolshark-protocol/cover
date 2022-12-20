@@ -3,12 +3,12 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { HardhatRuntimeEnvironment, Network } from 'hardhat/types';
 import { BeforeEachProps } from './test/utils/setup/beforeEachProps';
 
-interface PsharksHardhatRuntimeEnvironment
+interface PoolsharkHardhatRuntimeEnvironment
     extends HardhatRuntimeEnvironment {
 }
 
-export interface PsharksRuntimeEnvironment
-    extends PsharksHardhatRuntimeEnvironment {
+export interface PoolsharkRuntimeEnvironment
+    extends PoolsharkHardhatRuntimeEnvironment {
     props: BeforeEachProps;
     adminA: SignerWithAddress;
     adminB: SignerWithAddress;

@@ -7,8 +7,8 @@ import "hardhat/console.sol";
 
 contract ConcentratedPoolMock is IConcentratedPool {
 
-    address token0;
-    address token1;
+    address public token0;
+    address public token1;
     uint256 swapFee;
 
     uint16 observationCardinality;

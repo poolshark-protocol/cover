@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber, ContractReceipt } from "ethers";
 import { once } from "events";
 import { getNonce, readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, PoolsharkHedgePoolLibraries, PoolsharkHedgePoolLibraries__factory, DyDxMath__factory, FullPrecisionMath__factory } from "../../../typechain";
+import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, PoolsharkHedgePoolUtils__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -63,7 +63,7 @@ export class InitialSetup {
                                                                         );
         hre.props.concentratedPoolMock = await hre.ethers.getContractAt("ConcentratedPoolMock", mockPoolAddress);
 
-        const libraries = await new PoolsharkHedgePoolLibraries__factory(hre.props.alice)
+        const libraries = await new PoolsharkHedgePoolUtils__factory(hre.props.alice)
                                                         .deploy(
                                                             {nonce: nonce}
                                                         );
@@ -95,7 +95,8 @@ export class InitialSetup {
                                         {
                                             "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address,
                                             "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
-                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
+                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address,
+                                            "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address
                                         }, 
                                         hre.props.alice
                                     ).deploy(hre.props.concentratedFactoryMock.address,

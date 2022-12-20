@@ -10,6 +10,9 @@ interface IConcentratedPool
         uint16 observationCardinalityNext
     ) external;
 
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+
     
     /// @notice The 0th storage slot in the pool stores many values, and is exposed as a single method to save gas
     /// when accessed externally.

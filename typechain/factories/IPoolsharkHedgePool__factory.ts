@@ -28,24 +28,18 @@ const _abi = [
         type: "int24",
       },
       {
+        internalType: "bool",
+        name: "zeroForOne",
+        type: "bool",
+      },
+      {
         internalType: "uint128",
         name: "amount",
         type: "uint128",
       },
     ],
     name: "burn",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "token0Amount",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "token1Amount",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },

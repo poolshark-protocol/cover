@@ -23,19 +23,12 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
   functions: {
     "calculateAverageTick(address)": FunctionFragment;
     "concentratedFactory()": FunctionFragment;
-    "getAmountsForLiquidity(uint256,uint256,uint256,uint256,bool)": FunctionFragment;
-    "getDx(uint256,uint256,uint256,bool)": FunctionFragment;
-    "getDy(uint256,uint256,uint256,bool)": FunctionFragment;
-    "getLiquidityForAmounts(uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
     "getSqrtPriceLimitX96(bool)": FunctionFragment;
-    "handleFees(uint256,uint24,uint256,uint256)": FunctionFragment;
     "initializePoolObservations(address)": FunctionFragment;
     "isPoolObservationsEnough(address)": FunctionFragment;
     "mulDiv(uint256,uint256,uint256)": FunctionFragment;
     "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
     "sqrt(uint256)": FunctionFragment;
-    "toUint128(uint256)": FunctionFragment;
-    "toUint160(uint256)": FunctionFragment;
     "within1(uint256,uint256)": FunctionFragment;
   };
 
@@ -48,34 +41,8 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getAmountsForLiquidity",
-    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getDx",
-    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getDy",
-    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getLiquidityForAmounts",
-    values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getSqrtPriceLimitX96",
     values: [boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "handleFees",
-    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "initializePoolObservations",
@@ -95,14 +62,6 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "sqrt", values: [BigNumberish]): string;
   encodeFunctionData(
-    functionFragment: "toUint128",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "toUint160",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "within1",
     values: [BigNumberish, BigNumberish]
   ): string;
@@ -116,20 +75,9 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getAmountsForLiquidity",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "getDx", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getDy", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getLiquidityForAmounts",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "getSqrtPriceLimitX96",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "handleFees", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "initializePoolObservations",
     data: BytesLike
@@ -144,8 +92,6 @@ interface PoolsharkHedgePoolLibrariesInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "sqrt", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "toUint128", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "toUint160", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "within1", data: BytesLike): Result;
 
   events: {};
@@ -202,57 +148,10 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
     concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
 
-    getAmountsForLiquidity(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      liquidityAmount: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & {
-        token0amount: BigNumber;
-        token1amount: BigNumber;
-      }
-    >;
-
-    getDx(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { dx: BigNumber }>;
-
-    getDy(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { dy: BigNumber }>;
-
-    getLiquidityForAmounts(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      dy: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { liquidity: BigNumber }>;
-
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
-
-    handleFees(
-      output: BigNumberish,
-      swapFee: BigNumberish,
-      totalFeeAmount: BigNumberish,
-      amountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber]>;
 
     initializePoolObservations(
       pool: string,
@@ -283,16 +182,6 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { z: BigNumber }>;
 
-    toUint128(
-      y: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { z: BigNumber }>;
-
-    toUint160(
-      y: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { z: BigNumber }>;
-
     within1(
       a: BigNumberish,
       b: BigNumberish,
@@ -307,57 +196,10 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
   concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
-  getAmountsForLiquidity(
-    priceLower: BigNumberish,
-    priceUpper: BigNumberish,
-    currentPrice: BigNumberish,
-    liquidityAmount: BigNumberish,
-    roundUp: boolean,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber] & {
-      token0amount: BigNumber;
-      token1amount: BigNumber;
-    }
-  >;
-
-  getDx(
-    liquidity: BigNumberish,
-    priceLower: BigNumberish,
-    priceUpper: BigNumberish,
-    roundUp: boolean,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  getDy(
-    liquidity: BigNumberish,
-    priceLower: BigNumberish,
-    priceUpper: BigNumberish,
-    roundUp: boolean,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  getLiquidityForAmounts(
-    priceLower: BigNumberish,
-    priceUpper: BigNumberish,
-    currentPrice: BigNumberish,
-    dy: BigNumberish,
-    dx: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   getSqrtPriceLimitX96(
     zeroForOne: boolean,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
-
-  handleFees(
-    output: BigNumberish,
-    swapFee: BigNumberish,
-    totalFeeAmount: BigNumberish,
-    amountOut: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<[BigNumber, BigNumber]>;
 
   initializePoolObservations(
     pool: string,
@@ -385,10 +227,6 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
   sqrt(x: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
-  toUint128(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-  toUint160(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
   within1(
     a: BigNumberish,
     b: BigNumberish,
@@ -403,57 +241,10 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
     concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
-    getAmountsForLiquidity(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      liquidityAmount: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & {
-        token0amount: BigNumber;
-        token1amount: BigNumber;
-      }
-    >;
-
-    getDx(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getDy(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getLiquidityForAmounts(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      dy: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    handleFees(
-      output: BigNumberish,
-      swapFee: BigNumberish,
-      totalFeeAmount: BigNumberish,
-      amountOut: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber]>;
 
     initializePoolObservations(
       pool: string,
@@ -481,10 +272,6 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
     sqrt(x: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
-    toUint128(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    toUint160(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
     within1(
       a: BigNumberish,
       b: BigNumberish,
@@ -502,50 +289,8 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
     concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getAmountsForLiquidity(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      liquidityAmount: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getDx(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getDy(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getLiquidityForAmounts(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      dy: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    handleFees(
-      output: BigNumberish,
-      swapFee: BigNumberish,
-      totalFeeAmount: BigNumberish,
-      amountOut: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -575,10 +320,6 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
     sqrt(x: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
-    toUint128(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    toUint160(y: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
     within1(
       a: BigNumberish,
       b: BigNumberish,
@@ -596,50 +337,8 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getAmountsForLiquidity(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      liquidityAmount: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getDx(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getDy(
-      liquidity: BigNumberish,
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      roundUp: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getLiquidityForAmounts(
-      priceLower: BigNumberish,
-      priceUpper: BigNumberish,
-      currentPrice: BigNumberish,
-      dy: BigNumberish,
-      dx: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    handleFees(
-      output: BigNumberish,
-      swapFee: BigNumberish,
-      totalFeeAmount: BigNumberish,
-      amountOut: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -669,16 +368,6 @@ export class PoolsharkHedgePoolLibraries extends BaseContract {
 
     sqrt(
       x: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    toUint128(
-      y: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    toUint160(
-      y: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
