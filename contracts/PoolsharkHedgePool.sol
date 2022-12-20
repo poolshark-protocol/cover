@@ -108,8 +108,30 @@ contract PoolsharkHedgePool is
         );
     }
 
+    function mint(
+        int24 lowerOld,
+        int24 lower,
+        int24 upperOld,
+        int24 upper,
+        uint128 amountDesired,
+        bool zeroForOne,
+        bool native
+    ) external lock {
+        _mint(
+            MintParams(
+                lowerOld,
+                lower,
+                upperOld,
+                upper,
+                amountDesired,
+                zeroForOne,
+                native
+            )
+        );
+    }
+
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
-    function mint(MintParams memory mintParams) public lock returns (uint256 liquidityMinted) {
+    function _mint(MintParams memory mintParams) internal returns (uint256 liquidityMinted) {
         /// @dev - don't allow mints until we have enough observations from inputPool
         _ensureInitialized();
         //TODO: move tick update check here

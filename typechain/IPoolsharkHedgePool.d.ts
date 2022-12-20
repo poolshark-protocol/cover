@@ -22,7 +22,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
   functions: {
     "burn(int24,int24,int24,bool,uint128)": FunctionFragment;
-    "mint((int24,int24,int24,int24,uint128,bool,bool))": FunctionFragment;
+    "mint(int24,int24,int24,int24,uint128,bool,bool)": FunctionFragment;
     "swap(address,bool,uint256,uint160)": FunctionFragment;
   };
 
@@ -33,15 +33,13 @@ interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "mint",
     values: [
-      {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      }
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      boolean,
+      boolean
     ]
   ): string;
   encodeFunctionData(
@@ -110,15 +108,13 @@ export class IPoolsharkHedgePool extends BaseContract {
     ): Promise<ContractTransaction>;
 
     mint(
-      data: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -141,15 +137,13 @@ export class IPoolsharkHedgePool extends BaseContract {
   ): Promise<ContractTransaction>;
 
   mint(
-    data: {
-      lowerOld: BigNumberish;
-      lower: BigNumberish;
-      upperOld: BigNumberish;
-      upper: BigNumberish;
-      amountDesired: BigNumberish;
-      zeroForOne: boolean;
-      native: boolean;
-    },
+    lowerOld: BigNumberish,
+    lower: BigNumberish,
+    upperOld: BigNumberish,
+    upper: BigNumberish,
+    amountDesired: BigNumberish,
+    zeroForOne: boolean,
+    native: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -172,17 +166,15 @@ export class IPoolsharkHedgePool extends BaseContract {
     ): Promise<void>;
 
     mint(
-      data: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<void>;
 
     swap(
       recipient: string,
@@ -206,15 +198,13 @@ export class IPoolsharkHedgePool extends BaseContract {
     ): Promise<BigNumber>;
 
     mint(
-      data: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -238,15 +228,13 @@ export class IPoolsharkHedgePool extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     mint(
-      data: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

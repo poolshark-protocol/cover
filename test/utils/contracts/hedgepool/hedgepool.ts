@@ -128,31 +128,27 @@ export async function validateMint(
         lower,
         upper
     );
-
+        console.log('token1 address and balance:', hre.props.token1.address, (await hre.props.token1.balanceOf(signer.address)).toString());
     if (revertMessage == ""){
         const txn = await hre.props.hedgePool.connect(signer).mint(
-            {
-              lowerOld: lowerOld,
-              lower: lower,
-              upperOld: upperOld,
-              upper: upper,
-              amountDesired: amountDesired,
-              zeroForOne: zeroForOne,
-              native: false
-            }
+            lowerOld,
+            lower,
+            upperOld,
+            upper,
+            amountDesired,
+            zeroForOne,
+            false
           );
           await txn.wait();
     } else {
         await expect(hre.props.hedgePool.connect(signer).mint(
-            {
-              lowerOld: lowerOld,
-              lower: lower,
-              upperOld: upperOld,
-              upper: upper,
-              amountDesired: amountDesired,
-              zeroForOne: zeroForOne,
-              native: false
-            }
+            lowerOld,
+            lower,
+            upperOld,
+            upper,
+            amountDesired,
+            zeroForOne,
+            false
           )).to.be.revertedWith(revertMessage);
         return;
     }
