@@ -116,7 +116,7 @@ contract PoolsharkHedgePool is
         uint128 amountDesired,
         bool zeroForOne,
         bool native
-    ) external lock {
+    ) external {
         _mint(
             MintParams(
                 lowerOld,
