@@ -7,7 +7,7 @@ interface IPoolsharkHedgePoolStructs {
         int24   nearestTick;       /// @dev Tick below current price
         uint160 price;             /// @dev Starting price current
         uint128 liquidity;         /// @dev Liquidity currently active
-        uint256 feeGrowthGlobalIn; /// @dev Global fee growth per liquidity unit
+        uint232 feeGrowthGlobalIn; /// @dev Global fee growth per liquidity unit
     }
 
     struct TickNode {
@@ -18,18 +18,17 @@ interface IPoolsharkHedgePoolStructs {
     struct Tick {
         int128   liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
         uint128  liquidityDeltaMinus; // represent LPs for token0 -> token1
-        uint256  feeGrowthGlobalIn;   // Used to check for claim updates
+        uint232  feeGrowthGlobalIn;   // Used to check for claim updates
         int128   amountInDelta; 
         int128   amountOutDelta;
-        // int128   amountInDeltaCarry;
-        // int128   amountOutDeltaCarry;
+        uint64   amountInDeltaCarryPercent;
+        uint64   amountOutDeltaCarryPercent;
     }
-
-    // feeGrowthGlobalInitial 
+ 
     // balance needs to be immediately transferred to the position owner
     struct Position {
         uint128 liquidity;           // expected amount to be used not actual
-        uint256 feeGrowthGlobalIn; // last feeGrowth this position was updated at
+        uint232 feeGrowthGlobalIn; // last feeGrowth this position was updated at
         uint160 claimPriceLast;      // highest price claimed at
         uint128 amountIn;            // token amount already claimed; balance
         uint128 amountOut;           // necessary for non-custodial positions
@@ -56,7 +55,7 @@ interface IPoolsharkHedgePoolStructs {
 
     struct UpdatePositionCache {
         Position position;
-        uint256 feeGrowthGlobalIn;
+        uint232 feeGrowthGlobalIn;
         uint160 priceLower;
         uint160 priceUpper;
         uint160 claimPrice;

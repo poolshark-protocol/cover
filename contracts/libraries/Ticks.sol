@@ -78,7 +78,7 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         int24 latestTick,
-        uint256 feeGrowthGlobalIn,
+        uint232 feeGrowthGlobalIn,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
@@ -123,16 +123,14 @@ library Ticks
                     -int128(amount),
                     amount,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             } else {
                 ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                     int128(amount),
                     0,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             }
 
@@ -187,8 +185,7 @@ library Ticks
                     int128(amount),
                     0,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             } else {
                             console.log('upper does not exist');
@@ -196,8 +193,7 @@ library Ticks
                     -int128(amount),
                     amount,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             }
         }
@@ -310,7 +306,7 @@ library Ticks
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
-        uint256 feeGrowthGlobal,
+        uint232 feeGrowthGlobal,
         int128 amountInDelta,
         int128 amountOutDelta
     ) internal returns (int128, int128) {

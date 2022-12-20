@@ -428,7 +428,7 @@ contract PoolsharkHedgePool is
                                             * cache.feeAmount / 1e18
                                            );
                 cache.feeAmount -= feeReturn;
-                pool.feeGrowthGlobalIn += cache.feeAmount; 
+                pool.feeGrowthGlobalIn += uint232(cache.feeAmount); 
                 _transferOut(recipient, token0, cache.input + feeReturn);
             }
             _transferOut(recipient, token1, amountOut);
@@ -441,7 +441,7 @@ contract PoolsharkHedgePool is
                                             * cache.feeAmount / 1e18
                                            );
                 cache.feeAmount -= feeReturn;
-                pool.feeGrowthGlobalIn += cache.feeAmount; 
+                pool.feeGrowthGlobalIn += uint232(cache.feeAmount); 
                 _transferOut(recipient, token1, cache.input + feeReturn);
             }
             _transferOut(recipient, token1, amountOut);
