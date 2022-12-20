@@ -117,7 +117,7 @@ contract PoolsharkHedgePool is
         bool zeroForOne,
         bool native
     ) external {
-        _mint(
+        internalMint(
             MintParams(
                 lowerOld,
                 lower,
@@ -131,7 +131,7 @@ contract PoolsharkHedgePool is
     }
 
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
-    function _mint(MintParams memory mintParams) internal returns (uint256 liquidityMinted) {
+    function internalMint(MintParams memory mintParams) internal returns (uint256 liquidityMinted) {
         /// @dev - don't allow mints until we have enough observations from inputPool
         _ensureInitialized();
         //TODO: move tick update check here
