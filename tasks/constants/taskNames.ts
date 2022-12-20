@@ -10,3 +10,4 @@ export const DEPLOY_HEDGEPOOLS = 'deploy-hedgepools';
 
 /* Utils */
 export const MINT_TOKENS = 'mint-tokens';
+export const MINT_POSITION = 'mint-position'

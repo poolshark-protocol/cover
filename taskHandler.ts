@@ -1,4 +1,4 @@
-import { DEPLOY_HEDGEPOOLS, MINT_TOKENS } from './tasks/constants/taskNames';
+import { DEPLOY_HEDGEPOOLS, MINT_POSITION, MINT_TOKENS } from './tasks/constants/taskNames';
 import { purpleLog } from './test/utils/colors';
 
 export function handleHardhatTasks() {
@@ -12,6 +12,9 @@ function handleOrderBook20Tasks() {
     } else if (process.argv.includes(MINT_TOKENS)) {
         import('./tasks/deploy/mint-tokens');
         logTask(MINT_TOKENS);
+    } else if (process.argv.includes(MINT_POSITION)) {
+        import('./tasks/deploy/mint-position');
+        logTask(MINT_POSITION);
     }
 }
 

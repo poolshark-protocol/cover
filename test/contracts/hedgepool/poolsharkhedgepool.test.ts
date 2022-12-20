@@ -247,7 +247,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       false,
       token1Amount,
       liquidityAmount,
-      "InvalidPosition()"
+      ""
     );
 
     
