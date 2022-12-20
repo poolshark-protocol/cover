@@ -19,6 +19,8 @@ abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, Pools
     PoolState public pool0; /// @dev State for token0 as output
     PoolState public pool1; /// @dev State for token1 as output
     int24 public latestTick; /// @dev Latest updated inputPool price tick
+    //TODO: size correctly
+    uint256 public lastBlockNumber;
     
     mapping(int24 => TickNode) public tickNodes;  /// @dev Tick nodes in linked list
     mapping(int24 => Tick) public ticks0;         /// @dev Ticks containing token0 as output

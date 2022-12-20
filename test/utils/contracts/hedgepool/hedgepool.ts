@@ -7,7 +7,7 @@ export const Q64x96 = BigNumber.from("2").pow(96)
 export const BN_ZERO = BigNumber.from("0")
 export interface Position {
     liquidity: BigNumber,
-    feeGrowthGlobalLast: BigNumber,
+    feeGrowthGlobalIn: BigNumber,
     claimPriceLast: BigNumber,
     amountIn: BigNumber,
     amountOut: BigNumber
@@ -17,7 +17,6 @@ export interface PoolState {
     nearestTick: number,
     price: BigNumber,
     liquidity: BigNumber,
-    lastBlockNumber: BigNumber,
     feeGrowthGlobalIn: BigNumber
 }
 
@@ -59,7 +58,6 @@ export async function validateSwap(
 
     const pool0Before: PoolState    = await hre.props.hedgePool.pool0();
     const liquidityBefore           = pool0Before.liquidity;
-    const lastBlockNumberBefore     = pool0Before.lastBlockNumber;
     const feeGrowthGlobalBefore     = pool0Before.feeGrowthGlobalIn;
     const nearestTickBefore         = pool0Before.nearestTick;
     const priceBefore               = pool0Before.price;
@@ -87,7 +85,6 @@ export async function validateSwap(
 
     const pool0After: PoolState    = await hre.props.hedgePool.pool0();
     const liquidityAfter           = pool0After.liquidity;
-    const lastBlockNumberAfter     = pool0After.lastBlockNumber;
     const feeGrowthGlobalAfter     = pool0After.feeGrowthGlobalIn;
     const nearestTickAfter         = pool0After.nearestTick;
     const priceAfter               = pool0After.price;

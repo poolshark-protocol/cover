@@ -4,10 +4,9 @@ pragma solidity ^0.8.13;
 interface IPoolsharkHedgePoolStructs {
 
     struct PoolState {
-        int24   nearestTick;     /// @dev Tick below current price
-        uint160 price;           /// @dev Starting price current
-        uint128 liquidity;       /// @dev Liquidity currently active
-        uint256 lastBlockNumber;
+        int24   nearestTick;       /// @dev Tick below current price
+        uint160 price;             /// @dev Starting price current
+        uint128 liquidity;         /// @dev Liquidity currently active
         uint256 feeGrowthGlobalIn; /// @dev Global fee growth per liquidity unit
     }
 
@@ -28,7 +27,7 @@ interface IPoolsharkHedgePoolStructs {
     // balance needs to be immediately transferred to the position owner
     struct Position {
         uint128 liquidity;           // expected amount to be used not actual
-        uint256 feeGrowthGlobalLast; // last feeGrowth this position was updated at
+        uint256 feeGrowthGlobalIn; // last feeGrowth this position was updated at
         uint160 claimPriceLast;      // highest price claimed at
         uint128 amountIn;            // token amount already claimed; balance
         uint128 amountOut;           // necessary for non-custodial positions
@@ -51,6 +50,19 @@ interface IPoolsharkHedgePoolStructs {
         uint256 liquidity;
         uint256 feeAmount;
         uint256 input;
+    }
+
+    struct UpdatePositionCache {
+        Position position;
+        uint256 feeGrowthGlobalIn;
+        uint160 priceLower;
+        uint160 priceUpper;
+        uint160 claimPrice;
+        bool removeLower;
+        bool removeUpper;
+        bool removeClaim;
+        int24 upperRemove;
+        int24 lowerRemove;
     }
 
     struct AccumulateCache {

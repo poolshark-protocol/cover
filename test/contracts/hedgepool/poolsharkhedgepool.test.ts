@@ -31,8 +31,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     //TODO: map it to an interface
     const pool0: PoolState    = await hre.props.hedgePool.pool0();
     const liquidity           = pool0.liquidity;
-    const lastBlockNumber     = pool0.lastBlockNumber;
-    const feeGrowthGlobalIn     = pool0.feeGrowthGlobalIn;
+    const lastBlockNumber     = await hre.props.hedgePool.lastBlockNumber();
+    const feeGrowthGlobalIn   = pool0.feeGrowthGlobalIn;
     const nearestTick         = pool0.nearestTick;
     const price               = pool0.price;
     const latestTick          = await hre.props.hedgePool.latestTick();
@@ -340,6 +340,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   });
 
   // TODO: partial mint
+  // TODO: ensure user cannot claim from a lower tick after TWAP moves around
   // TODO: claim liquidity filled
   // TODO: empty swap at price limit higher than current price
   // TODO: move TWAP again and fill remaining

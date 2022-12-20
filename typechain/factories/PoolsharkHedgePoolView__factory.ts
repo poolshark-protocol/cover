@@ -95,6 +95,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "lastBlockNumber",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "latestTick",
     outputs: [
       {
@@ -127,11 +140,6 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "lastBlockNumber",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
         name: "feeGrowthGlobalIn",
         type: "uint256",
       },
@@ -157,11 +165,6 @@ const _abi = [
         internalType: "uint128",
         name: "liquidity",
         type: "uint128",
-      },
-      {
-        internalType: "uint256",
-        name: "lastBlockNumber",
-        type: "uint256",
       },
       {
         internalType: "uint256",
@@ -199,7 +202,7 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "feeGrowthGlobalLast",
+        name: "feeGrowthGlobalIn",
         type: "uint256",
       },
       {
@@ -248,7 +251,7 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "feeGrowthGlobalLast",
+        name: "feeGrowthGlobalIn",
         type: "uint256",
       },
       {
