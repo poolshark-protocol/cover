@@ -7,8 +7,15 @@ import "./IPoolsharkHedgePoolStructs.sol";
 interface IPoolsharkHedgePool is  IPoolsharkHedgePoolStructs {
 
     // function collect(int24 lower, int24 upper) external returns (uint256 amount0fees, uint256 amount1fees);
-
-    function mint(MintParams memory data) external returns (uint256 liquidityMinted);
+    function mint(
+        int24 lowerOld,
+        int24 lower,
+        int24 upperOld,
+        int24 upper,
+        uint128 amountDesired,
+        bool zeroForOne,
+        bool native
+    ) external;
 
     function burn(
         int24 lower,

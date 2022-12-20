@@ -46,56 +46,43 @@ const _abi = [
   {
     inputs: [
       {
-        components: [
-          {
-            internalType: "int24",
-            name: "lowerOld",
-            type: "int24",
-          },
-          {
-            internalType: "int24",
-            name: "lower",
-            type: "int24",
-          },
-          {
-            internalType: "int24",
-            name: "upperOld",
-            type: "int24",
-          },
-          {
-            internalType: "int24",
-            name: "upper",
-            type: "int24",
-          },
-          {
-            internalType: "uint128",
-            name: "amountDesired",
-            type: "uint128",
-          },
-          {
-            internalType: "bool",
-            name: "zeroForOne",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "native",
-            type: "bool",
-          },
-        ],
-        internalType: "struct IPoolsharkHedgePoolStructs.MintParams",
-        name: "data",
-        type: "tuple",
+        internalType: "int24",
+        name: "lowerOld",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "lower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "upperOld",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "upper",
+        type: "int24",
+      },
+      {
+        internalType: "uint128",
+        name: "amountDesired",
+        type: "uint128",
+      },
+      {
+        internalType: "bool",
+        name: "zeroForOne",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "native",
+        type: "bool",
       },
     ],
     name: "mint",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "liquidityMinted",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },

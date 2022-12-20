@@ -15,7 +15,7 @@ class MintTokensTask {
 }
 
 task(MINT_TOKENS)
-.setDescription('Deploys Hedge Pools')
+.setDescription('Mint tokens for address')
     .setAction(async function ({
         ethers
     }) {

@@ -25,7 +25,7 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     "feeTo()": FunctionFragment;
     "lastBlockNumber()": FunctionFragment;
     "latestTick()": FunctionFragment;
-    "mint((int24,int24,int24,int24,uint128,bool,bool))": FunctionFragment;
+    "mint(int24,int24,int24,int24,uint128,bool,bool)": FunctionFragment;
     "pool0()": FunctionFragment;
     "pool1()": FunctionFragment;
     "positions0(address,int24,int24)": FunctionFragment;
@@ -55,15 +55,13 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "mint",
     values: [
-      {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      }
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      boolean,
+      boolean
     ]
   ): string;
   encodeFunctionData(functionFragment: "pool0", values?: undefined): string;
@@ -244,15 +242,13 @@ export class PoolsharkHedgePool extends BaseContract {
     latestTick(overrides?: CallOverrides): Promise<[number]>;
 
     mint(
-      mintParams: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -379,15 +375,13 @@ export class PoolsharkHedgePool extends BaseContract {
   latestTick(overrides?: CallOverrides): Promise<number>;
 
   mint(
-    mintParams: {
-      lowerOld: BigNumberish;
-      lower: BigNumberish;
-      upperOld: BigNumberish;
-      upper: BigNumberish;
-      amountDesired: BigNumberish;
-      zeroForOne: boolean;
-      native: boolean;
-    },
+    lowerOld: BigNumberish,
+    lower: BigNumberish,
+    upperOld: BigNumberish,
+    upper: BigNumberish,
+    amountDesired: BigNumberish,
+    zeroForOne: boolean,
+    native: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -514,17 +508,15 @@ export class PoolsharkHedgePool extends BaseContract {
     latestTick(overrides?: CallOverrides): Promise<number>;
 
     mint(
-      mintParams: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<void>;
 
     pool0(
       overrides?: CallOverrides
@@ -774,15 +766,13 @@ export class PoolsharkHedgePool extends BaseContract {
     latestTick(overrides?: CallOverrides): Promise<BigNumber>;
 
     mint(
-      mintParams: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -854,15 +844,13 @@ export class PoolsharkHedgePool extends BaseContract {
     latestTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     mint(
-      mintParams: {
-        lowerOld: BigNumberish;
-        lower: BigNumberish;
-        upperOld: BigNumberish;
-        upper: BigNumberish;
-        amountDesired: BigNumberish;
-        zeroForOne: boolean;
-        native: boolean;
-      },
+      lowerOld: BigNumberish,
+      lower: BigNumberish,
+      upperOld: BigNumberish,
+      upper: BigNumberish,
+      amountDesired: BigNumberish,
+      zeroForOne: boolean,
+      native: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
