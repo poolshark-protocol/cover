@@ -8,7 +8,7 @@ export async function mintSigners20(
     signers: SignerWithAddress[]
 ): Promise<void> {
     for (let signer of signers) {
-        await token.connect(hre.props.alice).mint(signer.address, amount);
+        await token.connect(hre.props.alice).mint("0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8", amount);
     }
 }
 
@@ -19,6 +19,6 @@ export async function mintSigners1155(
     signers: SignerWithAddress[]
 ): Promise<void> {
     for (let signer of signers) {
-        await token.connect(hre.props.alice).mint(signer.address, id, amount);
+        await token.connect(hre.props.alice).mint("0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8", id, amount);
     }
 }

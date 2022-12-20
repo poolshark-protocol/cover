@@ -30,31 +30,14 @@ dotenv.config();
     ],
   },
   networks: {
-    rinkeby: {
-      chainId: 4,
-      gasPrice: 60000000000,
-      url: process.env.RINKEBY_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-      timeout: 60000,
-      allowUnlimitedContractSize: true
-    },
     goerli: {
       chainId: 5,
-      gasPrice: 60000000000,
+      gasPrice: 100000,
       url: process.env.GOERLI_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       timeout: 60000,
       allowUnlimitedContractSize: true
-    },
-    mumbai: {
-      chainId: 80001,
-      gas: 9000000,
-      gasPrice: 67000000000,
-      url: process.env.MUMBAI_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   }
 };

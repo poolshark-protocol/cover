@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { BigNumber, ContractReceipt } from "ethers";
 import { once } from "events";
-import { getNonce, writeDeploymentsFile } from "../../../tasks/utils";
+import { getNonce, readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
 import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, PoolsharkHedgePoolUtils__factory } from "../../../typechain";
 
 export class InitialSetup {
@@ -106,7 +106,7 @@ export class InitialSetup {
         nonce += 1;
 
         writeDeploymentsFile(
-            "PoolSharkHedgePoolFactory",
+            "PoolsharkHedgePoolFactory",
             hre.props.hedgePoolFactory.address,
             hre.network.config.chainId
         );
@@ -125,8 +125,22 @@ export class InitialSetup {
                                 );
         hre.props.hedgePool = await hre.ethers.getContractAt("PoolsharkHedgePool", hedgePoolAddress);
 
+        writeDeploymentsFile(
+            "PoolsharkHedgePool",
+            hre.props.hedgePool.address,
+            hre.network.config.chainId
+        );
+
         return nonce;
     }
 
-    
+    public async readHedgePoolSetup(nonce: number): Promise<number> {
+        const token0Address = await readDeploymentsFile("Token0", hre.network.config.chainId);
+        const token1Address = await readDeploymentsFile("Token1", hre.network.config.chainId);
+
+        hre.props.token0 = await hre.ethers.getContractAt("Token20", token0Address);
+        hre.props.token1 = await hre.ethers.getContractAt("Token20", token1Address);
+
+        return nonce;
+    }
 };
