@@ -596,9 +596,8 @@ contract PoolsharkHedgePool is
             priceLower: TickMath.getSqrtRatioAtTick(lower),
             priceUpper: TickMath.getSqrtRatioAtTick(upper),
             claimPrice: TickMath.getSqrtRatioAtTick(claim),
-            removeLower: false,
-            removeUpper: false,
-            removeClaim: false,
+            removeLower: true,
+            removeUpper: true,
             upperRemove: 0,
             lowerRemove: 0
         });
@@ -619,18 +618,47 @@ contract PoolsharkHedgePool is
         // handle claims
         if(ticks[claim].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) {
             // skip claim if lower == claim
-            if(claim != lower){
+            if(claim != (zeroForOne ? upper : lower)){
                 // verify user passed highest tick with growth
-                if (claim != upper){
+                if (claim != (zeroForOne ? lower : upper)){
                     {
                         // next tick should not have any fee growth
                         int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
                         if (ticks[claimNextTick].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) revert WrongTickClaimedAt();
                     }
+                    Ticks.remove(
+                        zeroForOne ? ticks0 : ticks1,
+                        tickNodes,
+                        zeroForOne ? lower : claim,
+                        zeroForOne ? claim : upper,
+                        uint128(-amount),
+                        zeroForOne,
+                        true,
+                        true
+                    );
+                } else {
+                    //remove liquidity from last tick only
+                    {
+                        // next tick should not have any fee growth
+                        int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
+                        if (ticks[claimNextTick].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) zeroForOne ? cache.removeLower = false 
+                                                                                                                  : cache.removeUpper = false;
+                    }
+                    Ticks.remove(
+                        zeroForOne ? ticks0 : ticks1,
+                        tickNodes,
+                        zeroForOne ? lower : claim,
+                        zeroForOne ? claim : upper,
+                        uint128(-amount),
+                        zeroForOne,
+                        zeroForOne ? cache.removeLower : false,
+                        zeroForOne ? false : cache.removeUpper
+                    );
                 }
                 cache.position.claimPriceLast = cache.claimPrice;
                 {
                     // calculate what is claimable
+                    //TODO: should this be inside Ticks library?
                     uint256 amountInClaimable  = zeroForOne ? 
                                                     DyDxMath.getDy(
                                                         cache.position.liquidity,

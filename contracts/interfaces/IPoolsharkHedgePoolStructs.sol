@@ -21,6 +21,8 @@ interface IPoolsharkHedgePoolStructs {
         uint256  feeGrowthGlobalIn;   // Used to check for claim updates
         int128   amountInDelta; 
         int128   amountOutDelta;
+        int128   amountInDeltaCarry;
+        int128   amountOutDeltaCarry;
     }
 
     // feeGrowthGlobalInitial 
@@ -60,7 +62,6 @@ interface IPoolsharkHedgePoolStructs {
         uint160 claimPrice;
         bool removeLower;
         bool removeUpper;
-        bool removeClaim;
         int24 upperRemove;
         int24 lowerRemove;
     }

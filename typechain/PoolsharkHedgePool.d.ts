@@ -613,7 +613,7 @@ export class PoolsharkHedgePool extends BaseContract {
       token: string,
       amount: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<void>;
 
     transferOut(
       to: string,

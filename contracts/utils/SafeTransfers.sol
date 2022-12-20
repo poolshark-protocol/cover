@@ -17,7 +17,7 @@ abstract contract SafeTransfers is PoolsharkTransferErrors {
     function transferIn(
         address token,
         uint256 amount
-    ) external returns (uint256) {
+    ) external {
         _transferIn(token, amount);
     }
     /**

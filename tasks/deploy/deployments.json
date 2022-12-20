@@ -16,5 +16,23 @@
             "address": "0xd635c93eC40EE626EB48254eACeF419cCA682917",
             "created": "2022-12-20T03:18:40.283Z"
         }
+    },
+    "31337": {
+        "Token0": {
+            "address": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
+            "created": "2022-12-20T03:52:41.256Z"
+        },
+        "Token1": {
+            "address": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+            "created": "2022-12-20T03:52:41.261Z"
+        },
+        "PoolsharkHedgePoolFactory": {
+            "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
+            "created": "2022-12-20T03:52:41.379Z"
+        },
+        "PoolsharkHedgePool": {
+            "address": "0x5E3d0fdE6f793B3115A9E7f5EBC195bbeeD35d6C",
+            "created": "2022-12-20T03:52:41.482Z"
+        }
     }
 }
