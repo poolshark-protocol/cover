@@ -145,10 +145,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Token20__factory>;
     getContractFactory(
-      name: "Token20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Token20__factory>;
-    getContractFactory(
       name: "MathUtils",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MathUtils__factory>;
@@ -345,11 +341,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ConcentratedPoolMock>;
-    getContractAt(
-      name: "Token20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Token20>;
     getContractAt(
       name: "Token20",
       address: string,

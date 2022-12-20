@@ -602,10 +602,6 @@ contract PoolsharkHedgePool is
             lowerRemove: 0
         });
 
-        cache.removeLower = cache.position.feeGrowthGlobalIn >= ticks[lower].feeGrowthGlobalIn;
-        cache.removeUpper = cache.position.feeGrowthGlobalIn >= ticks[upper].feeGrowthGlobalIn;
-        cache.removeClaim = claim != upper && claim != upper;
-
         // validate removal amount is less than position liquidity
         if (amount < 0 && uint128(-amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
 
@@ -639,7 +635,7 @@ contract PoolsharkHedgePool is
                 } else {
                     //remove liquidity from last tick only
                     {
-                        // next tick should not have any fee growth
+                        // next tick having fee growth means liquidity was cleared
                         int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
                         if (ticks[claimNextTick].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) zeroForOne ? cache.removeLower = false 
                                                                                                                   : cache.removeUpper = false;
