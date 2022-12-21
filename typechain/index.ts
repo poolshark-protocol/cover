@@ -32,6 +32,7 @@ export type { PoolsharkHedgePoolFactory } from "./PoolsharkHedgePoolFactory";
 export type { PoolsharkHedgePoolUtils } from "./PoolsharkHedgePoolUtils";
 export type { ConcentratedFactoryMock } from "./ConcentratedFactoryMock";
 export type { ConcentratedPoolMock } from "./ConcentratedPoolMock";
+export type { Token20 } from "./Token20";
 export type { MathUtils } from "./MathUtils";
 export type { PoolsharkHedgePoolErrors } from "./PoolsharkHedgePoolErrors";
 export type { PoolsharkHedgePoolFactoryErrors } from "./PoolsharkHedgePoolFactoryErrors";
@@ -73,6 +74,7 @@ export { PoolsharkHedgePoolFactory__factory } from "./factories/PoolsharkHedgePo
 export { PoolsharkHedgePoolUtils__factory } from "./factories/PoolsharkHedgePoolUtils__factory";
 export { ConcentratedFactoryMock__factory } from "./factories/ConcentratedFactoryMock__factory";
 export { ConcentratedPoolMock__factory } from "./factories/ConcentratedPoolMock__factory";
+export { Token20__factory } from "./factories/Token20__factory";
 export { MathUtils__factory } from "./factories/MathUtils__factory";
 export { PoolsharkHedgePoolErrors__factory } from "./factories/PoolsharkHedgePoolErrors__factory";
 export { PoolsharkHedgePoolFactoryErrors__factory } from "./factories/PoolsharkHedgePoolFactoryErrors__factory";

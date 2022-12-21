@@ -606,6 +606,8 @@ contract PoolsharkHedgePool is
             if(claim != (zeroForOne ? upper : lower)){
                 // verify user passed highest tick with growth
                 if (claim != (zeroForOne ? lower : upper)){
+                    //TODO: factor in deltas including carryover
+                    //TODO: remove liquidity from claim tick
                     {
                         // next tick should not have any fee growth
                         int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
@@ -622,6 +624,7 @@ contract PoolsharkHedgePool is
                         true
                     );
                 } else {
+                    //TODO: factor in deltas excluding carryover
                     //remove liquidity from last tick only
                     {
                         // next tick having fee growth means liquidity was cleared
@@ -691,23 +694,28 @@ contract PoolsharkHedgePool is
                     }
                     //TODO: add to position
                 }
-            } 
+            }
+        // user can claim with no updates from lower
         } else if ((zeroForOne ? claim == upper : claim == lower) && amount < 0) {
+            //TODO: if claim is start of position, ignore deltas
             {
                 // next tick should not have any fee growth
+                //TODO: this should be impossible if lower fee growth is equal to position
                 int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
                 if (ticks[claimNextTick].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) revert WrongTickClaimedAt();
             }
-            Ticks.remove(
-                zeroForOne ? ticks0 : ticks1,
-                tickNodes,
-                lower,
-                upper,
-                uint128(-amount),
-                zeroForOne,
-                true,
-                true
-            );
+            if (amount < 0){
+                Ticks.remove(
+                    zeroForOne ? ticks0 : ticks1,
+                    tickNodes,
+                    lower,
+                    upper,
+                    uint128(-amount),
+                    zeroForOne,
+                    true,
+                    true
+                );
+            }
         } else if (zeroForOne ? claim != upper : claim != lower) {
             //user needs to withdraw liquidity from highest tick possible
             revert WrongTickClaimedAt();
