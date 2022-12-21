@@ -403,22 +403,11 @@ contract PoolsharkHedgePool is
             }
         }
 
-        // console.log("liquidity:", cache.liquidity);
         // It increases each swap step.
         // amountOut += output;
 
         zeroForOne ? pool1.price = uint160(cache.price) : 
                      pool0.price = uint160(cache.price) ;
-
-        // console.log('fee growth:', cache.feeGrowthGlobal);
-        // console.log('output:');
-        // console.log(amountOut);
-        // console.log('new price:', sqrtPrice);
-        // console.log('current tick:');
-        // console.log(cache.liquidity);
-        // console.logInt( cache.currentTick);
-        // console.log('new nearest tick:');
-        // console.logInt(nearestTick);
 
         if (zeroForOne) {
             if(cache.input > 0) {
