@@ -40,13 +40,13 @@ export class MintTokens {
         );
         
         const token0Balance = await hre.props.token0.balanceOf(
-            "0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8"
+            "0x4ec744F218397F315EE4AB53A49D3D33019BfD05"
         );
-        console.log("0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8", 'token 0 balance:', token0Balance.toString());
+        console.log("0x4ec744F218397F315EE4AB53A49D3D33019BfD05", 'token 0 balance:', token0Balance.toString());
         const token1Balance = await hre.props.token1.balanceOf(
-            "0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8"
+            "0x4ec744F218397F315EE4AB53A49D3D33019BfD05"
         );
-        console.log("0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8", 'token 1 balance:', token1Balance.toString());
+        console.log("0x4ec744F218397F315EE4AB53A49D3D33019BfD05", 'token 1 balance:', token1Balance.toString());
     }
 
     public async postDeployment() {
