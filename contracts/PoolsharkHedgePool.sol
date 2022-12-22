@@ -588,7 +588,9 @@ contract PoolsharkHedgePool is
             removeLower: true,
             removeUpper: true,
             upperRemove: 0,
-            lowerRemove: 0
+            lowerRemove: 0,
+            amountInDelta: 0,
+            amountOutDelta: 0
         });
 
         // validate removal amount is less than position liquidity
@@ -601,13 +603,18 @@ contract PoolsharkHedgePool is
         if (cache.position.claimPriceLast > cache.claimPrice) revert InvalidClaimTick();
 
         // handle claims
+        //TODO: figure out how to calculate current auction and withdraw liquidity from that
         if(ticks[claim].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) {
             // skip claim if lower == claim
             if(claim != (zeroForOne ? upper : lower)){
                 // verify user passed highest tick with growth
                 if (claim != (zeroForOne ? lower : upper)){
-                    //TODO: factor in deltas including carryover
-                    //TODO: remove liquidity from claim tick
+
+                    //TODO: remove liquidity from current if necessary
+                    //TODO: get dx from latestTick to current price for pool1
+                    //TODO: get dy from currentPrice to claim tick for pool1
+                    //TODO: do opposite for pool0
+                    //TODO: add this to transferred amount if removing liquidity
                     {
                         // next tick should not have any fee growth
                         int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
@@ -623,8 +630,9 @@ contract PoolsharkHedgePool is
                         true,
                         true
                     );
+                    cache.amountInDelta  = ticks[claim].amountInDelta;
+                    cache.amountOutDelta = ticks[claim].amountOutDelta;
                 } else {
-                    //TODO: factor in deltas excluding carryover
                     //remove liquidity from last tick only
                     {
                         // next tick having fee growth means liquidity was cleared
@@ -642,6 +650,11 @@ contract PoolsharkHedgePool is
                         zeroForOne ? cache.removeLower : false,
                         zeroForOne ? false : cache.removeUpper
                     );
+                    //ignore carryover for last tick of position
+                    cache.amountInDelta  = ticks[claim].amountInDelta - int64(ticks[claim].amountInDeltaCarryPercent) 
+                                                                            * ticks[claim].amountInDelta / 1e18;
+                    cache.amountOutDelta = ticks[claim].amountOutDelta - int64(ticks[claim].amountOutDeltaCarryPercent)
+                                                                            * ticks[claim].amountInDelta / 1e18;
                 }
                 cache.position.claimPriceLast = cache.claimPrice;
                 {
@@ -659,33 +672,31 @@ contract PoolsharkHedgePool is
                                                         cache.position.claimPriceLast,
                                                         cache.claimPrice, 
                                                         false
-                                                    ); // * (1e6 + swapFee) / 1e6; //factors in fees 
-                    int128 amountInDelta = ticks[claim].amountInDelta;
-                    if (amountInDelta > 0) {
+                                                    );
+                    if (cache.amountInDelta > 0) {
                         amountInClaimable += FullPrecisionMath.mulDiv(
-                                                                        uint128(amountInDelta),
+                                                                        uint128(cache.amountInDelta),
                                                                         cache.position.liquidity, 
                                                                         Ticks.Q128
                                                                     );
-                    } else if (amountInDelta < 0) {
+                    } else if (cache.amountInDelta < 0) {
                         //TODO: handle underflow here
                         amountInClaimable -= FullPrecisionMath.mulDiv(
-                                                                        uint128(-amountInDelta),
+                                                                        uint128(-cache.amountInDelta),
                                                                         cache.position.liquidity, 
                                                                         Ticks.Q128
                                                                     );
                     }
                     //TODO: add to position
                     if (amountInClaimable > 0) {
+                        amountInClaimable *= (1e6 + swapFee) / 1e6; // factor in swap fees
                         _transferOut(owner, zeroForOne ? token1 : token0, amountInClaimable);
                     }
                 }
                 {
-                    int128 amountOutDelta = ticks[claim].amountOutDelta;
-                    uint256 amountOutClaimable;
-                    if (amountOutDelta > 0) {
-                        amountOutClaimable = FullPrecisionMath.mulDiv(
-                                                                        uint128(amountOutDelta),
+                    if (cache.amountOutDelta > 0) {
+                        uint256 amountOutClaimable = FullPrecisionMath.mulDiv(
+                                                                        uint128(cache.amountOutDelta),
                                                                         cache.position.liquidity, 
                                                                         Ticks.Q128
                                                                     );

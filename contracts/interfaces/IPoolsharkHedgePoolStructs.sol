@@ -63,6 +63,8 @@ interface IPoolsharkHedgePoolStructs {
         bool removeUpper;
         int24 upperRemove;
         int24 lowerRemove;
+        int128 amountInDelta;
+        int128 amountOutDelta;
     }
 
     struct AccumulateCache {
