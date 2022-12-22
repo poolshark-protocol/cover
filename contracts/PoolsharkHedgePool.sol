@@ -595,6 +595,7 @@ contract PoolsharkHedgePool is
 
         // validate removal amount is less than position liquidity
         if (amount < 0 && uint128(-amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
+        else if (amount < 0) cache.position.liquidity -= uint128(-amount);
 
         if (cache.position.claimPriceLast == 0) {
             cache.position.feeGrowthGlobalIn = cache.feeGrowthGlobalIn;
@@ -610,7 +611,7 @@ contract PoolsharkHedgePool is
                 // verify user passed highest tick with growth
                 if (claim != (zeroForOne ? lower : upper)){
 
-                    //TODO: remove liquidity from current if necessary
+                    //TODO: if latestTick was just updated we can skip
                     //TODO: get dx from latestTick to current price for pool1
                     //TODO: get dy from currentPrice to claim tick for pool1
                     //TODO: do opposite for pool0
@@ -630,26 +631,62 @@ contract PoolsharkHedgePool is
                         true,
                         true
                     );
+
+                    //TODO: does uint -> int check for overflow?
                     cache.amountInDelta  = ticks[claim].amountInDelta;
                     cache.amountOutDelta = ticks[claim].amountOutDelta;
+                    //TODO: move into Ticks lib ~ this code is 1.125 kb
+                    // handle partial fill between lastestTick and current pool price
+                    if (zeroForOne ? 
+                            (latestTick < claim && latestTick >= lower) //TODO: not sure if second condition is possible
+                          : (latestTick > claim && latestTick <= upper) 
+                       ) {
+                        uint160 latestTickPrice = TickMath.getSqrtRatioAtTick(latestTick);
+                        //TODO: stop accumulating the tick before latestTick when moving TWAP
+                        cache.amountInDelta += int128(int256(zeroForOne ? 
+                                DyDxMath.getDy(
+                                    1, // multiplied by liquidity later
+                                    latestTickPrice,
+                                    pool0.price,
+                                    false
+                                )
+                                : DyDxMath.getDx(
+                                    1, 
+                                    pool1.price,
+                                    latestTickPrice, 
+                                    false
+                                )
+                        ));
+                        //TODO: implement stopPrice for pool0/1
+                        cache.amountOutDelta += int128(int256(zeroForOne ? 
+                            DyDxMath.getDx(
+                                1, // multiplied by liquidity later
+                                pool0.price,
+                                cache.claimPrice,
+                                false
+                            )
+                            : DyDxMath.getDy(
+                                1, 
+                                cache.claimPrice,
+                                pool1.price, 
+                                false
+                            )
+                        ));
+                        //TODO: do we need to handle minus deltas correctly depending on direction
+                        // modify current liquidity
+                        if (amount < 0) {
+                            zeroForOne ? pool0.liquidity -= uint128(-amount) 
+                                       : pool1.liquidity -= uint128(-amount);
+                        }
+                    }
                 } else {
-                    //remove liquidity from last tick only
                     {
                         // next tick having fee growth means liquidity was cleared
                         int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
                         if (ticks[claimNextTick].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) zeroForOne ? cache.removeLower = false 
                                                                                                                   : cache.removeUpper = false;
                     }
-                    Ticks.remove(
-                        zeroForOne ? ticks0 : ticks1,
-                        tickNodes,
-                        zeroForOne ? lower : claim,
-                        zeroForOne ? claim : upper,
-                        uint128(-amount),
-                        zeroForOne,
-                        zeroForOne ? cache.removeLower : false,
-                        zeroForOne ? false : cache.removeUpper
-                    );
+                    /// @dev - no liquidity removed from last tick
                     //ignore carryover for last tick of position
                     cache.amountInDelta  = ticks[claim].amountInDelta - int64(ticks[claim].amountInDeltaCarryPercent) 
                                                                             * ticks[claim].amountInDelta / 1e18;
@@ -726,38 +763,25 @@ contract PoolsharkHedgePool is
                     true,
                     true
                 );
+                uint256 amountOutRemoved = zeroForOne ? 
+                                    DyDxMath.getDx(
+                                        uint128(-amount),
+                                        cache.priceLower,
+                                        cache.claimPrice,
+                                        false
+                                    )
+                                  : DyDxMath.getDy(
+                                        uint128(-amount),
+                                        cache.claimPrice,
+                                        cache.priceUpper,
+                                        false
+                                    );
+                _transferOut(owner, zeroForOne ? token0 : token1, amountOutRemoved);
             }
         } else if (zeroForOne ? claim != upper : claim != lower) {
             //user needs to withdraw liquidity from highest tick possible
             revert WrongTickClaimedAt();
         } 
-        //TODO: should we revert otherwise? 
-
-        // liquidity updated in burn() function
-        if (amount < 0) {
-            // calculate amount to transfer out
-            // TODO: ensure no liquidity above has been touched
-
-            uint256 amountOutRemoved = zeroForOne ? 
-                                            DyDxMath.getDx(
-                                                uint128(-amount),
-                                                cache.priceLower,
-                                                cache.claimPrice,
-                                                false
-                                            )
-                                          : DyDxMath.getDy(
-                                                uint128(-amount),
-                                                cache.claimPrice,
-                                                cache.priceUpper,
-                                                false
-                                            );
-
-            // console.log('amount out removed:', amountOutRemoved);
-            // will underflow if too much liquidity withdrawn
-            uint128 liquidityAmount = uint128(-amount);
-            cache.position.liquidity -= liquidityAmount;
-            _transferOut(owner, zeroForOne ? token0 : token1, amountOutRemoved);
-        }
 
         if (amount > 0) {
             //TODO: i'm not sure how to handle double mints just yet
