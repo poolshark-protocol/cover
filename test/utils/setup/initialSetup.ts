@@ -209,7 +209,6 @@ export class InitialSetup {
             "hedgePool",
             hre.props.hedgePool,
             [
-                hre.props.hedgePoolFactory.address,
                 hre.props.concentratedPoolMock.address,
                 libraries.address,
                 "500",

@@ -3,14 +3,6 @@ import { ContractDeploymentsKey } from "../util/files/contractDeploymentsJson";
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
         networkName: 'goerli',
-        objectName: 'tokenA'
-    },
-    {
-        networkName: 'goerli',
-        objectName: 'tokenB'
-    },
-    {
-        networkName: 'goerli',
         objectName: 'token0'
     },
     {
@@ -27,18 +19,10 @@ export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     },
     {
         networkName: 'goerli',
-        objectName: 'concentratedPoolMock'
-    },
-    {
-        networkName: 'hardhat',
-        objectName: 'tokenA'
-    },
-    {
-        networkName: 'hardhat',
-        objectName: 'tokenA'
+        objectName: 'hedgePoolFactory'
     },
     {
         networkName: 'goerli',
-        objectName: 'hedgePoolFactory'
+        objectName: 'hedgePool'
     },
 ];

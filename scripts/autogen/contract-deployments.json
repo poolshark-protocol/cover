@@ -2,71 +2,82 @@
     "goerli": {
         "tokenA": {
             "contractName": "Token20",
-            "contractAddress": "0xBE673Dd9ef1CD464394550dF2AC49D2a2bF0EC5F",
+            "contractAddress": "0xa9bAd443855B62E21BeF630afCdBa59a58680997",
             "constructorArguments": [
                 "Token20A",
                 "TOKEN20A",
                 18
             ],
-            "created": "2022-12-24T00:49:25.435Z"
+            "created": "2022-12-24T01:07:26.480Z"
         },
         "tokenB": {
             "contractName": "Token20",
-            "contractAddress": "0xAE4733988e0E658A5e59F1bd5e7F0Aa827E79080",
+            "contractAddress": "0x74Aea7d4c41B51dBF198f08eB95f4646dA83dE26",
             "constructorArguments": [
                 "Token20B",
                 "TOKEN20B",
                 18
             ],
-            "created": "2022-12-24T00:49:49.798Z"
+            "created": "2022-12-24T01:07:52.748Z"
         },
         "token0": {
             "contractName": "Token20",
-            "contractAddress": "0xAE4733988e0E658A5e59F1bd5e7F0Aa827E79080",
+            "contractAddress": "0x74Aea7d4c41B51dBF198f08eB95f4646dA83dE26",
             "constructorArguments": [
                 "Token20B",
                 "TOKEN20B",
                 18
             ],
-            "created": "2022-12-24T00:49:49.845Z"
+            "created": "2022-12-24T01:07:52.786Z"
         },
         "token1": {
             "contractName": "Token20",
-            "contractAddress": "0xBE673Dd9ef1CD464394550dF2AC49D2a2bF0EC5F",
+            "contractAddress": "0xa9bAd443855B62E21BeF630afCdBa59a58680997",
             "constructorArguments": [
                 "Token20A",
                 "TOKEN20A",
                 18
             ],
-            "created": "2022-12-24T00:49:49.850Z"
+            "created": "2022-12-24T01:07:52.790Z"
         },
         "concentratedFactoryMock": {
             "contractName": "ConcentratedFactoryMock",
-            "contractAddress": "0x42D86F94AD855EC3ddfd4FF6A83dF4b8430EE11C",
+            "contractAddress": "0x7969EAe09708aE99f30819587B16909A4c613866",
             "constructorArguments": [
-                "0xAE4733988e0E658A5e59F1bd5e7F0Aa827E79080",
-                "0xBE673Dd9ef1CD464394550dF2AC49D2a2bF0EC5F"
+                "0x74Aea7d4c41B51dBF198f08eB95f4646dA83dE26",
+                "0xa9bAd443855B62E21BeF630afCdBa59a58680997"
             ],
-            "created": "2022-12-24T00:50:16.352Z"
+            "created": "2022-12-24T01:08:02.767Z"
         },
         "concentratedPoolMock": {
             "contractName": "ConcentratedPoolMock",
-            "contractAddress": "0x9891eF40549912225e8626d656Cc3602faD57Fc5",
+            "contractAddress": "0xaa47c935cb317E8D4C70D2C90FF511cF5F17153e",
             "constructorArguments": [
-                "0xAE4733988e0E658A5e59F1bd5e7F0Aa827E79080",
-                "0xBE673Dd9ef1CD464394550dF2AC49D2a2bF0EC5F",
+                "0x74Aea7d4c41B51dBF198f08eB95f4646dA83dE26",
+                "0xa9bAd443855B62E21BeF630afCdBa59a58680997",
                 "500"
             ],
-            "created": "2022-12-24T00:50:25.122Z"
+            "created": "2022-12-24T01:08:09.876Z"
         },
         "hedgePoolFactory": {
             "contractName": "PoolsharkHedgePoolFactory",
-            "contractAddress": "0xcF5C50A6b0d7d94680C23f10a28807356aB3D288",
+            "contractAddress": "0xf76485511ddF3c758b2578ddC400D2D638661134",
             "constructorArguments": [
-                "0x42D86F94AD855EC3ddfd4FF6A83dF4b8430EE11C",
-                "0x6D6564085aC196A75a1157ac432f79623D926b6d"
+                "0x7969EAe09708aE99f30819587B16909A4c613866",
+                "0x59D6df38838403D9Cab9918eC64C23f968663c3d"
             ],
-            "created": "2022-12-24T00:51:04.356Z"
+            "created": "2022-12-24T01:08:29.070Z"
+        },
+        "hedgePool": {
+            "contractName": "PoolsharkHedgePool",
+            "contractAddress": "0x87B4784C1a8125dfB9Fb16F8A997128f346f5B13",
+            "constructorArguments": [
+                "0xaa47c935cb317E8D4C70D2C90FF511cF5F17153e",
+                "0x59D6df38838403D9Cab9918eC64C23f968663c3d",
+                "500",
+                "10"
+            ],
+            "created": "2022-12-24T01:08:42.202Z"
         }
     },
     "hardhat": {}
