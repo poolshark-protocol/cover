@@ -1,25 +1,5 @@
 {
     "goerli": {
-        "tokenA": {
-            "contractName": "Token20",
-            "contractAddress": "0xa9bAd443855B62E21BeF630afCdBa59a58680997",
-            "constructorArguments": [
-                "Token20A",
-                "TOKEN20A",
-                18
-            ],
-            "created": "2022-12-24T01:07:26.480Z"
-        },
-        "tokenB": {
-            "contractName": "Token20",
-            "contractAddress": "0x74Aea7d4c41B51dBF198f08eB95f4646dA83dE26",
-            "constructorArguments": [
-                "Token20B",
-                "TOKEN20B",
-                18
-            ],
-            "created": "2022-12-24T01:07:52.748Z"
-        },
         "token0": {
             "contractName": "Token20",
             "contractAddress": "0x74Aea7d4c41B51dBF198f08eB95f4646dA83dE26",
