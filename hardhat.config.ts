@@ -39,6 +39,15 @@ dotenv.config();
       timeout: 60000,
       allowUnlimitedContractSize: true
     },
+  },
+  etherscan: {
+    apiKey: {
+      /* ETH L1 */
+      // mainnet: process.env.ETHEREUM_API_KEY,
+      // ropsten: process.env.ETHEREUM_API_KEY,
+      // rinkeby: process.env.ETHEREUM_API_KEY,
+      goerli: process.env.ETHEREUM_API_KEY,
+    }
   }
 };
 

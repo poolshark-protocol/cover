@@ -55,17 +55,14 @@ contract PoolsharkHedgePoolFactory is
         // console.log("factory input pool:", inputPool);
 
         // launch pool and save address
-        pool = address(
-            new PoolsharkHedgePool(
-                abi.encode(
-                    address(this),
-                    inputPool,
-                    libraries,
-                    uint24(swapFee),
-                    tickSpacing
-                )
-            )
-        );
+        pool =  address(
+                    new PoolsharkHedgePool(
+                        inputPool,
+                        libraries,
+                        uint24(swapFee),
+                        tickSpacing
+                    )
+                );
 
         poolMapping[key] = pool;
         poolList.push(pool);

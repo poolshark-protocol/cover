@@ -1,7 +1,7 @@
 import { error } from 'console';
-import { redLog } from '../../../developer/debug/colorLog';
-import { PrimeConstants } from '../../constants/constants';
-import { FileIOClient } from '../clients/_fileIOClient';
+import { redLog } from '../../../test/utils/colors';
+import { DeployConstants } from '../../constants/deployConstants';
+import { FileIOClient } from '../clients/fileIOClient';
 
 export interface ContractDeploymentsKey {
     networkName: string;
@@ -25,11 +25,71 @@ export class ContractDeploymentsJson {
     public prepareContractDeploymentsJsonFile() {
         const functionName = 'prepareContractDeploymentsFile';
 
-        const blank = this.fileIO.readFile(PrimeConstants.JSON_BLANK_FILENAME, functionName);
+        const blank = this.fileIO.readFile(DeployConstants.JSON_BLANK_FILENAME, functionName);
 
         this.fileIO.overwriteFile(
-            PrimeConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
+            DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
             blank,
+            functionName
+        );
+    }
+
+    public deleteContractDeploymentsJsonFile(
+        currentNetworkName: string,
+        objectName: string
+    ) {
+        const functionName = 'writeContractDeploymentsFile';
+
+        console.log(
+            `📄 Deleting ${currentNetworkName}:${objectName} from contracts deployments file.`
+        );
+
+        const spacesPerTab = 4;
+
+        let contractDeploymentsJson = this.fileIO.readFile(
+            DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
+            functionName
+        );
+
+        let contractDeployments;
+
+        try {
+            contractDeployments = JSON.parse(contractDeploymentsJson);
+        } catch (error: any) {
+            redLog(
+                `${functionName}():
+                Failed to parse JSON for ${objectName} on ${currentNetworkName.toUpperCase()}`
+            );
+            throw error;
+        }
+
+        if (!contractDeployments[currentNetworkName]) {
+            console.log(
+                '\n📄 Creating new entry for %s network.\n',
+                currentNetworkName
+            );
+            contractDeployments[currentNetworkName] = {};
+        }
+
+        delete contractDeployments[currentNetworkName][objectName];
+
+        try {
+            contractDeploymentsJson = JSON.stringify(
+                contractDeployments,
+                null,
+                spacesPerTab
+            );
+        } catch (error: any) {
+            redLog(
+                `⛔️ ${functionName}():
+                Failed to stringify JSON when deleting ${objectName} on ${currentNetworkName.toUpperCase()}`
+            );
+            throw error;
+        }
+
+        this.fileIO.overwriteFile(
+            DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
+            contractDeploymentsJson,
             functionName
         );
     }
@@ -50,7 +110,7 @@ export class ContractDeploymentsJson {
         const spacesPerTab = 4;
 
         let contractDeploymentsJson = this.fileIO.readFile(
-            PrimeConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
+            DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
             functionName
         );
 
@@ -99,7 +159,7 @@ export class ContractDeploymentsJson {
         }
 
         this.fileIO.overwriteFile(
-            PrimeConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
+            DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
             contractDeploymentsJson,
             functionName
         );
@@ -116,14 +176,21 @@ export class ContractDeploymentsJson {
         );
 
         const contractDeploymentsJson = this.fileIO.readFile(
-            PrimeConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
+            DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
             functionName
+        );
+
+        console.log(
+            `📄 ${callingFunction}(): Reading ${key.networkName}:${key.objectName} from contracts deployments file.`
         );
 
         let contractDeployments;
 
         try {
             contractDeployments = JSON.parse(contractDeploymentsJson);
+            console.log(
+                `📄 ${callingFunction}(): Reading ${key.networkName}:${key.objectName} from contracts deployments file.`
+            );
         } catch (error: any) {
             redLog(
                 `⛔️ ${functionName}():
@@ -142,6 +209,10 @@ export class ContractDeploymentsJson {
 
         const contractDeploymentsEntry: ContractDeploymentsEntry =
             contractDeployments[key.networkName][key.objectName];
+
+            console.log(
+                `📄 ${callingFunction}(): Reading ${key.networkName}:${key.objectName} from contracts deployments file.`
+            );
 
         return contractDeploymentsEntry;
     }

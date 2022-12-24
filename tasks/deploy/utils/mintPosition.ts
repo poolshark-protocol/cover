@@ -1,8 +1,10 @@
+import { BigNumber } from "ethers";
+import { validateMint } from "../../../test/utils/contracts/hedgepool/hedgepool";
 import { InitialSetup } from "../../../test/utils/setup/initialSetup";
 import { mintSigners20 } from "../../../test/utils/token";
 import { getNonce } from "../../utils";
 
-export class MintTokens {
+export class MintPosition {
 
     private initialSetup: InitialSetup;
     private nonce: number;
@@ -39,14 +41,27 @@ export class MintTokens {
             [hre.props.alice]
         );
         
-        const token0Balance = await hre.props.token0.balanceOf(
-            "0x4ec744F218397F315EE4AB53A49D3D33019BfD05"
-        );
-        console.log("0x4ec744F218397F315EE4AB53A49D3D33019BfD05", 'token 0 balance:', token0Balance.toString());
-        const token1Balance = await hre.props.token1.balanceOf(
-            "0x4ec744F218397F315EE4AB53A49D3D33019BfD05"
-        );
-        console.log("0x4ec744F218397F315EE4AB53A49D3D33019BfD05", 'token 1 balance:', token1Balance.toString());
+        const liquidityAmount = BigNumber.from('199760153929825488153727');
+        const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+        const lower    = hre.ethers.utils.parseUnits("20", 0);
+        const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+        const upper    = hre.ethers.utils.parseUnits("30", 0);
+
+        await validateMint(
+            hre.props.alice,
+            hre.props.alice.address,
+            lowerOld,
+            lower,
+            upperOld,
+            upper,
+            token1Amount,
+            false,
+            token1Amount,
+            liquidityAmount,
+            ""
+          );
+        
+        console.log("position minted");
     }
 
     public async postDeployment() {

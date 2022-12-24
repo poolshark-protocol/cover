@@ -1,15 +1,25 @@
-import { boolean } from "hardhat/internal/core/params/argumentTypes";
+import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { InitialSetup } from "../../../test/utils/setup/initialSetup";
+import { mintSigners20 } from "../../../test/utils/token";
 import { getNonce } from "../../utils";
-import { VerifyContracts } from "./verifyContracts";
+import { CONTRACT_DEPLOYMENT_KEYS } from "../../../scripts/autogen/contract-deployments-keys";
+import { ContractDeploymentsJson, ContractDeploymentsKey } from "../../../scripts/util/files/contractDeploymentsJson";
+import { ContractDeploymentsKeys } from "../../../scripts/util/files/contractDeploymentKeys";
+import { DeploymentActionsJson } from "../../../scripts/util/files/deploymentActionsJson";
+import { Contract } from "ethers";
+import { greenLog, yellowLog, redLog } from "../../../test/utils/colors";
+import { DeployAssist } from "../../../scripts/util/deployAssist";
 
-export class DeployHedgePools {
+export class VerifyContracts {
+    private deployAssist: DeployAssist;
 
     private initialSetup: InitialSetup;
     private nonce: number;
 
     constructor() {
         this.initialSetup = new InitialSetup();
+        // this.psharkGlobalConfigs = new PsharkGlobalConfigs();
+        this.deployAssist = new DeployAssist();
     }
 
     public async preDeployment() {
@@ -26,16 +36,10 @@ export class DeployHedgePools {
             hre.carol       = signers[2];
         }
         hre.nonce = await getNonce(hre, hre.props.alice.address);
-
-        // deploy contracts onto network
-        await this.initialSetup.initialHedgePoolSetup();
-
-        // verify contracts on block explorer
-        await hre.run('verify-contracts');
+        await this.deployAssist.verifyContracts();
     }
 
     public async postDeployment() {
-
     }
 
     public canDeploy(): boolean {

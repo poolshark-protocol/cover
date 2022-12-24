@@ -39,29 +39,17 @@ contract PoolsharkHedgePool is
         unlocked = 1;
     }
 
-    constructor(bytes memory _poolParams) {
-        (
-            address _factory,
-            address _inputPool,
-            address _libraries,
-            uint24  _swapFee, 
-            int24  _tickSpacing
-        ) = abi.decode(
-            _poolParams,
-            (
-                address, 
-                address,
-                address,
-                uint24,
-                int24
-            )
-        );
-
+    constructor(
+        address _inputPool,
+        address _libraries,
+        uint24  _swapFee, 
+        int24  _tickSpacing
+    ) {
         // check for invalid params
         if (_swapFee > MAX_FEE) revert InvalidSwapFee();
 
         // set state variables from params
-        factory     = _factory;
+        factory     = msg.sender;
         inputPool   = IConcentratedPool(_inputPool);
         utils       = IPoolsharkUtils(_libraries);
         token0      = IConcentratedPool(inputPool).token0();
@@ -71,7 +59,7 @@ contract PoolsharkHedgePool is
         tickSpacing = _tickSpacing;
 
         // extrapolate other state variables
-        feeTo = IPoolsharkHedgePoolFactory(_factory).owner();
+        feeTo = IPoolsharkHedgePoolFactory(factory).owner();
         MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpacing);
 
         // set default initial values
@@ -116,8 +104,8 @@ contract PoolsharkHedgePool is
         uint128 amountDesired,
         bool zeroForOne,
         bool native
-    ) external lock {
-        _mint(
+    ) external {
+        internalMint(
             MintParams(
                 lowerOld,
                 lower,
@@ -131,7 +119,7 @@ contract PoolsharkHedgePool is
     }
 
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
-    function _mint(MintParams memory mintParams) internal returns (uint256 liquidityMinted) {
+    function internalMint(MintParams memory mintParams) internal returns (uint256 liquidityMinted) {
         /// @dev - don't allow mints until we have enough observations from inputPool
         _ensureInitialized();
         //TODO: move tick update check here
