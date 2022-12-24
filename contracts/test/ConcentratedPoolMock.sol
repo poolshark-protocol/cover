@@ -18,13 +18,13 @@ contract ConcentratedPoolMock is IConcentratedPool {
     int56 tickCumulative1;
 
     constructor(
-        address tokenA,
-        address tokenB,
-        uint24 _swapFee
+        address _token0,
+        address _token1,
+        uint24  _swapFee
     ) {
-        require(tokenA < tokenB, "wrong token order");
-        token0 = tokenA;
-        token1 = tokenB;
+        require(_token0 < _token1, "wrong token order");
+        token0  = _token0;
+        token1  = _token1;
         swapFee = _swapFee;
     }
 

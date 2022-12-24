@@ -34,8 +34,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     "tickNodes(int24)": FunctionFragment;
     "ticks0(int24)": FunctionFragment;
     "ticks1(int24)": FunctionFragment;
-    "transferIn(address,uint256)": FunctionFragment;
-    "transferOut(address,address,uint256)": FunctionFragment;
     "utils()": FunctionFragment;
   };
 
@@ -90,14 +88,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     functionFragment: "ticks1",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "transferIn",
-    values: [string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "transferOut",
-    values: [string, string, BigNumberish]
-  ): string;
   encodeFunctionData(functionFragment: "utils", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
@@ -116,11 +106,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "tickNodes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks1", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "transferIn", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOut",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "utils", data: BytesLike): Result;
 
   events: {
@@ -321,12 +306,22 @@ export class PoolsharkHedgePool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
       }
     >;
 
@@ -334,27 +329,24 @@ export class PoolsharkHedgePool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
       }
     >;
-
-    transferIn(
-      token: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    transferOut(
-      to: string,
-      token: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
 
     utils(overrides?: CallOverrides): Promise<[string]>;
   };
@@ -454,12 +446,22 @@ export class PoolsharkHedgePool extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
       amountInDelta: BigNumber;
       amountOutDelta: BigNumber;
+      amountInDeltaCarryPercent: BigNumber;
+      amountOutDeltaCarryPercent: BigNumber;
     }
   >;
 
@@ -467,27 +469,24 @@ export class PoolsharkHedgePool extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
       feeGrowthGlobalIn: BigNumber;
       amountInDelta: BigNumber;
       amountOutDelta: BigNumber;
+      amountInDeltaCarryPercent: BigNumber;
+      amountOutDeltaCarryPercent: BigNumber;
     }
   >;
-
-  transferIn(
-    token: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  transferOut(
-    to: string,
-    token: string,
-    amount: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
 
   utils(overrides?: CallOverrides): Promise<string>;
 
@@ -587,12 +586,22 @@ export class PoolsharkHedgePool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
       }
     >;
 
@@ -600,27 +609,24 @@ export class PoolsharkHedgePool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
         feeGrowthGlobalIn: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
       }
     >;
-
-    transferIn(
-      token: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    transferOut(
-      to: string,
-      token: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     utils(overrides?: CallOverrides): Promise<string>;
   };
@@ -811,19 +817,6 @@ export class PoolsharkHedgePool extends BaseContract {
 
     ticks1(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
-    transferIn(
-      token: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    transferOut(
-      to: string,
-      token: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     utils(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
@@ -893,19 +886,6 @@ export class PoolsharkHedgePool extends BaseContract {
     ticks1(
       arg0: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    transferIn(
-      token: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    transferOut(
-      to: string,
-      token: string,
-      amount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     utils(overrides?: CallOverrides): Promise<PopulatedTransaction>;

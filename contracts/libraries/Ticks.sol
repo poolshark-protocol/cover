@@ -78,7 +78,7 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         int24 latestTick,
-        uint256 feeGrowthGlobalIn,
+        uint232 feeGrowthGlobalIn,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
@@ -123,16 +123,14 @@ library Ticks
                     -int128(amount),
                     amount,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             } else {
                 ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                     int128(amount),
                     0,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             }
 
@@ -187,8 +185,7 @@ library Ticks
                     int128(amount),
                     0,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             } else {
                             console.log('upper does not exist');
@@ -196,8 +193,7 @@ library Ticks
                     -int128(amount),
                     amount,
                     feeGrowthGlobalIn,
-                    0,
-                    0
+                    0,0,0,0
                 );
             }
         }
@@ -310,40 +306,62 @@ library Ticks
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
-        uint256 feeGrowthGlobal,
+        uint232 feeGrowthGlobal,
         int128 amountInDelta,
-        int128 amountOutDelta
+        int128 amountOutDelta,
+        bool removeLiquidity
     ) internal returns (int128, int128) {
-        //TODO: take in amount deltas to limit storage reads and writes
-        //assume tick index is increasing as we acccumulate
-        int128 deltaPercent;
-        uint128 liquidityDeltaMinus = ticks[nextTickToAccum].liquidityDeltaMinus;
-        if (liquidityDeltaMinus == 0) {
-            deltaPercent = 0;
-        } else {
-            deltaPercent  = int128(liquidityDeltaMinus) * 1e18 / int128(currentLiquidity);
-            // console.log('carry percent:', carryPercent);
-        }
+        console.log('fee growth accumulate check');
         console.log(ticks[nextTickToCross].feeGrowthGlobalIn);
         console.log(ticks[nextTickToAccum].feeGrowthGlobalIn);
-        //TODO: do we do this even if there is no liquidity?
-        if (currentLiquidity > 0){
+
+        //update fee growth
+        ticks[nextTickToAccum].feeGrowthGlobalIn = feeGrowthGlobal;
+
+        //remove all liquidity from previous tick
+        if (removeLiquidity) {
+            ticks[nextTickToCross].liquidityDelta = 0;
+            ticks[nextTickToCross].liquidityDeltaMinus = 0;
+        }
+        //check for deltas to carry
+        if(ticks[nextTickToCross].amountInDeltaCarryPercent > 0){
+            //TODO: will this work with negatives?
+            int128 amountInDeltaCarry = int64(ticks[nextTickToCross].amountInDeltaCarryPercent) 
+                                            * ticks[nextTickToCross].amountInDelta / 1e18;
+            ticks[nextTickToCross].amountInDelta -= amountInDeltaCarry;
+            ticks[nextTickToCross].amountInDeltaCarryPercent = 0;
+            amountInDelta += amountInDeltaCarry;
+            /// @dev - amountOutDelta cannot exist without amountInDelta
+            if(ticks[nextTickToCross].amountOutDeltaCarryPercent > 0){
+            //TODO: will this work with negatives?
+                int256 amountOutDeltaCarry = int64(ticks[nextTickToCross].amountOutDeltaCarryPercent) 
+                                                * ticks[nextTickToCross].amountOutDelta / 1e18;
+                ticks[nextTickToCross].amountOutDelta -= int128(amountOutDeltaCarry);
+                ticks[nextTickToCross].amountOutDeltaCarryPercent = 0;
+                amountOutDelta += int128(amountOutDeltaCarry);
+            }
+        }
+        if (currentLiquidity > 0) {
+            //write amount deltas and set cache to zero
+            uint128 liquidityDeltaMinus = ticks[nextTickToAccum].liquidityDeltaMinus;
+            if (currentLiquidity != liquidityDeltaMinus) {
+                //
+                ticks[nextTickToAccum].amountInDelta  += amountInDelta;
+                ticks[nextTickToAccum].amountOutDelta += amountOutDelta;
+                int128 liquidityDeltaPlus = ticks[nextTickToAccum].liquidityDelta + int128(liquidityDeltaMinus);
+                if (liquidityDeltaPlus > 0) {
+                    /// @dev - amount deltas get diluted when liquidity is added
+                    int128 liquidityPercentIncrease = liquidityDeltaPlus * 1e18 / int128(currentLiquidity - liquidityDeltaMinus);
+                    amountOutDelta = amountOutDelta * (1e18 + liquidityPercentIncrease) / 1e18;
+                    amountInDelta = amountInDelta * (1e18 + liquidityPercentIncrease) / 1e18;
+                }
+            } else {
+                ticks[nextTickToAccum].amountInDelta += amountInDelta;
+                ticks[nextTickToAccum].amountOutDelta += amountOutDelta;
+                amountInDelta = 0;
+                amountOutDelta = 0;
+            }
             // update fee growth
-            ticks[nextTickToAccum].feeGrowthGlobalIn = feeGrowthGlobal;
-            // handle amount in delta
-            int128 amountInDeltaChange = amountInDelta * deltaPercent / 1e18;
-            if (amountInDelta > 0) {
-                ticks[nextTickToAccum].amountInDelta += amountInDeltaChange;
-                amountInDelta -= amountInDeltaChange;
-            }
-            // handle amount out delta
-            //TODO: this works once but not on a second carryover
-            //TODO: implement percent carry to be used during accumulateLastBlock
-            int128 amountOutDeltaChange = ticks[nextTickToCross].amountOutDelta * deltaPercent / 1e18;
-            if (amountOutDelta > 0) {
-                ticks[nextTickToAccum].amountOutDelta += amountOutDeltaChange;
-                amountOutDelta -= amountOutDeltaChange;
-            }
         }
         return (amountInDelta, amountOutDelta);
     }
@@ -442,6 +460,30 @@ library Ticks
         pool0.price = TickMath.getSqrtRatioAtTick(latestTick);
         pool1.price = pool0.price;
     }
+
+    function _updateAmountDeltas (
+        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        int24 update,
+        int128 amountInDelta,
+        int128 amountOutDelta,
+        uint128 currentLiquidity
+    ) internal {
+        // return since there is nothing to update
+        if (currentLiquidity == 0) return;
+
+        // handle amount in delta
+        int128 amountInDeltaCarry = int64(ticks[update].amountInDeltaCarryPercent) * ticks[update].amountInDelta / 1e18;
+        ticks[update].amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
+                                                    / (ticks[update].amountInDelta + amountInDelta)));
+        ticks[update].amountInDelta += amountInDelta;
+
+        // handle amount out delta
+        int128 amountOutDeltaCarry = int64(ticks[update].amountOutDeltaCarryPercent) * ticks[update].amountOutDelta / 1e18;
+        ticks[update].amountOutDeltaCarryPercent = uint64(uint128((amountOutDelta + amountOutDeltaCarry) * 1e18 
+                                                    / (ticks[update].amountOutDelta + amountOutDelta)));
+        ticks[update].amountOutDelta += amountOutDelta;
+    }
+
     //TODO: do both pool0 AND pool1
     function accumulateLastBlock(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks0,
@@ -468,6 +510,7 @@ library Ticks
         console.log('zero tick previous:');
         console.logInt(tickNodes[0].previousTick);
 
+        //TODO: to save stack space can also use pool0/1 everywhere
         IPoolsharkHedgePoolStructs.AccumulateCache memory cache = IPoolsharkHedgePoolStructs.AccumulateCache({
             nextTickToCross0:  tickNodes[pool0.nearestTick].nextTick,
             nextTickToCross1:  pool1.nearestTick,
@@ -555,7 +598,8 @@ library Ticks
                 cache.liquidity0,
                 pool0.feeGrowthGlobalIn,
                 cache.amountInDelta0, /// @dev - amount deltas will be 0 initially
-                cache.amountOutDelta0
+                cache.amountOutDelta0,
+                true //TODO: only do this for below latestTick to keep liquidity between old and new latestTick
             );
             if(cache.nextTickToAccum0 >= latestTick) {
                 ticks0[cache.nextTickToCross0].liquidityDelta = 0;
@@ -582,7 +626,14 @@ library Ticks
                 break;
             }
         }
-
+        // place leftover amount deltas at stopTick
+        _updateAmountDeltas(
+                ticks0,
+                cache.stopTick0,
+                cache.amountInDelta0,
+                cache.amountOutDelta0,
+                cache.liquidity0
+        );
         while (true) {
             //rollover if past latestTick and TWAP moves up
             if (cache.stopTick1 == nextLatestTick 
@@ -615,7 +666,8 @@ library Ticks
                 cache.liquidity1,
                 pool1.feeGrowthGlobalIn,
                 cache.amountInDelta1, /// @dev - amount deltas will be 1 initially
-                cache.amountOutDelta1
+                cache.amountOutDelta1,
+                true
             );
             if(cache.nextTickToAccum0 <= latestTick) {
                 ticks0[cache.nextTickToCross0].liquidityDelta = 0;
@@ -644,6 +696,14 @@ library Ticks
                 break;
             }
         }
+        // place leftover amount deltas at stopTick
+        _updateAmountDeltas(
+                ticks1,
+                cache.stopTick1,
+                cache.amountInDelta1,
+                cache.amountOutDelta1,
+                cache.liquidity1
+        );
         //TODO: remove liquidity from all ticks crossed
         //TODO: handle burn when price is between ticks
         //if TWAP moved up

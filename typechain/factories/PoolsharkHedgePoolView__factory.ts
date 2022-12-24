@@ -139,9 +139,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint256",
+        internalType: "uint232",
         name: "feeGrowthGlobalIn",
-        type: "uint256",
+        type: "uint232",
       },
     ],
     stateMutability: "view",
@@ -167,9 +167,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint256",
+        internalType: "uint232",
         name: "feeGrowthGlobalIn",
-        type: "uint256",
+        type: "uint232",
       },
     ],
     stateMutability: "view",
@@ -201,9 +201,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint256",
+        internalType: "uint232",
         name: "feeGrowthGlobalIn",
-        type: "uint256",
+        type: "uint232",
       },
       {
         internalType: "uint160",
@@ -250,9 +250,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint256",
+        internalType: "uint232",
         name: "feeGrowthGlobalIn",
-        type: "uint256",
+        type: "uint232",
       },
       {
         internalType: "uint160",
@@ -318,9 +318,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint256",
+        internalType: "uint232",
         name: "feeGrowthGlobalIn",
-        type: "uint256",
+        type: "uint232",
       },
       {
         internalType: "int128",
@@ -331,6 +331,16 @@ const _abi = [
         internalType: "int128",
         name: "amountOutDelta",
         type: "int128",
+      },
+      {
+        internalType: "uint64",
+        name: "amountInDeltaCarryPercent",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
+        name: "amountOutDeltaCarryPercent",
+        type: "uint64",
       },
     ],
     stateMutability: "view",
@@ -357,9 +367,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint256",
+        internalType: "uint232",
         name: "feeGrowthGlobalIn",
-        type: "uint256",
+        type: "uint232",
       },
       {
         internalType: "int128",
@@ -370,6 +380,16 @@ const _abi = [
         internalType: "int128",
         name: "amountOutDelta",
         type: "int128",
+      },
+      {
+        internalType: "uint64",
+        name: "amountInDeltaCarryPercent",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
+        name: "amountOutDeltaCarryPercent",
+        type: "uint64",
       },
     ],
     stateMutability: "view",

@@ -5,21 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../utils/PoolsharkErrors.sol";
 
 abstract contract SafeTransfers is PoolsharkTransferErrors {
-    
-    function transferOut(
-        address to,
-        address token,
-        uint256 amount
-    ) external {
-        return _transferOut(to, token, amount);
-    }
-
-    function transferIn(
-        address token,
-        uint256 amount
-    ) external returns (uint256) {
-        _transferIn(token, amount);
-    }
     /**
      * @dev Similar to EIP20 transfer, except it handles a False result from `transferFrom` and reverts in that case.
      *      This will revert due to insufficient balance or insufficient allowance.

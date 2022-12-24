@@ -17,4 +17,5 @@ export interface PoolsharkRuntimeEnvironment
     carol: SignerWithAddress;
     isAllTestSuite: boolean;
     network: Network;
+    nonce: number;
 }

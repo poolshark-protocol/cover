@@ -1,5 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
+import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { getNonce } from "../../../tasks/utils";
 import { ConcentratedFactoryMock, ConcentratedPoolMock, PoolsharkHedgePool, PoolsharkHedgePoolFactory, Token20 } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
@@ -9,9 +10,12 @@ export interface BeforeEachProps {
     hedgePoolFactory: PoolsharkHedgePoolFactory;
     concentratedFactoryMock: ConcentratedFactoryMock;
     concentratedPoolMock: ConcentratedPoolMock;
+    tokenA: Token20;
+    tokenB: Token20;
     token0: Token20;
     token1: Token20;
     token20: Token20;
+    admin: SignerWithAddress;
     alice: SignerWithAddress;
     bob: SignerWithAddress;
     carol: SignerWithAddress;
@@ -29,13 +33,14 @@ export class GetBeforeEach {
     public async getBeforeEach() {
         hre.props = this.retrieveProps();
         const signers = await ethers.getSigners();
+        hre.props.admin = signers[0];
         hre.props.alice = signers[0];
         if(hre.network.name == "hardhat"){
             hre.props.bob   = signers[1];
             hre.carol       = signers[2];
         }
-        this.nonce = await getNonce(hre, hre.props.alice.address);
-        this.nonce = await this.initialSetup.initialHedgePoolSetup(this.nonce);
+        hre.nonce = await getNonce(hre, hre.props.alice.address);
+        this.nonce = await this.initialSetup.initialHedgePoolSetup();
     };
 
     public retrieveProps(): BeforeEachProps {
@@ -43,9 +48,12 @@ export class GetBeforeEach {
         let hedgePoolFactory: PoolsharkHedgePoolFactory;
         let concentratedFactoryMock: ConcentratedFactoryMock;
         let concentratedPoolMock: ConcentratedPoolMock;
+        let tokenA: Token20;
+        let tokenB: Token20;
         let token0: Token20;
         let token1: Token20;
         let token20: Token20;
+        let admin: SignerWithAddress;
         let alice: SignerWithAddress;
         let bob: SignerWithAddress;
         let carol: SignerWithAddress;
@@ -55,9 +63,12 @@ export class GetBeforeEach {
             hedgePoolFactory,
             concentratedFactoryMock,
             concentratedPoolMock,
+            tokenA,
+            tokenB,
             token0,
             token1,
             token20,
+            admin,
             alice,
             bob,
             carol,

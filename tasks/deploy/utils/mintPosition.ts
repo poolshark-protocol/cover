@@ -25,7 +25,7 @@ export class MintPosition {
             hre.props.bob   = signers[1];
             hre.carol       = signers[2];
         }
-        this.nonce = await getNonce(hre, hre.props.alice.address);
+        hre.nonce = await getNonce(hre, hre.props.alice.address);
         console.log(this.nonce)
         await this.initialSetup.readHedgePoolSetup(this.nonce);
         const token0Amount = ethers.utils.parseUnits("100", await hre.props.token0.decimals());
