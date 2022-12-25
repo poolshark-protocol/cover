@@ -158,18 +158,6 @@ export class InitialSetup {
                                         hre.props.alice
                         ).deploy();
         hre.nonce += 1;
-        
-        await this.deployAssist.saveContractDeployment(
-            network,
-            "ConcentratedPoolMock",
-            "concentratedPoolMock",
-            hre.props.concentratedPoolMock,
-            [
-                hre.props.token0.address,
-                hre.props.token1.address,
-                "500"
-            ]
-        );
 
         await this.deployAssist.deployContractWithRetry(
             network,

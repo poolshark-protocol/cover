@@ -240,8 +240,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -251,8 +252,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -380,8 +382,9 @@ export class PoolsharkHedgePool extends BaseContract {
   pool0(
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber] & {
+    [number, number, BigNumber, BigNumber, BigNumber] & {
       nearestTick: number;
+      lastTick: number;
       price: BigNumber;
       liquidity: BigNumber;
       feeGrowthGlobalIn: BigNumber;
@@ -391,8 +394,9 @@ export class PoolsharkHedgePool extends BaseContract {
   pool1(
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber] & {
+    [number, number, BigNumber, BigNumber, BigNumber] & {
       nearestTick: number;
+      lastTick: number;
       price: BigNumber;
       liquidity: BigNumber;
       feeGrowthGlobalIn: BigNumber;
@@ -520,8 +524,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -531,8 +536,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;

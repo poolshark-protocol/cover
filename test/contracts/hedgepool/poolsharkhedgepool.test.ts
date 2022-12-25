@@ -165,7 +165,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   });
 
   it('Should move TWAP before mint and do a successful swap', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("30", 0);
+    const lowerOld = hre.ethers.utils.parseUnits("40", 0);
     const lower    = hre.ethers.utils.parseUnits("60", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("90", 0);
@@ -178,8 +178,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     console.log('max tick:', maxTick.toString());
     // move TWAP to tick 50
     let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-      3600,
-      1800
+      4800,
+      2400
     );
     await txn.wait();
 

@@ -2,9 +2,24 @@
   {
     "inputs": [
       {
-        "internalType": "bytes",
-        "name": "_poolParams",
-        "type": "bytes"
+        "internalType": "address",
+        "name": "_inputPool",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_libraries",
+        "type": "address"
+      },
+      {
+        "internalType": "uint24",
+        "name": "_swapFee",
+        "type": "uint24"
+      },
+      {
+        "internalType": "int24",
+        "name": "_tickSpacing",
+        "type": "int24"
       }
     ],
     "stateMutability": "nonpayable",
@@ -425,9 +440,9 @@
         "type": "uint128"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint232",
         "name": "feeGrowthGlobalIn",
-        "type": "uint256"
+        "type": "uint232"
       }
     ],
     "stateMutability": "view",
@@ -453,9 +468,9 @@
         "type": "uint128"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint232",
         "name": "feeGrowthGlobalIn",
-        "type": "uint256"
+        "type": "uint232"
       }
     ],
     "stateMutability": "view",
@@ -487,9 +502,9 @@
         "type": "uint128"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint232",
         "name": "feeGrowthGlobalIn",
-        "type": "uint256"
+        "type": "uint232"
       },
       {
         "internalType": "uint160",
@@ -536,9 +551,9 @@
         "type": "uint128"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint232",
         "name": "feeGrowthGlobalIn",
-        "type": "uint256"
+        "type": "uint232"
       },
       {
         "internalType": "uint160",
@@ -638,9 +653,9 @@
         "type": "uint128"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint232",
         "name": "feeGrowthGlobalIn",
-        "type": "uint256"
+        "type": "uint232"
       },
       {
         "internalType": "int128",
@@ -651,6 +666,16 @@
         "internalType": "int128",
         "name": "amountOutDelta",
         "type": "int128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "amountInDeltaCarryPercent",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "amountOutDeltaCarryPercent",
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -677,9 +702,9 @@
         "type": "uint128"
       },
       {
-        "internalType": "uint256",
+        "internalType": "uint232",
         "name": "feeGrowthGlobalIn",
-        "type": "uint256"
+        "type": "uint232"
       },
       {
         "internalType": "int128",
@@ -690,56 +715,19 @@
         "internalType": "int128",
         "name": "amountOutDelta",
         "type": "int128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "amountInDeltaCarryPercent",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "amountOutDeltaCarryPercent",
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "transferIn",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "transferOut",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
