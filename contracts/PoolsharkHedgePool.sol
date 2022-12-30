@@ -201,15 +201,13 @@ contract PoolsharkHedgePool is
             mintParams.zeroForOne
         );
 
-        (uint128 amountInActual, uint128 amountOutActual) = DyDxMath.getAmountsForLiquidity(
-            priceLower,
-            priceUpper,
-            mintParams.zeroForOne ? priceLower : priceUpper,
-            liquidityMinted,
-            true
+        emit Mint(
+            msg.sender,
+            mintParams.lower,
+            mintParams.upper,
+            mintParams.zeroForOne,
+            uint128(liquidityMinted)
         );
-
-        emit Mint(msg.sender, amountInActual, amountOutActual);
     }
 
     function burn(
@@ -260,11 +258,8 @@ contract PoolsharkHedgePool is
             -int128(amount)
         );
 
-        uint256 amountIn;
-        uint256 amountOut;
-
         //TODO: get token amounts from _updatePosition return values
-        emit Burn(msg.sender, amountIn, amountOut);
+        emit Burn(msg.sender, lower, upper, zeroForOne, amount);
     }
 
     // function collect(int24 lower, int24 upper) public lock returns (uint256 amountInfees, uint256 amountOutfees) {

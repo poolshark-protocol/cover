@@ -35,14 +35,14 @@ export async function readDeploymentsFile(
     throw new Error("ERROR: undefined chainId in hardhat.config.ts");
   }
   const deploymentsStr = readFileSync(
-    "./tasks/deploy/deployments.json",
+    "./scripts/autogen/contract-deployments.json",
     "utf-8"
   );
   const deployments = JSON.parse(deploymentsStr);
-  if(deployments[chainId][contractName] == undefined){
+  if(deployments[hre.network.name][contractName] == undefined){
     return "";
   }
-  return deployments[chainId][contractName].address;
+  return deployments[hre.network.name][contractName].address;
 }
 
 export async function writeDeploymentsFile(

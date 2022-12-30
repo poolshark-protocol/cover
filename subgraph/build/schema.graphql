@@ -1,0 +1,32 @@
+type Token @entity {
+    # token address
+    id: ID!
+    name: String!
+    symbol: String!
+    decimals: BigInt!
+}
+
+type HedgePool @entity {
+    # poolAddress
+    id: ID!
+    factory: Bytes!
+    token0: Token!
+    token1: Token!
+    inputPool: Bytes!
+}
+
+type Position @entity {
+    # poolAddress + owner + lower + upper
+    id: ID!
+    txnHash: Bytes!
+    createdBy: Bytes!
+    createdAtTimestamp: BigInt!
+    owner: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    liquidity: BigInt!
+    inToken: Token!
+    outToken: Token!
+    inAmount: BigInt!
+    outAmount: BigInt!
+}

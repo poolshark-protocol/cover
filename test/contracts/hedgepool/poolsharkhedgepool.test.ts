@@ -24,6 +24,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   const minTickIdx = BigNumber.from('-887272');
   const maxTickIdx = BigNumber.from('887272');
 
+  //TODO: mint position and burn as if there were 100
+
   before(async function () {
     await gBefore();
     let currentBlock = await ethers.provider.getBlockNumber();
@@ -250,7 +252,6 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       "InvalidPosition()"
     );
 
-    
     let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
     let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
@@ -290,7 +291,6 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       ""
     );
 
-    
     let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
     let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
