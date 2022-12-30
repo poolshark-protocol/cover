@@ -78,7 +78,6 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         int24 latestTick,
-        uint232 feeGrowthGlobalIn,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
@@ -99,6 +98,8 @@ library Ticks
         // Stack overflow.
         // console.log('current lower liquidity:', currentLowerLiquidity);
         //TODO: handle lower = latestTick
+        console.log('liquidity before');
+        console.logInt(ticks[upper].liquidityDelta);
         if (ticks[lower].liquidityDelta != 0 
             || ticks[lower].liquidityDeltaMinus != 0
             || ticks[lower].amountInDelta != 0
@@ -112,9 +113,6 @@ library Ticks
             } else {
                 ticks[lower].liquidityDelta      += int128(amount);
             }
-            if(ticks[lower].feeGrowthGlobalIn == 0) {
-                ticks[lower].feeGrowthGlobalIn = feeGrowthGlobalIn;
-            } 
         } else {
             // tick does not exist and we must insert
             //TODO: handle new TWAP being in between lowerOld and lower
@@ -122,22 +120,22 @@ library Ticks
                 ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                     -int128(amount),
                     amount,
-                    feeGrowthGlobalIn,
+                    ticks[lowerOld].feeGrowthGlobalIn,                     /// @dev - inherit feeGrowth from prev tick
                     0,0,0,0
                 );
             } else {
                 ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
                     int128(amount),
                     0,
-                    feeGrowthGlobalIn,
+                    ticks[tickNodes[lowerOld].nextTick].feeGrowthGlobalIn, /// @dev - inherit feeGrowth from next tick
                     0,0,0,0
                 );
             }
 
         }
-        console.log('lower tick');
-        console.logInt(tickNodes[lower].nextTick);
-        console.logInt(tickNodes[lower].previousTick);
+        // console.log('lower tick');
+        // console.logInt(tickNodes[lower].nextTick);
+        // console.logInt(tickNodes[lower].previousTick);
         if(tickNodes[lower].nextTick == tickNodes[lower].previousTick && lower != TickMath.MIN_TICK) {
                     console.log('lower tick');
             int24 oldNextTick = tickNodes[lowerOld].nextTick;
@@ -158,9 +156,9 @@ library Ticks
             );
             tickNodes[lowerOld].nextTick = lower;
         }
-        console.log('lower tick');
-        console.logInt(tickNodes[lower].nextTick);
-        console.logInt(tickNodes[lower].previousTick);
+        // console.log('lower tick');
+        // console.logInt(tickNodes[lower].nextTick);
+        // console.logInt(tickNodes[lower].previousTick);
                 console.log('upper tick');
         console.logInt(tickNodes[upper].previousTick);
         console.logInt(tickNodes[upper].nextTick);
@@ -168,6 +166,7 @@ library Ticks
             || ticks[upper].liquidityDeltaMinus != 0
             || ticks[lower].amountInDelta != 0
         ) {
+            console.log('adding liquidity');
             // We are adding liquidity to an existing tick.
             if (isPool0) {
                 ticks[upper].liquidityDelta      += int128(amount);
@@ -175,31 +174,28 @@ library Ticks
                 ticks[upper].liquidityDelta      -= int128(amount);
                 ticks[upper].liquidityDeltaMinus += amount;
             }
-            if (ticks[upper].feeGrowthGlobalIn == 0) {
-                ticks[upper].feeGrowthGlobalIn = feeGrowthGlobalIn;
-            }    
         } else {
-            //TODO: set feeGrowth to 1 initially
+
             if (isPool0) {
                 ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                     int128(amount),
                     0,
-                    feeGrowthGlobalIn,
+                    ticks[tickNodes[upperOld].previousTick].feeGrowthGlobalIn,
                     0,0,0,0
                 );
             } else {
-                            console.log('upper does not exist');
+                            console.log('new tick');
+            console.logInt(upper);
+            console.log(amount);
                 ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
                     -int128(amount),
                     amount,
-                    feeGrowthGlobalIn,
+                    ticks[upperOld].feeGrowthGlobalIn,
                     0,0,0,0
                 );
+                console.logInt(ticks[upper].liquidityDelta);
             }
         }
-        console.log('upper tick');
-        console.logInt(tickNodes[upper].previousTick);
-        console.logInt(tickNodes[upper].nextTick);
         if(tickNodes[upper].nextTick == tickNodes[upper].previousTick && upper != TickMath.MAX_TICK) {
             int24 oldPrevTick = tickNodes[upperOld].previousTick;
             console.logInt(oldPrevTick);
@@ -247,7 +243,7 @@ library Ticks
         //TODO: we can only delete is upper != MAX_TICK or latestTick and all values are 0
         bool deleteUpperTick = false;
         if (deleteLowerTick) {
-            console.log('deleting lower tick');
+
             // Delete lower tick.
             int24 previous = tickNodes[lower].previousTick;
             int24 next     = tickNodes[lower].nextTick;
@@ -261,12 +257,14 @@ library Ticks
             }
         }
         if (removeLower) {
+                        console.log('deleting lower tick');
             if (isPool0) {
                 ticks[lower].liquidityDelta += int128(amount);
                 ticks[lower].liquidityDeltaMinus -= amount;
             } else {
                 ticks[lower].liquidityDelta -= int128(amount);
             }
+                        console.log('deleting lower tick');
         }
 
         //TODO: could also modify amounts and then check if liquidityDelta and liquidityDeltaMinus are both zero
@@ -288,12 +286,14 @@ library Ticks
         //TODO: that is the tick that should have liquidity values modified
         //TODO: keep unchecked block?
         if (removeUpper) {
+                                    console.log('deleting upper tick');
             if (isPool0) {
                 ticks[upper].liquidityDelta -= int128(amount);
             } else {
                 ticks[upper].liquidityDelta += int128(amount);
                 ticks[upper].liquidityDeltaMinus -= amount;
             }
+                                                console.log('deleting upper tick');
         }
         /// @dev - we can never delete ticks due to amount deltas
 
@@ -316,7 +316,7 @@ library Ticks
         console.log(ticks[nextTickToAccum].feeGrowthGlobalIn);
 
         //update fee growth
-        ticks[nextTickToAccum].feeGrowthGlobalIn = feeGrowthGlobal;
+        ticks[nextTickToAccum].feeGrowthGlobalIn = feeGrowthGlobal + 1;
 
         //remove all liquidity from previous tick
         if (removeLiquidity) {
@@ -487,15 +487,25 @@ library Ticks
 
         // handle amount in delta
         int128 amountInDeltaCarry = int64(ticks[update].amountInDeltaCarryPercent) * ticks[update].amountInDelta / 1e18;
-        ticks[update].amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
-                                                    / (ticks[update].amountInDelta + amountInDelta)));
-        ticks[update].amountInDelta += amountInDelta;
+        int128 newAmountInDelta = ticks[update].amountInDelta + amountInDelta;
+        if (amountInDelta != 0 && newAmountInDelta != 0) {
+            ticks[update].amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
+                                            / (newAmountInDelta)));
+            ticks[update].amountInDelta += amountInDelta;
+        } else if (amountInDelta != 0 && newAmountInDelta == 0) {
+            revert NotImplementedYet();
+        }
 
         // handle amount out delta
         int128 amountOutDeltaCarry = int64(ticks[update].amountOutDeltaCarryPercent) * ticks[update].amountOutDelta / 1e18;
-        ticks[update].amountOutDeltaCarryPercent = uint64(uint128((amountOutDelta + amountOutDeltaCarry) * 1e18 
-                                                    / (ticks[update].amountOutDelta + amountOutDelta)));
-        ticks[update].amountOutDelta += amountOutDelta;
+        int128 newAmountOutDelta = ticks[update].amountOutDelta + amountOutDelta;
+        if (amountOutDelta != 0 && newAmountOutDelta != 0) {
+            ticks[update].amountOutDeltaCarryPercent = uint64(uint128((amountOutDelta + amountOutDeltaCarry) * 1e18 
+                                                    / (newAmountOutDelta)));
+            ticks[update].amountOutDelta += amountOutDelta;
+        } else if (amountOutDelta != 0 && newAmountOutDelta == 0) {
+            revert NotImplementedYet();
+        }
     }
 
     //TODO: do both pool0 AND pool1

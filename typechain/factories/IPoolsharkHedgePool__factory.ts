@@ -66,6 +66,11 @@ const _abi = [
         type: "int24",
       },
       {
+        internalType: "int24",
+        name: "claim",
+        type: "int24",
+      },
+      {
         internalType: "uint128",
         name: "amountDesired",
         type: "uint128",
@@ -73,11 +78,6 @@ const _abi = [
       {
         internalType: "bool",
         name: "zeroForOne",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "native",
         type: "bool",
       },
     ],

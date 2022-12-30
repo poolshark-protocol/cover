@@ -90,10 +90,30 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       lower,
       upperOld,
       upper,
+      lower,
       token1Amount,
       false,
       token1Amount,
       liquidityAmount,
+      false,
+      false,
+      ""
+    );
+
+    await validateMint(
+      hre.props.alice,
+      hre.props.alice.address,
+      lowerOld,
+      lower,
+      upperOld,
+      upper,
+      lower,
+      token1Amount,
+      false,
+      token1Amount,
+      liquidityAmount,
+      false,
+      false,
       ""
     );
     
@@ -113,13 +133,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
     expect(lowerTickNode.previousTick).to.be.equal(lowerOld);
     expect(lowerTickNode.nextTick).to.be.equal(upper);
-    expect(lowerTick.liquidityDelta).to.be.equal(liquidityAmount);
+    expect(lowerTick.liquidityDelta).to.be.equal(liquidityAmount.mul(2));
     expect(lowerTick.liquidityDeltaMinus).to.be.equal(BN_ZERO);
 
     expect(upperTickNode.previousTick).to.be.equal(lower);
     expect(upperTickNode.nextTick).to.be.equal(upperOld);
-    expect(upperTick.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityAmount));
-    expect(upperTick.liquidityDeltaMinus).to.be.equal(liquidityAmount);
+    expect(upperTick.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityAmount.mul(2)));
+    expect(upperTick.liquidityDeltaMinus).to.be.equal(liquidityAmount.mul(2));
   });
 
   it('Should swap with zero output', async function () {
@@ -162,6 +182,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       false,
       BN_ZERO,
       token1Amount.sub(1),
+      false,
+      false,
       ""
     );
   });
@@ -178,7 +200,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
-    // move TWAP to tick 50
+    // move TWAP to tick 40
     let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
       4800,
       2400
@@ -193,10 +215,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       lower,
       upperOld,
       upper,
+      lower,
       token1Amount,
       false,
       token1Amount,
       burnAmount,
+      false,
+      false,
       ""
     );
 
@@ -221,6 +246,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       false,
       BN_ZERO,
       token1Amount.sub(1),
+      false,
+      false,
       ""
     )
 
@@ -245,10 +272,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       lower,
       upperOld,
       upper,
+      lower,
       token1Amount,
       false,
       token1Amount,
       liquidityAmount,
+      false,
+      false,
       "InvalidPosition()"
     );
 
@@ -274,8 +304,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     );
     await txn.wait();
 
-    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1("0");
-    console.log('min tick:', lowerOldTickBefore.toString());
+    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1("30");
+    console.log('upper before tick:', lowerOldTickBefore.toString());
 
     await validateMint(
       hre.props.alice,
@@ -284,10 +314,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       lower,
       upperOld,
       upper,
+      lower,
       token1Amount,
       false,
       token1Amount,
       liquidityAmount,
+      true,
+      false,
       ""
     );
 
@@ -314,11 +347,27 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       hre.props.alice,
       lower,
       upper,
+      upper,
+      liquidityAmount,
+      false,
+      BN_ZERO,
+      token1Amount.sub(1),
+      false,
+      false,
+      "WrongTickClaimedAt()"
+    )
+    //TODO: why is lower removed but upper isn't?
+    await validateBurn(
+      hre.props.alice,
+      lower,
+      upper,
       lower,
       liquidityAmount,
       false,
       BN_ZERO,
       token1Amount.sub(1),
+      false,
+      true,
       ""
     )
   });
@@ -330,13 +379,33 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
 
-    await expect(hre.props.hedgePool.burn(
+    await validateBurn(
+      hre.props.alice,
       lower,
       upper,
-      upper,
+      lower,
+      liquidityAmount,
       false,
-      liquidityAmount
-    )).to.be.revertedWith("NotEnoughPositionLiquidity()");
+      BN_ZERO,
+      token1Amount.sub(1),
+      false,
+      true,
+      ""
+    )
+
+    await validateBurn(
+      hre.props.alice,
+      lower,
+      upper,
+      lower,
+      liquidityAmount,
+      false,
+      BN_ZERO,
+      token1Amount.sub(1),
+      true,
+      true,
+      "NotEnoughPositionLiquidity()"
+    )
   });
 
   // TODO: partial mint

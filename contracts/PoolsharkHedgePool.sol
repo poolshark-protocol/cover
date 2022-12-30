@@ -96,30 +96,16 @@ contract PoolsharkHedgePool is
         );
     }
 
+    /// @dev Mints LP tokens - should be called via the CL pool manager contract.
     function mint(
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
         int24 upper,
+        int24 claim,
         uint128 amountDesired,
-        bool zeroForOne,
-        bool native
+        bool zeroForOne
     ) external {
-        internalMint(
-            MintParams(
-                lowerOld,
-                lower,
-                upperOld,
-                upper,
-                amountDesired,
-                zeroForOne,
-                native
-            )
-        );
-    }
-
-    /// @dev Mints LP tokens - should be called via the CL pool manager contract.
-    function internalMint(MintParams memory mintParams) internal returns (uint256 liquidityMinted) {
         /// @dev - don't allow mints until we have enough observations from inputPool
         _ensureInitialized();
         //TODO: move tick update check here
@@ -137,75 +123,76 @@ contract PoolsharkHedgePool is
                 tickSpacing
             );
         }
+        _validatePosition(lower, upper, zeroForOne, amountDesired);
         //TODO: handle upperOld and lowerOld being invalid
-        uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(mintParams.lower));
-        uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(mintParams.upper));
-        //TODO: maybe move to other function
-        // handle partial mints
-        if (mintParams.zeroForOne && mintParams.upper >= latestTick) {
-            mintParams.upper = latestTick - int24(tickSpacing);
-            mintParams.upperOld = latestTick;
-            uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(mintParams.upper);
-            mintParams.amountDesired -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
-            priceUpper = priceNewUpper;
-        }
-        if (!mintParams.zeroForOne && mintParams.lower <= latestTick) {
-            mintParams.lower = latestTick + int24(tickSpacing);
-            mintParams.lowerOld = latestTick;
-            uint256 priceNewLower = TickMath.getSqrtRatioAtTick(mintParams.lower);
-            mintParams.amountDesired -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false));
-            priceLower = priceNewLower;
-        }
+        uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(lower));
+        uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper));
 
-        _validatePosition(mintParams);
-
-        liquidityMinted = DyDxMath.getLiquidityForAmounts(
+        uint256 liquidityMinted = DyDxMath.getLiquidityForAmounts(
             priceLower,
             priceUpper,
-            mintParams.zeroForOne ? priceLower : priceUpper,
-            mintParams.zeroForOne ? 0 : uint256(mintParams.amountDesired),
-            mintParams.zeroForOne ? uint256(mintParams.amountDesired) : 0
+            zeroForOne ? priceLower : priceUpper,
+            zeroForOne ? 0 : uint256(amountDesired),
+            zeroForOne ? uint256(amountDesired) : 0
         );
+        // handle partial mints
+        if (zeroForOne && upper >= latestTick) {
+            upper = latestTick - int24(tickSpacing);
+            upperOld = latestTick;
+            uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(upper);
+            amountDesired -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
+            priceUpper = priceNewUpper;
+        }
+        if (!zeroForOne && lower <= latestTick) {
+            lower = latestTick + int24(tickSpacing);
+            lowerOld = latestTick;
+            uint256 priceNewLower = TickMath.getSqrtRatioAtTick(lower);
+            amountDesired -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false));
+            priceLower = priceNewLower;
+        }
 
         // Ensure no overflow happens when we cast from uint256 to int128.
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
 
-        if(mintParams.zeroForOne){
-            _transferIn(token0, mintParams.amountDesired);
+        if(zeroForOne){
+            _transferIn(token0, amountDesired);
         } else {
-            _transferIn(token1, mintParams.amountDesired);
+            _transferIn(token1, amountDesired);
         }
 
         unchecked {
             _updatePosition(
                 msg.sender,
-                mintParams.lower,
-                mintParams.upper,
-                mintParams.zeroForOne ? mintParams.upper : mintParams.lower,
-                mintParams.zeroForOne,
+                lower,
+                upper,
+                claim,
+                zeroForOne,
                 int128(uint128(liquidityMinted))
             );
             /// @dev - pool current liquidity should never be increased on mint
         }
 
+        //should remove from old lower if necessary
+        //and add liquidity to new ticks
         Ticks.insert(
-            mintParams.zeroForOne ? ticks0 : ticks1,
+            zeroForOne ? ticks0 : ticks1,
             tickNodes,
             latestTick,
-            mintParams.zeroForOne ? pool0.feeGrowthGlobalIn : pool1.feeGrowthGlobalIn,
-            mintParams.lowerOld,
-            mintParams.lower,
-            mintParams.upperOld,
-            mintParams.upper,
+            lowerOld,
+            lower,
+            upperOld,
+            upper,
             uint128(liquidityMinted),
-            mintParams.zeroForOne
+            zeroForOne
         );
+
+        console.logInt(ticks1[upper].liquidityDelta);
 
         emit Mint(
             msg.sender,
-            mintParams.lower,
-            mintParams.upper,
-            mintParams.zeroForOne,
+            lower,
+            upper,
+            zeroForOne,
             uint128(liquidityMinted)
         );
     }
@@ -240,7 +227,8 @@ contract PoolsharkHedgePool is
                 tickSpacing
             );
         }
-        // console.log('zero previous tick:');
+        console.log('zero previous tick:');
+        console.log('zero previus tick:');
         // console.logInt(ticks[0].previousTick);
 
         //TODO: burning liquidity should take liquidity out past the current auction
@@ -257,7 +245,7 @@ contract PoolsharkHedgePool is
             zeroForOne,
             -int128(amount)
         );
-
+        console.log('zero previous tick:');
         //TODO: get token amounts from _updatePosition return values
         emit Burn(msg.sender, lower, upper, zeroForOne, amount);
     }
@@ -421,18 +409,18 @@ contract PoolsharkHedgePool is
         }
     }
 
-    function _validatePosition(MintParams memory mintParams) internal view {
-        if (mintParams.lower % int24(tickSpacing) != 0) revert InvalidTick();
-        if (mintParams.upper % int24(tickSpacing) != 0) revert InvalidTick();
-        if (mintParams.amountDesired == 0) revert InvalidPosition();
-        if (mintParams.lower >= mintParams.upper) revert InvalidPosition();
-        if (mintParams.zeroForOne) {
-            if (mintParams.lower >= latestTick) revert InvalidPosition();
+    function _validatePosition(int24 lower, int24 upper, bool zeroForOne, uint128 amountDesired) internal view {
+        if (lower % int24(tickSpacing) != 0) revert InvalidTick();
+        if (upper % int24(tickSpacing) != 0) revert InvalidTick();
+        if (amountDesired == 0) revert InvalidPosition();
+        if (lower >= upper) revert InvalidPosition();
+        if (zeroForOne) {
+            if (lower >= latestTick) revert InvalidPosition();
         } else {
             // console.log('upper param');
-            // console.logInt(mintParams.upper);
+            // console.logInt(upper);
             // console.logInt(latestTick);
-            if (mintParams.upper <= latestTick) revert InvalidPosition();
+            if (upper <= latestTick) revert InvalidPosition();
         }
     }
 
@@ -575,7 +563,8 @@ contract PoolsharkHedgePool is
             amountInDelta: 0,
             amountOutDelta: 0
         });
-
+console.log('claiming from lower:');
+console.log(cache.position.liquidity);
         // validate removal amount is less than position liquidity
         if (amount < 0 && uint128(-amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         else if (amount < 0) cache.position.liquidity -= uint128(-amount);
@@ -585,10 +574,10 @@ contract PoolsharkHedgePool is
             cache.position.claimPriceLast = zeroForOne ? uint160(cache.priceUpper) : uint160(cache.priceLower);
         }
         if (cache.position.claimPriceLast > cache.claimPrice) revert InvalidClaimTick();
-
         // handle claims
         //TODO: figure out how to calculate current auction and withdraw liquidity from that
-        if(ticks[claim].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) {
+        //TODO: cannot skip claim process
+        if(claim != (zeroForOne ? upper : lower) && ticks[claim].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) {
             // skip claim if lower == claim
             if(claim != (zeroForOne ? upper : lower)){
                 // verify user passed highest tick with growth
@@ -663,6 +652,7 @@ contract PoolsharkHedgePool is
                         }
                     }
                 } else {
+                            console.log('claiming from lower:');
                     {
                         // next tick having fee growth means liquidity was cleared
                         int24 claimNextTick = zeroForOne ? tickNodes[claim].previousTick : tickNodes[claim].nextTick;
@@ -720,7 +710,7 @@ contract PoolsharkHedgePool is
                                                                         cache.position.liquidity, 
                                                                         Ticks.Q128
                                                                     );
-                        //TODO: change to one transfer
+                        //TODO: ADD TO POSITION INSTEAD
                         _transferOut(owner, zeroForOne ? token0 : token1, amountOutClaimable);
                     }
                     //TODO: add to position
@@ -728,6 +718,7 @@ contract PoolsharkHedgePool is
             }
         // user can claim with no updates from lower
         } else if ((zeroForOne ? claim == upper : claim == lower) && amount < 0) {
+            console.log('zero previous tick6:');
             //TODO: if claim is start of position, ignore deltas
             {
                 // next tick should not have any fee growth
@@ -736,6 +727,17 @@ contract PoolsharkHedgePool is
                 if (ticks[claimNextTick].feeGrowthGlobalIn > cache.position.feeGrowthGlobalIn) revert WrongTickClaimedAt();
             }
             if (amount < 0){
+                console.log('fee growth check:');
+                //only if feeGrowth has not increased
+                console.logInt(ticks1[upper].liquidityDelta);
+                console.log(cache.position.feeGrowthGlobalIn);
+                cache.removeLower = zeroForOne ? 
+                                          ticks0[tickNodes[lower].previousTick].feeGrowthGlobalIn <= cache.position.feeGrowthGlobalIn
+                                        : ticks1[tickNodes[claim].nextTick].feeGrowthGlobalIn <= cache.position.feeGrowthGlobalIn;
+                cache.removeUpper = zeroForOne ? 
+                                          ticks0[tickNodes[claim].previousTick].feeGrowthGlobalIn <= cache.position.feeGrowthGlobalIn
+                                        : ticks1[tickNodes[upper].nextTick].feeGrowthGlobalIn <= cache.position.feeGrowthGlobalIn;
+                console.log(cache.removeLower);
                 Ticks.remove(
                     zeroForOne ? ticks0 : ticks1,
                     tickNodes,
@@ -743,9 +745,10 @@ contract PoolsharkHedgePool is
                     upper,
                     uint128(-amount),
                     zeroForOne,
-                    true,
-                    true
+                    cache.removeLower,
+                    cache.removeUpper
                 );
+                console.log('zero previous tick6:');
                 uint256 amountOutRemoved = zeroForOne ? 
                                     DyDxMath.getDx(
                                         uint128(-amount),
@@ -766,23 +769,21 @@ contract PoolsharkHedgePool is
             revert WrongTickClaimedAt();
         } 
 
+        console.log('zero previous tick2:');
+
         if (amount > 0) {
-            //TODO: i'm not sure how to handle double mints just yet
-            // one solution is to take all their current liquidity
-            // and then respread it over whatever range they select
-            // if they haven't claimed at all it's fine
-            // second solution is to recalculate claimPriceLast
-            // easiest option is to just reset the position
-            // and store the leftover amounts in the position
-            // or transfer the leftover balance to the owner
-            //TODO: handle double minting of position
-            if(cache.position.liquidity > 0) revert NotImplementedYet();
+            // handle double minting of position
+            if(cache.position.liquidity > 0) {
+                zeroForOne ? 
+                delete positions0[owner][lower][upper]
+              : delete positions1[owner][lower][upper];
+            }
             cache.position.liquidity += uint128(amount);
             // Prevents a global liquidity overflow in even if all ticks are initialised.
             if (cache.position.liquidity > MAX_TICK_LIQUIDITY) revert LiquidityOverflow();
         }
 
-        zeroForOne ? positions0[owner][lower][upper] = cache.position 
-                   : positions1[owner][lower][upper] = cache.position;
+        zeroForOne ? positions0[owner][lower][claim] = cache.position 
+                   : positions1[owner][claim][upper] = cache.position;
     }
 }

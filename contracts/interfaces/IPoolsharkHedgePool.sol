@@ -13,9 +13,9 @@ interface IPoolsharkHedgePool is  IPoolsharkHedgePoolStructs {
         int24 lower,
         int24 upperOld,
         int24 upper,
+        int24 claim,
         uint128 amountDesired,
-        bool zeroForOne,
-        bool native
+        bool zeroForOne
     ) external;
 
     function burn(
