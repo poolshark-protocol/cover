@@ -2,9 +2,10 @@
 pragma solidity ^0.8.13;
 
 interface IPoolsharkHedgePoolStructs {
-
+    //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
     struct PoolState {
         int24   nearestTick;       /// @dev Tick below current price
+        int24   lastTick;          /// @dev Last tick accumulated to
         uint160 price;             /// @dev Starting price current
         uint128 liquidity;         /// @dev Liquidity currently active
         uint232 feeGrowthGlobalIn; /// @dev Global fee growth per liquidity unit
@@ -74,10 +75,6 @@ interface IPoolsharkHedgePoolStructs {
         int24   nextTickToAccum1;
         int24   stopTick0;
         int24   stopTick1;
-        uint160 price0;
-        uint160 price1;
-        uint128 liquidity0;
-        uint128 liquidity1;
         int128   amountInDelta0; 
         int128   amountInDelta1; 
         int128   amountOutDelta0;

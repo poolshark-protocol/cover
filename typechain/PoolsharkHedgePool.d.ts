@@ -109,9 +109,9 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "utils", data: BytesLike): Result;
 
   events: {
-    "Burn(address,uint256,uint256)": EventFragment;
+    "Burn(address,int24,int24,bool,uint128)": EventFragment;
     "Collect(address,uint256,uint256)": EventFragment;
-    "Mint(address,uint256,uint256)": EventFragment;
+    "Mint(address,int24,int24,bool,uint128)": EventFragment;
     "PoolCreated(address,address,address,uint24,int24)": EventFragment;
     "Swap(address,address,address,uint256,uint256)": EventFragment;
   };
@@ -124,10 +124,12 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
 }
 
 export type BurnEvent = TypedEvent<
-  [string, BigNumber, BigNumber] & {
+  [string, number, number, boolean, BigNumber] & {
     owner: string;
-    amount0: BigNumber;
-    amount1: BigNumber;
+    lower: number;
+    upper: number;
+    zeroForOne: boolean;
+    liquidityBurned: BigNumber;
   }
 >;
 
@@ -140,10 +142,12 @@ export type CollectEvent = TypedEvent<
 >;
 
 export type MintEvent = TypedEvent<
-  [string, BigNumber, BigNumber] & {
+  [string, number, number, boolean, BigNumber] & {
     owner: string;
-    amount0: BigNumber;
-    amount1: BigNumber;
+    lower: number;
+    upper: number;
+    zeroForOne: boolean;
+    liquidityMinted: BigNumber;
   }
 >;
 
@@ -240,8 +244,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -251,8 +256,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -380,8 +386,9 @@ export class PoolsharkHedgePool extends BaseContract {
   pool0(
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber] & {
+    [number, number, BigNumber, BigNumber, BigNumber] & {
       nearestTick: number;
+      lastTick: number;
       price: BigNumber;
       liquidity: BigNumber;
       feeGrowthGlobalIn: BigNumber;
@@ -391,8 +398,9 @@ export class PoolsharkHedgePool extends BaseContract {
   pool1(
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber] & {
+    [number, number, BigNumber, BigNumber, BigNumber] & {
       nearestTick: number;
+      lastTick: number;
       price: BigNumber;
       liquidity: BigNumber;
       feeGrowthGlobalIn: BigNumber;
@@ -520,8 +528,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -531,8 +540,9 @@ export class PoolsharkHedgePool extends BaseContract {
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber] & {
+      [number, number, BigNumber, BigNumber, BigNumber] & {
         nearestTick: number;
+        lastTick: number;
         price: BigNumber;
         liquidity: BigNumber;
         feeGrowthGlobalIn: BigNumber;
@@ -632,22 +642,38 @@ export class PoolsharkHedgePool extends BaseContract {
   };
 
   filters: {
-    "Burn(address,uint256,uint256)"(
+    "Burn(address,int24,int24,bool,uint128)"(
       owner?: string | null,
-      amount0?: null,
-      amount1?: null
+      lower?: BigNumberish | null,
+      upper?: BigNumberish | null,
+      zeroForOne?: null,
+      liquidityBurned?: null
     ): TypedEventFilter<
-      [string, BigNumber, BigNumber],
-      { owner: string; amount0: BigNumber; amount1: BigNumber }
+      [string, number, number, boolean, BigNumber],
+      {
+        owner: string;
+        lower: number;
+        upper: number;
+        zeroForOne: boolean;
+        liquidityBurned: BigNumber;
+      }
     >;
 
     Burn(
       owner?: string | null,
-      amount0?: null,
-      amount1?: null
+      lower?: BigNumberish | null,
+      upper?: BigNumberish | null,
+      zeroForOne?: null,
+      liquidityBurned?: null
     ): TypedEventFilter<
-      [string, BigNumber, BigNumber],
-      { owner: string; amount0: BigNumber; amount1: BigNumber }
+      [string, number, number, boolean, BigNumber],
+      {
+        owner: string;
+        lower: number;
+        upper: number;
+        zeroForOne: boolean;
+        liquidityBurned: BigNumber;
+      }
     >;
 
     "Collect(address,uint256,uint256)"(
@@ -668,22 +694,38 @@ export class PoolsharkHedgePool extends BaseContract {
       { sender: string; amount0: BigNumber; amount1: BigNumber }
     >;
 
-    "Mint(address,uint256,uint256)"(
+    "Mint(address,int24,int24,bool,uint128)"(
       owner?: string | null,
-      amount0?: null,
-      amount1?: null
+      lower?: BigNumberish | null,
+      upper?: BigNumberish | null,
+      zeroForOne?: null,
+      liquidityMinted?: null
     ): TypedEventFilter<
-      [string, BigNumber, BigNumber],
-      { owner: string; amount0: BigNumber; amount1: BigNumber }
+      [string, number, number, boolean, BigNumber],
+      {
+        owner: string;
+        lower: number;
+        upper: number;
+        zeroForOne: boolean;
+        liquidityMinted: BigNumber;
+      }
     >;
 
     Mint(
       owner?: string | null,
-      amount0?: null,
-      amount1?: null
+      lower?: BigNumberish | null,
+      upper?: BigNumberish | null,
+      zeroForOne?: null,
+      liquidityMinted?: null
     ): TypedEventFilter<
-      [string, BigNumber, BigNumber],
-      { owner: string; amount0: BigNumber; amount1: BigNumber }
+      [string, number, number, boolean, BigNumber],
+      {
+        owner: string;
+        lower: number;
+        upper: number;
+        zeroForOne: boolean;
+        liquidityMinted: BigNumber;
+      }
     >;
 
     "PoolCreated(address,address,address,uint24,int24)"(

@@ -5,16 +5,21 @@ abstract contract PoolsharkHedgePoolEvents {
 
     event Mint(
         address indexed owner,
-        uint256 amount0,
-        uint256 amount1
+        int24 indexed lower,
+        int24 indexed upper,
+        bool zeroForOne,
+        uint128 liquidityMinted
     );
 
     event Burn(
         address indexed owner,
-        uint256 amount0,
-        uint256 amount1
+        int24 indexed lower,
+        int24 indexed upper,
+        bool zeroForOne,
+        uint128 liquidityBurned
     );
 
+    //TODO: implement Collect event for subgraph
     event Collect(
         address indexed sender, 
         uint256 amount0, 

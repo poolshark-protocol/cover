@@ -158,18 +158,6 @@ export class InitialSetup {
                                         hre.props.alice
                         ).deploy();
         hre.nonce += 1;
-        
-        await this.deployAssist.saveContractDeployment(
-            network,
-            "ConcentratedPoolMock",
-            "concentratedPoolMock",
-            hre.props.concentratedPoolMock,
-            [
-                hre.props.token0.address,
-                hre.props.token1.address,
-                "500"
-            ]
-        );
 
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -220,9 +208,9 @@ export class InitialSetup {
     }
 
     public async readHedgePoolSetup(nonce: number): Promise<number> {
-        const token0Address = await readDeploymentsFile("Token0", hre.network.config.chainId);
-        const token1Address = await readDeploymentsFile("Token1", hre.network.config.chainId);
-        const hedgePoolAddress = await readDeploymentsFile("PoolsharkHedgePool", hre.network.config.chainId);
+        const token0Address = await readDeploymentsFile("token0", hre.network.config.chainId);
+        const token1Address = await readDeploymentsFile("token1", hre.network.config.chainId);
+        const hedgePoolAddress = await readDeploymentsFile("poolsharkHedgePool", hre.network.config.chainId);
 
         hre.props.token0 = await hre.ethers.getContractAt("Token20", token0Address);
         hre.props.token1 = await hre.ethers.getContractAt("Token20", token1Address);

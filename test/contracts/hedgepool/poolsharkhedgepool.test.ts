@@ -24,6 +24,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   const minTickIdx = BigNumber.from('-887272');
   const maxTickIdx = BigNumber.from('887272');
 
+  //TODO: mint position and burn as if there were 100
+
   before(async function () {
     await gBefore();
     let currentBlock = await ethers.provider.getBlockNumber();
@@ -165,7 +167,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   });
 
   it('Should move TWAP before mint and do a successful swap', async function () {
-    const lowerOld = hre.ethers.utils.parseUnits("30", 0);
+    const lowerOld = hre.ethers.utils.parseUnits("40", 0);
     const lower    = hre.ethers.utils.parseUnits("60", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("90", 0);
@@ -178,8 +180,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     console.log('max tick:', maxTick.toString());
     // move TWAP to tick 50
     let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-      3600,
-      1800
+      4800,
+      2400
     );
     await txn.wait();
 
@@ -250,7 +252,6 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       "InvalidPosition()"
     );
 
-    
     let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
     let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
@@ -290,7 +291,6 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       ""
     );
 
-    
     let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
     let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
