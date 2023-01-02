@@ -13,20 +13,20 @@ import "hardhat/console.sol";
 abstract contract TwapOracle is 
     ITwapOracle
 {
-
     IConcentratedFactory public concentratedFactory;
+    //TODO: set from constructor
     uint16 private constant observationsLength = 5;
     uint16 private constant blockTime = 12;
     int24  private constant invalidTick = -887273; /// @dev = MIN_TICK - 1
 
     // @dev increase pool observations if not sufficient
     // @dev must be deterministic since called externally
-    function initializePoolObservations(IConcentratedPool pool) external returns (int24 startingTick) {
+    function initializePoolObservations(IConcentratedPool pool) external returns (bool initializable, int24 startingTick) {
         if (!_isPoolObservationsEnough(pool)) {
             _increaseV3Observations(address(pool));
-            return invalidTick;
+            return (false, 0);
         }
-        return _calculateAverageTick(pool);
+        return (true, _calculateAverageTick(pool));
     }
 
     function calculateAverageTick(IConcentratedPool pool) external view returns (int24 averageTick) {

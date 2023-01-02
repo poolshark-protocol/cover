@@ -2,7 +2,7 @@ import { network } from "hardhat";
 import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { DeployAssist } from "../../../scripts/util/deployAssist";
 import { readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, PoolsharkHedgePoolUtils__factory } from "../../../typechain";
+import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, PoolsharkHedgePoolUtils__factory, Positions__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -158,7 +158,17 @@ export class InitialSetup {
                                         hre.props.alice
                         ).deploy();
         hre.nonce += 1;
-
+        const positionsLib = await new Positions__factory(
+            {
+                "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address,
+                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
+                "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address,
+                "contracts/libraries/Ticks.sol:Ticks": ticksLib.address
+            },
+            hre.props.alice
+        ).deploy();
+        hre.nonce += 1;
+        
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
@@ -169,7 +179,8 @@ export class InitialSetup {
                 libraries.address
             ],
             {
-                "contracts/libraries/Ticks.sol:Ticks":       ticksLib.address,
+                "contracts/libraries/Positions.sol:Positions": positionsLib.address,
+                "contracts/libraries/Ticks.sol:Ticks": ticksLib.address,
                 "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
                 "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address,
                 "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address

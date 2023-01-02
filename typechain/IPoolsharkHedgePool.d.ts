@@ -22,6 +22,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
   functions: {
     "burn(int24,int24,int24,bool,uint128)": FunctionFragment;
+    "collect(int24,int24,int24,bool)": FunctionFragment;
     "mint(int24,int24,int24,int24,int24,uint128,bool)": FunctionFragment;
     "swap(address,bool,uint256,uint160)": FunctionFragment;
   };
@@ -29,6 +30,10 @@ interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "burn",
     values: [BigNumberish, BigNumberish, BigNumberish, boolean, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "collect",
+    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "mint",
@@ -48,6 +53,7 @@ interface IPoolsharkHedgePoolInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "collect", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
 
@@ -107,6 +113,14 @@ export class IPoolsharkHedgePool extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    collect(
+      lower: BigNumberish,
+      upper: BigNumberish,
+      claim: BigNumberish,
+      zeroForOne: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
@@ -133,6 +147,14 @@ export class IPoolsharkHedgePool extends BaseContract {
     claim: BigNumberish,
     zeroForOne: boolean,
     amount: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  collect(
+    lower: BigNumberish,
+    upper: BigNumberish,
+    claim: BigNumberish,
+    zeroForOne: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -164,6 +186,16 @@ export class IPoolsharkHedgePool extends BaseContract {
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    collect(
+      lower: BigNumberish,
+      upper: BigNumberish,
+      claim: BigNumberish,
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & { amountIn: BigNumber; amountOut: BigNumber }
+    >;
 
     mint(
       lowerOld: BigNumberish,
@@ -197,6 +229,14 @@ export class IPoolsharkHedgePool extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    collect(
+      lower: BigNumberish,
+      upper: BigNumberish,
+      claim: BigNumberish,
+      zeroForOne: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
@@ -224,6 +264,14 @@ export class IPoolsharkHedgePool extends BaseContract {
       claim: BigNumberish,
       zeroForOne: boolean,
       amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    collect(
+      lower: BigNumberish,
+      upper: BigNumberish,
+      claim: BigNumberish,
+      zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -95,34 +95,23 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "lastBlockNumber",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "latestTick",
-    outputs: [
-      {
-        internalType: "int24",
-        name: "",
-        type: "int24",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "pool0",
     outputs: [
+      {
+        internalType: "uint128",
+        name: "liquidity",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "feeGrowthCurrentEpoch",
+        type: "uint128",
+      },
+      {
+        internalType: "uint160",
+        name: "price",
+        type: "uint160",
+      },
       {
         internalType: "int24",
         name: "nearestTick",
@@ -132,21 +121,6 @@ const _abi = [
         internalType: "int24",
         name: "lastTick",
         type: "int24",
-      },
-      {
-        internalType: "uint160",
-        name: "price",
-        type: "uint160",
-      },
-      {
-        internalType: "uint128",
-        name: "liquidity",
-        type: "uint128",
-      },
-      {
-        internalType: "uint232",
-        name: "feeGrowthGlobalIn",
-        type: "uint232",
       },
     ],
     stateMutability: "view",
@@ -157,6 +131,21 @@ const _abi = [
     name: "pool1",
     outputs: [
       {
+        internalType: "uint128",
+        name: "liquidity",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "feeGrowthCurrentEpoch",
+        type: "uint128",
+      },
+      {
+        internalType: "uint160",
+        name: "price",
+        type: "uint160",
+      },
+      {
         internalType: "int24",
         name: "nearestTick",
         type: "int24",
@@ -165,21 +154,6 @@ const _abi = [
         internalType: "int24",
         name: "lastTick",
         type: "int24",
-      },
-      {
-        internalType: "uint160",
-        name: "price",
-        type: "uint160",
-      },
-      {
-        internalType: "uint128",
-        name: "liquidity",
-        type: "uint128",
-      },
-      {
-        internalType: "uint232",
-        name: "feeGrowthGlobalIn",
-        type: "uint232",
       },
     ],
     stateMutability: "view",
@@ -211,9 +185,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint232",
-        name: "feeGrowthGlobalIn",
-        type: "uint232",
+        internalType: "uint32",
+        name: "accumEpochLast",
+        type: "uint32",
       },
       {
         internalType: "uint160",
@@ -260,9 +234,9 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint232",
-        name: "feeGrowthGlobalIn",
-        type: "uint232",
+        internalType: "uint32",
+        name: "accumEpochLast",
+        type: "uint32",
       },
       {
         internalType: "uint160",
@@ -278,6 +252,44 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "state",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "unlocked",
+        type: "uint8",
+      },
+      {
+        internalType: "int24",
+        name: "latestTick",
+        type: "int24",
+      },
+      {
+        internalType: "uint32",
+        name: "accumEpoch",
+        type: "uint32",
+      },
+      {
+        internalType: "uint32",
+        name: "lastBlockNumber",
+        type: "uint32",
+      },
+      {
+        internalType: "uint24",
+        name: "swapFee",
+        type: "uint24",
+      },
+      {
+        internalType: "int24",
+        name: "tickSpacing",
+        type: "int24",
       },
     ],
     stateMutability: "view",
@@ -303,6 +315,11 @@ const _abi = [
         name: "nextTick",
         type: "int24",
       },
+      {
+        internalType: "uint32",
+        name: "accumEpochLast",
+        type: "uint32",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -318,29 +335,24 @@ const _abi = [
     name: "ticks0",
     outputs: [
       {
-        internalType: "int128",
+        internalType: "int104",
         name: "liquidityDelta",
-        type: "int128",
+        type: "int104",
       },
       {
-        internalType: "uint128",
+        internalType: "uint104",
         name: "liquidityDeltaMinus",
-        type: "uint128",
+        type: "uint104",
       },
       {
-        internalType: "uint232",
-        name: "feeGrowthGlobalIn",
-        type: "uint232",
-      },
-      {
-        internalType: "int128",
+        internalType: "int88",
         name: "amountInDelta",
-        type: "int128",
+        type: "int88",
       },
       {
-        internalType: "int128",
+        internalType: "int88",
         name: "amountOutDelta",
-        type: "int128",
+        type: "int88",
       },
       {
         internalType: "uint64",
@@ -367,29 +379,24 @@ const _abi = [
     name: "ticks1",
     outputs: [
       {
-        internalType: "int128",
+        internalType: "int104",
         name: "liquidityDelta",
-        type: "int128",
+        type: "int104",
       },
       {
-        internalType: "uint128",
+        internalType: "uint104",
         name: "liquidityDeltaMinus",
-        type: "uint128",
+        type: "uint104",
       },
       {
-        internalType: "uint232",
-        name: "feeGrowthGlobalIn",
-        type: "uint232",
-      },
-      {
-        internalType: "int128",
+        internalType: "int88",
         name: "amountInDelta",
-        type: "int128",
+        type: "int88",
       },
       {
-        internalType: "int128",
+        internalType: "int88",
         name: "amountOutDelta",
-        type: "int128",
+        type: "int88",
       },
       {
         internalType: "uint64",

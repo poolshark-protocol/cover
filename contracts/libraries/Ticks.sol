@@ -56,11 +56,7 @@ library Ticks
     ) internal view returns (uint128, int24, int24) {
         currentTick = nextTickToCross;
         int128 liquidityDelta = ticks[nextTickToCross].liquidityDelta;
-        // console.log('cross tick');
-        // console.logInt(currentTick);
-        // console.logInt(nextTickToCross);
-        // console.logInt(liquidityDelta);
-        // console.log(currentLiquidity);
+
         if(liquidityDelta > 0) {
             currentLiquidity += uint128(liquidityDelta);
         } else {
@@ -82,7 +78,7 @@ library Ticks
         int24 lower,
         int24 upperOld,
         int24 upper,
-        uint128 amount,
+        uint104 amount,
         bool isPool0
     ) external {
         if (lower >= upper || lowerOld >= upperOld) {
@@ -108,26 +104,24 @@ library Ticks
             //TODO: ensure amount < type(int128).max()
             console.log('insert liq');
             if (isPool0) {
-                ticks[lower].liquidityDelta      -= int128(amount);
+                ticks[lower].liquidityDelta      -= int104(amount);
                 ticks[lower].liquidityDeltaMinus += amount;
             } else {
-                ticks[lower].liquidityDelta      += int128(amount);
+                ticks[lower].liquidityDelta      += int104(amount);
             }
         } else {
             // tick does not exist and we must insert
             //TODO: handle new TWAP being in between lowerOld and lower
             if (isPool0) {
                 ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
-                    -int128(amount),
+                    -int104(amount),
                     amount,
-                    ticks[lowerOld].feeGrowthGlobalIn,                     /// @dev - inherit feeGrowth from prev tick
                     0,0,0,0
                 );
             } else {
                 ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
-                    int128(amount),
+                    int104(amount),
                     0,
-                    ticks[tickNodes[lowerOld].nextTick].feeGrowthGlobalIn, /// @dev - inherit feeGrowth from next tick
                     0,0,0,0
                 );
             }
@@ -152,7 +146,8 @@ library Ticks
             console.logInt(oldNextTick);
             tickNodes[lower] = IPoolsharkHedgePoolStructs.TickNode(
                 lowerOld,
-                oldNextTick
+                oldNextTick,
+                0
             );
             tickNodes[lowerOld].nextTick = lower;
         }
@@ -169,42 +164,29 @@ library Ticks
             console.log('adding liquidity');
             // We are adding liquidity to an existing tick.
             if (isPool0) {
-                ticks[upper].liquidityDelta      += int128(amount);
+                ticks[upper].liquidityDelta      += int104(amount);
             } else {
-                ticks[upper].liquidityDelta      -= int128(amount);
+                ticks[upper].liquidityDelta      -= int104(amount);
                 ticks[upper].liquidityDeltaMinus += amount;
             }
         } else {
-
             if (isPool0) {
                 ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
-                    int128(amount),
+                    int104(amount),
                     0,
-                    ticks[tickNodes[upperOld].previousTick].feeGrowthGlobalIn,
                     0,0,0,0
                 );
             } else {
-                            console.log('new tick');
-            console.logInt(upper);
-            console.log(amount);
                 ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
-                    -int128(amount),
+                    -int104(amount),
                     amount,
-                    ticks[upperOld].feeGrowthGlobalIn,
                     0,0,0,0
                 );
-                console.logInt(ticks[upper].liquidityDelta);
             }
         }
         if(tickNodes[upper].nextTick == tickNodes[upper].previousTick && upper != TickMath.MAX_TICK) {
             int24 oldPrevTick = tickNodes[upperOld].previousTick;
-            console.logInt(oldPrevTick);
             if (lower > oldPrevTick) oldPrevTick = lower;
-            console.log('upper new');
-            console.logInt(oldPrevTick);
-            console.logInt(upperOld);
-            console.logInt(upper);
-            console.logInt(latestTick);
 
             // console.logInt(tickNodes[upperOld].nextTick);
             // console.logInt(tickNodes[upperOld].previousTick);
@@ -221,7 +203,8 @@ library Ticks
 
             tickNodes[upper] = IPoolsharkHedgePoolStructs.TickNode(
                 oldPrevTick,
-                upperOld
+                upperOld,
+                0
             );
             tickNodes[oldPrevTick].nextTick = upper;
             tickNodes[upperOld].previousTick = upper;
@@ -233,7 +216,7 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         int24 lower,
         int24 upper,
-        uint128 amount,
+        uint104 amount,
         bool isPool0,
         bool removeLower,
         bool removeUpper
@@ -259,10 +242,10 @@ library Ticks
         if (removeLower) {
                         console.log('deleting lower tick');
             if (isPool0) {
-                ticks[lower].liquidityDelta += int128(amount);
+                ticks[lower].liquidityDelta += int104(amount);
                 ticks[lower].liquidityDeltaMinus -= amount;
             } else {
-                ticks[lower].liquidityDelta -= int128(amount);
+                ticks[lower].liquidityDelta -= int104(amount);
             }
                         console.log('deleting lower tick');
         }
@@ -288,9 +271,9 @@ library Ticks
         if (removeUpper) {
                                     console.log('deleting upper tick');
             if (isPool0) {
-                ticks[upper].liquidityDelta -= int128(amount);
+                ticks[upper].liquidityDelta -= int104(amount);
             } else {
-                ticks[upper].liquidityDelta += int128(amount);
+                ticks[upper].liquidityDelta += int104(amount);
                 ticks[upper].liquidityDeltaMinus -= amount;
             }
                                                 console.log('deleting upper tick');
@@ -302,21 +285,22 @@ library Ticks
     }
 
     function _accumulate(
+        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        uint32 accumEpoch,
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
-        uint232 feeGrowthGlobal,
         int128 amountInDelta,
         int128 amountOutDelta,
         bool removeLiquidity
     ) internal returns (int128, int128) {
         console.log('fee growth accumulate check');
-        console.log(ticks[nextTickToCross].feeGrowthGlobalIn);
-        console.log(ticks[nextTickToAccum].feeGrowthGlobalIn);
+        console.log(tickNodes[nextTickToCross].accumEpochLast);
+        console.log(tickNodes[nextTickToAccum].accumEpochLast);
 
         //update fee growth
-        ticks[nextTickToAccum].feeGrowthGlobalIn = feeGrowthGlobal + 1;
+        tickNodes[nextTickToAccum].accumEpochLast = accumEpoch;
 
         //remove all liquidity from previous tick
         if (removeLiquidity) {
@@ -326,9 +310,9 @@ library Ticks
         //check for deltas to carry
         if(ticks[nextTickToCross].amountInDeltaCarryPercent > 0){
             //TODO: will this work with negatives?
-            int128 amountInDeltaCarry = int64(ticks[nextTickToCross].amountInDeltaCarryPercent) 
+            int104 amountInDeltaCarry = int64(ticks[nextTickToCross].amountInDeltaCarryPercent) 
                                             * ticks[nextTickToCross].amountInDelta / 1e18;
-            ticks[nextTickToCross].amountInDelta -= amountInDeltaCarry;
+            ticks[nextTickToCross].amountInDelta -= int88(amountInDeltaCarry);
             ticks[nextTickToCross].amountInDeltaCarryPercent = 0;
             amountInDelta += amountInDeltaCarry;
             /// @dev - amountOutDelta cannot exist without amountInDelta
@@ -336,7 +320,7 @@ library Ticks
             //TODO: will this work with negatives?
                 int256 amountOutDeltaCarry = int64(ticks[nextTickToCross].amountOutDeltaCarryPercent) 
                                                 * ticks[nextTickToCross].amountOutDelta / 1e18;
-                ticks[nextTickToCross].amountOutDelta -= int128(amountOutDeltaCarry);
+                ticks[nextTickToCross].amountOutDelta -= int88(amountOutDeltaCarry);
                 ticks[nextTickToCross].amountOutDeltaCarryPercent = 0;
                 amountOutDelta += int128(amountOutDeltaCarry);
             }
@@ -346,8 +330,8 @@ library Ticks
             uint128 liquidityDeltaMinus = ticks[nextTickToAccum].liquidityDeltaMinus;
             if (currentLiquidity != liquidityDeltaMinus) {
                 //
-                ticks[nextTickToAccum].amountInDelta  += amountInDelta;
-                ticks[nextTickToAccum].amountOutDelta += amountOutDelta;
+                ticks[nextTickToAccum].amountInDelta  += int88(amountInDelta);
+                ticks[nextTickToAccum].amountOutDelta += int88(amountOutDelta);
                 int128 liquidityDeltaPlus = ticks[nextTickToAccum].liquidityDelta + int128(liquidityDeltaMinus);
                 if (liquidityDeltaPlus > 0) {
                     /// @dev - amount deltas get diluted when liquidity is added
@@ -356,8 +340,8 @@ library Ticks
                     amountInDelta = amountInDelta * (1e18 + liquidityPercentIncrease) / 1e18;
                 }
             } else {
-                ticks[nextTickToAccum].amountInDelta += amountInDelta;
-                ticks[nextTickToAccum].amountOutDelta += amountOutDelta;
+                ticks[nextTickToAccum].amountInDelta += int88(amountInDelta);
+                ticks[nextTickToAccum].amountOutDelta += int88(amountOutDelta);
                 amountInDelta = 0;
                 amountOutDelta = 0;
             }
@@ -445,27 +429,28 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         IPoolsharkHedgePoolStructs.PoolState storage pool0,
         IPoolsharkHedgePoolStructs.PoolState storage pool1,
-        int24 latestTick
+        int24 latestTick,
+        uint32 accumEpoch
     ) external {
         if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
             tickNodes[latestTick] = IPoolsharkHedgePoolStructs.TickNode(
-                TickMath.MIN_TICK, TickMath.MAX_TICK
+                TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
             tickNodes[TickMath.MIN_TICK] = IPoolsharkHedgePoolStructs.TickNode(
-                TickMath.MIN_TICK, latestTick
+                TickMath.MIN_TICK, latestTick, accumEpoch
             );
             tickNodes[TickMath.MAX_TICK] = IPoolsharkHedgePoolStructs.TickNode(
-                latestTick, TickMath.MAX_TICK
+                latestTick, TickMath.MAX_TICK, accumEpoch
             );
         } else if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) {
             tickNodes[TickMath.MIN_TICK] = IPoolsharkHedgePoolStructs.TickNode(
-                TickMath.MIN_TICK, TickMath.MAX_TICK
+                TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
             tickNodes[TickMath.MAX_TICK] = IPoolsharkHedgePoolStructs.TickNode(
-                TickMath.MIN_TICK, TickMath.MAX_TICK
+                TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
         }
-                //TODO: we might not need nearestTick; always with defined tickSpacing
+        //TODO: we might not need nearestTick; always with defined tickSpacing
         pool0.nearestTick = latestTick;
         pool1.nearestTick = TickMath.MIN_TICK;
         pool0.lastTick    = TickMath.MAX_TICK;
@@ -474,7 +459,7 @@ library Ticks
         pool0.price = TickMath.getSqrtRatioAtTick(latestTick);
         pool1.price = pool0.price;
     }
-
+    //TODO: pass in specific tick and update in storage on calling function
     function _updateAmountDeltas (
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         int24 update,
@@ -491,7 +476,7 @@ library Ticks
         if (amountInDelta != 0 && newAmountInDelta != 0) {
             ticks[update].amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
                                             / (newAmountInDelta)));
-            ticks[update].amountInDelta += amountInDelta;
+            ticks[update].amountInDelta += int88(amountInDelta);
         } else if (amountInDelta != 0 && newAmountInDelta == 0) {
             revert NotImplementedYet();
         }
@@ -502,7 +487,7 @@ library Ticks
         if (amountOutDelta != 0 && newAmountOutDelta != 0) {
             ticks[update].amountOutDeltaCarryPercent = uint64(uint128((amountOutDelta + amountOutDeltaCarry) * 1e18 
                                                     / (newAmountOutDelta)));
-            ticks[update].amountOutDelta += amountOutDelta;
+            ticks[update].amountOutDelta += int88(amountOutDelta);
         } else if (amountOutDelta != 0 && newAmountOutDelta == 0) {
             revert NotImplementedYet();
         }
@@ -515,29 +500,30 @@ library Ticks
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
         IPoolsharkHedgePoolStructs.PoolState memory pool0,
         IPoolsharkHedgePoolStructs.PoolState memory pool1,
-        int24 latestTick,
-        int24 nextLatestTick,
-        int24 tickSpacing
+        IPoolsharkHedgePoolStructs.GlobalState memory state,
+        int24 nextLatestTick
     ) external returns (
+        IPoolsharkHedgePoolStructs.GlobalState memory,
         IPoolsharkHedgePoolStructs.PoolState memory, 
-        IPoolsharkHedgePoolStructs.PoolState memory,
-        int24
+        IPoolsharkHedgePoolStructs.PoolState memory
     ) {
         console.log("-- START ACCUMULATE LAST BLOCK --");
 
         // only accumulate if latestTick needs to move
-        if (nextLatestTick / (2*tickSpacing) == latestTick / (2*tickSpacing)) {
+        if (nextLatestTick / (2*state.tickSpacing) == state.latestTick / (2*state.tickSpacing)) {
             console.log("-- EARLY END ACCUMULATE LAST BLOCK --");
-            return (pool0, pool1, latestTick);
+            return (state, pool0, pool1);
         }
+        
+        state.accumEpoch += 1;
 
         IPoolsharkHedgePoolStructs.AccumulateCache memory cache = IPoolsharkHedgePoolStructs.AccumulateCache({
             nextTickToCross0:  tickNodes[pool0.nearestTick].nextTick,
             nextTickToCross1:  pool1.nearestTick,
             nextTickToAccum0:  pool0.nearestTick,
             nextTickToAccum1:  tickNodes[pool1.nearestTick].nextTick,
-            stopTick0:  (nextLatestTick > latestTick) ? latestTick     : nextLatestTick + tickSpacing,
-            stopTick1:  (nextLatestTick > latestTick) ? nextLatestTick - tickSpacing : latestTick,
+            stopTick0:  (nextLatestTick > state.latestTick) ? state.latestTick : nextLatestTick + state.tickSpacing,
+            stopTick1:  (nextLatestTick > state.latestTick) ? nextLatestTick - state.tickSpacing : state.latestTick,
             amountInDelta0:  0,
             amountInDelta1:  0,
             amountOutDelta0: 0,
@@ -619,11 +605,12 @@ library Ticks
                     cache.amountInDelta0,
                     cache.amountOutDelta0
                 ) = _accumulate(
+                    tickNodes,
                     ticks0,
+                    state.accumEpoch,
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
                     pool0.liquidity,
-                    pool0.feeGrowthGlobalIn,
                     cache.amountInDelta0, /// @dev - amount deltas will be 0 initially
                     cache.amountOutDelta0,
                     true
@@ -647,9 +634,9 @@ library Ticks
                 );
             } else {
                 /// @dev - place liquidity on latestTick for continuation when TWAP moves back up
-                if (nextLatestTick > latestTick)
-                    ticks0[latestTick].liquidityDelta += int128(uint128(pool0.liquidity) 
-                                                        - ticks0[latestTick].liquidityDeltaMinus);
+                if (nextLatestTick > state.latestTick)
+                    ticks0[state.latestTick].liquidityDelta += int104(int128(uint128(pool0.liquidity) 
+                                                        - ticks0[state.latestTick].liquidityDeltaMinus));
                 /// @dev - update amount deltas on stopTick
                 _updateAmountDeltas(
                         ticks0,
@@ -658,7 +645,7 @@ library Ticks
                         cache.amountOutDelta0,
                         pool0.liquidity
                 );
-                if (nextLatestTick < latestTick) {
+                if (nextLatestTick < state.latestTick) {
                     (
                         pool0.liquidity, 
                         cache.nextTickToCross0,
@@ -701,11 +688,12 @@ library Ticks
                     cache.amountInDelta1,
                     cache.amountOutDelta1
                 ) = _accumulate(
+                    tickNodes,
                     ticks1,
+                    state.accumEpoch,
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
                     pool1.liquidity,
-                    pool1.feeGrowthGlobalIn,
                     cache.amountInDelta1, /// @dev - amount deltas will be 1 initially
                     cache.amountOutDelta1,
                     true
@@ -729,9 +717,9 @@ library Ticks
                 );
             } else {
                 /// @dev - place liquidity on latestTick for continuation when TWAP moves back up
-                if (nextLatestTick < latestTick)
-                    ticks1[latestTick].liquidityDelta += int128(uint128(pool1.liquidity) 
-                                                        - ticks1[latestTick].liquidityDeltaMinus);
+                if (nextLatestTick < state.latestTick)
+                    ticks1[state.latestTick].liquidityDelta += int104(int128(uint128(pool1.liquidity) 
+                                                        - ticks1[state.latestTick].liquidityDeltaMinus));
                 /// @dev - update amount deltas on stopTick
                 _updateAmountDeltas(
                         ticks1,
@@ -740,7 +728,7 @@ library Ticks
                         cache.amountOutDelta1,
                         pool1.liquidity
                 );
-                if (nextLatestTick > latestTick) {
+                if (nextLatestTick > state.latestTick) {
                     (
                         pool1.liquidity, 
                         cache.nextTickToCross1,
@@ -762,7 +750,7 @@ library Ticks
         //TODO: remove liquidity from all ticks crossed
         //TODO: handle burn when price is between ticks
         //if TWAP moved up
-        if (nextLatestTick > latestTick) {
+        if (nextLatestTick > state.latestTick) {
             // if this is true we need to insert new latestTick
             if (cache.nextTickToAccum1 != nextLatestTick) {
                 // if this is true we need to delete the old tick
@@ -773,7 +761,8 @@ library Ticks
                             console.logInt(cache.nextTickToAccum1);
                 tickNodes[nextLatestTick] = IPoolsharkHedgePoolStructs.TickNode(
                         cache.nextTickToCross1,
-                        cache.nextTickToAccum1
+                        cache.nextTickToAccum1,
+                        0
                 );
                 tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
                 tickNodes[cache.nextTickToCross1].nextTick     = nextLatestTick;
@@ -788,7 +777,7 @@ library Ticks
             console.logInt(pool0.lastTick);
             console.logInt(pool1.lastTick);
         // handle TWAP moving down
-        } else if (nextLatestTick < latestTick) {
+        } else if (nextLatestTick < state.latestTick) {
             //TODO: if tick is deleted rollover amounts if necessary
             //TODO: do we recalculate deltas if liquidity is removed?
             if (cache.nextTickToAccum0 != nextLatestTick) {
@@ -796,7 +785,8 @@ library Ticks
                 //TODO: don't delete old latestTick for now
                 tickNodes[nextLatestTick] = IPoolsharkHedgePoolStructs.TickNode(
                         cache.nextTickToAccum0,
-                        cache.nextTickToCross0
+                        cache.nextTickToCross0,
+                        0
                 );
                 tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;
                 tickNodes[cache.nextTickToAccum0].nextTick     = nextLatestTick;
@@ -809,39 +799,12 @@ library Ticks
             pool1.lastTick  = tickNodes[nextLatestTick].previousTick;
         }
         //TODO: delete old latestTick if possible
-
-        // console.log('cross last tick touched');
-        // console.logInt(cache.tick);
-        // console.logInt(tickNodes[cache.tick].nextTick);
-        
-
-        //TODO: handle pool0 AND pool1
         pool0.nearestTick = tickNodes[nextLatestTick].nextTick;
         pool1.nearestTick = tickNodes[nextLatestTick].previousTick;
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick);
         pool1.price = pool0.price;
-        latestTick = nextLatestTick;
-
-        // console.log('max tick previous:');
-        // console.logInt(tickNodes[887272].previousTick);
-        // console.logInt(tickNodes[887272].nextTick);
+        state.latestTick = nextLatestTick;
         console.log("-- END ACCUMULATE LAST BLOCK --");
-        return (pool0, pool1, latestTick);
-        //TODO: update liquidity
-        // if latestTick didn't change we don't update liquidity
-        // if it did we set to current liquidity
-
-
-        // insert new latest tick
-        // console.log('updated tick after insert');
-        // console.logInt(ticks[cache.nextTick].previousTick);
-        // console.logInt(latestTick);
-        // console.logInt(ticks[latestTick].nextTick);
-        // console.log('fee growth check:');
-        // console.log(ticks[0].feeGrowthGlobalLast);
-        // console.log(ticks[20].feeGrowthGlobalLast);
-        // console.log(ticks[30].feeGrowthGlobalLast);
-        // console.log(ticks[50].feeGrowthGlobalLast);
-
+        return (state, pool0, pool1);
     }
 }

@@ -6,7 +6,7 @@ import "../IConcentratedPool.sol";
 interface ITwapOracle {
     function initializePoolObservations(
         IConcentratedPool pool
-    ) external returns (int24 startingTick);
+    ) external returns (bool initializable, int24 startingTick);
 
     function calculateAverageTick(
         IConcentratedPool pool

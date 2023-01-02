@@ -139,7 +139,9 @@ export class ITwapOracle extends BaseContract {
     initializePoolObservations(
       pool: string,
       overrides?: CallOverrides
-    ): Promise<number>;
+    ): Promise<
+      [boolean, number] & { initializable: boolean; startingTick: number }
+    >;
 
     isPoolObservationsEnough(
       pool: string,

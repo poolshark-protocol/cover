@@ -5,7 +5,7 @@ import { gBefore } from '../../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
 import { mintSigners20 } from '../../utils/token';
-import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode } from '../../utils/contracts/hedgepool/hedgepool';
+import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateAccumulateEpoch } from '../../utils/contracts/hedgepool/hedgepool';
 
 alice: SignerWithAddress;
 describe('PoolsharkHedgePool Basic Tests', function () {
@@ -31,17 +31,18 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     let currentBlock = await ethers.provider.getBlockNumber();
     //TODO: maybe just have one view function that grabs all these
     //TODO: map it to an interface
-    const pool0: PoolState    = await hre.props.hedgePool.pool0();
-    const liquidity           = pool0.liquidity;
-    const lastBlockNumber     = await hre.props.hedgePool.lastBlockNumber();
-    const feeGrowthGlobalIn   = pool0.feeGrowthGlobalIn;
-    const nearestTick         = pool0.nearestTick;
-    const price               = pool0.price;
-    const latestTick          = await hre.props.hedgePool.latestTick();
+    const pool0: PoolState      = await hre.props.hedgePool.pool0();
+    const liquidity             = pool0.liquidity;
+    const globalState           = await hre.props.hedgePool.state();
+    const lastBlockNumber       = globalState.lastBlockNumber;
+    const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch;
+    const nearestTick           = pool0.nearestTick;
+    const price                 = pool0.price;
+    const latestTick            = globalState.latestTick;
 
     expect(liquidity).to.be.equal(BN_ZERO);
     expect(lastBlockNumber).to.be.equal(currentBlock);
-    expect(feeGrowthGlobalIn).to.be.equal(BN_ZERO);
+    expect(feeGrowthCurrentEpoch).to.be.equal(BN_ZERO);
     expect(latestTick).to.be.equal(BN_ZERO);
     expect(nearestTick).to.be.equal(BN_ZERO);
 
@@ -79,7 +80,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
@@ -146,7 +147,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
@@ -169,10 +170,10 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
-    console.log('max tick:', maxTick.toString());
+    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(60);
+    console.log('next tick:', maxTick.toString());
     await validateBurn(
       hre.props.alice,
       lower,
@@ -196,17 +197,15 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const burnAmount = hre.ethers.utils.parseUnits("66420461859385355519898", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
-    console.log('max tick:', maxTick.toString());
+    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(60);
+    console.log('next tick:', maxTick.toString());
     // move TWAP to tick 40
-    let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
-      4800,
-      2400
+    await validateAccumulateEpoch(
+      hre.props.alice,
+      BigNumber.from("40")
     );
-    await txn.wait();
-
     // mint new position
     await validateMint(
       hre.props.alice,
@@ -251,12 +250,12 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       ""
     )
 
-    minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
-    console.log('min tick:', minTick.toString());
-    latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
-    console.log('latest tick:', latestTick.toString());
-    maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
-    console.log('max tick:', maxTick.toString());
+    // minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    // console.log('min tick:', minTick.toString());
+    // latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    // console.log('latest tick:', latestTick.toString());
+    // maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    // console.log('max tick:', maxTick.toString());
   });
 
   it('Should not mint position with lower below TWAP', async function () {
@@ -284,7 +283,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
     let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    let latestTick = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
@@ -321,15 +320,32 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       liquidityAmount,
       true,
       false,
+      "WrongTickClaimedAt()"
+    );
+
+    await validateMint(
+      hre.props.alice,
+      hre.props.alice.address,
+      lowerOld,
+      lower,
+      upperOld,
+      upper,
+      upper,
+      token1Amount,
+      false,
+      token1Amount,
+      liquidityAmount,
+      true,
+      true,
       ""
     );
 
-    let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
-    console.log('min tick:', minTick.toString());
-    let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
-    console.log('latest tick:', latestTick.toString());
-    let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
-    console.log('max tick:', maxTick.toString());
+    // let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    // console.log('min tick:', minTick.toString());
+    // let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    // console.log('latest tick:', latestTick.toString());
+    // let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    // console.log('max tick:', maxTick.toString());
 
     await validateSwap(
       hre.props.alice,
@@ -351,12 +367,12 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       liquidityAmount,
       false,
       BN_ZERO,
-      token1Amount.sub(1),
+      token1Amount,
       false,
       false,
       "WrongTickClaimedAt()"
     )
-    //TODO: why is lower removed but upper isn't?
+    // TODO: why is lower removed but upper isn't?
     await validateBurn(
       hre.props.alice,
       lower,
@@ -367,7 +383,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       BN_ZERO,
       token1Amount.sub(1),
       false,
-      true,
+      false,
       ""
     )
   });
@@ -378,20 +394,6 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("30", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-
-    await validateBurn(
-      hre.props.alice,
-      lower,
-      upper,
-      lower,
-      liquidityAmount,
-      false,
-      BN_ZERO,
-      token1Amount.sub(1),
-      false,
-      true,
-      ""
-    )
 
     await validateBurn(
       hre.props.alice,

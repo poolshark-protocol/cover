@@ -113,6 +113,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.FullPrecisionMath__factory>;
     getContractFactory(
+      name: "Positions",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Positions__factory>;
+    getContractFactory(
       name: "TickMath",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TickMath__factory>;
@@ -306,6 +310,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.FullPrecisionMath>;
+    getContractAt(
+      name: "Positions",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Positions>;
     getContractAt(
       name: "TickMath",
       address: string,
