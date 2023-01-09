@@ -18,6 +18,7 @@ type HedgePool @entity {
 type Position @entity {
     # poolAddress + owner + lower + upper
     id: ID!
+    pool: HedgePool!
     txnHash: Bytes!
     createdBy: Bytes!
     createdAtTimestamp: BigInt!
