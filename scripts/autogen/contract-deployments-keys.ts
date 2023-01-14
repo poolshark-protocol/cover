@@ -3,6 +3,14 @@ import { ContractDeploymentsKey } from "../util/files/contractDeploymentsJson";
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
         networkName: 'goerli',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'goerli',
+        objectName: 'tokenB'
+    },
+    {
+        networkName: 'goerli',
         objectName: 'token0'
     },
     {

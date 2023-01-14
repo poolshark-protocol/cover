@@ -35,6 +35,7 @@ export function handleMint(event: Mint): void {
         position.createdBy          = event.transaction.from
         position.createdAtTimestamp = event.block.timestamp
         position.txnHash            = event.transaction.hash
+        position.pool               = poolAddress
     }
     position.liquidity = liquidityMintedParam
     position.save()

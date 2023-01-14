@@ -32,7 +32,7 @@ dotenv.config();
   networks: {
     goerli: {
       chainId: 5,
-      gasPrice: 100000,
+      gasPrice: 2000000000,
       url: process.env.GOERLI_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
@@ -41,13 +41,7 @@ dotenv.config();
     },
   },
   etherscan: {
-    apiKey: {
-      /* ETH L1 */
-      // mainnet: process.env.ETHEREUM_API_KEY,
-      // ropsten: process.env.ETHEREUM_API_KEY,
-      // rinkeby: process.env.ETHEREUM_API_KEY,
-      goerli: process.env.ETHEREUM_API_KEY,
-    }
+    apiKey: process.env.ETHEREUM_API_KEY
   }
 };
 

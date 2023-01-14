@@ -7,30 +7,61 @@ export const Q64x96 = BigNumber.from("2").pow(96)
 export const BN_ZERO = BigNumber.from("0")
 export interface Position {
     liquidity: BigNumber,
-    feeGrowthGlobalIn: BigNumber,
+    accumEpochLast: number,
     claimPriceLast: BigNumber,
     amountIn: BigNumber,
-    amountOut: BigNumber
+    amountOut: BigNumber,
 }
 
 export interface PoolState {
-    nearestTick: number,
-    price: BigNumber,
     liquidity: BigNumber,
-    feeGrowthGlobalIn: BigNumber
+    feeGrowthCurrentEpoch: BigNumber,
+    price: BigNumber,
+    nearestTick: number,
+    lastTick: number,
 }
 
 export interface TickNode {
     previousTick: number,
     nextTick: number,
+    accumEpochLast: number,
 }
 
 export interface Tick {
     liquidityDelta: BigNumber,
     liquidityDeltaMinus: BigNumber,
-    feeGrowthGlobalIn: BigNumber,
     amountInDelta: BigNumber,
-    amountOutDelta: BigNumber
+    amountOutDelta: BigNumber,
+    amountInDeltaCarryPercent: BigNumber,
+    amountOutDeltaCarryPercent: BigNumber,
+}
+
+export async function validateAccumulateEpoch(
+    signer: SignerWithAddress,
+    newLatestTick: BigNumber
+) {
+    /// get tick node status before
+    
+    // const tickNodes = await hre.props.hedgePool.tickNodes();
+    /// update TWAP
+    let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
+        newLatestTick.mul(120),
+        newLatestTick.mul(60)
+    );
+    await txn.wait();
+
+    /// send a "no op" swap to trigger accumulate
+    const token1Balance = await hre.props.token1.balanceOf(signer.address);
+    await hre.props.token1.approve(hre.props.hedgePool.address, token1Balance);
+    txn = await hre.props.hedgePool.swap(
+        signer.address,
+        false,
+        token1Balance,
+        BigNumber.from("4294967296")
+    );
+    await txn.wait();
+
+    /// check tick status after
 }
 
 export async function validateSwap(
@@ -55,13 +86,14 @@ export async function validateSwap(
         await hre.props.token1.approve(hre.props.hedgePool.address, amountIn);
     }
 
-
-    const pool0Before: PoolState    = await hre.props.hedgePool.pool0();
-    const liquidityBefore           = pool0Before.liquidity;
-    const feeGrowthGlobalBefore     = pool0Before.feeGrowthGlobalIn;
-    const nearestTickBefore         = pool0Before.nearestTick;
-    const priceBefore               = pool0Before.price;
-    const latestTickBefore          = await hre.props.hedgePool.latestTick();
+    const poolBefore: PoolState       = zeroForOne ? 
+                                          await hre.props.hedgePool.pool1()
+                                        : await hre.props.hedgePool.pool0();
+    const liquidityBefore             = poolBefore.liquidity;
+    const feeGrowthCurrentEpochBefore = poolBefore.feeGrowthCurrentEpoch;
+    const nearestTickBefore           = poolBefore.nearestTick;
+    const priceBefore                 = poolBefore.price;
+    const latestTickBefore            = (await hre.props.hedgePool.state()).latestTick;
 
     let txn = await hre.props.hedgePool.swap(
         signer.address,
@@ -83,12 +115,14 @@ export async function validateSwap(
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
 
-    const pool0After: PoolState    = await hre.props.hedgePool.pool0();
-    const liquidityAfter           = pool0After.liquidity;
-    const feeGrowthGlobalAfter     = pool0After.feeGrowthGlobalIn;
-    const nearestTickAfter         = pool0After.nearestTick;
-    const priceAfter               = pool0After.price;
-    const latestTickAfter          = await hre.props.hedgePool.latestTick();
+    const poolAfter: PoolState       = zeroForOne ? 
+                                         await hre.props.hedgePool.pool1()
+                                       : await hre.props.hedgePool.pool0();
+    const liquidityAfter             = poolAfter.liquidity;
+    const feeGrowthCurrentEpochAfter = poolAfter.feeGrowthCurrentEpoch;
+    const nearestTickAfter           = poolAfter.nearestTick;
+    const priceAfter                 = poolAfter.price;
+    const latestTickAfter            = (await hre.props.hedgePool.state()).latestTick;
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
     // expect(priceAfter).to.be.equal(finalPrice);
@@ -102,12 +136,23 @@ export async function validateMint(
     lower: BigNumber,
     upperOld: BigNumber,
     upper: BigNumber,
+    claim: BigNumber,
     amountDesired: BigNumber,
     zeroForOne: boolean,
     balanceInDecrease: BigNumber,
     liquidityIncrease: BigNumber,
+    upperTickCleared: boolean,
+    lowerTickCleared: boolean,
     revertMessage: string
 ) {
+    //collect first to recreate positions if necessary
+    const collectTxn = await hre.props.hedgePool.connect(signer).collect(
+        lower,
+        upper,
+        claim,
+        zeroForOne
+    );
+    await collectTxn.wait();
     let balanceInBefore; let balanceOutBefore;
     if(zeroForOne){
         balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
@@ -135,9 +180,9 @@ export async function validateMint(
             lower,
             upperOld,
             upper,
+            claim,
             amountDesired,
-            zeroForOne,
-            false
+            zeroForOne
           );
           await txn.wait();
     } else {
@@ -146,9 +191,9 @@ export async function validateMint(
             lower,
             upperOld,
             upper,
+            claim,
             amountDesired,
-            zeroForOne,
-            false
+            zeroForOne
           )).to.be.revertedWith(revertMessage);
         return;
     }
@@ -164,6 +209,9 @@ export async function validateMint(
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
 
+    // if(!zeroForOne) {
+
+    // }
     const lowerOldTickAfter: Tick = await hre.props.hedgePool.ticks1(lowerOld);
     const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks1(lower);
     const upperOldTickAfter: Tick = await hre.props.hedgePool.ticks1(upperOld);
@@ -176,10 +224,21 @@ export async function validateMint(
     //TODO: handle lower and/or upper below TWAP
     //TODO: does this handle negative values okay?
     // console.log('liquidity negative delta:', upperTickAfter.liquidityDelta.toString());
-    expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(liquidityIncrease);
-    expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
-    expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityIncrease));
-    expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(liquidityIncrease);
+    if(!lowerTickCleared) {
+        expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(liquidityIncrease);
+        expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+    } else {
+        expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease);
+        expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO);
+    }
+    if(!upperTickCleared) {
+        expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityIncrease));
+        expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(liquidityIncrease);
+    } else {
+        expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease));
+        expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease);
+    }
+    
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease);
 }   
 
@@ -192,6 +251,8 @@ export async function validateBurn(
     zeroForOne: boolean,
     balanceInIncrease: BigNumber,
     balanceOutIncrease: BigNumber,
+    lowerTickCleared: boolean,
+    upperTickCleared: boolean,
     revertMessage: string
 ) {
     let balanceInBefore; let balanceOutBefore;
@@ -203,18 +264,31 @@ export async function validateBurn(
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
     }
 
+    const positionBefore: Position = await hre.props.hedgePool.positions1(
+        signer.address,
+        lower,
+        upper
+    );
     const lowerTickBefore:    Tick = await hre.props.hedgePool.ticks1(lower);
     const upperTickBefore:    Tick = await hre.props.hedgePool.ticks1(upper);
 
     if (revertMessage == ""){
-        const txn = await hre.props.hedgePool.connect(signer).burn(
+        const burnTxn = await hre.props.hedgePool.connect(signer).burn(
             lower,
             upper,
             claim,
             zeroForOne,
             liquidityAmount
           );
-        await txn.wait();
+        await burnTxn.wait();
+        //TODO: expect balances to remain unchanged until collect
+        const collectTxn = await hre.props.hedgePool.connect(signer).collect(
+            lower,
+            upper,
+            claim,
+            zeroForOne
+        );
+        await collectTxn.wait();
     } else {
         await expect(hre.props.hedgePool.connect(signer).burn(
             lower,
@@ -239,19 +313,36 @@ export async function validateBurn(
     expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease);
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
 
+    const positionAfter: Position = await hre.props.hedgePool.positions1(
+        signer.address,
+        lower,
+        upper
+    );
     const lowerTickAfter:    Tick = await hre.props.hedgePool.ticks1(lower);
     const upperTickAfter:    Tick = await hre.props.hedgePool.ticks1(upper);
 
     //dependent on zeroForOne
     if (!zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
-        expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityAmount));
-        expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
-        expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(liquidityAmount);
-        expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+        if(!lowerTickCleared){
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+        } else {
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO);
+            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+        }
+        if(!upperTickCleared) {
+            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(liquidityAmount);
+            expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+        } else {
+            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO);
+            expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+        }
+
+
     } else {
         
     }
-    
+    expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(BN_ZERO.sub(liquidityAmount));
 
 }

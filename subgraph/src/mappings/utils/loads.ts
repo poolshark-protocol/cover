@@ -66,7 +66,7 @@ export function safeLoadPosition(poolAddress: string, lower: BigInt, upper: BigI
     let positionEntity = Position.load(positionId);
 
     if (!positionEntity) {
-        positionEntity = new Position(positionId);
+        positionEntity = new Position(positionId) ;
 
         exists = false;
     }

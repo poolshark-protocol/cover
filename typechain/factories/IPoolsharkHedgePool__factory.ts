@@ -47,6 +47,45 @@ const _abi = [
     inputs: [
       {
         internalType: "int24",
+        name: "lower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "upper",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "claim",
+        type: "int24",
+      },
+      {
+        internalType: "bool",
+        name: "zeroForOne",
+        type: "bool",
+      },
+    ],
+    name: "collect",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "amountIn",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "amountOut",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int24",
         name: "lowerOld",
         type: "int24",
       },
@@ -66,6 +105,11 @@ const _abi = [
         type: "int24",
       },
       {
+        internalType: "int24",
+        name: "claim",
+        type: "int24",
+      },
+      {
         internalType: "uint128",
         name: "amountDesired",
         type: "uint128",
@@ -73,11 +117,6 @@ const _abi = [
       {
         internalType: "bool",
         name: "zeroForOne",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "native",
         type: "bool",
       },
     ],

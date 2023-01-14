@@ -11,7 +11,6 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
-  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -19,43 +18,25 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface ITwapOracleInterface extends ethers.utils.Interface {
+interface PositionsInterface extends ethers.utils.Interface {
   functions: {
-    "calculateAverageTick(address)": FunctionFragment;
-    "initializePoolObservations(address)": FunctionFragment;
-    "isPoolObservationsEnough(address)": FunctionFragment;
+    "getMaxLiquidity(int24)": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "calculateAverageTick",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "initializePoolObservations",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isPoolObservationsEnough",
-    values: [string]
+    functionFragment: "getMaxLiquidity",
+    values: [BigNumberish]
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "calculateAverageTick",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "initializePoolObservations",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isPoolObservationsEnough",
+    functionFragment: "getMaxLiquidity",
     data: BytesLike
   ): Result;
 
   events: {};
 }
 
-export class ITwapOracle extends BaseContract {
+export class Positions extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -96,91 +77,39 @@ export class ITwapOracle extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: ITwapOracleInterface;
+  interface: PositionsInterface;
 
   functions: {
-    calculateAverageTick(
-      pool: string,
+    getMaxLiquidity(
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[number] & { averageTick: number }>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    isPoolObservationsEnough(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    ): Promise<[BigNumber]>;
   };
 
-  calculateAverageTick(
-    pool: string,
+  getMaxLiquidity(
+    tickSpacing: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<number>;
-
-  initializePoolObservations(
-    pool: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  isPoolObservationsEnough(
-    pool: string,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
+  ): Promise<BigNumber>;
 
   callStatic: {
-    calculateAverageTick(
-      pool: string,
+    getMaxLiquidity(
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<number>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, number] & { initializable: boolean; startingTick: number }
-    >;
-
-    isPoolObservationsEnough(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<BigNumber>;
   };
 
   filters: {};
 
   estimateGas: {
-    calculateAverageTick(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    isPoolObservationsEnough(
-      pool: string,
+    getMaxLiquidity(
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    calculateAverageTick(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    isPoolObservationsEnough(
-      pool: string,
+    getMaxLiquidity(
+      tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

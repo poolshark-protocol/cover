@@ -154,6 +154,7 @@ export class Position extends Entity {
     super();
     this.set("id", Value.fromString(id));
 
+    this.set("pool", Value.fromString(""));
     this.set("txnHash", Value.fromBytes(Bytes.empty()));
     this.set("createdBy", Value.fromBytes(Bytes.empty()));
     this.set("createdAtTimestamp", Value.fromBigInt(BigInt.zero()));
@@ -191,6 +192,15 @@ export class Position extends Entity {
 
   set id(value: string) {
     this.set("id", Value.fromString(value));
+  }
+
+  get pool(): string {
+    let value = this.get("pool");
+    return value!.toString();
+  }
+
+  set pool(value: string) {
+    this.set("pool", Value.fromString(value));
   }
 
   get txnHash(): Bytes {

@@ -279,6 +279,11 @@ const _abi = [
     name: "initializePoolObservations",
     outputs: [
       {
+        internalType: "bool",
+        name: "initializable",
+        type: "bool",
+      },
+      {
         internalType: "int24",
         name: "startingTick",
         type: "int24",
