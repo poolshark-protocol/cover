@@ -56,7 +56,6 @@ library Positions
         Ticks.insert(
             ticks,
             tickNodes,
-            state.latestTick,
             params.lowerOld,
             params.lower,
             params.upperOld,

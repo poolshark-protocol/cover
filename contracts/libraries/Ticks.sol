@@ -73,7 +73,6 @@ library Ticks
     function insert(
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        int24 latestTick,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
