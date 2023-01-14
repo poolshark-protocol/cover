@@ -106,10 +106,10 @@ interface IPoolsharkHedgePoolStructs {
         int24   nextTickToAccum1;
         int24   stopTick0;
         int24   stopTick1;
-        int128   amountInDelta0; 
-        int128   amountInDelta1; 
-        int128   amountOutDelta0;
-        int128   amountOutDelta1;
+        int128  amountInDelta0; 
+        int128  amountInDelta1; 
+        int128  amountOutDelta0;
+        int128  amountOutDelta1;
     }
 }
     
