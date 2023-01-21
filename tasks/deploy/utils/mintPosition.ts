@@ -54,10 +54,13 @@ export class MintPosition {
             lower,
             upperOld,
             upper,
+            lower,
             token1Amount,
             false,
             token1Amount,
             liquidityAmount,
+            false,
+            false,
             ""
           );
         

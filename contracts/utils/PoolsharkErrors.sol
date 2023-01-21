@@ -6,6 +6,7 @@ abstract contract PoolsharkHedgePoolErrors {
     error InvalidToken();
     error InvalidPosition();
     error InvalidSwapFee();
+    error InvalidTickSpread();
     error LiquidityOverflow();
     error Token0Missing();
     error Token1Missing();

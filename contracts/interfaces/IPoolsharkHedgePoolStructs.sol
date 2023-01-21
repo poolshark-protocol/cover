@@ -3,12 +3,12 @@ pragma solidity ^0.8.13;
 
 interface IPoolsharkHedgePoolStructs {
     struct GlobalState {
+        uint24 swapFee;         /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
+        int24  tickSpread;      /// @dev this is a integer multiple of the inputPool tickSpacing
+        uint32 lastBlockNumber; /// @dev last block checked for reference price update
         uint8  unlocked;
-        int24  latestTick; /// @dev Latest updated inputPool price tick
+        int24  latestTick;      /// @dev Latest updated inputPool price tick
         uint32 accumEpoch;
-        uint32 lastBlockNumber;
-        uint24 swapFee;
-        int24  tickSpacing;
     }
     
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
@@ -38,7 +38,7 @@ interface IPoolsharkHedgePoolStructs {
     // balance needs to be immediately transferred to the position owner
     struct Position {
         uint128 liquidity;           // expected amount to be used not actual
-        uint32  accumEpochLast; // last feeGrowth this position was updated at
+        uint32  accumEpochLast;      // last feeGrowth this position was updated at
         uint160 claimPriceLast;      // highest price claimed at
         uint128 amountIn;            // token amount already claimed; balance
         uint128 amountOut;           // necessary for non-custodial positions

@@ -31,7 +31,7 @@ export class DeployHedgePools {
         await this.initialSetup.initialHedgePoolSetup();
 
         // verify contracts on block explorer
-        await hre.run('verify-contracts');
+        // await hre.run('verify-contracts');
     }
 
     public async postDeployment() {

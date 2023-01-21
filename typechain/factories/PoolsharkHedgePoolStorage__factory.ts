@@ -27,6 +27,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidTickSpread",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidToken",
     type: "error",
   },
@@ -88,6 +93,44 @@ const _abi = [
         internalType: "address",
         name: "",
         type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "globalState",
+    outputs: [
+      {
+        internalType: "uint24",
+        name: "swapFee",
+        type: "uint24",
+      },
+      {
+        internalType: "int24",
+        name: "tickSpread",
+        type: "int24",
+      },
+      {
+        internalType: "uint32",
+        name: "lastBlockNumber",
+        type: "uint32",
+      },
+      {
+        internalType: "uint8",
+        name: "unlocked",
+        type: "uint8",
+      },
+      {
+        internalType: "int24",
+        name: "latestTick",
+        type: "int24",
+      },
+      {
+        internalType: "uint32",
+        name: "accumEpoch",
+        type: "uint32",
       },
     ],
     stateMutability: "view",
@@ -252,44 +295,6 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "state",
-    outputs: [
-      {
-        internalType: "uint8",
-        name: "unlocked",
-        type: "uint8",
-      },
-      {
-        internalType: "int24",
-        name: "latestTick",
-        type: "int24",
-      },
-      {
-        internalType: "uint32",
-        name: "accumEpoch",
-        type: "uint32",
-      },
-      {
-        internalType: "uint32",
-        name: "lastBlockNumber",
-        type: "uint32",
-      },
-      {
-        internalType: "uint24",
-        name: "swapFee",
-        type: "uint24",
-      },
-      {
-        internalType: "int24",
-        name: "tickSpacing",
-        type: "int24",
       },
     ],
     stateMutability: "view",

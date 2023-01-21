@@ -37,9 +37,9 @@ const _abi = [
     name: "initializePoolObservations",
     outputs: [
       {
-        internalType: "bool",
+        internalType: "uint8",
         name: "initializable",
-        type: "bool",
+        type: "uint8",
       },
       {
         internalType: "int24",

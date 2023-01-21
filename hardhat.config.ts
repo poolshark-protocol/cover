@@ -32,7 +32,7 @@ dotenv.config();
   networks: {
     goerli: {
       chainId: 5,
-      gasPrice: 2000000000,
+      gasPrice: 3000000000,
       url: process.env.GOERLI_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],

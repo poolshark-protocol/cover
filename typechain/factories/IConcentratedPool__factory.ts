@@ -92,6 +92,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "tickSpacing",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "",
+        type: "int24",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "token0",
     outputs: [
       {

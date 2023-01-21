@@ -93,7 +93,7 @@ export async function validateSwap(
     const feeGrowthCurrentEpochBefore = poolBefore.feeGrowthCurrentEpoch;
     const nearestTickBefore           = poolBefore.nearestTick;
     const priceBefore                 = poolBefore.price;
-    const latestTickBefore            = (await hre.props.hedgePool.state()).latestTick;
+    const latestTickBefore            = (await hre.props.hedgePool.globalState()).latestTick;
 
     let txn = await hre.props.hedgePool.swap(
         signer.address,
@@ -122,7 +122,7 @@ export async function validateSwap(
     const feeGrowthCurrentEpochAfter = poolAfter.feeGrowthCurrentEpoch;
     const nearestTickAfter           = poolAfter.nearestTick;
     const priceAfter                 = poolAfter.price;
-    const latestTickAfter            = (await hre.props.hedgePool.state()).latestTick;
+    const latestTickAfter            = (await hre.props.hedgePool.globalState()).latestTick;
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
     // expect(priceAfter).to.be.equal(finalPrice);
@@ -235,6 +235,8 @@ export async function validateMint(
         expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityIncrease));
         expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(liquidityIncrease);
     } else {
+        console.log('L delta before:', upperTickBefore.liquidityDelta.toString())
+        console.log('L delta after', upperTickAfter.liquidityDelta.toString())
         expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease));
         expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease);
     }

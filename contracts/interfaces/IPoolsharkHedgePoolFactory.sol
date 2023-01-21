@@ -23,12 +23,14 @@ abstract contract IPoolsharkHedgePoolFactory {
     function createHedgePool(
         address fromToken,
         address destToken,
-        uint256 fee
+        uint256 fee,
+        uint24  tickSpread
     ) external virtual returns (address book);
 
     function getHedgePool(
         address fromToken,
         address destToken,
-        uint256 fee
+        uint256 fee,
+        uint24  tickSpread
     ) external virtual view returns (address);
 }

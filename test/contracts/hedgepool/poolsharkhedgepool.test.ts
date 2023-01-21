@@ -20,7 +20,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   let bob: SignerWithAddress;
   let carol: SignerWithAddress;
 
-  const liquidityAmount = BigNumber.from('199760153929825488153727');
+  const liquidityAmount = BigNumber.from('99855108194609381495771');
   const minTickIdx = BigNumber.from('-887272');
   const maxTickIdx = BigNumber.from('887272');
 
@@ -33,7 +33,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     //TODO: map it to an interface
     const pool0: PoolState      = await hre.props.hedgePool.pool0();
     const liquidity             = pool0.liquidity;
-    const globalState           = await hre.props.hedgePool.state();
+    const globalState           = await hre.props.hedgePool.globalState();
     const lastBlockNumber       = globalState.lastBlockNumber;
     const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch;
     const nearestTick           = pool0.nearestTick;
@@ -77,10 +77,10 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const upper    = hre.ethers.utils.parseUnits("40", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
@@ -143,11 +143,34 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(upperTick.liquidityDeltaMinus).to.be.equal(liquidityAmount.mul(2));
   });
 
+  it('Should not mint new LP position due to tickSpread divisibility', async function () {
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+    const lower    = hre.ethers.utils.parseUnits("20", 0);
+    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    await validateMint(
+      hre.props.alice,
+      hre.props.alice.address,
+      lowerOld,
+      lower,
+      upperOld,
+      upper,
+      lower,
+      token1Amount,
+      false,
+      token1Amount,
+      liquidityAmount,
+      false,
+      false,
+      "InvalidTick()"
+    );
+  });
+
   it('Should swap with zero output', async function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
@@ -166,11 +189,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
   it('Should burn LP position and withdraw all liquidity', async function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const upper    = hre.ethers.utils.parseUnits("40", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(60);
     console.log('next tick:', maxTick.toString());
@@ -193,11 +216,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lowerOld = hre.ethers.utils.parseUnits("40", 0);
     const lower    = hre.ethers.utils.parseUnits("60", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("90", 0);
-    const burnAmount = hre.ethers.utils.parseUnits("66420461859385355519898", 0);
+    const upper    = hre.ethers.utils.parseUnits("100", 0);
+    const burnAmount = hre.ethers.utils.parseUnits("49802891105937278098768", 0);
+    const balanceInDecrease = hre.ethers.utils.parseUnits("99750339674246044929", 0);
+    const balanceOutIncrease = hre.ethers.utils.parseUnits("99999999999999999999", 0);
     let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
+    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.hedgePool.tickNodes(60);
     console.log('next tick:', maxTick.toString());
@@ -230,8 +255,8 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       true,
       token0Amount,
       currentPrice,
-      BN_ZERO,
-      BN_ZERO,
+      balanceInDecrease,
+      balanceOutIncrease,
       BN_ZERO,
       currentPrice
     )
@@ -262,7 +287,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
     const lower    = hre.ethers.utils.parseUnits("0", 0);
     const upperOld = hre.ethers.utils.parseUnits("50", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const upper    = hre.ethers.utils.parseUnits("40", 0);
 
     await validateMint(
       hre.props.alice,
@@ -283,7 +308,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
     let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.state()).latestTick);
+    let latestTick = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
     let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
@@ -293,7 +318,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const upper    = hre.ethers.utils.parseUnits("40", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
     const feeTaken = hre.ethers.utils.parseUnits("5", 16);
 
@@ -322,7 +347,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       false,
       "WrongTickClaimedAt()"
     );
-
+    // TODO: should lower tick be cleared and upper not be cleared?
     await validateMint(
       hre.props.alice,
       hre.props.alice.address,
@@ -335,7 +360,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       false,
       token1Amount,
       liquidityAmount,
-      true,
+      false,
       true,
       ""
     );
@@ -372,7 +397,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       false,
       "WrongTickClaimedAt()"
     )
-    // TODO: why is lower removed but upper isn't?
+
     await validateBurn(
       hre.props.alice,
       lower,
@@ -392,7 +417,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    const upper    = hre.ethers.utils.parseUnits("30", 0);
+    const upper    = hre.ethers.utils.parseUnits("40", 0);
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
 
     await validateBurn(

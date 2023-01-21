@@ -77,6 +77,11 @@ const _abi = [
         name: "fee",
         type: "uint256",
       },
+      {
+        internalType: "uint24",
+        name: "tickSpread",
+        type: "uint24",
+      },
     ],
     name: "createHedgePool",
     outputs: [
@@ -124,6 +129,11 @@ const _abi = [
         internalType: "uint256",
         name: "fee",
         type: "uint256",
+      },
+      {
+        internalType: "uint24",
+        name: "tickSpread",
+        type: "uint24",
       },
     ],
     name: "getHedgePool",

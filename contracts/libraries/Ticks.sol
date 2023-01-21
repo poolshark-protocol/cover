@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
 import "./TickMath.sol";
@@ -429,7 +429,8 @@ library Ticks
         IPoolsharkHedgePoolStructs.PoolState storage pool0,
         IPoolsharkHedgePoolStructs.PoolState storage pool1,
         int24 latestTick,
-        uint32 accumEpoch
+        uint32 accumEpoch,
+        int24 tickSpread 
     ) external {
         if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
             tickNodes[latestTick] = IPoolsharkHedgePoolStructs.TickNode(
@@ -455,8 +456,8 @@ library Ticks
         pool0.lastTick    = TickMath.MAX_TICK;
         pool1.lastTick    = TickMath.MIN_TICK;
         //TODO: the sqrtPrice cannot move more than 1 tickSpacing away
-        pool0.price = TickMath.getSqrtRatioAtTick(latestTick);
-        pool1.price = pool0.price;
+        pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
+        pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
     }
     //TODO: pass in specific tick and update in storage on calling function
     function _updateAmountDeltas (
@@ -509,7 +510,7 @@ library Ticks
         console.log("-- START ACCUMULATE LAST BLOCK --");
 
         // only accumulate if latestTick needs to move
-        if (nextLatestTick / (2*state.tickSpacing) == state.latestTick / (2*state.tickSpacing)) {
+        if (nextLatestTick / (2*state.tickSpread) == state.latestTick / (2*state.tickSpread)) {
             console.log("-- EARLY END ACCUMULATE LAST BLOCK --");
             return (state, pool0, pool1);
         }
@@ -521,8 +522,8 @@ library Ticks
             nextTickToCross1:  pool1.nearestTick,
             nextTickToAccum0:  pool0.nearestTick,
             nextTickToAccum1:  tickNodes[pool1.nearestTick].nextTick,
-            stopTick0:  (nextLatestTick > state.latestTick) ? state.latestTick : nextLatestTick + state.tickSpacing,
-            stopTick1:  (nextLatestTick > state.latestTick) ? nextLatestTick - state.tickSpacing : state.latestTick,
+            stopTick0:  (nextLatestTick > state.latestTick) ? state.latestTick : nextLatestTick + state.tickSpread,
+            stopTick1:  (nextLatestTick > state.latestTick) ? nextLatestTick - state.tickSpread : state.latestTick,
             amountInDelta0:  0,
             amountInDelta1:  0,
             amountOutDelta0: 0,

@@ -24,6 +24,7 @@ interface IConcentratedPoolInterface extends ethers.utils.Interface {
     "increaseObservationCardinalityNext(uint16)": FunctionFragment;
     "observe(uint32[])": FunctionFragment;
     "slot0()": FunctionFragment;
+    "tickSpacing()": FunctionFragment;
     "token0()": FunctionFragment;
     "token1()": FunctionFragment;
   };
@@ -37,6 +38,10 @@ interface IConcentratedPoolInterface extends ethers.utils.Interface {
     values: [BigNumberish[]]
   ): string;
   encodeFunctionData(functionFragment: "slot0", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "tickSpacing",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "token0", values?: undefined): string;
   encodeFunctionData(functionFragment: "token1", values?: undefined): string;
 
@@ -46,6 +51,10 @@ interface IConcentratedPoolInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "observe", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "slot0", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "tickSpacing",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "token0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "token1", data: BytesLike): Result;
 
@@ -125,6 +134,8 @@ export class IConcentratedPool extends BaseContract {
       }
     >;
 
+    tickSpacing(overrides?: CallOverrides): Promise<[number]>;
+
     token0(overrides?: CallOverrides): Promise<[string]>;
 
     token1(overrides?: CallOverrides): Promise<[string]>;
@@ -158,6 +169,8 @@ export class IConcentratedPool extends BaseContract {
       unlocked: boolean;
     }
   >;
+
+  tickSpacing(overrides?: CallOverrides): Promise<number>;
 
   token0(overrides?: CallOverrides): Promise<string>;
 
@@ -193,6 +206,8 @@ export class IConcentratedPool extends BaseContract {
       }
     >;
 
+    tickSpacing(overrides?: CallOverrides): Promise<number>;
+
     token0(overrides?: CallOverrides): Promise<string>;
 
     token1(overrides?: CallOverrides): Promise<string>;
@@ -213,6 +228,8 @@ export class IConcentratedPool extends BaseContract {
 
     slot0(overrides?: CallOverrides): Promise<BigNumber>;
 
+    tickSpacing(overrides?: CallOverrides): Promise<BigNumber>;
+
     token0(overrides?: CallOverrides): Promise<BigNumber>;
 
     token1(overrides?: CallOverrides): Promise<BigNumber>;
@@ -230,6 +247,8 @@ export class IConcentratedPool extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     slot0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    tickSpacing(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     token0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

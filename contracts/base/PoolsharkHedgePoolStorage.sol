@@ -9,7 +9,7 @@ import "../utils/PoolsharkErrors.sol";
 abstract contract PoolsharkHedgePoolStorage is IPoolsharkHedgePoolStructs, PoolsharkHedgePoolErrors {
 
     IPoolsharkUtils public utils;
-    GlobalState public state;
+    GlobalState public globalState;
     PoolState public pool0; /// @dev State for token0 as output
     PoolState public pool1; /// @dev State for token1 as output
 

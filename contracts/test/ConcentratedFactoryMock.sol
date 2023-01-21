@@ -24,7 +24,7 @@ contract ConcentratedFactoryMock is IConcentratedFactory {
         feeTierTickSpacing[3000] = 60;
         feeTierTickSpacing[10000] = 200;
 
-        mockPool = address(new ConcentratedPoolMock(tokenA, tokenB, 500));
+        mockPool = address(new ConcentratedPoolMock(tokenA, tokenB, 500, 10));
 
         getPool[tokenA][tokenB][500] = mockPool;
 

@@ -8,7 +8,7 @@ dataSources:
     name: PoolsharkHedgePoolFactory
     network: goerli
     source:
-      address: '0x4Ed4D8e2832F66362B576c35447F64eC1b3f716d'
+      address: '0x4cBEA8D79A8e5a79999B496B5Ad4332279CF8fDe'
       abi: PoolsharkHedgePoolFactory
       startBlock: 8222670
     mapping:

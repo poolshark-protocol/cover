@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
 //TODO: deploy library code once and reference from factory
@@ -25,8 +25,6 @@ contract PoolsharkHedgePool is
     SafeTransfers
 {
     /// @dev Reference: tickSpacing of 100 -> 1% between ticks.
-    int24 internal immutable tickSpacing;
-    uint24 internal immutable swapFee; /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
     uint128 internal immutable MAX_TICK_LIQUIDITY;
 
     address internal immutable factory;
@@ -36,67 +34,74 @@ contract PoolsharkHedgePool is
     IConcentratedPool internal immutable inputPool;
 
     modifier lock() {
-        if (state.unlocked != 1) revert Locked();
-        state.unlocked = 2;
+        if (globalState.unlocked != 1) revert Locked();
+        globalState.unlocked = 2;
         _;
-        state.unlocked = 1;
+        globalState.unlocked = 1;
     }
 
     constructor(
         address _inputPool,
         address _libraries,
         uint24  _swapFee, 
-        int24  _tickSpacing
+        int24  _tickSpread
     ) {
-        // check for invalid params
+        // validate swap fee
         if (_swapFee > MAX_FEE) revert InvalidSwapFee();
+        GlobalState memory state = GlobalState(0,0,0,0,0,0);
+        // validate tick spread
+        int24 _tickSpacing = IConcentratedPool(_inputPool).tickSpacing();
+        int24 _tickMultiple = _tickSpread / _tickSpacing;
+        if ((_tickMultiple < 2) 
+          || _tickMultiple * _tickSpacing != _tickSpread
+        ) revert InvalidTickSpread();
 
-        // set state variables from params
+        // set addresses
         factory     = msg.sender;
-        inputPool   = IConcentratedPool(_inputPool);
         utils       = IPoolsharkUtils(_libraries);
-        token0      = IConcentratedPool(inputPool).token0();
-        token1      = IConcentratedPool(inputPool).token1();
-        swapFee     = _swapFee;
-        //TODO: should be 1% for .1% spacing on inputPool
-        tickSpacing = _tickSpacing;
-        state.tickSpacing = _tickSpacing;
-        state.swapFee     = _swapFee;
+        token0      = IConcentratedPool(_inputPool).token0();
+        token1      = IConcentratedPool(_inputPool).token1();
+        inputPool   = IConcentratedPool(_inputPool);
+        feeTo       = IPoolsharkHedgePoolFactory(msg.sender).owner();
 
-        // extrapolate other state variables
-        feeTo = IPoolsharkHedgePoolFactory(factory).owner();
-        MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpacing);
+        // set global state
+        state.swapFee         = _swapFee;
+        state.tickSpread      = _tickSpread;
         state.lastBlockNumber = uint32(block.number);
+        globalState = state;
+
+        // set max liquidity per tick
+        MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpread);
 
         // set default initial values
         //TODO: insertSingle or pass MAX_TICK as upper
         _ensureInitialized();
     }
 
+    //TODO: test this check
     function _ensureInitialized() internal {
-        if (state.unlocked == 0) {
-            bool initializable; int24 initLatestTick;
-            (initializable, initLatestTick) = utils.initializePoolObservations(
+        if (globalState.unlocked == 0) {
+            GlobalState memory state = globalState;
+            (state.unlocked, state.latestTick) = utils.initializePoolObservations(
                                                     IConcentratedPool(inputPool)
                                                 );
-            if(initializable) { _initialize(initLatestTick); state.unlocked = 1; }
+            if(state.unlocked == 1) { _initialize(state); }
         }
     }
 
-    //TODO: test this check
-
-
-    function _initialize(int24 initLatestTick) internal {
-        state.latestTick = initLatestTick / int24(tickSpacing) * int24(tickSpacing);
+    function _initialize(GlobalState memory state) internal {
+        //TODO: store values in memory then write to state
+        state.latestTick = state.latestTick / int24(state.tickSpread) * int24(state.tickSpread);
         state.accumEpoch = 1;
-        state.unlocked = 1;
         Ticks.initialize(
             tickNodes,
             pool0,
             pool1,
-            initLatestTick,
-            state.accumEpoch
+            state.latestTick,
+            state.accumEpoch,
+            state.tickSpread
         );
+        globalState = state;
     }
     //TODO: create transfer function to transfer ownership
     //TODO: reorder params to upperOld being last (logical order)
@@ -113,19 +118,20 @@ contract PoolsharkHedgePool is
     ) external lock {
         /// @dev - don't allow mints until we have enough observations from inputPool
         _ensureInitialized();
-        if (state.unlocked == 0 ) revert WaitUntilEnoughObservations();
+        // GlobalState memory globalState = globalState;
+        if (globalState.unlocked == 0 ) revert WaitUntilEnoughObservations();
         
         //TODO: move tick update check here
-        if(block.number != state.lastBlockNumber) {
-            state.lastBlockNumber = uint32(block.number);
+        if(block.number != globalState.lastBlockNumber) {
+            globalState.lastBlockNumber = uint32(block.number);
             //can save a couple 100 gas if we skip this when no update
-            (state, pool0, pool1) = Ticks.accumulateLastBlock(
+            (globalState, pool0, pool1) = Ticks.accumulateLastBlock(
                 ticks0,
                 ticks1,
                 tickNodes,
                 pool0,
                 pool1,
-                state,
+                globalState,
                 utils.calculateAverageTick(inputPool)
             );
         }
@@ -145,18 +151,18 @@ contract PoolsharkHedgePool is
             );
             // handle partial mints
             if (zeroForOne) {
-                if(upper >= state.latestTick) {
-                    upper = state.latestTick - int24(tickSpacing);
-                    upperOld = state.latestTick;
+                if(upper >= globalState.latestTick) {
+                    upper = globalState.latestTick - int24(globalState.tickSpread);
+                    upperOld = globalState.latestTick;
                     uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(upper);
                     amountDesired -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
                     priceUpper = priceNewUpper;
                 }
             }
             if (!zeroForOne) {
-                if (lower <= state.latestTick) {
-                    lower = state.latestTick + int24(tickSpacing);
-                    lowerOld = state.latestTick;
+                if (lower <= globalState.latestTick) {
+                    lower = globalState.latestTick + int24(globalState.tickSpread);
+                    lowerOld = globalState.latestTick;
                     uint256 priceNewLower = TickMath.getSqrtRatioAtTick(lower);
                     amountDesired -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false));
                     priceLower = priceNewLower;
@@ -173,14 +179,12 @@ contract PoolsharkHedgePool is
         }
         //TODO: is this dangerous?
         unchecked {
-            console.log('ticks before');
-            console.logInt(ticks1[lower].liquidityDelta);
             // recreates position if required
-            Positions.update(
+            (,,,,globalState) = Positions.update(
                 zeroForOne ? positions0 : positions1,
                 zeroForOne ? ticks0 : ticks1,
                 tickNodes,
-                state,
+                globalState,
                 zeroForOne ? pool0 : pool1,
                 UpdateParams(
                     msg.sender,
@@ -194,11 +198,11 @@ contract PoolsharkHedgePool is
 
             //TODO: check amount consumed from return value
             // creates new position
-            Positions.add(
+            (,globalState) = Positions.add(
                 zeroForOne ? positions0 : positions1,
                 zeroForOne ? ticks0 : ticks1,
                 tickNodes,
-                state,
+                globalState,
                 AddParams(
                     msg.sender,
                     lowerOld,
@@ -219,6 +223,7 @@ contract PoolsharkHedgePool is
             zeroForOne,
             uint128(liquidityMinted)
         );
+        // globalState = state;
     }
 
     function burn(
@@ -231,6 +236,7 @@ contract PoolsharkHedgePool is
         public
         lock
     {
+        GlobalState memory state = globalState;
         if(block.number != state.lastBlockNumber) {
             // console.log("accumulating last block");
             state.lastBlockNumber = uint32(block.number);
@@ -258,7 +264,7 @@ contract PoolsharkHedgePool is
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
 
         // update position and get new lower and upper
-        (,,lower,upper) = Positions.update(
+        (,,lower,upper, state) = Positions.update(
             zeroForOne ? positions0 : positions1,
             zeroForOne ? ticks0 : ticks1,
             tickNodes,
@@ -278,7 +284,7 @@ contract PoolsharkHedgePool is
         // if position hasn't changed remove liquidity
         if (claim == (zeroForOne ? upper : lower)) {
             console.log('removing liquidity');
-            Positions.remove(
+            (,state) = Positions.remove(
                zeroForOne ? positions0 : positions1,
                zeroForOne ? ticks0 : ticks1,
                tickNodes,
@@ -296,6 +302,7 @@ contract PoolsharkHedgePool is
         console.log('zero previous tick:');
         //TODO: get token amounts from _updatePosition return values
         emit Burn(msg.sender, lower, upper, zeroForOne, amount);
+        globalState = state;
     }
 
     function collect(
@@ -304,6 +311,7 @@ contract PoolsharkHedgePool is
         int24 claim,
         bool  zeroForOne
     ) public lock returns (uint256 amountIn, uint256 amountOut) {
+        GlobalState memory state = globalState;
         if(block.number != state.lastBlockNumber) {
             // console.log("accumulating last block");
             state.lastBlockNumber = uint32(block.number);
@@ -321,7 +329,7 @@ contract PoolsharkHedgePool is
                 utils.calculateAverageTick(inputPool)
             );
         }
-        (amountIn,amountOut,,) = Positions.update(
+        (amountIn,amountOut,,,state) = Positions.update(
             zeroForOne ? positions0 : positions1,
             zeroForOne ? ticks0 : ticks1,
             tickNodes,
@@ -348,6 +356,7 @@ contract PoolsharkHedgePool is
         _transferOut(msg.sender, zeroForOne ? token0 : token1, amountOut);
 
         emit Collect(msg.sender, amountIn, amountOut);
+        globalState = state;
     }
 
     /// @dev Swaps one token for another. The router must prefund this contract and ensure there isn't too much slippage.
@@ -359,8 +368,9 @@ contract PoolsharkHedgePool is
         // bytes calldata data
     ) external override lock returns (uint256 amountOut) {
         //TODO: is this needed?
+        GlobalState memory state = globalState;
         if (state.latestTick < TickMath.MIN_TICK) revert WaitUntilEnoughObservations();
-        PoolState memory pool = zeroForOne ? pool1 : pool0;
+        PoolState   memory pool  = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
 
         _transferIn(zeroForOne ? token0 : token1, amountIn);
@@ -384,16 +394,16 @@ contract PoolsharkHedgePool is
         SwapCache memory cache = SwapCache({
             price: pool.price,
             liquidity: pool.liquidity,
-            feeAmount: utils.mulDivRoundingUp(amountIn, swapFee, 1e6),
+            feeAmount: utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - utils.mulDivRoundingUp(amountIn, swapFee, 1e6)
+            input: amountIn - utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
         });
 
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - int24(tickSpacing)))
-                                           : uint256(TickMath.getSqrtRatioAtTick(state.latestTick + int24(tickSpacing)));
+        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread))
+                                           : uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread));
         uint256 nextPrice = nextTickPrice;
 
         if (zeroForOne) {
@@ -475,11 +485,13 @@ contract PoolsharkHedgePool is
             _transferOut(recipient, token1, amountOut);
             emit Swap(recipient, token1, token0, amountIn, amountOut);
         }
+        globalState = state;
     }
 
     function _validatePosition(int24 lower, int24 upper, bool zeroForOne, uint128 amountDesired) internal view {
-        if (lower % int24(tickSpacing) != 0) revert InvalidTick();
-        if (upper % int24(tickSpacing) != 0) revert InvalidTick();
+        GlobalState memory state = globalState;
+        if (lower % int24(state.tickSpread) != 0) revert InvalidTick();
+        if (upper % int24(state.tickSpread) != 0) revert InvalidTick();
         if (amountDesired == 0) revert InvalidPosition();
         if (lower >= upper) revert InvalidPosition();
         if (zeroForOne) {
@@ -495,18 +507,19 @@ contract PoolsharkHedgePool is
         uint160 priceLimit
     ) internal view returns (uint256 inAmount, uint256 outAmount) {
         // TODO: make override
+        GlobalState memory state = globalState;
         SwapCache memory cache = SwapCache({
             price: zeroForOne ? pool1.price : pool0.price,
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
-            feeAmount: utils.mulDivRoundingUp(amountIn, swapFee, 1e6),
+            feeAmount: utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - utils.mulDivRoundingUp(amountIn, swapFee, 1e6)
+            input: amountIn - utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
         });
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - int24(tickSpacing))) :
-                                             uint256(TickMath.getSqrtRatioAtTick(state.latestTick + int24(tickSpacing))) ;
+        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread)) :
+                                             uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread)) ;
         uint256 nextPrice = nextTickPrice;
 
         if (zeroForOne) {
