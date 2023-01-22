@@ -20,7 +20,7 @@ export class InitialSetup {
         this.contractDeploymentsKeys = new ContractDeploymentsKeys();
     }
 
-    public async initialHedgePoolSetup(): Promise<number> {
+    public async initialCoverPoolSetup(): Promise<number> {
 
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()];
 
@@ -211,7 +211,7 @@ export class InitialSetup {
         );
         // // hre.nonce += 1;
 
-        const createPoolTxn = await hre.props.coverPoolFactory.createHedgePool(
+        const createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
                                     hre.props.token0.address,
                                     hre.props.token1.address,
                                     "500",
@@ -221,7 +221,7 @@ export class InitialSetup {
 
         hre.nonce += 1;
         
-        const coverPoolAddress = await hre.props.coverPoolFactory.getHedgePool(
+        const coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
                                     hre.props.token0.address,
                                     hre.props.token1.address,
                                     "500",
@@ -245,27 +245,27 @@ export class InitialSetup {
         return hre.nonce;
     }
 
-    public async readHedgePoolSetup(nonce: number): Promise<number> {
+    public async readCoverPoolSetup(nonce: number): Promise<number> {
         const token0Address = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                                                                     {
                                                                         networkName: hre.network.name,
                                                                         objectName: 'token0'
                                                                     },
-                                                                    'readHedgePoolSetup'
+                                                                    'readCoverPoolSetup'
                                                                 )).contractAddress
         const token1Address = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                                                                     {
                                                                         networkName: hre.network.name,
                                                                         objectName: 'token1'
                                                                     },
-                                                                    'readHedgePoolSetup'
+                                                                    'readCoverPoolSetup'
                                                                 )).contractAddress
         const coverPoolAddress = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                                                                         {
                                                                             networkName: hre.network.name,
                                                                             objectName: 'coverPool'
                                                                         },
-                                                                        'readHedgePoolSetup'
+                                                                        'readCoverPoolSetup'
                                                                 )).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt("Token20", token0Address);

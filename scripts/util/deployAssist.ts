@@ -141,7 +141,7 @@ export class DeployAssist {
         objectName: string
     ) {
 
-        if (this.isLocal()) {
+        if (!this.isLocal()) {
             await this.contractDeploymentsJson.deleteContractDeploymentsJsonFile(
                 network,
                 objectName

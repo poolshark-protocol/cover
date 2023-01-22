@@ -46,7 +46,7 @@ export class GetBeforeEach {
             hre.carol       = signers[2];
         }
         hre.nonce = await getNonce(hre, hre.props.alice.address);
-        this.nonce = await this.initialSetup.initialHedgePoolSetup();
+        this.nonce = await this.initialSetup.initialCoverPoolSetup();
     };
 
     public retrieveProps(): BeforeEachProps {

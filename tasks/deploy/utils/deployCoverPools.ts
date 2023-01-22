@@ -3,7 +3,7 @@ import { InitialSetup } from "../../../test/utils/setup/initialSetup";
 import { getNonce } from "../../utils";
 import { VerifyContracts } from "./verifyContracts";
 
-export class DeployHedgePools {
+export class DeployCoverPools {
 
     private initialSetup: InitialSetup;
     private nonce: number;
@@ -28,7 +28,7 @@ export class DeployHedgePools {
         hre.nonce = await getNonce(hre, hre.props.alice.address);
 
         // deploy contracts onto network
-        await this.initialSetup.initialHedgePoolSetup();
+        await this.initialSetup.initialCoverPoolSetup();
 
         // verify contracts on block explorer
         // await hre.run('verify-contracts');
