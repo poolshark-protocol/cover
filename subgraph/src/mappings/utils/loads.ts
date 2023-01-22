@@ -1,7 +1,6 @@
 
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
-import { ERC20SymbolBytes } from "../../../generated/PoolsharkHedgePool/ERC20SymbolBytes";
-import { HedgePool, Position, Token } from "../../../generated/schema"
+import { CoverPool, Position, Token } from "../../../generated/schema"
 import { fetchTokenSymbol, fetchTokenName, fetchTokenDecimals, BIGINT_ZERO, BIGDECIMAL_ZERO } from "./helpers";
 
 class LoadTokenRet {
@@ -30,16 +29,16 @@ export function safeLoadToken(address: string): LoadTokenRet {
     }
 }
 
-class LoadHedgePoolRet {
-    entity: HedgePool;
+class LoadCoverPoolRet {
+    entity: CoverPool;
     exists: boolean;
 }
-export function safeLoadHedgePool(poolAddress: string): LoadHedgePoolRet {
+export function safeLoadCoverPool(poolAddress: string): LoadCoverPoolRet {
     let exists = true;
-    let hedgePoolEntity = HedgePool.load(poolAddress);
+    let hedgePoolEntity = CoverPool.load(poolAddress);
 
     if (!hedgePoolEntity) {
-        hedgePoolEntity = new HedgePool(poolAddress);
+        hedgePoolEntity = new CoverPool(poolAddress);
 
         exists = false;
     }

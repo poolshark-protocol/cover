@@ -29,49 +29,61 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
     getContractFactory(
+      name: "CoverPoolEvents",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverPoolEvents__factory>;
+    getContractFactory(
+      name: "CoverPoolStorage",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverPoolStorage__factory>;
+    getContractFactory(
+      name: "CoverPoolView",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverPoolView__factory>;
+    getContractFactory(
       name: "TwapOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TwapOracle__factory>;
     getContractFactory(
-      name: "PoolsharkHedgePoolEvents",
+      name: "CoverPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolEvents__factory>;
+    ): Promise<Contracts.CoverPool__factory>;
     getContractFactory(
-      name: "PoolsharkHedgePoolStorage",
+      name: "CoverPoolFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolStorage__factory>;
+    ): Promise<Contracts.CoverPoolFactory__factory>;
     getContractFactory(
-      name: "PoolsharkHedgePoolView",
+      name: "CoverPoolUtils",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolView__factory>;
+    ): Promise<Contracts.CoverPoolUtils__factory>;
     getContractFactory(
-      name: "IConcentratedFactory",
+      name: "ICoverPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IConcentratedFactory__factory>;
+    ): Promise<Contracts.ICoverPool__factory>;
     getContractFactory(
-      name: "IConcentratedPool",
+      name: "ICoverPoolFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IConcentratedPool__factory>;
-    getContractFactory(
-      name: "IERC20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20__factory>;
-    getContractFactory(
-      name: "IPoolsharkHedgePool",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IPoolsharkHedgePool__factory>;
-    getContractFactory(
-      name: "IPoolsharkHedgePoolFactory",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IPoolsharkHedgePoolFactory__factory>;
+    ): Promise<Contracts.ICoverPoolFactory__factory>;
     getContractFactory(
       name: "IPoolsharkUtils",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IPoolsharkUtils__factory>;
     getContractFactory(
+      name: "IERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20__factory>;
+    getContractFactory(
       name: "IPositionManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IPositionManager__factory>;
+    getContractFactory(
+      name: "IRangeFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IRangeFactory__factory>;
+    getContractFactory(
+      name: "IRangePool",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IRangePool__factory>;
     getContractFactory(
       name: "IDyDxMath",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -125,57 +137,45 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ticks__factory>;
     getContractFactory(
-      name: "PoolsharkHedgePool",
+      name: "RangeFactoryMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePool__factory>;
+    ): Promise<Contracts.RangeFactoryMock__factory>;
     getContractFactory(
-      name: "PoolsharkHedgePoolFactory",
+      name: "RangePoolMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolFactory__factory>;
-    getContractFactory(
-      name: "PoolsharkHedgePoolUtils",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolUtils__factory>;
-    getContractFactory(
-      name: "ConcentratedFactoryMock",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ConcentratedFactoryMock__factory>;
-    getContractFactory(
-      name: "ConcentratedPoolMock",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ConcentratedPoolMock__factory>;
+    ): Promise<Contracts.RangePoolMock__factory>;
     getContractFactory(
       name: "Token20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Token20__factory>;
     getContractFactory(
+      name: "CoverMiscErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverMiscErrors__factory>;
+    getContractFactory(
+      name: "CoverPoolErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverPoolErrors__factory>;
+    getContractFactory(
+      name: "CoverPoolFactoryErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverPoolFactoryErrors__factory>;
+    getContractFactory(
+      name: "CoverPositionErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverPositionErrors__factory>;
+    getContractFactory(
+      name: "CoverTicksErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverTicksErrors__factory>;
+    getContractFactory(
+      name: "CoverTransferErrors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CoverTransferErrors__factory>;
+    getContractFactory(
       name: "MathUtils",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MathUtils__factory>;
-    getContractFactory(
-      name: "PoolsharkHedgePoolErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolErrors__factory>;
-    getContractFactory(
-      name: "PoolsharkHedgePoolFactoryErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkHedgePoolFactoryErrors__factory>;
-    getContractFactory(
-      name: "PoolsharkMiscErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkMiscErrors__factory>;
-    getContractFactory(
-      name: "PoolsharkPositionErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkPositionErrors__factory>;
-    getContractFactory(
-      name: "PoolsharkTicksErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkTicksErrors__factory>;
-    getContractFactory(
-      name: "PoolsharkTransferErrors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PoolsharkTransferErrors__factory>;
     getContractFactory(
       name: "SafeCast",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -206,60 +206,75 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
     getContractAt(
+      name: "CoverPoolEvents",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverPoolEvents>;
+    getContractAt(
+      name: "CoverPoolStorage",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverPoolStorage>;
+    getContractAt(
+      name: "CoverPoolView",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverPoolView>;
+    getContractAt(
       name: "TwapOracle",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.TwapOracle>;
     getContractAt(
-      name: "PoolsharkHedgePoolEvents",
+      name: "CoverPool",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolEvents>;
+    ): Promise<Contracts.CoverPool>;
     getContractAt(
-      name: "PoolsharkHedgePoolStorage",
+      name: "CoverPoolFactory",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolStorage>;
+    ): Promise<Contracts.CoverPoolFactory>;
     getContractAt(
-      name: "PoolsharkHedgePoolView",
+      name: "CoverPoolUtils",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolView>;
+    ): Promise<Contracts.CoverPoolUtils>;
     getContractAt(
-      name: "IConcentratedFactory",
+      name: "ICoverPool",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.IConcentratedFactory>;
+    ): Promise<Contracts.ICoverPool>;
     getContractAt(
-      name: "IConcentratedPool",
+      name: "ICoverPoolFactory",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.IConcentratedPool>;
-    getContractAt(
-      name: "IERC20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20>;
-    getContractAt(
-      name: "IPoolsharkHedgePool",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IPoolsharkHedgePool>;
-    getContractAt(
-      name: "IPoolsharkHedgePoolFactory",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IPoolsharkHedgePoolFactory>;
+    ): Promise<Contracts.ICoverPoolFactory>;
     getContractAt(
       name: "IPoolsharkUtils",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IPoolsharkUtils>;
     getContractAt(
+      name: "IERC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20>;
+    getContractAt(
       name: "IPositionManager",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IPositionManager>;
+    getContractAt(
+      name: "IRangeFactory",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IRangeFactory>;
+    getContractAt(
+      name: "IRangePool",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IRangePool>;
     getContractAt(
       name: "IDyDxMath",
       address: string,
@@ -326,70 +341,55 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Ticks>;
     getContractAt(
-      name: "PoolsharkHedgePool",
+      name: "RangeFactoryMock",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePool>;
+    ): Promise<Contracts.RangeFactoryMock>;
     getContractAt(
-      name: "PoolsharkHedgePoolFactory",
+      name: "RangePoolMock",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolFactory>;
-    getContractAt(
-      name: "PoolsharkHedgePoolUtils",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolUtils>;
-    getContractAt(
-      name: "ConcentratedFactoryMock",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ConcentratedFactoryMock>;
-    getContractAt(
-      name: "ConcentratedPoolMock",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ConcentratedPoolMock>;
+    ): Promise<Contracts.RangePoolMock>;
     getContractAt(
       name: "Token20",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Token20>;
     getContractAt(
+      name: "CoverMiscErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverMiscErrors>;
+    getContractAt(
+      name: "CoverPoolErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverPoolErrors>;
+    getContractAt(
+      name: "CoverPoolFactoryErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverPoolFactoryErrors>;
+    getContractAt(
+      name: "CoverPositionErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverPositionErrors>;
+    getContractAt(
+      name: "CoverTicksErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverTicksErrors>;
+    getContractAt(
+      name: "CoverTransferErrors",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CoverTransferErrors>;
+    getContractAt(
       name: "MathUtils",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.MathUtils>;
-    getContractAt(
-      name: "PoolsharkHedgePoolErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolErrors>;
-    getContractAt(
-      name: "PoolsharkHedgePoolFactoryErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkHedgePoolFactoryErrors>;
-    getContractAt(
-      name: "PoolsharkMiscErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkMiscErrors>;
-    getContractAt(
-      name: "PoolsharkPositionErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkPositionErrors>;
-    getContractAt(
-      name: "PoolsharkTicksErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkTicksErrors>;
-    getContractAt(
-      name: "PoolsharkTransferErrors",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PoolsharkTransferErrors>;
     getContractAt(
       name: "SafeCast",
       address: string,

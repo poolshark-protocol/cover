@@ -10,7 +10,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "contract IConcentratedPool",
+        internalType: "contract IRangePool",
         name: "pool",
         type: "address",
       },
@@ -29,7 +29,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "contract IConcentratedPool",
+        internalType: "contract IRangePool",
         name: "pool",
         type: "address",
       },
@@ -53,7 +53,7 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "contract IConcentratedPool",
+        internalType: "contract IRangePool",
         name: "pool",
         type: "address",
       },

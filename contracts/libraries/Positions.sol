@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./TickMath.sol";
 import "./Ticks.sol";
-import "../interfaces/IPoolsharkHedgePoolStructs.sol";
+import "../interfaces/ICoverPoolStructs.sol";
 import "hardhat/console.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
@@ -18,21 +18,21 @@ library Positions
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    using Positions for mapping(int24 => IPoolsharkHedgePoolStructs.Tick);
+    using Positions for mapping(int24 => ICoverPoolStructs.Tick);
 
     function getMaxLiquidity(int24 tickSpacing) external pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(tickSpacing)));
     }
 
     function add(
-        mapping(address => mapping(int24 => mapping(int24 => IPoolsharkHedgePoolStructs.Position))) storage positions,
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.GlobalState memory state,
-        IPoolsharkHedgePoolStructs.AddParams memory params
-    ) external returns (uint128, IPoolsharkHedgePoolStructs.GlobalState memory) {
+        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position))) storage positions,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.AddParams memory params
+    ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
         //TODO: dilute amountDeltas when adding liquidity
-        IPoolsharkHedgePoolStructs.PositionCache memory cache = IPoolsharkHedgePoolStructs.PositionCache({
+        ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper)
@@ -78,14 +78,14 @@ library Positions
     }
 
     function remove(
-        mapping(address => mapping(int24 => mapping(int24 => IPoolsharkHedgePoolStructs.Position))) storage positions,
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.GlobalState memory state,
-        IPoolsharkHedgePoolStructs.RemoveParams memory params
-    ) external returns (uint128, IPoolsharkHedgePoolStructs.GlobalState memory) {
+        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position))) storage positions,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.RemoveParams memory params
+    ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
         //TODO: dilute amountDeltas when adding liquidity
-        IPoolsharkHedgePoolStructs.PositionCache memory cache = IPoolsharkHedgePoolStructs.PositionCache({
+        ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper)
@@ -143,14 +143,14 @@ library Positions
     }
 
     function update(
-        mapping(address => mapping(int24 => mapping(int24 => IPoolsharkHedgePoolStructs.Position))) storage positions,
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.GlobalState memory state,
-        IPoolsharkHedgePoolStructs.PoolState storage pool,
-        IPoolsharkHedgePoolStructs.UpdateParams memory params
-    ) external returns (uint128, uint128, int24, int24, IPoolsharkHedgePoolStructs.GlobalState memory) {
-        IPoolsharkHedgePoolStructs.UpdatePositionCache memory cache = IPoolsharkHedgePoolStructs.UpdatePositionCache({
+        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position))) storage positions,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.PoolState storage pool,
+        ICoverPoolStructs.UpdateParams memory params
+    ) external returns (uint128, uint128, int24, int24, ICoverPoolStructs.GlobalState memory) {
+        ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             feeGrowthCurrentEpoch: pool.feeGrowthCurrentEpoch,
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),

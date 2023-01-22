@@ -2,15 +2,15 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { getNonce } from "../../../tasks/utils";
-import { ConcentratedFactoryMock, ConcentratedPoolMock, DyDxMath, FullPrecisionMath, PoolsharkHedgePool, PoolsharkHedgePoolFactory, PoolsharkHedgePoolUtils, Positions, TickMath, Ticks, Token20 } from "../../../typechain";
+import { RangeFactoryMock, RangePoolMock, DyDxMath, FullPrecisionMath, CoverPool, CoverPoolFactory, CoverPoolUtils, Positions, TickMath, Ticks, Token20 } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
 
 export interface BeforeEachProps {
-    hedgePool: PoolsharkHedgePool;
-    hedgePoolFactory: PoolsharkHedgePoolFactory;
-    hedgePoolUtils: PoolsharkHedgePoolUtils;
-    concentratedFactoryMock: ConcentratedFactoryMock;
-    concentratedPoolMock: ConcentratedPoolMock;
+    coverPool: CoverPool;
+    coverPoolFactory: CoverPoolFactory;
+    coverPoolUtils: CoverPoolUtils;
+    rangeFactoryMock: RangeFactoryMock;
+    rangePoolMock: RangePoolMock;
     tickMathLib: TickMath;
     dydxMathLib: DyDxMath;
     fullPrecisionMathLib: FullPrecisionMath;
@@ -50,11 +50,11 @@ export class GetBeforeEach {
     };
 
     public retrieveProps(): BeforeEachProps {
-        let hedgePool: PoolsharkHedgePool;
-        let hedgePoolFactory: PoolsharkHedgePoolFactory;
-        let hedgePoolUtils: PoolsharkHedgePoolUtils;
-        let concentratedFactoryMock: ConcentratedFactoryMock;
-        let concentratedPoolMock: ConcentratedPoolMock;
+        let coverPool: CoverPool;
+        let coverPoolFactory: CoverPoolFactory;
+        let coverPoolUtils: CoverPoolUtils;
+        let rangeFactoryMock: RangeFactoryMock;
+        let rangePoolMock: RangePoolMock;
         let tickMathLib: TickMath;
         let dydxMathLib: DyDxMath;
         let fullPrecisionMathLib: FullPrecisionMath;
@@ -71,11 +71,11 @@ export class GetBeforeEach {
         let carol: SignerWithAddress;
 
         return {
-            hedgePool,
-            hedgePoolFactory,
-            hedgePoolUtils,
-            concentratedFactoryMock,
-            concentratedPoolMock,
+            coverPool,
+            coverPoolFactory,
+            coverPoolUtils,
+            rangeFactoryMock,
+            rangePoolMock,
             tickMathLib,
             dydxMathLib,
             fullPrecisionMathLib,

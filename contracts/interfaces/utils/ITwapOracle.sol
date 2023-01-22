@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import "../IConcentratedPool.sol";
+import "../IRangePool.sol";
 
 interface ITwapOracle {
     function initializePoolObservations(
-        IConcentratedPool pool
+        IRangePool pool
     ) external returns (uint8 initializable, int24 startingTick);
 
     function calculateAverageTick(
-        IConcentratedPool pool
+        IRangePool pool
     ) external view returns (int24 averageTick);
 
     function isPoolObservationsEnough(
-        IConcentratedPool pool
+        IRangePool pool
     ) external view returns (bool);
 }
 

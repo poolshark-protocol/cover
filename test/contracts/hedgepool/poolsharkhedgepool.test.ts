@@ -5,7 +5,7 @@ import { gBefore } from '../../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
 import { mintSigners20 } from '../../utils/token';
-import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateAccumulateEpoch } from '../../utils/contracts/hedgepool/hedgepool';
+import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateAccumulateEpoch } from '../../utils/contracts/coverpool';
 
 alice: SignerWithAddress;
 describe('PoolsharkHedgePool Basic Tests', function () {
@@ -31,9 +31,9 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     let currentBlock = await ethers.provider.getBlockNumber();
     //TODO: maybe just have one view function that grabs all these
     //TODO: map it to an interface
-    const pool0: PoolState      = await hre.props.hedgePool.pool0();
+    const pool0: PoolState      = await hre.props.coverPool.pool0();
     const liquidity             = pool0.liquidity;
-    const globalState           = await hre.props.hedgePool.globalState();
+    const globalState           = await hre.props.coverPool.globalState();
     const lastBlockNumber       = globalState.lastBlockNumber;
     const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch;
     const nearestTick           = pool0.nearestTick;
@@ -46,7 +46,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     expect(latestTick).to.be.equal(BN_ZERO);
     expect(nearestTick).to.be.equal(BN_ZERO);
 
-    // console.log("sqrt price:", await (await hre.props.hedgePool.sqrtPrice()).toString());
+    // console.log("sqrt price:", await (await hre.props.coverPool.sqrtPrice()).toString());
     currentPrice = price;
     token0Decimals = await hre.props.token0.decimals();
     token1Decimals = await hre.props.token1.decimals();
@@ -78,11 +78,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     const upper    = hre.ethers.utils.parseUnits("40", 0);
-    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
+    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    let maxTick: TickNode = await hre.props.coverPool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
     await validateMint(
       hre.props.alice,
@@ -119,16 +119,16 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     );
     
     // validate upper and lower ticks
-    const lowerTickNode = await hre.props.hedgePool.tickNodes(
+    const lowerTickNode = await hre.props.coverPool.tickNodes(
       lower
     );
-    const lowerTick = await hre.props.hedgePool.ticks1(
+    const lowerTick = await hre.props.coverPool.ticks1(
       lower
     );
-    const upperTickNode = await hre.props.hedgePool.tickNodes(
+    const upperTickNode = await hre.props.coverPool.tickNodes(
       upper
     );
-    const upperTick = await hre.props.hedgePool.ticks1(
+    const upperTick = await hre.props.coverPool.ticks1(
       upper
     );
 
@@ -168,11 +168,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
 
   it('Should swap with zero output', async function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
+    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    let maxTick: TickNode = await hre.props.coverPool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
     await validateSwap(
       hre.props.alice,
@@ -191,11 +191,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upper    = hre.ethers.utils.parseUnits("40", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
+    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(60);
+    let maxTick: TickNode = await hre.props.coverPool.tickNodes(60);
     console.log('next tick:', maxTick.toString());
     await validateBurn(
       hre.props.alice,
@@ -220,11 +220,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const burnAmount = hre.ethers.utils.parseUnits("49802891105937278098768", 0);
     const balanceInDecrease = hre.ethers.utils.parseUnits("99750339674246044929", 0);
     const balanceOutIncrease = hre.ethers.utils.parseUnits("99999999999999999999", 0);
-    let minTick: TickNode = await hre.props.hedgePool.tickNodes(minTickIdx);
+    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
+    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.hedgePool.tickNodes(60);
+    let maxTick: TickNode = await hre.props.coverPool.tickNodes(60);
     console.log('next tick:', maxTick.toString());
     // move TWAP to tick 40
     await validateAccumulateEpoch(
@@ -275,11 +275,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       ""
     )
 
-    // minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    // minTick = await hre.props.coverPool.tickNodes(minTickIdx);
     // console.log('min tick:', minTick.toString());
-    // latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    // latestTick = await hre.props.coverPool.tickNodes(await hre.props.coverPool.latestTick());
     // console.log('latest tick:', latestTick.toString());
-    // maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    // maxTick = await hre.props.coverPool.tickNodes(maxTickIdx);
     // console.log('max tick:', maxTick.toString());
   });
 
@@ -306,11 +306,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       "InvalidPosition()"
     );
 
-    let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    let minTick = await hre.props.coverPool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());
-    let latestTick = await hre.props.hedgePool.tickNodes((await hre.props.hedgePool.globalState()).latestTick);
+    let latestTick = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
     console.log('latest tick:', latestTick.toString());
-    let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    let maxTick = await hre.props.coverPool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
   });
 
@@ -322,13 +322,13 @@ describe('PoolsharkHedgePool Basic Tests', function () {
     const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
     const feeTaken = hre.ethers.utils.parseUnits("5", 16);
 
-    let txn = await hre.props.concentratedPoolMock.setTickCumulatives(
+    let txn = await hre.props.rangePoolMock.setTickCumulatives(
       0,
       0
     );
     await txn.wait();
 
-    const lowerOldTickBefore: Tick = await hre.props.hedgePool.ticks1("30");
+    const lowerOldTickBefore: Tick = await hre.props.coverPool.ticks1("30");
     console.log('upper before tick:', lowerOldTickBefore.toString());
 
     await validateMint(
@@ -365,11 +365,11 @@ describe('PoolsharkHedgePool Basic Tests', function () {
       ""
     );
 
-    // let minTick = await hre.props.hedgePool.tickNodes(minTickIdx);
+    // let minTick = await hre.props.coverPool.tickNodes(minTickIdx);
     // console.log('min tick:', minTick.toString());
-    // let latestTick = await hre.props.hedgePool.tickNodes(await hre.props.hedgePool.latestTick());
+    // let latestTick = await hre.props.coverPool.tickNodes(await hre.props.coverPool.latestTick());
     // console.log('latest tick:', latestTick.toString());
-    // let maxTick = await hre.props.hedgePool.tickNodes(maxTickIdx);
+    // let maxTick = await hre.props.coverPool.tickNodes(maxTickIdx);
     // console.log('max tick:', maxTick.toString());
 
     await validateSwap(
@@ -454,7 +454,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
   //   const upper    = hre.ethers.utils.parseUnits("30", 0);
   //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-  //   const txn = await hre.props.hedgePool.mint(
+  //   const txn = await hre.props.coverPool.mint(
   //     {
   //       lowerOld: lowerOld,
   //       lower: lower,
@@ -466,7 +466,7 @@ describe('PoolsharkHedgePool Basic Tests', function () {
   //     }
   //   );
   //   await txn.wait();
-  //   console.log(await hre.props.hedgePool.positions(
+  //   console.log(await hre.props.coverPool.positions(
   //     hre.props.alice.address,
   //     lower,
   //     upper

@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers";
-import { validateMint } from "../../../test/utils/contracts/hedgepool/hedgepool";
+import { validateMint } from "../../../test/utils/contracts/coverpool";
 import { InitialSetup } from "../../../test/utils/setup/initialSetup";
 import { mintSigners20 } from "../../../test/utils/token";
 import { getNonce } from "../../utils";

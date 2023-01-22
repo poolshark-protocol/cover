@@ -1,29 +1,29 @@
 specVersion: 0.0.4
 description: Poolshark is a Directional Liquidity AMM allowing LPs to capture directional strength.
-repository: https://github.com/poolsharks-protocol/poolshark-hedge-pool
+repository: https://github.com/poolsharks-protocol/poolshark-cover-pool
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: PoolsharkHedgePoolFactory
+    name: CoverPoolFactory
     network: goerli
     source:
       address: '0x4cBEA8D79A8e5a79999B496B5Ad4332279CF8fDe'
-      abi: PoolsharkHedgePoolFactory
+      abi: CoverPoolFactory
       startBlock: 8222670
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
-      file: ./src/mappings/hedgefactory.ts
+      file: ./src/mappings/coverpoolfactory.ts
       entities:
         - Token
-        - HedgePool
+        - CoverPool
       abis:
-        - name: PoolsharkHedgePool
-          file: ./abis/PoolsharkHedgePool.json
-        - name: PoolsharkHedgePoolFactory
-          file: ./abis/PoolsharkHedgePoolFactory.json
+        - name: CoverPool
+          file: ../abis/CoverPool.json
+        - name: CoverPoolFactory
+          file: ../abis/CoverPoolFactory.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
@@ -35,24 +35,24 @@ dataSources:
           handler: handlePoolCreated
 templates:
   - kind: ethereum/contract
-    name: HedgePoolTemplate
+    name: CoverPoolTemplate
     network: goerli
     source:
-      abi: PoolsharkHedgePool
+      abi: CoverPool
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
-      file: ./src/mappings/hedgepool.ts
+      file: ./src/mappings/coverpool.ts
       entities:
         - Token
-        - HedgePool
+        - CoverPool
         - Position
       abis:
-        - name: PoolsharkHedgePool
-          file: ./abis/PoolsharkHedgePool.json
-        - name: PoolsharkHedgePoolFactory
-          file: ./abis/PoolsharkHedgePoolFactory.json
+        - name: CoverPool
+          file: ../abis/CoverPool.json
+        - name: CoverPoolFactory
+          file: ../abis/CoverPoolFactory.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes

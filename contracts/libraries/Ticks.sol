@@ -2,8 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "./TickMath.sol";
-import "../interfaces/IPoolsharkHedgePoolStructs.sol";
-import "../utils/PoolsharkErrors.sol";
+import "../interfaces/ICoverPoolStructs.sol";
+import "../utils/CoverPoolErrors.sol";
 import "hardhat/console.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
@@ -21,15 +21,15 @@ library Ticks
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    using Ticks for mapping(int24 => IPoolsharkHedgePoolStructs.Tick);
+    using Ticks for mapping(int24 => ICoverPoolStructs.Tick);
 
     function getMaxLiquidity(int24 tickSpacing) external pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(tickSpacing)));
     }
 
     function cross(
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 currentTick,
         int24 nextTickToCross,
         uint128 currentLiquidity,
@@ -47,8 +47,8 @@ library Ticks
 
     //maybe call ticks on msg.sender to get tick
     function _cross(
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 currentTick,
         int24 nextTickToCross,
         uint128 currentLiquidity,
@@ -71,8 +71,8 @@ library Ticks
     }
     //TODO: ALL TICKS NEED TO BE CREATED WITH 
     function insert(
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
@@ -112,13 +112,13 @@ library Ticks
             // tick does not exist and we must insert
             //TODO: handle new TWAP being in between lowerOld and lower
             if (isPool0) {
-                ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                ticks[lower] = ICoverPoolStructs.Tick(
                     -int104(amount),
                     amount,
                     0,0,0,0
                 );
             } else {
-                ticks[lower] = IPoolsharkHedgePoolStructs.Tick(
+                ticks[lower] = ICoverPoolStructs.Tick(
                     int104(amount),
                     0,
                     0,0,0,0
@@ -143,7 +143,7 @@ library Ticks
                 revert WrongTickLowerOld();
             }
             console.logInt(oldNextTick);
-            tickNodes[lower] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[lower] = ICoverPoolStructs.TickNode(
                 lowerOld,
                 oldNextTick,
                 0
@@ -170,13 +170,13 @@ library Ticks
             }
         } else {
             if (isPool0) {
-                ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
+                ticks[upper] = ICoverPoolStructs.Tick(
                     int104(amount),
                     0,
                     0,0,0,0
                 );
             } else {
-                ticks[upper] = IPoolsharkHedgePoolStructs.Tick(
+                ticks[upper] = ICoverPoolStructs.Tick(
                     -int104(amount),
                     amount,
                     0,0,0,0
@@ -200,7 +200,7 @@ library Ticks
                 revert WrongTickUpperOld();
             }
 
-            tickNodes[upper] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[upper] = ICoverPoolStructs.TickNode(
                 oldPrevTick,
                 upperOld,
                 0
@@ -211,8 +211,8 @@ library Ticks
     }
 
     function remove(
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 lower,
         int24 upper,
         uint104 amount,
@@ -284,8 +284,8 @@ library Ticks
     }
 
     function _accumulate(
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         uint32 accumEpoch,
         int24 nextTickToCross,
         int24 nextTickToAccum,
@@ -425,28 +425,28 @@ library Ticks
     }
 
     function initialize(
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.PoolState storage pool0,
-        IPoolsharkHedgePoolStructs.PoolState storage pool1,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.PoolState storage pool0,
+        ICoverPoolStructs.PoolState storage pool1,
         int24 latestTick,
         uint32 accumEpoch,
         int24 tickSpread 
     ) external {
         if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
-            tickNodes[latestTick] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[latestTick] = ICoverPoolStructs.TickNode(
                 TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
-            tickNodes[TickMath.MIN_TICK] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
                 TickMath.MIN_TICK, latestTick, accumEpoch
             );
-            tickNodes[TickMath.MAX_TICK] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
                 latestTick, TickMath.MAX_TICK, accumEpoch
             );
         } else if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) {
-            tickNodes[TickMath.MIN_TICK] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
                 TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
-            tickNodes[TickMath.MAX_TICK] = IPoolsharkHedgePoolStructs.TickNode(
+            tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
                 TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
         }
@@ -461,7 +461,7 @@ library Ticks
     }
     //TODO: pass in specific tick and update in storage on calling function
     function _updateAmountDeltas (
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         int24 update,
         int128 amountInDelta,
         int128 amountOutDelta,
@@ -495,17 +495,17 @@ library Ticks
 
     //TODO: do both pool0 AND pool1
     function accumulateLastBlock(
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks0,
-        mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks1,
-        mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.PoolState memory pool0,
-        IPoolsharkHedgePoolStructs.PoolState memory pool1,
-        IPoolsharkHedgePoolStructs.GlobalState memory state,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks0,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks1,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.PoolState memory pool0,
+        ICoverPoolStructs.PoolState memory pool1,
+        ICoverPoolStructs.GlobalState memory state,
         int24 nextLatestTick
     ) external returns (
-        IPoolsharkHedgePoolStructs.GlobalState memory,
-        IPoolsharkHedgePoolStructs.PoolState memory, 
-        IPoolsharkHedgePoolStructs.PoolState memory
+        ICoverPoolStructs.GlobalState memory,
+        ICoverPoolStructs.PoolState memory, 
+        ICoverPoolStructs.PoolState memory
     ) {
         console.log("-- START ACCUMULATE LAST BLOCK --");
 
@@ -517,7 +517,7 @@ library Ticks
         
         state.accumEpoch += 1;
 
-        IPoolsharkHedgePoolStructs.AccumulateCache memory cache = IPoolsharkHedgePoolStructs.AccumulateCache({
+        ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0:  tickNodes[pool0.nearestTick].nextTick,
             nextTickToCross1:  pool1.nearestTick,
             nextTickToAccum0:  pool0.nearestTick,
@@ -759,7 +759,7 @@ library Ticks
                             console.logInt(cache.stopTick1);
                             console.logInt(tickNodes[cache.nextTickToCross1].nextTick);
                             console.logInt(cache.nextTickToAccum1);
-                tickNodes[nextLatestTick] = IPoolsharkHedgePoolStructs.TickNode(
+                tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
                         0
@@ -783,7 +783,7 @@ library Ticks
             if (cache.nextTickToAccum0 != nextLatestTick) {
                 // if this is true we need to delete the old tick
                 //TODO: don't delete old latestTick for now
-                tickNodes[nextLatestTick] = IPoolsharkHedgePoolStructs.TickNode(
+                tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                         cache.nextTickToAccum0,
                         cache.nextTickToCross0,
                         0

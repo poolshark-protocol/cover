@@ -4,7 +4,7 @@ import { DeployAssist } from "../../../scripts/util/deployAssist";
 import { ContractDeploymentsKeys } from "../../../scripts/util/files/contractDeploymentKeys";
 import { ContractDeploymentsJson } from "../../../scripts/util/files/contractDeploymentsJson";
 import { readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, PoolsharkHedgePoolUtils__factory, Positions__factory } from "../../../typechain";
+import { Token20__factory, CoverPoolFactory__factory, RangeFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, CoverPoolUtils__factory, Positions__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -104,25 +104,25 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            ConcentratedFactoryMock__factory,
-            'concentratedFactoryMock',
+            RangeFactoryMock__factory,
+            'rangeFactoryMock',
             [
                 hre.props.token0.address,
                 hre.props.token1.address,
             ]
         );
-        const mockPoolAddress = await hre.props.concentratedFactoryMock.getPool(
+        const mockPoolAddress = await hre.props.rangeFactoryMock.getPool(
                                                                             hre.props.token0.address,
                                                                             hre.props.token1.address,
                                                                             "500"
                                                                         );
-        hre.props.concentratedPoolMock = await hre.ethers.getContractAt("ConcentratedPoolMock", mockPoolAddress);
+        hre.props.rangePoolMock = await hre.ethers.getContractAt("RangePoolMock", mockPoolAddress);
 
         await this.deployAssist.saveContractDeployment(
             network,
-            "ConcentratedPoolMock",
-            "concentratedPoolMock",
-            hre.props.concentratedPoolMock,
+            "RangePoolMock",
+            "rangePoolMock",
+            hre.props.rangePoolMock,
             [
                 hre.props.token0.address,
                 hre.props.token1.address,
@@ -133,8 +133,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            PoolsharkHedgePoolUtils__factory,
-            'hedgePoolUtils',
+            CoverPoolUtils__factory,
+            'coverPoolUtils',
             [],
         );
 
@@ -195,11 +195,11 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            PoolsharkHedgePoolFactory__factory,
-            'hedgePoolFactory',
+            CoverPoolFactory__factory,
+            'coverPoolFactory',
             [
-                hre.props.concentratedFactoryMock.address,
-                hre.props.hedgePoolUtils.address
+                hre.props.rangeFactoryMock.address,
+                hre.props.coverPoolUtils.address
             ],
             {
                 "contracts/libraries/Positions.sol:Positions": hre.props.positionsLib.address,
@@ -211,7 +211,7 @@ export class InitialSetup {
         );
         // // hre.nonce += 1;
 
-        const createPoolTxn = await hre.props.hedgePoolFactory.createHedgePool(
+        const createPoolTxn = await hre.props.coverPoolFactory.createHedgePool(
                                     hre.props.token0.address,
                                     hre.props.token1.address,
                                     "500",
@@ -221,22 +221,22 @@ export class InitialSetup {
 
         hre.nonce += 1;
         
-        const hedgePoolAddress = await hre.props.hedgePoolFactory.getHedgePool(
+        const coverPoolAddress = await hre.props.coverPoolFactory.getHedgePool(
                                     hre.props.token0.address,
                                     hre.props.token1.address,
                                     "500",
                                     "20"
                                 );
-        hre.props.hedgePool = await hre.ethers.getContractAt("PoolsharkHedgePool", hedgePoolAddress);
+        hre.props.coverPool = await hre.ethers.getContractAt("CoverPool", coverPoolAddress);
 
         await this.deployAssist.saveContractDeployment(
             network,
-            "PoolsharkHedgePool",
-            "hedgePool",
-            hre.props.hedgePool,
+            "CoverPool",
+            "coverPool",
+            hre.props.coverPool,
             [
-                hre.props.concentratedPoolMock.address,
-                hre.props.hedgePoolUtils.address,
+                hre.props.rangePoolMock.address,
+                hre.props.coverPoolUtils.address,
                 "500",
                 "20"
             ]
@@ -260,17 +260,17 @@ export class InitialSetup {
                                                                     },
                                                                     'readHedgePoolSetup'
                                                                 )).contractAddress
-        const hedgePoolAddress = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        const coverPoolAddress = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                                                                         {
                                                                             networkName: hre.network.name,
-                                                                            objectName: 'hedgePool'
+                                                                            objectName: 'coverPool'
                                                                         },
                                                                         'readHedgePoolSetup'
                                                                 )).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt("Token20", token0Address);
         hre.props.token1 = await hre.ethers.getContractAt("Token20", token1Address);
-        hre.props.hedgePool = await hre.ethers.getContractAt("PoolsharkHedgePool", hedgePoolAddress);
+        hre.props.coverPool = await hre.ethers.getContractAt("CoverPool", coverPoolAddress);
 
         return nonce;
     }
