@@ -100,11 +100,14 @@ export async function validateSwap(
         (await hre.props.coverPool.globalState()).latestTick
     );
 
-    console.log('swap quote:', (await hre.props.coverPool.quote(
+    // quote pre-swap and validate balance changes match post-swap
+    const quote = await hre.props.coverPool.quote(
         true,
         amountIn,
         sqrtPriceLimitX96
-    )).toString());
+    );
+    const amountInQuoted  = quote[0];
+    const amountOutQuoted = quote[1];
 
     let txn = await hre.props.coverPool.swap(
         signer.address,
@@ -125,7 +128,9 @@ export async function validateSwap(
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);
-
+    expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted);
+    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted);
+    
     const poolAfter: PoolState       = zeroForOne ? 
                                          await hre.props.coverPool.pool1()
                                        : await hre.props.coverPool.pool0();
@@ -134,6 +139,7 @@ export async function validateSwap(
     const nearestTickAfter           = poolAfter.nearestTick;
     const priceAfter                 = poolAfter.price;
     const latestTickAfter            = (await hre.props.coverPool.globalState()).latestTick;
+
 
     // expect(liquidityAfter).to.be.equal(finalLiquidity);
     // expect(priceAfter).to.be.equal(finalPrice);
