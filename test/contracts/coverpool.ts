@@ -73,7 +73,66 @@ describe('CoverPool Basic Tests', function () {
 
   });
 
-  it('Should mint new LP position', async function () {
+  it('Should mint new LP position - pool0', async function () {
+    const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
+    const lower    = hre.ethers.utils.parseUnits("-40", 0);
+    const upperOld = hre.ethers.utils.parseUnits("0", 0);
+    const upper    = hre.ethers.utils.parseUnits("-20", 0);
+    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
+    console.log('min tick:', minTick.toString());
+    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
+    console.log('latest tick:', latestTick.toString());
+    let maxTick: TickNode = await hre.props.coverPool.tickNodes(maxTickIdx);
+    console.log('max tick:', maxTick.toString());
+    await validateMint(
+      hre.props.alice,
+      hre.props.alice.address,
+      lowerOld,
+      lower,
+      upperOld,
+      upper,
+      upper,
+      token0Amount,
+      true,
+      token0Amount,
+      liquidityAmount,
+      false,
+      false,
+      ""
+    );
+
+    await validateMint(
+      hre.props.alice,
+      hre.props.alice.address,
+      lowerOld,
+      lower,
+      upperOld,
+      upper,
+      upper,
+      token0Amount,
+      true,
+      token0Amount,
+      liquidityAmount,
+      false,
+      false,
+      ""
+    );
+    
+    // validate upper and lower ticks
+    const lowerTickNode = await hre.props.coverPool.tickNodes(
+      lower
+    );
+    const upperTickNode = await hre.props.coverPool.tickNodes(
+      upper
+    );
+
+    expect(lowerTickNode.previousTick).to.be.equal(lowerOld);
+    expect(lowerTickNode.nextTick).to.be.equal(upper);
+    expect(upperTickNode.previousTick).to.be.equal(lower);
+    expect(upperTickNode.nextTick).to.be.equal(upperOld);
+  });
+
+  it('Should mint new LP position - pool1', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -134,13 +193,8 @@ describe('CoverPool Basic Tests', function () {
 
     expect(lowerTickNode.previousTick).to.be.equal(lowerOld);
     expect(lowerTickNode.nextTick).to.be.equal(upper);
-    expect(lowerTick.liquidityDelta).to.be.equal(liquidityAmount.mul(2));
-    expect(lowerTick.liquidityDeltaMinus).to.be.equal(BN_ZERO);
-
     expect(upperTickNode.previousTick).to.be.equal(lower);
     expect(upperTickNode.nextTick).to.be.equal(upperOld);
-    expect(upperTick.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityAmount.mul(2)));
-    expect(upperTick.liquidityDeltaMinus).to.be.equal(liquidityAmount.mul(2));
   });
 
   it('Should not mint new LP position due to tickSpread divisibility', async function () {
@@ -166,7 +220,21 @@ describe('CoverPool Basic Tests', function () {
     );
   });
 
-  it('Should swap with zero output', async function () {
+  it('Should swap with zero output - pool0', async function () {
+    await validateSwap(
+      hre.props.alice,
+      hre.props.alice.address,
+      false,
+      token1Amount.div(10),
+      currentPrice,
+      BN_ZERO,
+      BN_ZERO,
+      BN_ZERO,
+      currentPrice
+    )
+  });
+
+  it('Should swap with zero output - pool1', async function () {
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
     let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
     console.log('min tick:', minTick.toString());

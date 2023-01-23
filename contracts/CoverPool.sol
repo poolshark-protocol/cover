@@ -430,6 +430,7 @@ contract CoverPool is
         }
         globalState = state;
     }
+    
     //TODO: handle quoteAmountIn and quoteAmountOut
     function quote(
         bool zeroForOne,

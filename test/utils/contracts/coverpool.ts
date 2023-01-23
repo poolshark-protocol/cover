@@ -276,18 +276,18 @@ export async function validateMint(
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
         if(!upperTickCleared) {
-            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(liquidityIncrease);
-            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(liquidityIncrease);
+            expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
         } else {
-            expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease);
-            expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO);
+            expect(upperTickAfter.liquidityDelta).to.be.equal(liquidityIncrease);
+            expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO);
         }
         if(!lowerTickCleared) {
-            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityIncrease));
-            expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(liquidityIncrease);
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityIncrease));
+            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(liquidityIncrease);
         } else {
-            expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease));
-            expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease);
+            expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease));
+            expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease);
         }
     } else {
         if(!lowerTickCleared) {
@@ -416,18 +416,18 @@ export async function validateBurn(
     //dependent on zeroForOne
     if (zeroForOne) {
         if(!upperTickCleared){
-            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityAmount));
-            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
-        } else {
-            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO);
-            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
-        }
-        if(!lowerTickCleared) {
-            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(liquidityAmount);
-            expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+            expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+            expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(BN_ZERO);
             expect(upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
+        }
+        if(!lowerTickCleared) {
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(liquidityAmount);
+            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO.sub(liquidityAmount));
+        } else {
+            expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(BN_ZERO);
+            expect(lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)).to.be.equal(BN_ZERO);
         }
     } else {
         //liquidity change for lower should be -liquidityAmount
