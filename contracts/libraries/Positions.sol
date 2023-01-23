@@ -13,8 +13,14 @@ library Positions
 {
     error NotEnoughPositionLiquidity();
     error InvalidClaimTick();
+    error LiquidityOverflow();
     error WrongTickClaimedAt();
     error PositionNotUpdated();
+    error InvalidLowerTick();
+    error InvalidUpperTick();
+    error InvalidPositionAmount();
+    error InvalidPositionBoundsOrder();
+    error InvalidPositionBoundsTwap();
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
@@ -22,6 +28,54 @@ library Positions
 
     function getMaxLiquidity(int24 tickSpacing) external pure returns (uint128) {
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(tickSpacing)));
+    }
+
+    function validate(
+        ICoverPoolStructs.ValidateParams memory params
+    ) external pure returns (int24, int24, int24, int24, uint128, uint256 liquidityMinted) {
+        if (params.lower % int24(params.state.tickSpread) != 0) revert InvalidLowerTick();
+        if (params.upper % int24(params.state.tickSpread) != 0) revert InvalidUpperTick();
+        if (params.amount == 0) revert InvalidPositionAmount();
+        if (params.lower >= params.upper) revert InvalidPositionBoundsOrder();
+        if (params.zeroForOne) {
+            if (params.lower >= params.state.latestTick) revert InvalidPositionBoundsTwap();
+        } else {
+            if (params.upper <= params.state.latestTick) revert InvalidPositionBoundsTwap();
+        }
+        uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(params.lower));
+        uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(params.upper));
+
+        liquidityMinted = DyDxMath.getLiquidityForAmounts(
+                priceLower,
+                priceUpper,
+                params.zeroForOne ? priceLower : priceUpper,
+                params.zeroForOne ? 0 : uint256(params.amount),
+                params.zeroForOne ? uint256(params.amount) : 0
+        );
+
+        // handle partial mints 
+        if (params.zeroForOne) {
+            if(params.upper >= params.state.latestTick) {
+                params.upper = params.state.latestTick - int24(params.state.tickSpread);
+                params.upperOld = params.state.latestTick;
+                uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
+                params.amount -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
+                priceUpper = priceNewUpper;
+            }
+        }
+        if (!params.zeroForOne) {
+            if (params.lower <= params.state.latestTick) {
+                params.lower = params.state.latestTick + int24(params.state.tickSpread);
+                params.lowerOld = params.state.latestTick;
+                uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
+                params.amount -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false));
+                priceLower = priceNewLower;
+            }
+        }
+
+        if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
+
+        return (params.lowerOld, params.lower, params.upper, params.upperOld, params.amount, liquidityMinted);
     }
 
     function add(

@@ -21,17 +21,40 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
+    "quote(bool,uint160,(uint24,int24,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "getMaxLiquidity",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "quote",
+    values: [
+      boolean,
+      BigNumberish,
+      {
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        unlocked: BigNumberish;
+        latestTick: BigNumberish;
+        accumEpoch: BigNumberish;
+      },
+      {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      }
+    ]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "getMaxLiquidity",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
 
   events: {};
 }
@@ -84,6 +107,36 @@ export class Ticks extends BaseContract {
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        unlocked: BigNumberish;
+        latestTick: BigNumberish;
+        accumEpoch: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+          price: BigNumber;
+          liquidity: BigNumber;
+          feeAmount: BigNumber;
+          input: BigNumber;
+        },
+        BigNumber
+      ] & { amountOut: BigNumber }
+    >;
   };
 
   getMaxLiquidity(
@@ -91,11 +144,71 @@ export class Ticks extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  quote(
+    zeroForOne: boolean,
+    priceLimit: BigNumberish,
+    state: {
+      swapFee: BigNumberish;
+      tickSpread: BigNumberish;
+      lastBlockNumber: BigNumberish;
+      unlocked: BigNumberish;
+      latestTick: BigNumberish;
+      accumEpoch: BigNumberish;
+    },
+    cache: {
+      price: BigNumberish;
+      liquidity: BigNumberish;
+      feeAmount: BigNumberish;
+      input: BigNumberish;
+    },
+    overrides?: CallOverrides
+  ): Promise<
+    [
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        price: BigNumber;
+        liquidity: BigNumber;
+        feeAmount: BigNumber;
+        input: BigNumber;
+      },
+      BigNumber
+    ] & { amountOut: BigNumber }
+  >;
+
   callStatic: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        unlocked: BigNumberish;
+        latestTick: BigNumberish;
+        accumEpoch: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+          price: BigNumber;
+          liquidity: BigNumber;
+          feeAmount: BigNumber;
+          input: BigNumber;
+        },
+        BigNumber
+      ] & { amountOut: BigNumber }
+    >;
   };
 
   filters: {};
@@ -105,11 +218,51 @@ export class Ticks extends BaseContract {
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        unlocked: BigNumberish;
+        latestTick: BigNumberish;
+        accumEpoch: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        unlocked: BigNumberish;
+        latestTick: BigNumberish;
+        accumEpoch: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

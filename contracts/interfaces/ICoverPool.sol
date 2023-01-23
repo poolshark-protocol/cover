@@ -35,7 +35,7 @@ interface ICoverPool is  ICoverPoolStructs {
         address recipient,
         bool zeroForOne,
         uint256 amountIn,
-        uint160 sqrtPriceLimitX96
+        uint160 priceLimit
         // bytes calldata data
     ) external returns (uint256 amountOut);
 }

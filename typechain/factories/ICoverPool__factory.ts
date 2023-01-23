@@ -141,7 +141,7 @@ const _abi = [
       },
       {
         internalType: "uint160",
-        name: "sqrtPriceLimitX96",
+        name: "priceLimit",
         type: "uint160",
       },
     ],

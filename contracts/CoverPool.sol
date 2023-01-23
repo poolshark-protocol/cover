@@ -135,42 +135,26 @@ contract CoverPool is
                 utils.calculateAverageTick(inputPool)
             );
         }
-        _validatePosition(lower, upper, zeroForOne, amountDesired);
-        //TODO: handle upperOld and lowerOld being invalid
         uint256 liquidityMinted;
-        {
-            uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(lower));
-            uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(upper));
-
-            liquidityMinted = DyDxMath.getLiquidityForAmounts(
-                priceLower,
-                priceUpper,
-                zeroForOne ? priceLower : priceUpper,
-                zeroForOne ? 0 : uint256(amountDesired),
-                zeroForOne ? uint256(amountDesired) : 0
-            );
-            // handle partial mints
-            if (zeroForOne) {
-                if(upper >= globalState.latestTick) {
-                    upper = globalState.latestTick - int24(globalState.tickSpread);
-                    upperOld = globalState.latestTick;
-                    uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(upper);
-                    amountDesired -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
-                    priceUpper = priceNewUpper;
-                }
-            }
-            if (!zeroForOne) {
-                if (lower <= globalState.latestTick) {
-                    lower = globalState.latestTick + int24(globalState.tickSpread);
-                    lowerOld = globalState.latestTick;
-                    uint256 priceNewLower = TickMath.getSqrtRatioAtTick(lower);
-                    amountDesired -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false));
-                    priceLower = priceNewLower;
-                }
-            }
-            ///TODO: check for liquidity overflow
-            if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
-        }
+        (
+            lowerOld,
+            lower,
+            upper,
+            upperOld,
+            amountDesired,
+            liquidityMinted
+        ) = Positions.validate(
+            ValidateParams(
+                lowerOld,
+                lower,
+                upper,
+                upperOld,
+                zeroForOne,
+                amountDesired,
+                globalState
+            )
+        );
+        //TODO: handle upperOld and lowerOld being invalid
 
         if(zeroForOne){
             _transferIn(token0, amountDesired);
@@ -402,56 +386,15 @@ contract CoverPool is
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread))
-                                           : uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread));
-        uint256 nextPrice = nextTickPrice;
-
-        if (zeroForOne) {
-            // Trading token 0 (x) for token 1 (y).
-            // price  is decreasing.
-            if (nextPrice < priceLimit) { nextPrice = priceLimit; }
-            uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
-            // console.log("max dx:", maxDx);
-            if (cache.input <= maxDx) {
-                // We can swap within the current range.
-                uint256 liquidityPadded = cache.liquidity << 96;
-                // calculate price after swap
-                uint256 newPrice = uint256(
-                    utils.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input)
-                );
-                if (!(nextPrice <= newPrice && newPrice < cache.price)) {
-                    newPrice = uint160(utils.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
-                }
-                // Based on the sqrtPricedifference calculate the output of th swap: Δy = Δ√P · L.
-                amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
-                cache.price= newPrice;
-                cache.input = 0;
-            } else {
-                amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
-                cache.price= nextPrice;
-                cache.input -= maxDx;
-            }
-        } else {
-            // Price is increasing.
-            if (nextPrice > priceLimit) { nextPrice = priceLimit; }
-            uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
-            // console.log("max dy:", maxDy);
-            if (cache.input <= maxDy) {
-                // We can swap within the current range.
-                // Calculate new price after swap: ΔP = Δy/L.
-                uint256 newPrice = cache.price +
-                    FullPrecisionMath.mulDiv(cache.input, 0x1000000000000000000000000, cache.liquidity);
-                // Calculate output of swap
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
-                cache.price = newPrice;
-                cache.input = 0;
-            } else {
-                // Swap & cross the tick.
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
-                cache.price = nextTickPrice;
-                cache.input -= maxDy;
-            }
-        }
+        (
+            cache,
+            amountOut
+        ) = Ticks.quote(
+                zeroForOne,
+                priceLimit,
+                state,
+                cache
+        );
 
         // amountOut += output;
 
@@ -487,25 +430,12 @@ contract CoverPool is
         }
         globalState = state;
     }
-
-    function _validatePosition(int24 lower, int24 upper, bool zeroForOne, uint128 amountDesired) internal view {
-        GlobalState memory state = globalState;
-        if (lower % int24(state.tickSpread) != 0) revert InvalidTick();
-        if (upper % int24(state.tickSpread) != 0) revert InvalidTick();
-        if (amountDesired == 0) revert InvalidPosition();
-        if (lower >= upper) revert InvalidPosition();
-        if (zeroForOne) {
-            if (lower >= state.latestTick) revert InvalidPosition();
-        } else {
-            if (upper <= state.latestTick) revert InvalidPosition();
-        }
-    }
-
-    function getAmountIn(
+    //TODO: handle quoteAmountIn and quoteAmountOut
+    function quote(
         bool zeroForOne,
         uint256 amountIn,
         uint160 priceLimit
-    ) internal view returns (uint256 inAmount, uint256 outAmount) {
+    ) external view returns (uint256 inAmount, uint256 outAmount) {
         // TODO: make override
         GlobalState memory state = globalState;
         SwapCache memory cache = SwapCache({
@@ -518,52 +448,15 @@ contract CoverPool is
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread)) :
-                                             uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread)) ;
-        uint256 nextPrice = nextTickPrice;
-
-        if (zeroForOne) {
-            // Trading token 0 (x) for token 1 (y).
-            // price  is decreasing.
-            if (nextPrice < priceLimit) { nextPrice = priceLimit; }
-            uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
-            // console.log("max dx:", maxDx);
-            if (cache.input <= maxDx) {
-                // We can swap within the current range.
-                uint256 liquidityPadded = cache.liquidity << 96;
-                // calculate price after swap
-                uint256 newPrice = uint256(
-                    utils.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input)
-                );
-                if (!(nextPrice <= newPrice && newPrice < cache.price)) {
-                    newPrice = uint160(utils.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
-                }
-                // Based on the sqrtPricedifference calculate the output of th swap: Δy = Δ√P · L.
-                outAmount = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
-                inAmount  = amountIn;
-            } else {
-                // Execute swap step and cross the tick.
-                outAmount = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
-                inAmount = maxDx;
-            }
-        } else {
-            // Price is increasing.
-            if (nextPrice > priceLimit) { nextPrice = priceLimit; }
-            uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
-            if (cache.input <= maxDy) {
-                // We can swap within the current range.
-                // Calculate new price after swap: ΔP = Δy/L.
-                uint256 newPrice = cache.price +
-                    FullPrecisionMath.mulDiv(cache.input, 0x1000000000000000000000000, cache.liquidity);
-                // Calculate output of swap
-                outAmount = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
-                inAmount = amountIn;
-            } else {
-                // Swap & cross the tick.
-                outAmount = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
-                inAmount = maxDy;
-            }
-        }
+        (
+            cache,
+            outAmount
+        ) = Ticks.quote(
+                zeroForOne,
+                priceLimit,
+                state,
+                cache
+        );
         if (zeroForOne) {
             if(cache.input > 0) {
                 uint128 feeReturn = uint128(
@@ -583,7 +476,7 @@ contract CoverPool is
                 cache.input += feeReturn;
             }
         }
-        inAmount -= cache.input;
+        inAmount = amountIn - cache.input;
 
         return (inAmount, outAmount);
     }

@@ -4,8 +4,6 @@ const { expect } = require("chai");
 import { gBefore } from '../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
-import { mintSigners20 } from '../utils/token';
-import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateAccumulateEpoch } from '../utils/contracts/coverpool';
 
 alice: SignerWithAddress;
 describe('CoverPool Basic Tests', function () {

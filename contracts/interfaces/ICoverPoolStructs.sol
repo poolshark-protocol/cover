@@ -72,6 +72,16 @@ interface ICoverPoolStructs {
         int128 amount;
     }
 
+    struct ValidateParams {
+        int24 lowerOld;
+        int24 lower;
+        int24 upper;
+        int24 upperOld;
+        bool zeroForOne;
+        uint128 amount;
+        GlobalState state;
+    }
+
     //TODO: optimize this struct
     struct SwapCache {
         uint256 price;

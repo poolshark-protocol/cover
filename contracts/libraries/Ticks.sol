@@ -27,6 +27,65 @@ library Ticks
         return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(tickSpacing)));
     }
 
+    function quote(
+        bool zeroForOne,
+        uint160 priceLimit,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.SwapCache memory cache
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+         uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread))
+                                           : uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread));
+        uint256 nextPrice = nextTickPrice;
+
+        if (zeroForOne) {
+            // Trading token 0 (x) for token 1 (y).
+            // price  is decreasing.
+            if (nextPrice < priceLimit) { nextPrice = priceLimit; }
+            uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
+            // console.log("max dx:", maxDx);
+            if (cache.input <= maxDx) {
+                // We can swap within the current range.
+                uint256 liquidityPadded = cache.liquidity << 96;
+                // calculate price after swap
+                uint256 newPrice = uint256(
+                    FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input)
+                );
+                if (!(nextPrice <= newPrice && newPrice < cache.price)) {
+                    newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
+                }
+                amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
+                cache.price = newPrice;
+                cache.input = 0;
+            } else {
+                amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+                cache.price = nextPrice;
+                cache.input -= maxDx;
+            }
+        } else {
+            // Price is increasing.
+            if (nextPrice > priceLimit) { nextPrice = priceLimit; }
+            uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
+            // console.log("max dy:", maxDy);
+            if (cache.input <= maxDy) {
+                // We can swap within the current range.
+                // Calculate new price after swap: ΔP = Δy/L.
+                uint256 newPrice = cache.price +
+                    FullPrecisionMath.mulDiv(cache.input, 0x1000000000000000000000000, cache.liquidity);
+                // Calculate output of swap
+                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
+                cache.price = newPrice;
+                cache.input = 0;
+            } else {
+                // Swap & cross the tick.
+                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
+                cache.price = nextTickPrice;
+                cache.input -= maxDy;
+            }
+        }
+
+        return (cache, amountOut);
+    }
+
     function cross(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,

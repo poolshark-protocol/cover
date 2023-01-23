@@ -5,7 +5,7 @@ import { gBefore } from '../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
 import { mintSigners20 } from '../utils/token';
-import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateAccumulateEpoch } from '../utils/contracts/coverpool';
+import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateSync } from '../utils/contracts/coverpool';
 
 alice: SignerWithAddress;
 describe('CoverPool Basic Tests', function () {
@@ -162,7 +162,7 @@ describe('CoverPool Basic Tests', function () {
       liquidityAmount,
       false,
       false,
-      "InvalidTick()"
+      "InvalidUpperTick()"
     );
   });
 
@@ -227,9 +227,9 @@ describe('CoverPool Basic Tests', function () {
     let maxTick: TickNode = await hre.props.coverPool.tickNodes(60);
     console.log('next tick:', maxTick.toString());
     // move TWAP to tick 40
-    await validateAccumulateEpoch(
+    await validateSync(
       hre.props.alice,
-      BigNumber.from("40")
+      40
     );
     // mint new position
     await validateMint(
@@ -303,7 +303,7 @@ describe('CoverPool Basic Tests', function () {
       liquidityAmount,
       false,
       false,
-      "InvalidPosition()"
+      "InvalidPositionBoundsTwap()"
     );
 
     let minTick = await hre.props.coverPool.tickNodes(minTickIdx);

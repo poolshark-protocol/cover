@@ -36,17 +36,17 @@ export interface Tick {
     amountOutDeltaCarryPercent: BigNumber,
 }
 
-export async function validateAccumulateEpoch(
+export async function validateSync(
     signer: SignerWithAddress,
-    newLatestTick: BigNumber
+    newLatestTick: number
 ) {
     /// get tick node status before
     
     // const tickNodes = await hre.props.coverPool.tickNodes();
     /// update TWAP
     let txn = await hre.props.rangePoolMock.setTickCumulatives(
-        newLatestTick.mul(120),
-        newLatestTick.mul(60)
+        BigNumber.from(newLatestTick.toString()).mul(120),
+        BigNumber.from(newLatestTick.toString()).mul(60)
     );
     await txn.wait();
 
@@ -94,6 +94,17 @@ export async function validateSwap(
     const nearestTickBefore           = poolBefore.nearestTick;
     const priceBefore                 = poolBefore.price;
     const latestTickBefore            = (await hre.props.coverPool.globalState()).latestTick;
+
+    validateSync(
+        hre.props.admin,
+        (await hre.props.coverPool.globalState()).latestTick
+    );
+
+    console.log('swap quote:', (await hre.props.coverPool.quote(
+        true,
+        amountIn,
+        sqrtPriceLimitX96
+    )).toString());
 
     let txn = await hre.props.coverPool.swap(
         signer.address,

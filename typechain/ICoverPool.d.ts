@@ -136,7 +136,7 @@ export class ICoverPool extends BaseContract {
       recipient: string,
       zeroForOne: boolean,
       amountIn: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
+      priceLimit: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -173,7 +173,7 @@ export class ICoverPool extends BaseContract {
     recipient: string,
     zeroForOne: boolean,
     amountIn: BigNumberish,
-    sqrtPriceLimitX96: BigNumberish,
+    priceLimit: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -212,7 +212,7 @@ export class ICoverPool extends BaseContract {
       recipient: string,
       zeroForOne: boolean,
       amountIn: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
+      priceLimit: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -252,7 +252,7 @@ export class ICoverPool extends BaseContract {
       recipient: string,
       zeroForOne: boolean,
       amountIn: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
+      priceLimit: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -290,7 +290,7 @@ export class ICoverPool extends BaseContract {
       recipient: string,
       zeroForOne: boolean,
       amountIn: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
+      priceLimit: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

@@ -30,6 +30,7 @@ interface CoverPoolInterface extends ethers.utils.Interface {
     "pool1()": FunctionFragment;
     "positions0(address,int24,int24)": FunctionFragment;
     "positions1(address,int24,int24)": FunctionFragment;
+    "quote(bool,uint256,uint160)": FunctionFragment;
     "swap(address,bool,uint256,uint160)": FunctionFragment;
     "tickNodes(int24)": FunctionFragment;
     "ticks0(int24)": FunctionFragment;
@@ -73,6 +74,10 @@ interface CoverPoolInterface extends ethers.utils.Interface {
     values: [string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "quote",
+    values: [boolean, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "swap",
     values: [string, boolean, BigNumberish, BigNumberish]
   ): string;
@@ -102,6 +107,7 @@ interface CoverPoolInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "pool1", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "positions0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "positions1", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tickNodes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks0", data: BytesLike): Result;
@@ -312,6 +318,15 @@ export class CoverPool extends BaseContract {
       }
     >;
 
+    quote(
+      zeroForOne: boolean,
+      amountIn: BigNumberish,
+      priceLimit: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & { inAmount: BigNumber; outAmount: BigNumber }
+    >;
+
     swap(
       recipient: string,
       zeroForOne: boolean,
@@ -457,6 +472,15 @@ export class CoverPool extends BaseContract {
       amountIn: BigNumber;
       amountOut: BigNumber;
     }
+  >;
+
+  quote(
+    zeroForOne: boolean,
+    amountIn: BigNumberish,
+    priceLimit: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber] & { inAmount: BigNumber; outAmount: BigNumber }
   >;
 
   swap(
@@ -606,6 +630,15 @@ export class CoverPool extends BaseContract {
         amountIn: BigNumber;
         amountOut: BigNumber;
       }
+    >;
+
+    quote(
+      zeroForOne: boolean,
+      amountIn: BigNumberish,
+      priceLimit: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & { inAmount: BigNumber; outAmount: BigNumber }
     >;
 
     swap(
@@ -865,6 +898,13 @@ export class CoverPool extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    quote(
+      zeroForOne: boolean,
+      amountIn: BigNumberish,
+      priceLimit: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     swap(
       recipient: string,
       zeroForOne: boolean,
@@ -933,6 +973,13 @@ export class CoverPool extends BaseContract {
       arg0: string,
       arg1: BigNumberish,
       arg2: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    quote(
+      zeroForOne: boolean,
+      amountIn: BigNumberish,
+      priceLimit: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
