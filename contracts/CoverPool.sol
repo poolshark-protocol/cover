@@ -69,7 +69,6 @@ contract CoverPool is
         state.twapLength      = _twapLength;
         state.lastBlockNumber = uint32(block.number);
 
-
         // set max liquidity per tick
         MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpread);
 

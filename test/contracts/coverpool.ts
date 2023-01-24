@@ -47,7 +47,7 @@ describe('CoverPool Tests', function () {
     expect(nearestTick).to.be.equal(BN_ZERO);
 
     // console.log("sqrt price:", await (await hre.props.coverPool.sqrtPrice()).toString());
-    currentPrice = price;
+    currentPrice = BigNumber.from("2").pow(96);
     token0Decimals = await hre.props.token0.decimals();
     token1Decimals = await hre.props.token1.decimals();
     token0Amount = ethers.utils.parseUnits("100", token0Decimals);
@@ -70,10 +70,9 @@ describe('CoverPool Tests', function () {
   });
 
   this.beforeEach(async function () {
-
   });
 
-  it('Should not mint a position until inputPool has enough observations', async function () {
+  it('Should not mint/burn/swap until inputPool has enough observations 13', async function () {
     await validateMint(
       hre.props.alice,
       hre.props.alice.address,
@@ -90,10 +89,35 @@ describe('CoverPool Tests', function () {
       false,
       "WaitUntilEnoughObservations()"
     );
+    await validateSwap(
+      hre.props.alice,
+      hre.props.alice.address,
+      false,
+      token1Amount.div(10),
+      BigNumber.from("2").pow(96),
+      BN_ZERO,
+      BN_ZERO,
+      BN_ZERO,
+      currentPrice,
+      ""
+    );
+    await validateBurn(
+      hre.props.alice,
+      BigNumber.from("0"),
+      BigNumber.from("0"),
+      BigNumber.from("0"),
+      liquidityAmount,
+      true,
+      BN_ZERO,
+      token0Amount.sub(1),
+      false,
+      false,
+      "NotEnoughPositionLiquidity()"
+    );
     await hre.props.rangePoolMock.setObservationCardinality("5");
   });
 
-  it('Should mint new LP position - pool0', async function () {
+  it('Should mint new LP position - pool0 13', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
     const lower    = hre.ethers.utils.parseUnits("-40", 0);
     const upperOld = hre.ethers.utils.parseUnits("0", 0);
@@ -152,7 +176,7 @@ describe('CoverPool Tests', function () {
     expect(upperTickNode.nextTick).to.be.equal(upperOld);
   });
 
-  it('Should mint new LP position - pool1', async function () {
+  it('Should mint new LP position - pool1 13', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -217,7 +241,7 @@ describe('CoverPool Tests', function () {
     expect(upperTickNode.nextTick).to.be.equal(upperOld);
   });
 
-  it('Should not mint new LP position due to tickSpread divisibility', async function () {
+  it('Should not mint new LP position due to tickSpread divisibility 13', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -240,7 +264,7 @@ describe('CoverPool Tests', function () {
     );
   });
 
-  it('Should swap with zero output - pool0', async function () {
+  it('Should swap with zero output - pool0 13', async function () {
     await validateSwap(
       hre.props.alice,
       hre.props.alice.address,
@@ -250,7 +274,8 @@ describe('CoverPool Tests', function () {
       BN_ZERO,
       BN_ZERO,
       BN_ZERO,
-      currentPrice
+      currentPrice,
+      ""
     )
   });
 
@@ -262,6 +287,7 @@ describe('CoverPool Tests', function () {
     console.log('latest tick:', latestTick.toString());
     let maxTick: TickNode = await hre.props.coverPool.tickNodes(maxTickIdx);
     console.log('max tick:', maxTick.toString());
+    console.log('current price:', currentPrice)
     await validateSwap(
       hre.props.alice,
       hre.props.alice.address,
@@ -271,11 +297,12 @@ describe('CoverPool Tests', function () {
       BN_ZERO,
       BN_ZERO,
       BN_ZERO,
-      currentPrice
+      currentPrice,
+      ""
     )
   });
 
-  it('Should burn LP position and withdraw all liquidity - pool0', async function () {
+  it('Should burn LP position and withdraw all liquidity - pool0 12', async function () {
     const lower    = hre.ethers.utils.parseUnits("-40", 0);
     const upper    = hre.ethers.utils.parseUnits("-20", 0);
 
@@ -294,7 +321,7 @@ describe('CoverPool Tests', function () {
     );
   });
 
-  it('Should burn LP position and withdraw all liquidity - pool1', async function () {
+  it('Should burn LP position and withdraw all liquidity - pool1 12', async function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upper    = hre.ethers.utils.parseUnits("40", 0);
 
@@ -313,7 +340,7 @@ describe('CoverPool Tests', function () {
     );
   });
 
-  it('Should move TWAP before mint and do a successful swap', async function () {
+  it('Should move TWAP before mint and do a successful swap 12', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("40", 0);
     const lower    = hre.ethers.utils.parseUnits("60", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -355,7 +382,9 @@ describe('CoverPool Tests', function () {
       balanceInDecrease,
       balanceOutIncrease,
       BN_ZERO,
-      currentPrice
+      currentPrice,
+
+      ""
     )
 
     await validateBurn(
@@ -478,7 +507,8 @@ describe('CoverPool Tests', function () {
       BN_ZERO,
       BN_ZERO,
       BN_ZERO,
-      currentPrice
+      currentPrice,
+      ""
     )
 
     await validateBurn(

@@ -73,9 +73,11 @@ export async function validateSwap(
     balanceInDecrease: BigNumber,
     balanceOutIncrease: BigNumber,
     finalLiquidity: BigNumber,
-    finalPrice: BigNumber
+    finalPrice: BigNumber,
+    revertMessage: string
 ) {
     let balanceInBefore; let balanceOutBefore;
+    console.log(sqrtPriceLimitX96.toString())
     if(zeroForOne){
         balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
@@ -109,13 +111,23 @@ export async function validateSwap(
     const amountInQuoted  = quote[0];
     const amountOutQuoted = quote[1];
 
-    let txn = await hre.props.coverPool.swap(
-        signer.address,
-        zeroForOne,
-        amountIn,
-        sqrtPriceLimitX96
-    );
-    await txn.wait();
+    if (revertMessage == ""){
+        let txn = await hre.props.coverPool.connect(signer).swap(
+            signer.address,
+            zeroForOne,
+            amountIn,
+            sqrtPriceLimitX96
+        );
+        await txn.wait();
+    } else {
+        await expect(hre.props.coverPool.connect(signer).swap(
+            signer.address,
+            zeroForOne,
+            amountIn,
+            sqrtPriceLimitX96
+        )).to.be.revertedWith(revertMessage);
+        return;
+    }
 
     let balanceInAfter; let balanceOutAfter;
     if(zeroForOne){

@@ -32,8 +32,10 @@ library Ticks
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
-         uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread))
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+        
+        if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
+        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread))
                                            : uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread));
         uint256 nextPrice = nextTickPrice;
 
@@ -77,6 +79,8 @@ library Ticks
                 cache.input = 0;
             } else {
                 // Swap & cross the tick.
+                console.log('cache price:', cache.price);
+                console.log(nextTickPrice);
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
                 cache.price = nextTickPrice;
                 cache.input -= maxDy;
