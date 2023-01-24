@@ -1,6 +1,7 @@
 import { Burn, Mint } from "../../generated/CoverPoolFactory/CoverPool";
-import { Address, BigInt, Bytes, ethereum, log } from '@graphprotocol/graph-ts';
+import { Address, BigInt, Bytes, ethereum, log, store } from '@graphprotocol/graph-ts';
 import { safeLoadCoverPool, safeLoadPosition, safeLoadToken } from "./utils/loads";
+import { Position } from "../../generated/schema";
 
 export function handleMint(event: Mint): void {
 
@@ -47,7 +48,7 @@ export function handleBurn(event: Burn): void {
     let lowerParam           = event.params.lower
     let upperParam           = event.params.upper
     let zeroForOneParam      = event.params.zeroForOne
-    let liquidityMintedParam = event.params.liquidityBurned
+    let liquidityBurnedParam = event.params.liquidityBurned
     let poolAddress          = event.address.toHex()
     let senderParam          = event.transaction.from
 
@@ -63,6 +64,10 @@ export function handleBurn(event: Burn): void {
     if(!loadPosition.exists) {
         //throw an error
     }
-    position.liquidity = liquidityMintedParam
+    if(position.liquidity == liquidityBurnedParam) {
+        store.remove('Position', position.id)
+    } else {
+        position.liquidity = position.liquidity.minus(liquidityBurnedParam)
+    }
     position.save()
 }
