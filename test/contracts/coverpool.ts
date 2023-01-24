@@ -575,34 +575,6 @@ describe('CoverPool Tests', function () {
   // TODO: no one can mint until observations are sufficient
   // TODO: fill tick, move TWAP down, claim, move TWAP higher, fill again, claim again
 
-  // it('Should mint new LP position swap and then claim', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("30", 0);
-  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-  //   const txn = await hre.props.coverPool.mint(
-  //     {
-  //       lowerOld: lowerOld,
-  //       lower: lower,
-  //       upperOld: upperOld,
-  //       upper: upper,
-  //       amountDesired: amount,
-  //       zeroForOne: false,
-  //       native: false
-  //     }
-  //   );
-  //   await txn.wait();
-  //   console.log(await hre.props.coverPool.positions(
-  //     hre.props.alice.address,
-  //     lower,
-  //     upper
-  //   ));
-  //   // validateMint(
-
-  //   // )
-  // });
-
   // mint at different price ranges
   // mint then burn at different price ranges
   // mint swap then burn

@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 // will the blockTimestamp be consistent across the entire block?
 library TwapOracle
 {
-    uint16 private constant blockTime = 12;
+    uint16 public constant blockTime = 12;
 
     // @dev increase pool observations if not sufficient
     // @dev must be deterministic since called externally
@@ -38,8 +38,8 @@ library TwapOracle
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
     }
 
-    function isPoolObservationsEnough(IRangePool pool, uint16 twapLength) external view returns (bool) {
-        return _isPoolObservationsEnough(pool, twapLength);
+    function isPoolObservationsEnough(address pool, uint16 twapLength) external view returns (bool) {
+        return _isPoolObservationsEnough(IRangePool(pool), twapLength);
     }
 
     function _isPoolObservationsEnough(IRangePool pool, uint16 twapLength) internal view returns (bool){
@@ -50,9 +50,5 @@ library TwapOracle
 
     function _increaseV3Observations(address pool, uint16 twapLength) internal {
         IRangePool(pool).increaseObservationCardinalityNext(twapLength);
-    }
-
-    function getSqrtPriceLimitX96(bool zeroForOne) external pure returns (uint160) {
-        return zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1;
     }
 }

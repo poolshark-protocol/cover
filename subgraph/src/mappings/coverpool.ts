@@ -38,7 +38,7 @@ export function handleMint(event: Mint): void {
         position.txnHash            = event.transaction.hash
         position.pool               = poolAddress
     }
-    position.liquidity = liquidityMintedParam
+    position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.save()
 }
 
