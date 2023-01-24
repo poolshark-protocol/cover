@@ -29,7 +29,6 @@ interface CoverPoolViewInterface extends ethers.utils.Interface {
     "tickNodes(int24)": FunctionFragment;
     "ticks0(int24)": FunctionFragment;
     "ticks1(int24)": FunctionFragment;
-    "utils()": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "feeTo", values?: undefined): string;
@@ -59,7 +58,6 @@ interface CoverPoolViewInterface extends ethers.utils.Interface {
     functionFragment: "ticks1",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "utils", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "feeTo", data: BytesLike): Result;
   decodeFunctionResult(
@@ -73,7 +71,6 @@ interface CoverPoolViewInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "tickNodes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks1", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "utils", data: BytesLike): Result;
 
   events: {};
 }
@@ -127,9 +124,10 @@ export class CoverPoolView extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number] & {
+      [number, number, number, number, number, number, number] & {
         swapFee: number;
         tickSpread: number;
+        twapLength: number;
         lastBlockNumber: number;
         unlocked: number;
         latestTick: number;
@@ -229,8 +227,6 @@ export class CoverPoolView extends BaseContract {
         amountOutDeltaCarryPercent: BigNumber;
       }
     >;
-
-    utils(overrides?: CallOverrides): Promise<[string]>;
   };
 
   feeTo(overrides?: CallOverrides): Promise<string>;
@@ -238,9 +234,10 @@ export class CoverPoolView extends BaseContract {
   globalState(
     overrides?: CallOverrides
   ): Promise<
-    [number, number, number, number, number, number] & {
+    [number, number, number, number, number, number, number] & {
       swapFee: number;
       tickSpread: number;
+      twapLength: number;
       lastBlockNumber: number;
       unlocked: number;
       latestTick: number;
@@ -341,17 +338,16 @@ export class CoverPoolView extends BaseContract {
     }
   >;
 
-  utils(overrides?: CallOverrides): Promise<string>;
-
   callStatic: {
     feeTo(overrides?: CallOverrides): Promise<string>;
 
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number] & {
+      [number, number, number, number, number, number, number] & {
         swapFee: number;
         tickSpread: number;
+        twapLength: number;
         lastBlockNumber: number;
         unlocked: number;
         latestTick: number;
@@ -451,8 +447,6 @@ export class CoverPoolView extends BaseContract {
         amountOutDeltaCarryPercent: BigNumber;
       }
     >;
-
-    utils(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {};
@@ -488,8 +482,6 @@ export class CoverPoolView extends BaseContract {
     ticks0(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     ticks1(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    utils(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -529,7 +521,5 @@ export class CoverPoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
-
-    utils(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

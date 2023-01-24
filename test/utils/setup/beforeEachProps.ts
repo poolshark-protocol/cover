@@ -1,20 +1,18 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber } from "ethers";
-import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { getNonce } from "../../../tasks/utils";
-import { RangeFactoryMock, RangePoolMock, DyDxMath, FullPrecisionMath, CoverPool, CoverPoolFactory, CoverPoolUtils, Positions, TickMath, Ticks, Token20 } from "../../../typechain";
+import { RangeFactoryMock, RangePoolMock, DyDxMath, FullPrecisionMath, CoverPool, CoverPoolFactory, Positions, TickMath, Ticks, Token20, TwapOracle } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
 
 export interface BeforeEachProps {
     coverPool: CoverPool;
     coverPoolFactory: CoverPoolFactory;
-    coverPoolUtils: CoverPoolUtils;
     rangeFactoryMock: RangeFactoryMock;
     rangePoolMock: RangePoolMock;
     tickMathLib: TickMath;
     dydxMathLib: DyDxMath;
     fullPrecisionMathLib: FullPrecisionMath;
     ticksLib: Ticks;
+    twapOracleLib: TwapOracle;
     positionsLib: Positions;
     tokenA: Token20;
     tokenB: Token20;
@@ -52,13 +50,13 @@ export class GetBeforeEach {
     public retrieveProps(): BeforeEachProps {
         let coverPool: CoverPool;
         let coverPoolFactory: CoverPoolFactory;
-        let coverPoolUtils: CoverPoolUtils;
         let rangeFactoryMock: RangeFactoryMock;
         let rangePoolMock: RangePoolMock;
         let tickMathLib: TickMath;
         let dydxMathLib: DyDxMath;
         let fullPrecisionMathLib: FullPrecisionMath;
         let ticksLib: Ticks;
+        let twapOracleLib: TwapOracle;
         let positionsLib: Positions;
         let tokenA: Token20;
         let tokenB: Token20;
@@ -73,13 +71,13 @@ export class GetBeforeEach {
         return {
             coverPool,
             coverPoolFactory,
-            coverPoolUtils,
             rangeFactoryMock,
             rangePoolMock,
             tickMathLib,
             dydxMathLib,
             fullPrecisionMathLib,
             ticksLib,
+            twapOracleLib,
             positionsLib,
             tokenA,
             tokenB,

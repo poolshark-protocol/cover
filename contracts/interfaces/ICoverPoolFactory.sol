@@ -17,6 +17,7 @@ abstract contract ICoverPoolFactory {
         address indexed token1,
         uint24 indexed fee,
         int24 tickSpread,
+        uint16 twapLength,
         address pool
     );
 
@@ -24,13 +25,15 @@ abstract contract ICoverPoolFactory {
         address fromToken,
         address destToken,
         uint256 fee,
-        uint24  tickSpread
+        uint24  tickSpread,
+        uint16  twapLength
     ) external virtual returns (address book);
 
     function getCoverPool(
         address fromToken,
         address destToken,
         uint256 fee,
-        uint24  tickSpread
+        uint24  tickSpread,
+        uint16  twapLength
     ) external virtual view returns (address);
 }

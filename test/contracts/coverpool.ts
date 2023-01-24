@@ -8,7 +8,7 @@ import { mintSigners20 } from '../utils/token';
 import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateSync } from '../utils/contracts/coverpool';
 
 alice: SignerWithAddress;
-describe('CoverPool Basic Tests', function () {
+describe('CoverPool Tests', function () {
 
   let token0Amount: BigNumber;
   let token1Amount: BigNumber;
@@ -71,6 +71,26 @@ describe('CoverPool Basic Tests', function () {
 
   this.beforeEach(async function () {
 
+  });
+
+  it('Should not mint a position until inputPool has enough observations', async function () {
+    await validateMint(
+      hre.props.alice,
+      hre.props.alice.address,
+      BigNumber.from("0"),
+      BigNumber.from("0"),
+      BigNumber.from("0"),
+      BigNumber.from("0"),
+      BigNumber.from("0"),
+      token0Amount,
+      true,
+      token0Amount,
+      liquidityAmount,
+      false,
+      false,
+      "WaitUntilEnoughObservations()"
+    );
+    await hre.props.rangePoolMock.setObservationCardinality("5");
   });
 
   it('Should mint new LP position - pool0', async function () {
@@ -255,16 +275,29 @@ describe('CoverPool Basic Tests', function () {
     )
   });
 
-  it('Should burn LP position and withdraw all liquidity', async function () {
+  it('Should burn LP position and withdraw all liquidity - pool0', async function () {
+    const lower    = hre.ethers.utils.parseUnits("-40", 0);
+    const upper    = hre.ethers.utils.parseUnits("-20", 0);
+
+    await validateBurn(
+      hre.props.alice,
+      lower,
+      upper,
+      upper,
+      liquidityAmount,
+      true,
+      BN_ZERO,
+      token0Amount.sub(1),
+      false,
+      false,
+      ""
+    );
+  });
+
+  it('Should burn LP position and withdraw all liquidity - pool1', async function () {
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upper    = hre.ethers.utils.parseUnits("40", 0);
-    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
-    console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
-    console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.coverPool.tickNodes(60);
-    console.log('next tick:', maxTick.toString());
+
     await validateBurn(
       hre.props.alice,
       lower,
@@ -288,17 +321,13 @@ describe('CoverPool Basic Tests', function () {
     const burnAmount = hre.ethers.utils.parseUnits("49802891105937278098768", 0);
     const balanceInDecrease = hre.ethers.utils.parseUnits("99750339674246044929", 0);
     const balanceOutIncrease = hre.ethers.utils.parseUnits("99999999999999999999", 0);
-    let minTick: TickNode = await hre.props.coverPool.tickNodes(minTickIdx);
-    console.log('min tick:', minTick.toString());
-    let latestTick: TickNode = await hre.props.coverPool.tickNodes((await hre.props.coverPool.globalState()).latestTick);
-    console.log('latest tick:', latestTick.toString());
-    let maxTick: TickNode = await hre.props.coverPool.tickNodes(60);
-    console.log('next tick:', maxTick.toString());
+
     // move TWAP to tick 40
     await validateSync(
       hre.props.alice,
       40
     );
+
     // mint new position
     await validateMint(
       hre.props.alice,

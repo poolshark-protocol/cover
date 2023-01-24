@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
-    "quote(bool,uint160,(uint24,int24,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint24,int24,uint16,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -36,6 +36,7 @@ interface TicksInterface extends ethers.utils.Interface {
       {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
+        twapLength: BigNumberish;
         lastBlockNumber: BigNumberish;
         unlocked: BigNumberish;
         latestTick: BigNumberish;
@@ -114,6 +115,7 @@ export class Ticks extends BaseContract {
       state: {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
+        twapLength: BigNumberish;
         lastBlockNumber: BigNumberish;
         unlocked: BigNumberish;
         latestTick: BigNumberish;
@@ -150,6 +152,7 @@ export class Ticks extends BaseContract {
     state: {
       swapFee: BigNumberish;
       tickSpread: BigNumberish;
+      twapLength: BigNumberish;
       lastBlockNumber: BigNumberish;
       unlocked: BigNumberish;
       latestTick: BigNumberish;
@@ -186,6 +189,7 @@ export class Ticks extends BaseContract {
       state: {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
+        twapLength: BigNumberish;
         lastBlockNumber: BigNumberish;
         unlocked: BigNumberish;
         latestTick: BigNumberish;
@@ -225,6 +229,7 @@ export class Ticks extends BaseContract {
       state: {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
+        twapLength: BigNumberish;
         lastBlockNumber: BigNumberish;
         unlocked: BigNumberish;
         latestTick: BigNumberish;
@@ -252,6 +257,7 @@ export class Ticks extends BaseContract {
       state: {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
+        twapLength: BigNumberish;
         lastBlockNumber: BigNumberish;
         unlocked: BigNumberish;
         latestTick: BigNumberish;

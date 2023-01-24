@@ -23,6 +23,7 @@ interface RangePoolMockInterface extends ethers.utils.Interface {
   functions: {
     "increaseObservationCardinalityNext(uint16)": FunctionFragment;
     "observe(uint32[])": FunctionFragment;
+    "setObservationCardinality(uint16)": FunctionFragment;
     "setTickCumulatives(int56,int56)": FunctionFragment;
     "slot0()": FunctionFragment;
     "tickSpacing()": FunctionFragment;
@@ -37,6 +38,10 @@ interface RangePoolMockInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "observe",
     values: [BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setObservationCardinality",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setTickCumulatives",
@@ -55,6 +60,10 @@ interface RangePoolMockInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "observe", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setObservationCardinality",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setTickCumulatives",
     data: BytesLike
@@ -129,6 +138,11 @@ export class RangePoolMock extends BaseContract {
       }
     >;
 
+    setObservationCardinality(
+      _observationCardinality: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setTickCumulatives(
       _tickCumulative0: BigNumberish,
       _tickCumulative1: BigNumberish,
@@ -170,6 +184,11 @@ export class RangePoolMock extends BaseContract {
       secondsPerLiquidityCumulativeX128s: BigNumber[];
     }
   >;
+
+  setObservationCardinality(
+    _observationCardinality: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   setTickCumulatives(
     _tickCumulative0: BigNumberish,
@@ -213,6 +232,11 @@ export class RangePoolMock extends BaseContract {
       }
     >;
 
+    setObservationCardinality(
+      _observationCardinality: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setTickCumulatives(
       _tickCumulative0: BigNumberish,
       _tickCumulative1: BigNumberish,
@@ -253,6 +277,11 @@ export class RangePoolMock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    setObservationCardinality(
+      _observationCardinality: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setTickCumulatives(
       _tickCumulative0: BigNumberish,
       _tickCumulative1: BigNumberish,
@@ -277,6 +306,11 @@ export class RangePoolMock extends BaseContract {
     observe(
       secondsAgos: BigNumberish[],
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    setObservationCardinality(
+      _observationCardinality: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setTickCumulatives(

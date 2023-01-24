@@ -323,8 +323,8 @@ export async function validateBurn(
 ) {
     let balanceInBefore; let balanceOutBefore;
     if(zeroForOne){
-        balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
-        balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
+        balanceInBefore  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutBefore = await hre.props.token0.balanceOf(signer.address);
     } else {
         balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
@@ -382,8 +382,8 @@ export async function validateBurn(
 
     let balanceInAfter; let balanceOutAfter;
     if(zeroForOne){
-        balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
-        balanceOutAfter = await hre.props.token1.balanceOf(signer.address);
+        balanceInAfter  = await hre.props.token1.balanceOf(signer.address);
+        balanceOutAfter = await hre.props.token0.balanceOf(signer.address);
     } else {
         balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
         balanceOutAfter = await hre.props.token1.balanceOf(signer.address);

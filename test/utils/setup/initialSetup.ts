@@ -4,7 +4,7 @@ import { DeployAssist } from "../../../scripts/util/deployAssist";
 import { ContractDeploymentsKeys } from "../../../scripts/util/files/contractDeploymentKeys";
 import { ContractDeploymentsJson } from "../../../scripts/util/files/contractDeploymentsJson";
 import { readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, CoverPoolFactory__factory, RangeFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, CoverPoolUtils__factory, Positions__factory } from "../../../typechain";
+import { Token20__factory, CoverPoolFactory__factory, RangeFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, Positions__factory, TwapOracle__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -133,14 +133,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            CoverPoolUtils__factory,
-            'coverPoolUtils',
-            [],
-        );
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             TickMath__factory,
             'tickMathLib',
             [],
@@ -181,6 +173,14 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            TwapOracle__factory,
+            'twapOracleLib',
+            [],
+        );
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Positions__factory,
             'positionsLib',
             [],
@@ -198,15 +198,15 @@ export class InitialSetup {
             CoverPoolFactory__factory,
             'coverPoolFactory',
             [
-                hre.props.rangeFactoryMock.address,
-                hre.props.coverPoolUtils.address
+                hre.props.rangeFactoryMock.address
             ],
             {
                 "contracts/libraries/Positions.sol:Positions": hre.props.positionsLib.address,
                 "contracts/libraries/Ticks.sol:Ticks": hre.props.ticksLib.address,
                 "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address,
                 "contracts/libraries/TickMath.sol:TickMath": hre.props.tickMathLib.address,
-                "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address
+                "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address,
+                "contracts/libraries/TwapOracle.sol:TwapOracle": hre.props.twapOracleLib.address
             }
         );
         // // hre.nonce += 1;
@@ -215,7 +215,8 @@ export class InitialSetup {
                                     hre.props.token0.address,
                                     hre.props.token1.address,
                                     "500",
-                                    "20"
+                                    "20",
+                                    "5"
                                 );
         await createPoolTxn.wait();
 
@@ -225,7 +226,8 @@ export class InitialSetup {
                                     hre.props.token0.address,
                                     hre.props.token1.address,
                                     "500",
-                                    "20"
+                                    "20",
+                                    "5"
                                 );
         hre.props.coverPool = await hre.ethers.getContractAt("CoverPool", coverPoolAddress);
 
@@ -236,9 +238,9 @@ export class InitialSetup {
             hre.props.coverPool,
             [
                 hre.props.rangePoolMock.address,
-                hre.props.coverPoolUtils.address,
                 "500",
-                "20"
+                "20",
+                "5"
             ]
         );
 

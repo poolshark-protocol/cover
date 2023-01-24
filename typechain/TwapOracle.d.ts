@@ -11,7 +11,6 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
-  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -21,32 +20,22 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TwapOracleInterface extends ethers.utils.Interface {
   functions: {
-    "calculateAverageTick(address)": FunctionFragment;
-    "concentratedFactory()": FunctionFragment;
+    "calculateAverageTick(IRangePool,uint16)": FunctionFragment;
     "getSqrtPriceLimitX96(bool)": FunctionFragment;
-    "initializePoolObservations(address)": FunctionFragment;
-    "isPoolObservationsEnough(address)": FunctionFragment;
+    "isPoolObservationsEnough(IRangePool,uint16)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "calculateAverageTick",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "concentratedFactory",
-    values?: undefined
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getSqrtPriceLimitX96",
     values: [boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "initializePoolObservations",
-    values: [string]
-  ): string;
-  encodeFunctionData(
     functionFragment: "isPoolObservationsEnough",
-    values: [string]
+    values: [string, BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -54,15 +43,7 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "concentratedFactory",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "getSqrtPriceLimitX96",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "initializePoolObservations",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -119,71 +100,54 @@ export class TwapOracle extends BaseContract {
   functions: {
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[number] & { averageTick: number }>;
-
-    concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
 
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
   };
 
   calculateAverageTick(
     pool: string,
+    twapLength: BigNumberish,
     overrides?: CallOverrides
   ): Promise<number>;
-
-  concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
   getSqrtPriceLimitX96(
     zeroForOne: boolean,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  initializePoolObservations(
-    pool: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   isPoolObservationsEnough(
     pool: string,
+    twapLength: BigNumberish,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
   callStatic: {
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<number>;
-
-    concentratedFactory(overrides?: CallOverrides): Promise<string>;
 
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    initializePoolObservations(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number] & { initializable: number; startingTick: number }
-    >;
-
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
   };
@@ -193,23 +157,18 @@ export class TwapOracle extends BaseContract {
   estimateGas: {
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
 
     getSqrtPriceLimitX96(
       zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -217,10 +176,7 @@ export class TwapOracle extends BaseContract {
   populateTransaction: {
     calculateAverageTick(
       pool: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    concentratedFactory(
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -229,13 +185,9 @@ export class TwapOracle extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

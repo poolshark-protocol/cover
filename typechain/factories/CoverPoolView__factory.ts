@@ -110,6 +110,11 @@ const _abi = [
         type: "int24",
       },
       {
+        internalType: "uint16",
+        name: "twapLength",
+        type: "uint16",
+      },
+      {
         internalType: "uint32",
         name: "lastBlockNumber",
         type: "uint32",
@@ -409,19 +414,6 @@ const _abi = [
         internalType: "uint64",
         name: "amountOutDeltaCarryPercent",
         type: "uint64",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "utils",
-    outputs: [
-      {
-        internalType: "contract IPoolsharkUtils",
-        name: "",
-        type: "address",
       },
     ],
     stateMutability: "view",

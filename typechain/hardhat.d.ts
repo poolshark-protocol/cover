@@ -41,10 +41,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CoverPoolView__factory>;
     getContractFactory(
-      name: "TwapOracle",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TwapOracle__factory>;
-    getContractFactory(
       name: "CoverPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CoverPool__factory>;
@@ -53,10 +49,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CoverPoolFactory__factory>;
     getContractFactory(
-      name: "CoverPoolUtils",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CoverPoolUtils__factory>;
-    getContractFactory(
       name: "ICoverPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICoverPool__factory>;
@@ -64,10 +56,6 @@ declare module "hardhat/types/runtime" {
       name: "ICoverPoolFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICoverPoolFactory__factory>;
-    getContractFactory(
-      name: "IPoolsharkUtils",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IPoolsharkUtils__factory>;
     getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -84,38 +72,6 @@ declare module "hardhat/types/runtime" {
       name: "IRangePool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IRangePool__factory>;
-    getContractFactory(
-      name: "IDyDxMath",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IDyDxMath__factory>;
-    getContractFactory(
-      name: "IFullPrecisionMath",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IFullPrecisionMath__factory>;
-    getContractFactory(
-      name: "IMathUtils",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IMathUtils__factory>;
-    getContractFactory(
-      name: "IRebaseLibrary",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IRebaseLibrary__factory>;
-    getContractFactory(
-      name: "ISafeCast",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ISafeCast__factory>;
-    getContractFactory(
-      name: "ISwapLib",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ISwapLib__factory>;
-    getContractFactory(
-      name: "ITwapOracle",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ITwapOracle__factory>;
-    getContractFactory(
-      name: "IUnsafeMath",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IUnsafeMath__factory>;
     getContractFactory(
       name: "DyDxMath",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -136,6 +92,10 @@ declare module "hardhat/types/runtime" {
       name: "Ticks",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ticks__factory>;
+    getContractFactory(
+      name: "TwapOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TwapOracle__factory>;
     getContractFactory(
       name: "RangeFactoryMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -172,14 +132,6 @@ declare module "hardhat/types/runtime" {
       name: "CoverTransferErrors",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.CoverTransferErrors__factory>;
-    getContractFactory(
-      name: "MathUtils",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MathUtils__factory>;
-    getContractFactory(
-      name: "SafeCast",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SafeCast__factory>;
     getContractFactory(
       name: "SafeTransfers",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -221,11 +173,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.CoverPoolView>;
     getContractAt(
-      name: "TwapOracle",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TwapOracle>;
-    getContractAt(
       name: "CoverPool",
       address: string,
       signer?: ethers.Signer
@@ -236,11 +183,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.CoverPoolFactory>;
     getContractAt(
-      name: "CoverPoolUtils",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CoverPoolUtils>;
-    getContractAt(
       name: "ICoverPool",
       address: string,
       signer?: ethers.Signer
@@ -250,11 +192,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ICoverPoolFactory>;
-    getContractAt(
-      name: "IPoolsharkUtils",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IPoolsharkUtils>;
     getContractAt(
       name: "IERC20",
       address: string,
@@ -275,46 +212,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IRangePool>;
-    getContractAt(
-      name: "IDyDxMath",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IDyDxMath>;
-    getContractAt(
-      name: "IFullPrecisionMath",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IFullPrecisionMath>;
-    getContractAt(
-      name: "IMathUtils",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IMathUtils>;
-    getContractAt(
-      name: "IRebaseLibrary",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IRebaseLibrary>;
-    getContractAt(
-      name: "ISafeCast",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ISafeCast>;
-    getContractAt(
-      name: "ISwapLib",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ISwapLib>;
-    getContractAt(
-      name: "ITwapOracle",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ITwapOracle>;
-    getContractAt(
-      name: "IUnsafeMath",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IUnsafeMath>;
     getContractAt(
       name: "DyDxMath",
       address: string,
@@ -340,6 +237,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Ticks>;
+    getContractAt(
+      name: "TwapOracle",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TwapOracle>;
     getContractAt(
       name: "RangeFactoryMock",
       address: string,
@@ -385,16 +287,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.CoverTransferErrors>;
-    getContractAt(
-      name: "MathUtils",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MathUtils>;
-    getContractAt(
-      name: "SafeCast",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SafeCast>;
     getContractAt(
       name: "SafeTransfers",
       address: string,

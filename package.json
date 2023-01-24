@@ -7,7 +7,7 @@
     "clean": "rm -rf ./artifacts ./cache ./typechain; npx hardhat clean",
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "deploy": "npx hardhat OrderBook:deploy --network rinkeby",
+    "deploy": "npx hardhat deploy-coverpools",
     "all": "yarn clean; yarn compile; yarn test; yarn deploy;"
   },
   "devDependencies": {

@@ -6,7 +6,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
 
 alice: SignerWithAddress;
-describe('CoverPool Basic Tests', function () {
+describe('CoverPoolFactory Tests', function () {
 
   let token0Amount: BigNumber;
   let token1Amount: BigNumber;
@@ -36,7 +36,8 @@ describe('CoverPool Basic Tests', function () {
         "0x0000000000000000000000000000000000000000",
         "0x0000000000000000000000000000000000000000",
         "500",
-        "20"
+        "20",
+        "5"
       )).to.be.revertedWith("IdenticalTokenAddresses()");
   });
 
@@ -46,7 +47,8 @@ describe('CoverPool Basic Tests', function () {
         hre.props.token1.address,
         hre.props.token0.address,
         "500",
-        "20"
+        "20",
+        "5"
       )).to.be.revertedWith("PoolAlreadyExists()");
   });
 
@@ -55,7 +57,8 @@ describe('CoverPool Basic Tests', function () {
         hre.props.token1.address,
         hre.props.token0.address,
         "1000",
-        "20"
+        "20",  
+        "5"
       )).to.be.revertedWith("FeeTierNotSupported()");
   });
 
@@ -65,7 +68,8 @@ describe('CoverPool Basic Tests', function () {
         hre.props.token1.address,
         hre.props.token0.address,
         "1000",
-        "20"
+        "20",
+        "5"
       )).to.be.revertedWith("InvalidTokenDecimals()");
       await hre.props.token0.connect(hre.props.admin).setDecimals(18);
   });
@@ -76,7 +80,8 @@ describe('CoverPool Basic Tests', function () {
         hre.props.token1.address,
         hre.props.token0.address,
         "1000",
-        "20"
+        "20",
+        "5"
       )).to.be.revertedWith("InvalidTokenDecimals()");
       await hre.props.token1.connect(hre.props.admin).setDecimals(18);
   });

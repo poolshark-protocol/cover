@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-//TODO: deploy library code once and reference from factory
-// have interfaces for library contracts
 import "./interfaces/ICoverPool.sol";
 import "./interfaces/IRangePool.sol";
 import "./base/CoverPoolStorage.sol";
@@ -10,7 +8,9 @@ import "./base/CoverPoolEvents.sol";
 import "./utils/SafeTransfers.sol";
 import "./utils/CoverPoolErrors.sol";
 import "./libraries/Ticks.sol";
+import "./libraries/TwapOracle.sol";
 import "./libraries/Positions.sol";
+
 import "hardhat/console.sol";
 
 /// @notice Poolshark Directional Liquidity pool implementation.
@@ -34,21 +34,21 @@ contract CoverPool is
     IRangePool internal immutable inputPool;
 
     modifier lock() {
-        if (globalState.unlocked != 1) revert Locked();
-        globalState.unlocked = 2;
+        if (globalState.unlocked == 2) revert Locked();
+        if (globalState.unlocked != 0) globalState.unlocked = 2;
         _;
-        globalState.unlocked = 1;
+        if (globalState.unlocked != 0) globalState.unlocked = 1;
     }
 
     constructor(
         address _inputPool,
-        address _libraries,
         uint24  _swapFee, 
-        int24  _tickSpread
+        int24   _tickSpread,
+        uint16  _twapLength
     ) {
         // validate swap fee
         if (_swapFee > MAX_FEE) revert InvalidSwapFee();
-        GlobalState memory state = GlobalState(0,0,0,0,0,0);
+        GlobalState memory state = GlobalState(0,0,0,0,0,0,0);
         // validate tick spread
         int24 _tickSpacing = IRangePool(_inputPool).tickSpacing();
         int24 _tickMultiple = _tickSpread / _tickSpacing;
@@ -58,7 +58,6 @@ contract CoverPool is
 
         // set addresses
         factory     = msg.sender;
-        utils       = IPoolsharkUtils(_libraries);
         token0      = IRangePool(_inputPool).token0();
         token1      = IRangePool(_inputPool).token1();
         inputPool   = IRangePool(_inputPool);
@@ -67,30 +66,36 @@ contract CoverPool is
         // set global state
         state.swapFee         = _swapFee;
         state.tickSpread      = _tickSpread;
+        state.twapLength      = _twapLength;
         state.lastBlockNumber = uint32(block.number);
-        globalState = state;
+
 
         // set max liquidity per tick
         MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpread);
 
         // set default initial values
         //TODO: insertSingle or pass MAX_TICK as upper
-        _ensureInitialized();
+        globalState = _ensureInitialized(state);
     }
 
     //TODO: test this check
-    function _ensureInitialized() internal {
-        if (globalState.unlocked == 0) {
-            GlobalState memory state = globalState;
-            (state.unlocked, state.latestTick) = utils.initializePoolObservations(
-                                                    IRangePool(inputPool)
-                                                );
+    function _ensureInitialized(GlobalState memory state) internal returns (GlobalState memory) {
+        if (state.unlocked == 0) {
+            console.log("unlocked is zero");
+            (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
+                                                    IRangePool(inputPool),
+                                                    state.twapLength
+                                                 );
+                                                 console.log('unlocked:', state.unlocked);
             if(state.unlocked == 1) { _initialize(state); }
+            else console.log('not initialized yet');
         }
+        return state;
     }
 
     function _initialize(GlobalState memory state) internal {
         //TODO: store values in memory then write to state
+        console.log('being initialized');
         state.latestTick = state.latestTick / int24(state.tickSpread) * int24(state.tickSpread);
         state.accumEpoch = 1;
         Ticks.initialize(
@@ -117,9 +122,11 @@ contract CoverPool is
         bool zeroForOne
     ) external lock {
         /// @dev - don't allow mints until we have enough observations from inputPool
-        _ensureInitialized();
+        globalState = _ensureInitialized(globalState);
         // GlobalState memory globalState = globalState;
         if (globalState.unlocked == 0 ) revert WaitUntilEnoughObservations();
+        else console.log('unlocked state', globalState.unlocked);
+        console.logInt(globalState.latestTick);
         
         //TODO: move tick update check here
         if(block.number != globalState.lastBlockNumber) {
@@ -132,7 +139,7 @@ contract CoverPool is
                 pool0,
                 pool1,
                 globalState,
-                utils.calculateAverageTick(inputPool)
+                TwapOracle.calculateAverageTick(inputPool, globalState.twapLength)
             );
         }
         uint256 liquidityMinted;
@@ -235,7 +242,7 @@ contract CoverPool is
                 pool0,
                 pool1,
                 state,
-                utils.calculateAverageTick(inputPool)
+                TwapOracle.calculateAverageTick(inputPool, state.twapLength)
             );
         }
         console.log('zero previous tick:');
@@ -310,7 +317,7 @@ contract CoverPool is
                 pool0,
                 pool1,
                 state,
-                utils.calculateAverageTick(inputPool)
+                TwapOracle.calculateAverageTick(inputPool, state.twapLength)
             );
         }
         (amountIn,amountOut,,,state) = Positions.update(
@@ -371,16 +378,16 @@ contract CoverPool is
                 pool0,
                 pool1,
                 state,
-                utils.calculateAverageTick(inputPool)
+                TwapOracle.calculateAverageTick(inputPool, state.twapLength)
             );
         }
 
         SwapCache memory cache = SwapCache({
             price: pool.price,
             liquidity: pool.liquidity,
-            feeAmount: utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
+            feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
+            input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
         });
 
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
@@ -430,7 +437,7 @@ contract CoverPool is
         }
         globalState = state;
     }
-    
+
     //TODO: handle quoteAmountIn and quoteAmountOut
     function quote(
         bool zeroForOne,
@@ -442,9 +449,9 @@ contract CoverPool is
         SwapCache memory cache = SwapCache({
             price: zeroForOne ? pool1.price : pool0.price,
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
-            feeAmount: utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
+            feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - utils.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
+            input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
         });
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range

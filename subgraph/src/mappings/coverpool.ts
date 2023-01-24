@@ -10,12 +10,12 @@ export function handleMint(event: Mint): void {
     let zeroForOneParam      = event.params.zeroForOne
     let liquidityMintedParam = event.params.liquidityMinted
     let poolAddress          = event.address.toHex()
-    let senderParam          = event.transaction.from
+    let msgSender               = event.transaction.from
 
     let lower = BigInt.fromI32(lowerParam)
     let upper = BigInt.fromI32(upperParam)
 
-    let loadPosition  = safeLoadPosition(poolAddress, lower, upper, zeroForOneParam)
+    let loadPosition  = safeLoadPosition(poolAddress, ownerParam, lower, upper, zeroForOneParam)
     let loadCoverPool = safeLoadCoverPool(poolAddress)
 
     let position = loadPosition.entity
@@ -32,7 +32,7 @@ export function handleMint(event: Mint): void {
         position.lower              = lower
         position.upper              = upper
         position.owner              = Bytes.fromHexString(ownerParam) as Bytes
-        position.createdBy          = event.transaction.from
+        position.createdBy          = msgSender
         position.createdAtTimestamp = event.block.timestamp
         position.txnHash            = event.transaction.hash
         position.pool               = poolAddress
@@ -54,7 +54,7 @@ export function handleBurn(event: Burn): void {
     let lower = BigInt.fromI32(lowerParam)
     let upper = BigInt.fromI32(upperParam)
 
-    let loadPosition  = safeLoadPosition(poolAddress, lower, upper, zeroForOneParam)
+    let loadPosition  = safeLoadPosition(poolAddress, ownerParam, lower, upper, zeroForOneParam)
     let loadCoverPool = safeLoadCoverPool(poolAddress)
 
     let position = loadPosition.entity

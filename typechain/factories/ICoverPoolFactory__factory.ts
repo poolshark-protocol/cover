@@ -39,6 +39,12 @@ const _abi = [
       },
       {
         indexed: false,
+        internalType: "uint16",
+        name: "twapLength",
+        type: "uint16",
+      },
+      {
+        indexed: false,
         internalType: "address",
         name: "pool",
         type: "address",
@@ -81,6 +87,11 @@ const _abi = [
         internalType: "uint24",
         name: "tickSpread",
         type: "uint24",
+      },
+      {
+        internalType: "uint16",
+        name: "twapLength",
+        type: "uint16",
       },
     ],
     name: "createCoverPool",
@@ -134,6 +145,11 @@ const _abi = [
         internalType: "uint24",
         name: "tickSpread",
         type: "uint24",
+      },
+      {
+        internalType: "uint16",
+        name: "twapLength",
+        type: "uint16",
       },
     ],
     name: "getCoverPool",

@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./CoverPool.sol";
 import "./interfaces/ICoverPoolFactory.sol";
 import "./interfaces/IRangeFactory.sol";
-import "./interfaces/ICoverPoolUtils.sol";
 
 contract CoverPoolFactory is 
     ICoverPoolFactory
@@ -16,19 +15,18 @@ contract CoverPoolFactory is
     error FeeTierNotSupported();
     
     constructor(
-        address _concentratedFactory,
-        address _libraries
+        address _concentratedFactory
     ) {
         owner = msg.sender;
         concentratedFactory = _concentratedFactory;
-        libraries = _libraries;
     }
 
     function createCoverPool(
         address fromToken,
         address destToken,
         uint256 swapFee,
-        uint24  tickSpread
+        uint24  tickSpread,
+        uint16  twapLength
     ) external override returns (address pool) {
         
         // validate token pair
@@ -41,7 +39,7 @@ contract CoverPoolFactory is
         if(ERC20(token1).decimals() == 0) revert InvalidTokenDecimals();
 
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread));
+        bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread, twapLength));
         if (poolMapping[key] != address(0)){
             revert PoolAlreadyExists();
         }
@@ -60,9 +58,9 @@ contract CoverPoolFactory is
         pool =  address(
                     new CoverPool(
                         inputPool,
-                        libraries,
                         uint24(swapFee),
-                        int24(tickSpread)
+                        int24(tickSpread),
+                        twapLength
                     )
                 );
 
@@ -70,14 +68,15 @@ contract CoverPoolFactory is
         poolList.push(pool);
 
         // emit event for indexers
-        emit PoolCreated(token0, token1, uint24(swapFee), int24(tickSpread), pool);
+        emit PoolCreated(token0, token1, uint24(swapFee), int24(tickSpread), twapLength, pool);
     }
 
     function getCoverPool(
         address fromToken,
         address destToken,
         uint256 fee,
-        uint24  tickSpread
+        uint24  tickSpread,
+        uint16  twapLength
     ) public override view returns (address) {
 
         // set lexographical token address ordering
@@ -85,7 +84,7 @@ contract CoverPoolFactory is
         address token1 = fromToken < destToken ? destToken : fromToken;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(token0, token1, fee, tickSpread));
+        bytes32 key = keccak256(abi.encode(token0, token1, fee, tickSpread, twapLength));
 
         return poolMapping[key];
     }

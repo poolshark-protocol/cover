@@ -7,6 +7,7 @@ import "hardhat/console.sol";
 
 contract RangePoolMock is IRangePool {
 
+    address internal admin;
     address public token0;
     address public token1;
     int24   public tickSpacing;
@@ -25,14 +26,17 @@ contract RangePoolMock is IRangePool {
         int24   _tickSpacing
     ) {
         require(_token0 < _token1, "wrong token order");
+        admin = msg.sender;
         token0  = _token0;
         token1  = _token1;
         swapFee = _swapFee;
         tickSpacing = _tickSpacing;
+        observationCardinality = 4;
+        observationCardinalityNext = 4;
     }
 
     function slot0()
-    external pure
+    external view
     returns (
         uint160 sqrtPriceX96,
         int24 tick,
@@ -46,8 +50,8 @@ contract RangePoolMock is IRangePool {
             1 << 96,
             0,
             4,
-            4,
-            5,
+            observationCardinality,
+            observationCardinalityNext,
             100,
             true
         );
@@ -82,5 +86,11 @@ contract RangePoolMock is IRangePool {
     ) external {
         tickCumulative0 = _tickCumulative0;
         tickCumulative1 = _tickCumulative1;
+    }
+
+    function setObservationCardinality(
+        uint16 _observationCardinality
+    ) external {
+        observationCardinality = _observationCardinality;
     }
 }

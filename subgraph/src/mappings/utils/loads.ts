@@ -53,11 +53,12 @@ class LoadPositionRet {
     entity: Position;
     exists: boolean;
 }
-export function safeLoadPosition(poolAddress: string, lower: BigInt, upper: BigInt, zeroForOne: boolean): LoadPositionRet {
+export function safeLoadPosition(poolAddress: string, owner: string, lower: BigInt, upper: BigInt, zeroForOne: boolean): LoadPositionRet {
     let exists = true;
     let fromToken: string;
 
     let positionId = poolAddress
+                     .concat(owner)
                      .concat(lower.toString())
                      .concat(upper.toString())
                      .concat(zeroForOne.toString());

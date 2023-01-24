@@ -3,12 +3,10 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/ICoverPoolStructs.sol";
 import "../interfaces/ICoverPoolFactory.sol";
-import "../interfaces/ICoverPoolUtils.sol";
 import "../utils/CoverPoolErrors.sol";
 
 abstract contract CoverPoolStorage is ICoverPoolStructs, CoverPoolErrors {
 
-    IPoolsharkUtils public utils;
     GlobalState public globalState;
     PoolState public pool0; /// @dev State for token0 as output
     PoolState public pool1; /// @dev State for token1 as output

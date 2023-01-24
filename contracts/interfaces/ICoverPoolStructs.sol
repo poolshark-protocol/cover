@@ -5,6 +5,7 @@ interface ICoverPoolStructs {
     struct GlobalState {
         uint24 swapFee;         /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
         int24  tickSpread;      /// @dev this is a integer multiple of the inputPool tickSpacing
+        uint16 twapLength;      /// @dev number of blocks used for TWAP sampling
         uint32 lastBlockNumber; /// @dev last block checked for reference price update
         uint8  unlocked;
         int24  latestTick;      /// @dev Latest updated inputPool price tick

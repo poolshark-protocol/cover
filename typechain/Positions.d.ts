@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
-    "validate((int24,int24,int24,int24,bool,uint128,(uint24,int24,uint32,uint8,int24,uint32)))": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint24,int24,uint16,uint32,uint8,int24,uint32)))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -41,6 +41,7 @@ interface PositionsInterface extends ethers.utils.Interface {
         state: {
           swapFee: BigNumberish;
           tickSpread: BigNumberish;
+          twapLength: BigNumberish;
           lastBlockNumber: BigNumberish;
           unlocked: BigNumberish;
           latestTick: BigNumberish;
@@ -119,6 +120,7 @@ export class Positions extends BaseContract {
         state: {
           swapFee: BigNumberish;
           tickSpread: BigNumberish;
+          twapLength: BigNumberish;
           lastBlockNumber: BigNumberish;
           unlocked: BigNumberish;
           latestTick: BigNumberish;
@@ -149,6 +151,7 @@ export class Positions extends BaseContract {
       state: {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
+        twapLength: BigNumberish;
         lastBlockNumber: BigNumberish;
         unlocked: BigNumberish;
         latestTick: BigNumberish;
@@ -179,6 +182,7 @@ export class Positions extends BaseContract {
         state: {
           swapFee: BigNumberish;
           tickSpread: BigNumberish;
+          twapLength: BigNumberish;
           lastBlockNumber: BigNumberish;
           unlocked: BigNumberish;
           latestTick: BigNumberish;
@@ -212,6 +216,7 @@ export class Positions extends BaseContract {
         state: {
           swapFee: BigNumberish;
           tickSpread: BigNumberish;
+          twapLength: BigNumberish;
           lastBlockNumber: BigNumberish;
           unlocked: BigNumberish;
           latestTick: BigNumberish;
@@ -239,6 +244,7 @@ export class Positions extends BaseContract {
         state: {
           swapFee: BigNumberish;
           tickSpread: BigNumberish;
+          twapLength: BigNumberish;
           lastBlockNumber: BigNumberish;
           unlocked: BigNumberish;
           latestTick: BigNumberish;
