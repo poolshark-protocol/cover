@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "./FullPrecisionMath.sol";
-import "hardhat/console.sol";
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library DyDxMath
@@ -78,28 +77,5 @@ library DyDxMath
                 liquidity = liquidity1;
             }
         }
-    }
-
-    function getAmountsForLiquidity(
-        uint256 priceLower,
-        uint256 priceUpper,
-        uint256 currentPrice,
-        uint256 liquidityAmount,
-        bool roundUp
-    ) external view returns (uint128 token0amount, uint128 token1amount) {
-        if (priceUpper <= currentPrice) {
-            // Only supply `token1` (`token1` is Y).
-            //TODO: confirm casting is safe
-            token1amount = uint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
-        } else if (currentPrice <= priceLower) {
-            // Only supply `token0` (`token0` is X).
-            token0amount = uint128(_getDx(liquidityAmount, priceLower, priceUpper, roundUp));
-        } else {
-            // Supply both tokens.
-            token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
-            token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
-        }
-        console.log("tokenIn amount:        ", token0amount);
-        console.log("tokenOut amount:       ", token1amount);
     }
 }
