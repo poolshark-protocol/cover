@@ -66,15 +66,39 @@ describe('TickMath Library Tests', function () {
     this.beforeEach(async function () {
     });
 
-    it('Should get accurate tick from sqrt price', async function () {
+    it('Should get tick near min sqrt price', async function () {
         expect(await hre.props.tickMathLib.getTickAtSqrtRatio(
-            BigNumber.from("79307426338960776842885539844")
-        )).to.be.equal(BigNumber.from("19"));
+            BigNumber.from("4295128740")
+        )).to.be.equal(BigNumber.from("-887272"));
     });
 
-    it('Should get accurate tick from sqrt price', async function () {
+    it('Should get tick at min sqrt price', async function () {
         expect(await hre.props.tickMathLib.getTickAtSqrtRatio(
-            BigNumber.from("79307426338960776842885539845")
-        )).to.be.equal(BigNumber.from("20"));
+            BigNumber.from("4295128739")
+        )).to.be.equal(BigNumber.from("-887272"));
     });
+
+    it('getTickAtSqrtRatio - Should get tick near max sqrt price', async function () {
+        expect(await hre.props.tickMathLib.getTickAtSqrtRatio(
+            BigNumber.from("1461446703485210103287273052203988822378723970341")
+        )).to.be.equal(BigNumber.from("887271"));
+    });
+
+    it('getTickAtSqrtRatio - Should revert at max sqrt price', async function () {
+        await expect(hre.props.tickMathLib.getTickAtSqrtRatio(
+            BigNumber.from("1461446703485210103287273052203988822378723970342")
+        )).to.be.revertedWith("Transaction reverted: library was called directly");
+    });
+
+    it('getTickAtSqrtRatio - Should revert when sqrt price is below bounds', async function () {
+        await expect(hre.props.tickMathLib.getTickAtSqrtRatio(
+            BigNumber.from("4295128738")
+        )).to.be.revertedWith("Transaction reverted: library was called directly");
+    }); 
+
+    it('getTickAtSqrtRatio - Should revert when sqrt price is above bounds', async function () {
+        await expect(hre.props.tickMathLib.getTickAtSqrtRatio(
+            BigNumber.from("1461446703485210103287273052203988822378723970343")
+        )).to.be.revertedWith("Transaction reverted: library was called directly");
+    }); 
 });
