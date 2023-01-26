@@ -5,6 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    - name: Compile Contracts
+        run: |
+          npx hardhat compile
+    - name: Coverage Report
+        run: |
+          npx hardhat coverage
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
