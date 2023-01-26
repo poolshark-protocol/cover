@@ -1,12 +1,15 @@
 on: push
 
-steps:
-- uses: actions/checkout@test-coverage-twap-lib
-- uses: codecov/codecov-action@v3
-  with:
-    token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-    files: ./coverage/coverage-final.json # optional
-    # flags: contracttests # optional
-    name: cover-contract-tests # optional
-    fail_ci_if_error: true # optional (default = false)
-    verbose: true # optional (default = false)
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@test-coverage-twap-lib
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        files: ./coverage/coverage-final.json # optional
+        # flags: contracttests # optional
+        name: cover-contract-tests # optional
+        fail_ci_if_error: true # optional (default = false)
+        verbose: true # optional (default = false)
