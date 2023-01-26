@@ -57,7 +57,7 @@ export async function validateSync(
         signer.address,
         false,
         token1Balance,
-        BigNumber.from("4294967296")
+        BigNumber.from("4295128739")
     );
     await txn.wait();
 

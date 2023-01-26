@@ -66,13 +66,25 @@ describe('TickMath Library Tests', function () {
     this.beforeEach(async function () {
     });
 
-    it('Should get tick near min sqrt price', async function () {
-        expect(await hre.props.tickMathLib.getTickAtSqrtRatio(
-            BigNumber.from("4295128740")
-        )).to.be.equal(BigNumber.from("-887272"));
+    it('validatePrice - Should revert below min sqrt price', async function () {
+        await expect(hre.props.tickMathLib.validatePrice(
+            BigNumber.from("4295128738")
+        )).to.be.revertedWith("Transaction reverted: library was called directly");
     });
 
-    it('Should get tick at min sqrt price', async function () {
+    it('validatePrice - Should revert at max sqrt price', async function () {
+        await expect(hre.props.tickMathLib.validatePrice(
+            BigNumber.from("1461446703485210103287273052203988822378723970342")
+        )).to.be.revertedWith("Transaction reverted: library was called directly");
+    });
+
+    it('getSqrtRatioAtTick - Should get tick near min sqrt price', async function () {
+        expect(await hre.props.tickMathLib.getSqrtRatioAtTick(
+            BigNumber.from("-887272")
+        )).to.be.equal(BigNumber.from("4295128739"));
+    });
+
+    it('getTickAtSqrtRatio - Should get tick at min sqrt price', async function () {
         expect(await hre.props.tickMathLib.getTickAtSqrtRatio(
             BigNumber.from("4295128739")
         )).to.be.equal(BigNumber.from("-887272"));

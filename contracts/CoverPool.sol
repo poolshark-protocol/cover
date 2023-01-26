@@ -361,6 +361,7 @@ contract CoverPool is
         GlobalState memory state = globalState;
         if (state.latestTick < TickMath.MIN_TICK) revert WaitUntilEnoughObservations();
         PoolState   memory pool  = zeroForOne ? pool1 : pool0;
+        console.log('price limit:', priceLimit);
         TickMath.validatePrice(priceLimit);
 
         _transferIn(zeroForOne ? token0 : token1, amountIn);

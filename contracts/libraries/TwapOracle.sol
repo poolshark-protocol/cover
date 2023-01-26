@@ -16,12 +16,8 @@ library TwapOracle
     // @dev must be deterministic since called externally
     function initializePoolObservations(IRangePool pool, uint16 twapLength) external returns (uint8 initializable, int24 startingTick) {
         if (!_isPoolObservationsEnough(pool, twapLength)) {
-            console.log('pool observations not enough');
             _increaseV3Observations(address(pool), twapLength);
-            console.log('pool observations:', _isPoolObservationsEnough(pool, twapLength));
             return (0, 0);
-        } else {
-            console.log('pool observations:', _isPoolObservationsEnough(pool, twapLength));
         }
         return (1, _calculateAverageTick(pool, twapLength));
     }
@@ -44,7 +40,6 @@ library TwapOracle
 
     function _isPoolObservationsEnough(IRangePool pool, uint16 twapLength) internal view returns (bool){
         (,,,uint16 observationsCount,,,) = pool.slot0();
-        console.log('pool observations:', observationsCount);
         return observationsCount >= twapLength;
     }
 
