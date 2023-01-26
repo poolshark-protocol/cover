@@ -1,3 +1,4 @@
 module.exports = {
-    skipFiles: ['test', 'utils']
+    skipFiles: ['test', 'utils'],
+    configureYulOptimizer: true
 };

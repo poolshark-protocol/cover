@@ -231,6 +231,7 @@ export async function validateMint(
           );
           await txn.wait();
     } else {
+        console.log('expecting revert')
         await expect(hre.props.coverPool.connect(signer).mint(
             lowerOld,
             lower,
@@ -239,7 +240,8 @@ export async function validateMint(
             claim,
             amountDesired,
             zeroForOne
-          )).to.be.revertedWith(revertMessage);
+        )).to.be.revertedWith(revertMessage);
+        console.log('revert', revertMessage, 'done')
         return;
     }
 

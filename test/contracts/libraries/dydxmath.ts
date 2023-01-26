@@ -67,12 +67,22 @@ describe('DyDxMath Library Tests', function () {
     });
 
     it('Should get accurate dx value when rounding up', async function () {
-
         expect(await hre.props.dydxMathLib.getDx(
             BigNumber.from("99855108194609381495771"),
             BigNumber.from("79386769463160146968577785965"),
-            BigNumber.from("79545693927487839655804034729"),
-            true
-        )).to.be.equal(BigNumber.from("199102091646158105193"));
+            BigNumber.from("79545693927487839655804034729")
+        )).to.be.equal(BigNumber.from("199102091646158105192"));
     });
+
+    it('Should revert if getting liquidity value outside price bounds', async function () {
+        await expect(hre.props.dydxMathLib.getLiquidityForAmounts(
+            BigNumber.from("79386769463160146968577785965"),
+            BigNumber.from("79545693927487839655804034729"),
+            BigNumber.from("99855108194609381495771"),
+            BigNumber.from("20"),
+            BigNumber.from("20")
+        )).to.be.revertedWith("Transaction reverted: library was called directly");
+        //TODO: wrong error is reported using hardhat
+        // )).to.be.revertedWith("PriceOutsideOfBounds()");
+    })
 });

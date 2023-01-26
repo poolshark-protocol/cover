@@ -59,7 +59,7 @@ library Positions
                 params.upper = params.state.latestTick - int24(params.state.tickSpread);
                 params.upperOld = params.state.latestTick;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
-                params.amount -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false));
+                params.amount -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper));
                 priceUpper = priceNewUpper;
             }
         }
@@ -68,7 +68,7 @@ library Positions
                 params.lower = params.state.latestTick + int24(params.state.tickSpread);
                 params.lowerOld = params.state.latestTick;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
-                params.amount -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false));
+                params.amount -= uint128(DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower));
                 priceLower = priceNewLower;
             }
         }
@@ -106,6 +106,9 @@ library Positions
                 revert WrongTickClaimedAt();
             }
         }
+
+        // /// validate mint amount is not over max tick liquidity
+        // if (amount > 0 && uint128(amount) + cache.position.liquidity > MAX_TICK_LIQUIDITY) revert MaxTickLiquidity();
 
         Ticks.insert(
             ticks,
@@ -173,14 +176,12 @@ library Positions
             DyDxMath.getDx(
                 params.amount,
                 cache.priceLower,
-                cache.priceUpper,
-                false
+                cache.priceUpper
             )
             : DyDxMath.getDy(
                 params.amount,
                 cache.priceLower,
-                cache.priceUpper,
-                false
+                cache.priceUpper
             )
         );
 
@@ -217,9 +218,10 @@ library Positions
             amountOutDelta: 0
         });
         /// validate burn amount
-        if (params.amount < 0 && uint128(-params.amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
-                if (cache.position.liquidity == 0 
-         || params.claim == (params.zeroForOne ? params.upper : params.lower)
+        // if (params.amount < 0 && uint128(-params.amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
+        // check for no position liquidity
+        // or claiming from tick w/ zero fill
+        if (cache.position.liquidity == 0
         ) { 
             console.log('update return early early'); 
             return (
@@ -230,26 +232,20 @@ library Positions
                     state
             ); 
         }
-        //TODO: add to mint call
-        // /// validate mint amount 
-        // if (amount > 0 && uint128(amount) + cache.position.liquidity > MAX_TICK_LIQUIDITY) revert MaxTickLiquidity();
 
         /// validate claim param
         if (cache.position.claimPriceLast > cache.claimPrice) revert InvalidClaimTick();
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
-        /// handle params.claims
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)){
-            /// position filled
-            console.log('accum epochs');
-            console.log(cache.claimTick.accumEpochLast, cache.position.accumEpochLast);
+            // position 100% filled
             if (cache.claimTick.accumEpochLast <= cache.position.accumEpochLast) revert WrongTickClaimedAt();
             {
                 /// @dev - next tick having fee growth means liquidity was cleared
                 uint32 claimNextTickAccumEpoch = params.zeroForOne ? tickNodes[cache.claimTick.previousTick].accumEpochLast 
-                                                            : tickNodes[cache.claimTick.nextTick].accumEpochLast;
+                                                                   : tickNodes[cache.claimTick.nextTick].accumEpochLast;
                 if (claimNextTickAccumEpoch > cache.position.accumEpochLast) params.zeroForOne ? cache.removeLower = false 
-                                                                                        : cache.removeUpper = false;
+                                                                                               : cache.removeUpper = false;
             }
             /// @dev - ignore carryover for last tick of position
             cache.amountInDelta  = ticks[params.claim].amountInDelta - int64(ticks[params.claim].amountInDeltaCarryPercent) 
@@ -260,7 +256,10 @@ library Positions
         else {
             ///@dev - next accumEpoch should not be greater
             uint32 claimNextTickAccumEpoch = params.zeroForOne ? tickNodes[cache.claimTick.previousTick].accumEpochLast 
-                                                        : tickNodes[cache.claimTick.nextTick].accumEpochLast;
+                                                               : tickNodes[cache.claimTick.nextTick].accumEpochLast;
+            console.log('claim tick:');
+            console.logInt(params.claim);
+            console.log(claimNextTickAccumEpoch);
             if (claimNextTickAccumEpoch > cache.position.accumEpochLast) revert WrongTickClaimedAt();
             if (params.amount < 0) {
                 /// @dev - check if liquidity removal required
@@ -291,14 +290,12 @@ library Positions
                         DyDxMath.getDy(
                             1, // multiplied by liquidity later
                             latestTickPrice,
-                            pool.price,
-                            false
+                            pool.price
                         )
                         : DyDxMath.getDx(
                             1, 
                             pool.price,
-                            latestTickPrice, 
-                            false
+                            latestTickPrice
                         )
                 ));
                 //TODO: implement stopPrice for pool/1
@@ -306,14 +303,12 @@ library Positions
                     DyDxMath.getDx(
                         1, // multiplied by liquidity later
                         pool.price,
-                        cache.claimPrice,
-                        false
+                        cache.claimPrice
                     )
                     : DyDxMath.getDy(
                         1, 
                         cache.claimPrice,
-                        pool.price, 
-                        false
+                        pool.price
                     )
                 ));
                 //TODO: do we need to handle minus deltas correctly depending on direction
@@ -334,14 +329,12 @@ library Positions
                                                 DyDxMath.getDy(
                                                     cache.position.liquidity,
                                                     cache.claimPrice,
-                                                    cache.position.claimPriceLast,
-                                                    false
+                                                    cache.position.claimPriceLast
                                                 )
                                                 : DyDxMath.getDx(
                                                     cache.position.liquidity, 
                                                     cache.position.claimPriceLast,
-                                                    cache.claimPrice, 
-                                                    false
+                                                    cache.claimPrice
                                                 );
                 if (cache.amountInDelta > 0) {
                     amountInClaimable += FullPrecisionMath.mulDiv(
@@ -376,7 +369,7 @@ library Positions
         }
 
         // if burn or second mint
-        if (params.amount < 0 || (params.amount > 0 && cache.position.liquidity > 0 && params.claim > params.lower)) {
+        if (params.amount < 0 || (params.amount > 0 && cache.position.liquidity > 0 && (params.zeroForOne ? params.claim < params.upper : params.claim > params.lower))) {
             Ticks.remove(
                 ticks,
                 tickNodes,
@@ -392,14 +385,12 @@ library Positions
                 DyDxMath.getDx(
                     uint128(-params.amount),
                     cache.priceLower,
-                    cache.claimPrice,
-                    false
+                    cache.claimPrice
                 )
                 : DyDxMath.getDy(
                     uint128(-params.amount),
                     cache.claimPrice,
-                    cache.priceUpper,
-                    false
+                    cache.priceUpper
                 )
             );
             if (params.amount < 0) {

@@ -8,51 +8,41 @@ library DyDxMath
 {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
+    error PriceOutsideBounds();
+
     function getDy(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
+        uint256 priceUpper
     ) external pure returns (uint256 dy) {
-        return _getDy(liquidity, priceLower, priceUpper, roundUp);
+        return _getDy(liquidity, priceLower, priceUpper);
     }
 
     function getDx(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
+        uint256 priceUpper
     ) external pure returns (uint256 dx) {
-        return _getDx(liquidity, priceLower, priceUpper, roundUp);
+        return _getDx(liquidity, priceLower, priceUpper);
     }
 
     function _getDy(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
+        uint256 priceUpper
     ) internal pure returns (uint256 dy) {
         unchecked {
-            if (roundUp) {
-                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
-            } else {
-                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
-            }
+            dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
         }
     }
 
     function _getDx(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
+        uint256 priceUpper
     ) internal pure returns (uint256 dx) {
         unchecked {
-            if (roundUp) {
-                dx = FullPrecisionMath.divRoundingUp(FullPrecisionMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
-            } else {
-                dx = FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
-            }
+            dx = FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
         }
     }
     //TODO: debug math for this to validate numbers
@@ -64,18 +54,18 @@ library DyDxMath
         uint256 dx
     ) external pure returns (uint256 liquidity) {
         unchecked {
-            if (priceUpper <= currentPrice) {
+            if (priceUpper == currentPrice) {
                 liquidity = FullPrecisionMath.mulDiv(dy, Q96, priceUpper - priceLower);
-            } else if (currentPrice <= priceLower) {
+            } else if (currentPrice == priceLower) {
                 liquidity = FullPrecisionMath.mulDiv(
                     dx,
                     FullPrecisionMath.mulDiv(priceLower, priceUpper, Q96),
                     priceUpper - priceLower
                 );
             } else {
-                uint256 liquidity1 = FullPrecisionMath.mulDiv(dy, Q96, currentPrice - priceLower);
-                liquidity = liquidity1;
+                revert PriceOutsideBounds();
             }
+            /// @dev - price should never be outside of lower and upper
         }
     }
 }
