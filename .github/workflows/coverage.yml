@@ -1,3 +1,5 @@
+on: push
+
 steps:
 - uses: actions/checkout@test-coverage-twap-lib
 - uses: codecov/codecov-action@v3
