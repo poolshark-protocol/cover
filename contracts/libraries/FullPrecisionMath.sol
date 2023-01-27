@@ -13,7 +13,7 @@ library FullPrecisionMath
     }
 
     // @dev no underflow or overflow checks
-    function divRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
+    function divRoundingUp(uint256 x, uint256 y) external pure returns (uint256 z) {
         assembly {
             z := add(div(x, y), gt(mod(x, y), 0))
         }

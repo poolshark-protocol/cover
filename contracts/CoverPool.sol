@@ -80,21 +80,17 @@ contract CoverPool is
     //TODO: test this check
     function _ensureInitialized(GlobalState memory state) internal returns (GlobalState memory) {
         if (state.unlocked == 0) {
-            //console.log("unlocked is zero");
             (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
                                                     IRangePool(inputPool),
                                                     state.twapLength
                                                  );
-                                                 //console.log('unlocked:', state.unlocked);
             if(state.unlocked == 1) { _initialize(state); }
-            //else //console.log('not initialized yet');
         }
         return state;
     }
 
     function _initialize(GlobalState memory state) internal {
         //TODO: store values in memory then write to state
-        //console.log('being initialized');
         state.latestTick = state.latestTick / int24(state.tickSpread) * int24(state.tickSpread);
         state.accumEpoch = 1;
         Ticks.initialize(
@@ -124,8 +120,6 @@ contract CoverPool is
         globalState = _ensureInitialized(globalState);
         // GlobalState memory globalState = globalState;
         if (globalState.unlocked == 0 ) revert WaitUntilEnoughObservations();
-        else //console.log('unlocked state', globalState.unlocked);
-        //console.logInt(globalState.latestTick);
         
         //TODO: move tick update check here
         if(block.number != globalState.lastBlockNumber) {
@@ -205,7 +199,6 @@ contract CoverPool is
             );
             /// @dev - pool current liquidity should never be increased on mint
         }
-        //console.logInt(ticks1[lower].liquidityDelta);
         emit Mint(
             msg.sender,
             lower,
@@ -244,10 +237,6 @@ contract CoverPool is
                 TwapOracle.calculateAverageTick(inputPool, state.twapLength)
             );
         }
-        //console.log('zero previous tick:');
-        //console.log('zero previus tick:');
-        // //console.logInt(ticks[0].previousTick);
-
         //TODO: burning liquidity should take liquidity out past the current auction
         
         // Ensure no overflow happens when we cast from uint128 to int128.
@@ -269,11 +258,8 @@ contract CoverPool is
                 int128(amount)
             )
         );
-        //console.logInt(claim);
-        //console.logInt(lower);
         // if position hasn't changed remove liquidity
         if (claim == (zeroForOne ? upper : lower)) {
-            //console.log('removing liquidity');
             (,state) = Positions.remove(
                zeroForOne ? positions0 : positions1,
                zeroForOne ? ticks0 : ticks1,
@@ -288,8 +274,6 @@ contract CoverPool is
                )
             );
         }
-
-        //console.log('zero previous tick:');
         //TODO: get token amounts from _updatePosition return values
         emit Burn(msg.sender, lower, upper, zeroForOne, amount);
         globalState = state;
@@ -303,7 +287,6 @@ contract CoverPool is
     ) public lock returns (uint256 amountIn, uint256 amountOut) {
         GlobalState memory state = globalState;
         if(block.number != state.lastBlockNumber) {
-            // //console.log("accumulating last block");
             state.lastBlockNumber = uint32(block.number);
             (
                 state,
@@ -334,7 +317,6 @@ contract CoverPool is
                 0
             )
         );
-        //console.log(positions1[msg.sender][lower][upper].amountOut);
         /// zero out balances
         zeroForOne ? positions0[msg.sender][lower][upper].amountIn = 0 
                    : positions1[msg.sender][lower][upper].amountIn = 0;
@@ -361,16 +343,12 @@ contract CoverPool is
         GlobalState memory state = globalState;
         if (state.latestTick < TickMath.MIN_TICK) revert WaitUntilEnoughObservations();
         PoolState   memory pool  = zeroForOne ? pool1 : pool0;
-        console.log('price limit:', priceLimit);
         TickMath.validatePrice(priceLimit);
 
         _transferIn(zeroForOne ? token0 : token1, amountIn);
 
         if(block.number != state.lastBlockNumber) {
             state.lastBlockNumber = uint32(block.number);
-            // //console.log('min latest max');
-            // //console.logInt(tickNodes[-887272].nextTick);
-            // //console.logInt(tickNodes[-887272].previousTick);
             (state, pool0, pool1) = Ticks.accumulateLastBlock(
                 ticks0,
                 ticks1,
