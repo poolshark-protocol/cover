@@ -36,35 +36,24 @@ export interface Tick {
     amountOutDeltaCarryPercent: BigNumber,
 }
 
-export async function validateSync(
+export interface ValidateMintParams {
     signer: SignerWithAddress,
-    newLatestTick: number
-) {
-    /// get tick node status before
-    
-    // const tickNodes = await hre.props.coverPool.tickNodes();
-    /// update TWAP
-    let txn = await hre.props.rangePoolMock.setTickCumulatives(
-        BigNumber.from(newLatestTick.toString()).mul(120),
-        BigNumber.from(newLatestTick.toString()).mul(60)
-    );
-    await txn.wait();
-
-    /// send a "no op" swap to trigger accumulate
-    const token1Balance = await hre.props.token1.balanceOf(signer.address);
-    await hre.props.token1.approve(hre.props.coverPool.address, token1Balance);
-    txn = await hre.props.coverPool.swap(
-        signer.address,
-        false,
-        token1Balance,
-        BigNumber.from("4295128739")
-    );
-    await txn.wait();
-
-    /// check tick status after
+    recipient: string,
+    lowerOld: string,
+    lower: string,
+    upperOld: string,
+    upper: string,
+    claim: string,
+    amount: BigNumber,
+    zeroForOne: boolean,
+    balanceInDecrease: BigNumber,
+    liquidityIncrease: BigNumber,
+    upperTickCleared: boolean,
+    lowerTickCleared: boolean,
+    revertMessage: string
 }
 
-export async function validateSwap(
+export interface ValidateSwapParams {
     signer: SignerWithAddress,
     recipient: string,
     zeroForOne: boolean,
@@ -75,9 +64,66 @@ export async function validateSwap(
     finalLiquidity: BigNumber,
     finalPrice: BigNumber,
     revertMessage: string
+}
+
+export interface ValidateBurnParams {
+    signer: SignerWithAddress,
+    lower: string,
+    upper: string,
+    claim: string,
+    liquidityAmount: BigNumber,
+    zeroForOne: boolean,
+    balanceInIncrease: BigNumber,
+    balanceOutIncrease: BigNumber,
+    lowerTickCleared: boolean,
+    upperTickCleared: boolean,
+    revertMessage: string
+}
+
+export async function validateSync(
+    signer: SignerWithAddress,
+    newLatestTick: string
 ) {
+    /// get tick node status before
+    
+    // const tickNodes = await hre.props.coverPool.tickNodes();
+    /// update TWAP
+    let txn = await hre.props.rangePoolMock.setTickCumulatives(
+        BigNumber.from(newLatestTick).mul(120),
+        BigNumber.from(newLatestTick).mul(60)
+    );
+    await txn.wait();
+
+    /// send a "no op" swap to trigger accumulate
+    const token1Balance = await hre.props.token1.balanceOf(signer.address);
+    await hre.props.token1.approve(hre.props.coverPool.address, token1Balance);
+
+    txn = await hre.props.coverPool.swap(
+        signer.address,
+        false,
+        BigNumber.from("0"),
+        BigNumber.from("4295128739")
+    );
+    await txn.wait();
+
+    /// check tick status after
+}
+
+export async function validateSwap(
+    params: ValidateSwapParams
+) {
+    const signer = params.signer;
+    const recipient = params.recipient;
+    const zeroForOne = params.zeroForOne;
+    const amountIn = params.amountIn;
+    const sqrtPriceLimitX96 = params.sqrtPriceLimitX96;
+    const balanceInDecrease = params.balanceInDecrease;
+    const balanceOutIncrease = params.balanceOutIncrease;
+    const finalLiquidity = params.finalLiquidity;
+    const finalPrice = params.finalPrice;
+    const revertMessage = params.revertMessage;
+
     let balanceInBefore; let balanceOutBefore;
-    console.log(sqrtPriceLimitX96.toString())
     if(zeroForOne){
         balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
@@ -158,23 +204,25 @@ export async function validateSwap(
 }
 
 export async function validateMint(
-    signer: SignerWithAddress,
-    recipient: string,
-    lowerOld: BigNumber,
-    lower: BigNumber,
-    upperOld: BigNumber,
-    upper: BigNumber,
-    claim: BigNumber,
-    amountDesired: BigNumber,
-    zeroForOne: boolean,
-    balanceInDecrease: BigNumber,
-    liquidityIncrease: BigNumber,
-    upperTickCleared: boolean,
-    lowerTickCleared: boolean,
-    revertMessage: string
+    params: ValidateMintParams
 ) {
+    const signer = params.signer;
+    const recipient = params.recipient;
+    const lowerOld = BigNumber.from(params.lowerOld);
+    const lower = BigNumber.from(params.lower);
+    const upper = BigNumber.from(params.upper);
+    const upperOld = BigNumber.from(params.upperOld);
+    const claim = BigNumber.from(params.claim);
+    const amountDesired = params.amount;
+    const zeroForOne = params.zeroForOne;
+    const balanceInDecrease = params.balanceInDecrease;
+    const liquidityIncrease = params.liquidityIncrease;
+    const upperTickCleared = params.upperTickCleared;
+    const lowerTickCleared = params.lowerTickCleared;
+    const revertMessage = params.revertMessage;
+
     //collect first to recreate positions if necessary
-    const collectTxn = await hre.props.coverPool.connect(signer).collect(
+    const collectTxn = await hre.props.coverPool.connect(params.signer).collect(
         lower,
         upper,
         claim,
@@ -183,13 +231,13 @@ export async function validateMint(
     await collectTxn.wait();
     let balanceInBefore; let balanceOutBefore;
     if(zeroForOne){
-        balanceInBefore  = await hre.props.token0.balanceOf(signer.address);
-        balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
-        await hre.props.token0.connect(signer).approve(hre.props.coverPool.address, amountDesired);
+        balanceInBefore  = await hre.props.token0.balanceOf(params.signer.address);
+        balanceOutBefore = await hre.props.token1.balanceOf(params.signer.address);
+        await hre.props.token0.connect(params.signer).approve(hre.props.coverPool.address, amountDesired);
     } else {
-        balanceInBefore  = await hre.props.token1.balanceOf(signer.address);
-        balanceOutBefore = await hre.props.token0.balanceOf(signer.address);
-        await hre.props.token1.connect(signer).approve(hre.props.coverPool.address, amountDesired);
+        balanceInBefore  = await hre.props.token1.balanceOf(params.signer.address);
+        balanceOutBefore = await hre.props.token0.balanceOf(params.signer.address);
+        await hre.props.token1.connect(params.signer).approve(hre.props.coverPool.address, amountDesired);
     }
 
     let lowerOldTickBefore: Tick;
@@ -218,9 +266,8 @@ export async function validateMint(
             upper
         );
     }
-    //console.log('token1 address and balance:', hre.props.token1.address, (await hre.props.token1.balanceOf(signer.address)).toString());
     if (revertMessage == ""){
-        const txn = await hre.props.coverPool.connect(signer).mint(
+        const txn = await hre.props.coverPool.connect(params.signer).mint(
             lowerOld,
             lower,
             upperOld,
@@ -231,8 +278,7 @@ export async function validateMint(
           );
           await txn.wait();
     } else {
-        console.log('expecting revert')
-        await expect(hre.props.coverPool.connect(signer).mint(
+        await expect(hre.props.coverPool.connect(params.signer).mint(
             lowerOld,
             lower,
             upperOld,
@@ -241,17 +287,16 @@ export async function validateMint(
             amountDesired,
             zeroForOne
         )).to.be.revertedWith(revertMessage);
-        console.log('revert', revertMessage, 'done')
         return;
     }
 
     let balanceInAfter; let balanceOutAfter;
     if(zeroForOne){
-        balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
-        balanceOutAfter = await hre.props.token1.balanceOf(signer.address);
+        balanceInAfter  = await hre.props.token0.balanceOf(params.signer.address);
+        balanceOutAfter = await hre.props.token1.balanceOf(params.signer.address);
     } else {
-        balanceInAfter  = await hre.props.token1.balanceOf(signer.address);
-        balanceOutAfter = await hre.props.token0.balanceOf(signer.address);
+        balanceInAfter  = await hre.props.token1.balanceOf(params.signer.address);
+        balanceOutAfter = await hre.props.token0.balanceOf(params.signer.address);
     }
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease);
@@ -286,7 +331,6 @@ export async function validateMint(
 
     //TODO: handle lower and/or upper below TWAP
     //TODO: does this handle negative values okay?
-    // console.log('liquidity negative delta:', upperTickAfter.liquidityDelta.toString());
     if (zeroForOne) {
         //liquidity change for lower should be -liquidityAmount
         if(!upperTickCleared) {
@@ -323,18 +367,20 @@ export async function validateMint(
 }   
 
 export async function validateBurn(
-    signer: SignerWithAddress,
-    lower: BigNumber,
-    upper: BigNumber,
-    claim: BigNumber,
-    liquidityAmount: BigNumber,
-    zeroForOne: boolean,
-    balanceInIncrease: BigNumber,
-    balanceOutIncrease: BigNumber,
-    lowerTickCleared: boolean,
-    upperTickCleared: boolean,
-    revertMessage: string
+    params: ValidateBurnParams
 ) {
+    const signer = params.signer;
+    const lower = BigNumber.from(params.lower);
+    const upper = BigNumber.from(params.upper);
+    const claim = BigNumber.from(params.claim);
+    const liquidityAmount = params.liquidityAmount;
+    const zeroForOne = params.zeroForOne;
+    const balanceInIncrease = params.balanceInIncrease;
+    const balanceOutIncrease = params.balanceOutIncrease;
+    const upperTickCleared = params.upperTickCleared;
+    const lowerTickCleared = params.lowerTickCleared;
+    const revertMessage = params.revertMessage;
+
     let balanceInBefore; let balanceOutBefore;
     if(zeroForOne){
         balanceInBefore  = await hre.props.token1.balanceOf(signer.address);

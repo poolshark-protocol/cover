@@ -52,8 +52,6 @@ contract CoverPoolFactory is
 
         address inputPool = getInputPool(token0, token1, swapFee);
 
-        // console.log("factory input pool:", inputPool);
-
         // launch pool and save address
         pool =  address(
                     new CoverPool(

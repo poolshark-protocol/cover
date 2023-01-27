@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/IRangePool.sol";
 import "./RangePoolMock.sol";
-import "hardhat/console.sol";
 
 contract RangePoolMock is IRangePool {
 

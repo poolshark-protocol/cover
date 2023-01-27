@@ -43,7 +43,6 @@ library Ticks
             // price  is decreasing.
             if (nextPrice < priceLimit) { nextPrice = priceLimit; }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price);
-            // console.log("max dx:", maxDx);
             if (cache.input <= maxDx) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
@@ -67,7 +66,6 @@ library Ticks
             // Price is increasing.
             if (nextPrice > priceLimit) { nextPrice = priceLimit; }
             uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice);
-            // console.log("max dy:", maxDy);
             if (cache.input <= maxDy) {
                 // We can swap within the current range.
                 // Calculate new price after swap: ΔP = Δy/L.
@@ -79,8 +77,6 @@ library Ticks
                 cache.input = 0;
             } else {
                 // Swap & cross the tick.
-              //  console.log('cache price:', cache.price);
-              //  console.log(nextTickPrice);
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice);
                 cache.price = nextTickPrice;
                 cache.input -= maxDy;
@@ -153,18 +149,13 @@ library Ticks
             revert WrongTickUpperRange();
         }
         //TODO: merge Tick and TickData -> ticks0 and ticks1
-        // Stack overflow.
-        // console.log('current lower liquidity:', currentLowerLiquidity);
         //TODO: handle lower = latestTick
-      //  console.log('liquidity before');
-      //  console.logInt(ticks[upper].liquidityDelta);
         if (ticks[lower].liquidityDelta != 0 
             || ticks[lower].liquidityDeltaMinus != 0
             || ticks[lower].amountInDelta != 0
         ) {
             // tick exists
             //TODO: ensure amount < type(int128).max()
-          //  console.log('insert liq');
             if (isPool0) {
                 ticks[lower].liquidityDelta      -= int104(amount);
                 ticks[lower].liquidityDeltaMinus += amount;
@@ -189,23 +180,15 @@ library Ticks
             }
 
         }
-        // console.log('lower tick');
-        // console.logInt(tickNodes[lower].nextTick);
-        // console.logInt(tickNodes[lower].previousTick);
         if(tickNodes[lower].nextTick == tickNodes[lower].previousTick && lower != TickMath.MIN_TICK) {
-                  //  console.log('lower tick');
             int24 oldNextTick = tickNodes[lowerOld].nextTick;
             if (upper < oldNextTick) { oldNextTick = upper; }
             /// @dev - don't set previous tick so upper can be initialized
             else { tickNodes[oldNextTick].previousTick = lower; }
 
             if (lowerOld >= lower || lower >= oldNextTick) {
-              //  console.log('tick check');
-              //  console.logInt(tickNodes[lowerOld].nextTick);
-              //  console.logInt(tickNodes[lowerOld].previousTick);
                 revert WrongTickLowerOld();
             }
-          //  console.logInt(oldNextTick);
             tickNodes[lower] = ICoverPoolStructs.TickNode(
                 lowerOld,
                 oldNextTick,
@@ -213,17 +196,10 @@ library Ticks
             );
             tickNodes[lowerOld].nextTick = lower;
         }
-        // console.log('lower tick');
-        // console.logInt(tickNodes[lower].nextTick);
-        // console.logInt(tickNodes[lower].previousTick);
-              //  console.log('upper tick');
-      //  console.logInt(tickNodes[upper].previousTick);
-      //  console.logInt(tickNodes[upper].nextTick);
         if (ticks[upper].liquidityDelta != 0 
             || ticks[upper].liquidityDeltaMinus != 0
             || ticks[lower].amountInDelta != 0
         ) {
-          //  console.log('adding liquidity');
             // We are adding liquidity to an existing tick.
             if (isPool0) {
                 ticks[upper].liquidityDelta      += int104(amount);
@@ -249,11 +225,6 @@ library Ticks
         if(tickNodes[upper].nextTick == tickNodes[upper].previousTick && upper != TickMath.MAX_TICK) {
             int24 oldPrevTick = tickNodes[upperOld].previousTick;
             if (lower > oldPrevTick) oldPrevTick = lower;
-
-            // console.logInt(tickNodes[upperOld].nextTick);
-            // console.logInt(tickNodes[upperOld].previousTick);
-            // console.logInt(ticks[upper].liquidityDelta);
-            // console.log(ticks[upper].liquidityDeltaMinus);
             //TODO: handle new TWAP being in between upperOld and upper
             /// @dev - if nextTick == previousTick this tick node is uninitialized
             if (tickNodes[upperOld].nextTick == tickNodes[upperOld].previousTick
@@ -302,14 +273,12 @@ library Ticks
             }
         }
         if (removeLower) {
-                      //  console.log('deleting lower tick');
             if (isPool0) {
                 ticks[lower].liquidityDelta += int104(amount);
                 ticks[lower].liquidityDeltaMinus -= amount;
             } else {
                 ticks[lower].liquidityDelta -= int104(amount);
             }
-                      //  console.log('deleting lower tick');
         }
 
         //TODO: could also modify amounts and then check if liquidityDelta and liquidityDeltaMinus are both zero
@@ -331,19 +300,14 @@ library Ticks
         //TODO: that is the tick that should have liquidity values modified
         //TODO: keep unchecked block?
         if (removeUpper) {
-                                  //  console.log('deleting upper tick');
             if (isPool0) {
                 ticks[upper].liquidityDelta -= int104(amount);
             } else {
                 ticks[upper].liquidityDelta += int104(amount);
                 ticks[upper].liquidityDeltaMinus -= amount;
             }
-                                              //  console.log('deleting upper tick');
         }
         /// @dev - we can never delete ticks due to amount deltas
-
-      //  console.log('removed lower liquidity:', amount);
-      //  console.log('removed upper liquidity:', amount);
     }
 
     function _accumulate(
@@ -357,9 +321,6 @@ library Ticks
         int128 amountOutDelta,
         bool removeLiquidity
     ) internal returns (int128, int128) {
-      //  console.log('fee growth accumulate check');
-      //  console.log(tickNodes[nextTickToCross].accumEpochLast);
-      //  console.log(tickNodes[nextTickToAccum].accumEpochLast);
 
         //update fee growth
         tickNodes[nextTickToAccum].accumEpochLast = accumEpoch;
@@ -589,11 +550,6 @@ library Ticks
             amountOutDelta1: 0
         });
 
-      //  console.logInt(cache.nextTickToCross0);
-      //  console.logInt(pool0.lastTick);
-      //  console.logInt(tickNodes[pool0.lastTick].nextTick);
-
-
         while(cache.nextTickToCross0 != pool0.lastTick) {
             (
                 pool0.liquidity, 
@@ -607,9 +563,6 @@ library Ticks
                 pool0.liquidity,
                 false
             );
-      //  console.logInt(cache.nextTickToCross0);
-      //  console.logInt(pool0.lastTick);
-      //  console.logInt(tickNodes[pool0.lastTick].nextTick);
                     
         }
         
@@ -631,10 +584,6 @@ library Ticks
 
 
         //TODO: handle ticks not crossed into as a result of big TWAP move
-        // console.log('check cache');
-        // console.logInt(cache.nextTickToCross1);
-        // console.logInt(cache.nextTickToAccum1);
-        // console.logInt(tickNodes[cache.nextTickToCross1].nextTick);
         // handle partial tick fill
         // update liquidity and ticks
         //TODO: do we return here is latestTick has not moved??
@@ -657,9 +606,6 @@ library Ticks
                     );
                 }
                 //accumulate to next tick
-              //  console.log('pool0 accumulate');
-              //  console.logInt(cache.nextTickToCross0);
-              //  console.logInt(cache.nextTickToAccum0);
                 (
                     cache.amountInDelta0,
                     cache.amountOutDelta0
@@ -676,8 +622,6 @@ library Ticks
                 );
             }
             //cross otherwise break
-          //  console.logInt(cache.nextTickToAccum0);
-          //  console.logInt(cache.stopTick0);
             if (cache.nextTickToAccum0 > cache.stopTick0) {
                 (
                     pool0.liquidity, 
@@ -740,9 +684,6 @@ library Ticks
                     );
                 }
                 //accumulate to next tick
-              //  console.log('pool1 accumulate');
-              //  console.logInt(cache.nextTickToCross1);
-              //  console.logInt(cache.nextTickToAccum1);
                 (
                     cache.amountInDelta1,
                     cache.amountOutDelta1
@@ -759,8 +700,6 @@ library Ticks
                 );
             }
             //cross otherwise break
-          //  console.logInt(cache.nextTickToAccum1);
-          //  console.logInt(cache.stopTick1);
             if (cache.nextTickToAccum1 < cache.stopTick1) {
                 (
                     pool1.liquidity, 
@@ -814,10 +753,6 @@ library Ticks
             if (cache.nextTickToAccum1 != nextLatestTick) {
                 // if this is true we need to delete the old tick
                 //TODO: don't delete old latestTick for now
-                          //  console.log('twap moving up');
-                          //  console.logInt(cache.stopTick1);
-                          //  console.logInt(tickNodes[cache.nextTickToCross1].nextTick);
-                          //  console.logInt(cache.nextTickToAccum1);
                 tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
@@ -832,9 +767,6 @@ library Ticks
 
             pool0.lastTick  = tickNodes[nextLatestTick].nextTick;
             pool1.lastTick  = cache.nextTickToCross1;
-
-          //  console.logInt(pool0.lastTick);
-          //  console.logInt(pool1.lastTick);
         // handle TWAP moving down
         } else if (nextLatestTick < state.latestTick) {
             //TODO: if tick is deleted rollover amounts if necessary
@@ -851,7 +783,6 @@ library Ticks
                 tickNodes[cache.nextTickToAccum0].nextTick     = nextLatestTick;
                 //TODO: replace nearestTick with priceLimit for swapping...maybe
             }
-                      //  console.log('twap moving down');
             pool0.liquidity = pool0.liquidity;
             pool1.liquidity = 0;
             pool0.lastTick  = cache.nextTickToCross0;

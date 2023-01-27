@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "./TickMath.sol";
 import "./Ticks.sol";
 import "../interfaces/ICoverPoolStructs.sol";
-import "hardhat/console.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
 
@@ -95,7 +94,6 @@ library Positions
         /// initialize new position
         if (params.amount == 0) return (0, state);
         if (cache.position.liquidity == 0) {
-            console.log('new position');
             cache.position.accumEpochLast = state.accumEpoch;
             cache.position.claimPriceLast = params.zeroForOne ? uint160(cache.priceUpper) : uint160(cache.priceLower);
         } else {
@@ -121,15 +119,9 @@ library Positions
             params.zeroForOne
         );
 
-        console.logInt(ticks[params.lower].liquidityDelta);
-        console.logInt(ticks[params.upper].liquidityDelta);
-
         cache.position.liquidity += uint128(params.amount);
-        console.log('position liquidity check:', cache.position.liquidity);
-
 
         positions[params.owner][params.lower][params.upper] = cache.position;
-                console.log(positions[params.owner][params.lower][params.upper].liquidity);
 
         return (params.amount, state);
     }
@@ -185,14 +177,8 @@ library Positions
             )
         );
 
-        console.logInt(ticks[params.lower].liquidityDelta);
-        console.logInt(ticks[params.upper].liquidityDelta);
-
         cache.position.liquidity -= uint128(params.amount);
         positions[params.owner][params.lower][params.upper] = cache.position;
-
-        console.log('position liquidity check:', cache.position.liquidity);
-        console.log(positions[params.owner][params.lower][params.upper].liquidity);
 
         return (params.amount, state);
     }
@@ -222,8 +208,7 @@ library Positions
         // check for no position liquidity
         // or claiming from tick w/ zero fill
         if (cache.position.liquidity == 0
-        ) { 
-            console.log('update return early early'); 
+        ) {  
             return (
                     cache.position.amountIn,
                     cache.position.amountOut,
@@ -257,9 +242,6 @@ library Positions
             ///@dev - next accumEpoch should not be greater
             uint32 claimNextTickAccumEpoch = params.zeroForOne ? tickNodes[cache.claimTick.previousTick].accumEpochLast 
                                                                : tickNodes[cache.claimTick.nextTick].accumEpochLast;
-            console.log('claim tick:');
-            console.logInt(params.claim);
-            console.log(claimNextTickAccumEpoch);
             if (claimNextTickAccumEpoch > cache.position.accumEpochLast) revert WrongTickClaimedAt();
             if (params.amount < 0) {
                 /// @dev - check if liquidity removal required

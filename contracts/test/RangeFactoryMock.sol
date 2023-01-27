@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "../interfaces/IRangeFactory.sol";
 import "./RangePoolMock.sol";
-import "hardhat/console.sol";
 
 contract RangeFactoryMock is IRangeFactory {
 
@@ -27,8 +26,6 @@ contract RangeFactoryMock is IRangeFactory {
         mockPool = address(new RangePoolMock(tokenA, tokenB, 500, 10));
 
         getPool[tokenA][tokenB][500] = mockPool;
-
-        // console.log("mock pool:", mockPool);
     }
 
 

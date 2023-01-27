@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IRangeFactory.sol";
 import "../interfaces/IRangePool.sol";
 import "./TickMath.sol";
-import "hardhat/console.sol";
 
 // will the blockTimestamp be consistent across the entire block?
 library TwapOracle

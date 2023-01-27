@@ -11,8 +11,6 @@ import "./libraries/Ticks.sol";
 import "./libraries/TwapOracle.sol";
 import "./libraries/Positions.sol";
 
-// import "hardhat/console.sol";
-
 /// @notice Poolshark Directional Liquidity pool implementation.
 /// @dev SafeTransfers contains CoverPoolErrors
 contract CoverPool is
@@ -221,7 +219,6 @@ contract CoverPool is
     {
         GlobalState memory state = globalState;
         if(block.number != state.lastBlockNumber) {
-            // //console.log("accumulating last block");
             state.lastBlockNumber = uint32(block.number);
             (
                 state,
@@ -344,6 +341,8 @@ contract CoverPool is
         if (state.latestTick < TickMath.MIN_TICK) revert WaitUntilEnoughObservations();
         PoolState   memory pool  = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
+
+        if(amountIn == 0 ) return 0;
 
         _transferIn(zeroForOne ? token0 : token1, amountIn);
 
