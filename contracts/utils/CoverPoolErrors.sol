@@ -20,7 +20,6 @@ abstract contract CoverPoolErrors {
 }
 
 abstract contract CoverTicksErrors {
-    error WrongTickOrder();
     error WrongTickLowerRange();
     error WrongTickUpperRange();
     error WrongTickLowerOrder();

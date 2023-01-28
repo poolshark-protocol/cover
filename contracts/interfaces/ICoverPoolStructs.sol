@@ -122,6 +122,14 @@ interface ICoverPoolStructs {
         int128  amountOutDelta0;
         int128  amountOutDelta1;
     }
+
+    struct AccumulateOutputs {
+        int128 amountInDelta;
+        int128 amountOutDelta;
+        TickNode accumTickNode;
+        Tick crossTick;
+        Tick accumTick;
+    }
 }
     
     

@@ -50,7 +50,8 @@ export interface ValidateMintParams {
     liquidityIncrease: BigNumber,
     upperTickCleared: boolean,
     lowerTickCleared: boolean,
-    revertMessage: string
+    revertMessage: string,
+    collectRevertMessage?: string
 }
 
 export interface ValidateSwapParams {
@@ -100,7 +101,7 @@ export async function validateSync(
 
     txn = await hre.props.coverPool.swap(
         signer.address,
-        false,
+        true,
         BigNumber.from("0"),
         BigNumber.from("4295128739")
     );
@@ -145,7 +146,7 @@ export async function validateSwap(
 
     validateSync(
         hre.props.admin,
-        (await hre.props.coverPool.globalState()).latestTick
+        (await hre.props.coverPool.globalState()).latestTick.toString()
     );
 
     // quote pre-swap and validate balance changes match post-swap
@@ -220,15 +221,25 @@ export async function validateMint(
     const upperTickCleared = params.upperTickCleared;
     const lowerTickCleared = params.lowerTickCleared;
     const revertMessage = params.revertMessage;
+    const collectRevertMessage = params.collectRevertMessage;
 
     //collect first to recreate positions if necessary
-    const collectTxn = await hre.props.coverPool.connect(params.signer).collect(
-        lower,
-        upper,
-        claim,
-        zeroForOne
-    );
-    await collectTxn.wait();
+    if (!collectRevertMessage){
+        const txn = await hre.props.coverPool.connect(params.signer).collect(
+            lower,
+            upper,
+            claim,
+            zeroForOne
+        );
+        await txn.wait();
+    } else {
+        await expect(hre.props.coverPool.connect(params.signer).collect(
+            lower,
+            upper,
+            claim,
+            zeroForOne
+        )).to.be.revertedWith(collectRevertMessage);
+    }
     let balanceInBefore; let balanceOutBefore;
     if(zeroForOne){
         balanceInBefore  = await hre.props.token0.balanceOf(params.signer.address);

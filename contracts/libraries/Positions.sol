@@ -21,6 +21,7 @@ library Positions
     error InvalidPositionBoundsOrder();
     error InvalidPositionBoundsTwap();
 
+    uint256 internal constant Q64  = 0x10000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     using Positions for mapping(int24 => ICoverPoolStructs.Tick);
@@ -61,8 +62,7 @@ library Positions
                 params.amount -= uint128(DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper));
                 priceUpper = priceNewUpper;
             }
-        }
-        if (!params.zeroForOne) {
+        } else {
             if (params.lower <= params.state.latestTick) {
                 params.lower = params.state.latestTick + int24(params.state.tickSpread);
                 params.lowerOld = params.state.latestTick;
@@ -73,6 +73,7 @@ library Positions
         }
 
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
+        if (params.lower == params.upper) revert InvalidPositionBoundsTwap();
 
         return (params.lowerOld, params.lower, params.upper, params.upperOld, params.amount, liquidityMinted);
     }
@@ -207,6 +208,7 @@ library Positions
         // if (params.amount < 0 && uint128(-params.amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         // check for no position liquidity
         // or claiming from tick w/ zero fill
+        /// @dev - claim tick does not matter if there is no position liquidity
         if (cache.position.liquidity == 0
         ) {  
             return (
@@ -322,14 +324,14 @@ library Positions
                     amountInClaimable += FullPrecisionMath.mulDiv(
                                                                     uint128(cache.amountInDelta),
                                                                     cache.position.liquidity, 
-                                                                    Q128
+                                                                    Q64
                                                                 );
                 } else if (cache.amountInDelta < 0) {
                     //TODO: handle underflow here
                     amountInClaimable -= FullPrecisionMath.mulDiv(
                                                                     uint128(-cache.amountInDelta),
                                                                     cache.position.liquidity, 
-                                                                    Q128
+                                                                    Q64
                                                                 );
                 }
                 //TODO: add to position
@@ -343,7 +345,7 @@ library Positions
                     cache.position.amountOut += uint128(FullPrecisionMath.mulDiv(
                                                                         uint128(cache.amountOutDelta),
                                                                         cache.position.liquidity, 
-                                                                        Q128
+                                                                        Q64
                                                                     )
                                                        );
                 }

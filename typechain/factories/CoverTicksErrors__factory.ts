@@ -27,11 +27,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "WrongTickOrder",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "WrongTickUpperOrder",
     type: "error",
   },

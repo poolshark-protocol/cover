@@ -13,6 +13,7 @@ contract CoverPoolFactory is
     error InvalidTokenDecimals();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
+    error WaitUntilEnoughObservations();
     
     constructor(
         address _concentratedFactory

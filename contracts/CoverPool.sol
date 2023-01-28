@@ -32,10 +32,12 @@ contract CoverPool is
     IRangePool internal immutable inputPool;
 
     modifier lock() {
+        _ensureInitialized(globalState);
+        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
         if (globalState.unlocked == 2) revert Locked();
-        if (globalState.unlocked != 0) globalState.unlocked = 2;
+        globalState.unlocked = 2;
         _;
-        if (globalState.unlocked != 0) globalState.unlocked = 1;
+        globalState.unlocked = 1;
     }
 
     constructor(
@@ -46,7 +48,6 @@ contract CoverPool is
     ) {
         // validate swap fee
         if (_swapFee > MAX_FEE) revert InvalidSwapFee();
-        GlobalState memory state = GlobalState(0,0,0,0,0,0,0);
         // validate tick spread
         int24 _tickSpacing = IRangePool(_inputPool).tickSpacing();
         int24 _tickMultiple = _tickSpread / _tickSpacing;
@@ -62,6 +63,7 @@ contract CoverPool is
         feeTo       = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
+        GlobalState memory state = GlobalState(0,0,0,0,0,0,0);
         state.swapFee         = _swapFee;
         state.tickSpread      = _tickSpread;
         state.twapLength      = _twapLength;
@@ -72,19 +74,19 @@ contract CoverPool is
 
         // set default initial values
         //TODO: insertSingle or pass MAX_TICK as upper
-        globalState = _ensureInitialized(state);
+        _ensureInitialized(state);
     }
 
     //TODO: test this check
-    function _ensureInitialized(GlobalState memory state) internal returns (GlobalState memory) {
+    function _ensureInitialized(GlobalState memory state) internal {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
                                                     IRangePool(inputPool),
                                                     state.twapLength
                                                  );
             if(state.unlocked == 1) { _initialize(state); }
+            globalState = state;
         }
-        return state;
     }
 
     function _initialize(GlobalState memory state) internal {
@@ -99,7 +101,6 @@ contract CoverPool is
             state.accumEpoch,
             state.tickSpread
         );
-        globalState = state;
     }
     //TODO: create transfer function to transfer ownership
     //TODO: reorder params to upperOld being last (logical order)
@@ -115,10 +116,6 @@ contract CoverPool is
         bool zeroForOne
     ) external lock {
         /// @dev - don't allow mints until we have enough observations from inputPool
-        globalState = _ensureInitialized(globalState);
-        // GlobalState memory globalState = globalState;
-        if (globalState.unlocked == 0 ) revert WaitUntilEnoughObservations();
-        
         //TODO: move tick update check here
         if(block.number != globalState.lastBlockNumber) {
             globalState.lastBlockNumber = uint32(block.number);
@@ -213,10 +210,7 @@ contract CoverPool is
         int24 claim,
         bool zeroForOne,
         uint128 amount
-    )
-        public
-        lock
-    {
+    ) external lock {
         GlobalState memory state = globalState;
         if(block.number != state.lastBlockNumber) {
             state.lastBlockNumber = uint32(block.number);
@@ -338,14 +332,8 @@ contract CoverPool is
     ) external override lock returns (uint256 amountOut) {
         //TODO: is this needed?
         GlobalState memory state = globalState;
-        if (state.latestTick < TickMath.MIN_TICK) revert WaitUntilEnoughObservations();
         PoolState   memory pool  = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
-
-        if(amountIn == 0 ) return 0;
-
-        _transferIn(zeroForOne ? token0 : token1, amountIn);
-
         if(block.number != state.lastBlockNumber) {
             state.lastBlockNumber = uint32(block.number);
             (state, pool0, pool1) = Ticks.accumulateLastBlock(
@@ -358,6 +346,10 @@ contract CoverPool is
                 TwapOracle.calculateAverageTick(inputPool, state.twapLength)
             );
         }
+
+        if(amountIn == 0 ) { globalState = state; return 0; }
+
+        _transferIn(zeroForOne ? token0 : token1, amountIn);
 
         SwapCache memory cache = SwapCache({
             price: pool.price,

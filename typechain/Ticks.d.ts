@@ -22,6 +22,7 @@ interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
     "quote(bool,uint160,(uint24,int24,uint16,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
+    "rollover(int24,int24,uint256,uint256,int128,int128,bool)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -50,12 +51,25 @@ interface TicksInterface extends ethers.utils.Interface {
       }
     ]
   ): string;
+  encodeFunctionData(
+    functionFragment: "rollover",
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      boolean
+    ]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "getMaxLiquidity",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "rollover", data: BytesLike): Result;
 
   events: {};
 }
@@ -139,6 +153,17 @@ export class Ticks extends BaseContract {
         BigNumber
       ] & { amountOut: BigNumber }
     >;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber]>;
   };
 
   getMaxLiquidity(
@@ -177,6 +202,17 @@ export class Ticks extends BaseContract {
     ] & { amountOut: BigNumber }
   >;
 
+  rollover(
+    nextTickToCross: BigNumberish,
+    nextTickToAccum: BigNumberish,
+    currentPrice: BigNumberish,
+    currentLiquidity: BigNumberish,
+    amountInDelta: BigNumberish,
+    amountOutDelta: BigNumberish,
+    isPool0: boolean,
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, BigNumber]>;
+
   callStatic: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
@@ -213,6 +249,17 @@ export class Ticks extends BaseContract {
         BigNumber
       ] & { amountOut: BigNumber }
     >;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber]>;
   };
 
   filters: {};
@@ -243,6 +290,17 @@ export class Ticks extends BaseContract {
       },
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -269,6 +327,17 @@ export class Ticks extends BaseContract {
         feeAmount: BigNumberish;
         input: BigNumberish;
       },
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

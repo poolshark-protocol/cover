@@ -6,7 +6,7 @@ import { PoolState, BN_ZERO } from "../../utils/contracts/coverpool";
 import { gBefore } from "../../utils/hooks.test";
 import { mintSigners20 } from "../../utils/token";
 
-describe('DyDxMath Library Tests', function () {
+describe('FullPrecisionMath Library Tests', function () {
 
     let token0Amount: BigNumber;
     let token1Amount: BigNumber;
