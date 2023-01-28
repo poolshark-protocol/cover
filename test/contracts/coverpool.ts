@@ -123,7 +123,57 @@ describe('CoverPool Tests', function () {
       upperTickCleared:   false,
       revertMessage:      "WaitUntilEnoughObservations()"
     });
-    await hre.props.rangePoolMock.setObservationCardinality("5");
+  });
+
+  it('pool1 - Should wait until enough observations', async function () {
+    await hre.props.rangePoolMock.setObservationCardinality("4");
+    // mint should revert
+    await validateMint({
+        signer:            hre.props.alice,
+        recipient:         hre.props.alice.address,
+        lowerOld:          "0",
+        lower:             "0",
+        upper:             "0",
+        upperOld:          "0",
+        claim:             "0", 
+        amount:            tokenAmount,
+        zeroForOne:        false,
+        balanceInDecrease: tokenAmount,
+        liquidityIncrease: liquidityAmount,
+        upperTickCleared:  false,
+        lowerTickCleared:  false,
+        revertMessage: "WaitUntilEnoughObservations()",
+        collectRevertMessage: "WaitUntilEnoughObservations()"
+    });
+
+    // no-op swap
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         true,
+      amountIn:           tokenAmount,
+      sqrtPriceLimitX96:  minPrice,
+      balanceInDecrease:  BN_ZERO,
+      balanceOutIncrease: BN_ZERO,
+      finalLiquidity:     BN_ZERO,
+      finalPrice:         minPrice,
+      revertMessage:      "WaitUntilEnoughObservations()"
+    });
+
+    // burn should revert
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "0",
+      upper:              "0",
+      claim:              "0",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         false,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(1),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "WaitUntilEnoughObservations()"
+    });
   });
 
   it('pool0 - Should mint/burn new LP position', async function () {
