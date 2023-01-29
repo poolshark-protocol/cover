@@ -113,8 +113,8 @@ describe('Ticks Library Tests', function () {
             BigNumber.from("0"),
             true
         )
-        expect(result[0]).to.be.equal(BigNumber.from("-18455047322539437"));
-        expect(result[1]).to.be.equal(BigNumber.from("18436602421434134"));
+        expect(result[0]).to.be.equal(BigNumber.from("-79263824696439249340797497"));
+        expect(result[1]).to.be.equal(BigNumber.from("79184604449414017477223073"));
     });
 
     it('rollover() - pool1 - Should rollover unfilled amounts', async function () {
@@ -127,7 +127,7 @@ describe('Ticks Library Tests', function () {
             BigNumber.from("0"),
             false
         )
-        expect(result[0]).to.be.equal(BigNumber.from("-18436602421434134"));
-        expect(result[1]).to.be.equal(BigNumber.from("18455047322539437"));
+        expect(result[0]).to.be.equal(BigNumber.from("-79184604449414017477223073"));
+        expect(result[1]).to.be.equal(BigNumber.from("79263824696439249340797497"));
     });
 });

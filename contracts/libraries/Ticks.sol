@@ -6,6 +6,7 @@ import "../interfaces/ICoverPoolStructs.sol";
 import "../utils/CoverPoolErrors.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
+import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -598,6 +599,10 @@ library Ticks
         }
         // console.log("-- START ACCUMULATE LAST BLOCK --");
         state.accumEpoch += 1;
+
+        if(state.latestTick == 0 && nextLatestTick == -20){
+            console.log('is this the infinite loop?');
+        }
 
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0:  state.latestTick,
