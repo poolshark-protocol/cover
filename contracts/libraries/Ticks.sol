@@ -20,7 +20,7 @@ library Ticks
     error WrongTickUpperOld();
     error NoLiquidityToRollover();
 
-    uint256 internal constant Q64  = 0x10000000000000000;
+    uint256 internal constant Q96  = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     using Ticks for mapping(int24 => ICoverPoolStructs.Tick);
@@ -142,7 +142,8 @@ library Ticks
         int24 upper,
         uint104 amount,
         bool isPool0
-    ) external {
+    ) public {
+        //TODO: doesn't check if upper/lowerOld is greater/less than MAX/MIN_TICK
         if (lower >= upper || lowerOld >= upperOld) {
             revert WrongTickOrder();
         }
@@ -166,7 +167,7 @@ library Ticks
             } else {
                 ticks[lower].liquidityDelta      += int104(amount);
             }
-        } else {
+        } else if (lower != TickMath.MIN_TICK) {
             // tick does not exist and we must insert
             //TODO: handle new TWAP being in between lowerOld and lower
             if (isPool0) {
@@ -211,7 +212,7 @@ library Ticks
                 ticks[upper].liquidityDelta      -= int104(amount);
                 ticks[upper].liquidityDeltaMinus += amount;
             }
-        } else {
+        } else if (upper != TickMath.MAX_TICK) {
             if (isPool0) {
                 ticks[upper] = ICoverPoolStructs.Tick(
                     int104(amount),
@@ -263,7 +264,6 @@ library Ticks
         //TODO: we can only delete is upper != MAX_TICK or latestTick and all values are 0
         bool deleteUpperTick = false;
         if (deleteLowerTick) {
-
             // Delete lower tick.
             int24 previous = tickNodes[lower].previousTick;
             int24 next     = tickNodes[lower].nextTick;
@@ -314,6 +314,30 @@ library Ticks
         /// @dev - we can never delete ticks due to amount deltas
     }
 
+    function accumulate(
+        ICoverPoolStructs.TickNode calldata tickNode, /// tickNodes[nextTickToAccum]
+        ICoverPoolStructs.Tick calldata crossTick,
+        ICoverPoolStructs.Tick calldata accumTick,
+        uint32 accumEpoch,
+        uint128 currentLiquidity,
+        int128 amountInDelta,
+        int128 amountOutDelta,
+        bool removeLiquidity
+    ) external view returns(
+        ICoverPoolStructs.AccumulateOutputs memory
+    ) {
+        return _accumulate(
+            tickNode,
+            crossTick,
+            accumTick,
+            accumEpoch,
+            currentLiquidity,
+            amountInDelta,
+            amountOutDelta,
+            removeLiquidity
+        );
+    }
+
     //TODO: accumulate takes Tick and TickNode structs instead of storage pointer
     function _accumulate(
         ICoverPoolStructs.TickNode memory tickNode, /// tickNodes[nextTickToAccum]
@@ -324,7 +348,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool removeLiquidity
-    ) internal returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -348,6 +372,7 @@ library Ticks
             /// @dev - amountOutDelta cannot exist without amountInDelta
             if(crossTick.amountOutDeltaCarryPercent > 0){
             //TODO: will this work with negatives?
+
                 int256 amountOutDeltaCarry = int64(crossTick.amountOutDeltaCarryPercent) 
                                                 * crossTick.amountOutDelta / 1e18;
                 crossTick.amountOutDelta -= int88(amountOutDeltaCarry);
@@ -362,10 +387,10 @@ library Ticks
                 //
                 accumTick.amountInDelta  += int88(amountInDelta);
                 accumTick.amountOutDelta += int88(amountOutDelta);
-                int128 liquidityDeltaPlus = accumTick.liquidityDelta + int128(liquidityDeltaMinus);
+                int256 liquidityDeltaPlus = accumTick.liquidityDelta + int128(liquidityDeltaMinus);
                 if (liquidityDeltaPlus > 0) {
                     /// @dev - amount deltas get diluted when liquidity is added
-                    int128 liquidityPercentIncrease = liquidityDeltaPlus * 1e18 / int128(currentLiquidity - liquidityDeltaMinus);
+                    int128 liquidityPercentIncrease = int128(liquidityDeltaPlus * 1e18 / int256(int128(currentLiquidity - liquidityDeltaMinus)));
                     amountOutDelta = amountOutDelta * (1e18 + liquidityPercentIncrease) / 1e18;
                     amountInDelta = amountInDelta * (1e18 + liquidityPercentIncrease) / 1e18;
                 }
@@ -462,7 +487,7 @@ library Ticks
         amountInDelta -= int128(uint128(
                                             FullPrecisionMath.mulDiv(
                                                 amountInUnfilled,
-                                                Q64,
+                                                Q96,
                                                 currentLiquidity
                                             )
                                         )
@@ -470,7 +495,7 @@ library Ticks
         amountOutDelta += int128(uint128(
                                             FullPrecisionMath.mulDiv(
                                                 amountOutLeftover,
-                                                Q64, 
+                                                Q96, 
                                                 currentLiquidity
                                             )
                                         )
@@ -511,37 +536,43 @@ library Ticks
         pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
     }
+
     //TODO: pass in specific tick and update in storage on calling function
-    function _updateAmountDeltas (
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        int24 update,
-        int128 amountInDelta,
-        int128 amountOutDelta,
-        uint128 currentLiquidity
-    ) internal {
+    function _stash (
+        ICoverPoolStructs.Tick memory stashTick,
+        ICoverPoolStructs.AccumulateCache memory cache,
+        uint128 currentLiquidity,
+        bool isPool0
+    ) internal pure {
         // return since there is nothing to update
         if (currentLiquidity == 0) return;
 
         // handle amount in delta
-        int128 amountInDeltaCarry = int64(ticks[update].amountInDeltaCarryPercent) * ticks[update].amountInDelta / 1e18;
-        int128 newAmountInDelta = ticks[update].amountInDelta + amountInDelta;
-        if (amountInDelta != 0 && newAmountInDelta != 0) {
-            ticks[update].amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
-                                            / (newAmountInDelta)));
-            ticks[update].amountInDelta += int88(amountInDelta);
-        } else if (amountInDelta != 0 && newAmountInDelta == 0) {
-            revert NotImplementedYet();
+        {
+            int128 amountInDelta = isPool0 ? cache.amountInDelta0 : cache.amountInDelta1;
+            int128 amountInDeltaCarry = int64(stashTick.amountInDeltaCarryPercent) * stashTick.amountInDelta / 1e18;
+            int128 newAmountInDelta = stashTick.amountInDelta + amountInDelta;
+            if (amountInDelta != 0 && newAmountInDelta != 0) {
+                stashTick.amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
+                                                / (newAmountInDelta)));
+                stashTick.amountInDelta += int88(amountInDelta);
+            } else if (amountInDelta != 0 && newAmountInDelta == 0) {
+                revert NotImplementedYet();
+            }
         }
 
         // handle amount out delta
-        int128 amountOutDeltaCarry = int64(ticks[update].amountOutDeltaCarryPercent) * ticks[update].amountOutDelta / 1e18;
-        int128 newAmountOutDelta = ticks[update].amountOutDelta + amountOutDelta;
-        if (amountOutDelta != 0 && newAmountOutDelta != 0) {
-            ticks[update].amountOutDeltaCarryPercent = uint64(uint128((amountOutDelta + amountOutDeltaCarry) * 1e18 
-                                                    / (newAmountOutDelta)));
-            ticks[update].amountOutDelta += int88(amountOutDelta);
-        } else if (amountOutDelta != 0 && newAmountOutDelta == 0) {
-            revert NotImplementedYet();
+        {
+            int128 amountOutDelta = isPool0 ? cache.amountOutDelta0 : cache.amountOutDelta1;
+            int128 amountOutDeltaCarry = int64(stashTick.amountOutDeltaCarryPercent) * stashTick.amountOutDelta / 1e18;
+            int128 newAmountOutDelta = stashTick.amountOutDelta + amountOutDelta;
+            if (amountOutDelta != 0 && newAmountOutDelta != 0) {
+                stashTick.amountOutDeltaCarryPercent = uint64(uint128((amountOutDelta + amountOutDeltaCarry) * 1e18 
+                                                        / (newAmountOutDelta)));
+                stashTick.amountOutDelta += int88(amountOutDelta);
+            } else if (amountOutDelta != 0 && newAmountOutDelta == 0) {
+                revert NotImplementedYet();
+            }
         }
     }
 
@@ -609,7 +640,7 @@ library Ticks
                 outputs = _accumulate(
                     tickNodes[cache.nextTickToAccum0],
                     ticks0[cache.nextTickToCross0],
-                    ticks0[cache.nextTickToCross0],
+                    ticks0[cache.nextTickToAccum0],
                     state.accumEpoch,
                     pool0.liquidity,
                     cache.amountInDelta0, /// @dev - amount deltas will be 0 initially
@@ -640,17 +671,22 @@ library Ticks
                 if(cache.nextTickToCross0 == cache.nextTickToAccum0) revert InfiniteTickLoop0();
             } else {
                 /// @dev - place liquidity on latestTick for continuation when TWAP moves back up
-                if (nextLatestTick > state.latestTick)
-                // we need to call insert here
-                    ticks0[state.latestTick].liquidityDelta += int104(int128(uint128(pool0.liquidity) 
+                if (nextLatestTick > state.latestTick) {
+                    //TODO: test this
+                    tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
+                                                    state.latestTick,
+                                                    cache.nextTickToAccum0,
+                                                    state.accumEpoch
+                                                 );
+                    ticks0[cache.stopTick0].liquidityDelta += int104(int128(uint128(pool0.liquidity) 
                                                         - ticks0[state.latestTick].liquidityDeltaMinus));
+                }
                 /// @dev - update amount deltas on stopTick
-                _updateAmountDeltas(
-                        ticks0,
-                        cache.stopTick0,
-                        cache.amountInDelta0,
-                        cache.amountOutDelta0,
-                        pool0.liquidity
+                _stash(
+                        ticks0[cache.stopTick0],
+                        cache,
+                        pool0.liquidity,
+                        true
                 );
                 if (nextLatestTick < state.latestTick) {
                     (
@@ -666,6 +702,9 @@ library Ticks
                         true
                     );
                 }
+                ticks0[cache.stopTick0].liquidityDelta += int104(ticks0[cache.stopTick0].liquidityDeltaMinus);
+                ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
+                tickNodes[cache.stopTick0].accumEpochLast = state.accumEpoch;
                 break;
             }
         }
@@ -685,13 +724,12 @@ library Ticks
                     cache.amountOutDelta1,
                     false
                 );
-
                 //accumulate to next tick
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
                 outputs = _accumulate(
                     tickNodes[cache.nextTickToAccum1],
                     ticks1[cache.nextTickToCross1],
-                    ticks1[cache.nextTickToCross1],
+                    ticks1[cache.nextTickToAccum1],
                     state.accumEpoch,
                     pool1.liquidity,
                     cache.amountInDelta1, /// @dev - amount deltas will be 1 initially
@@ -721,18 +759,24 @@ library Ticks
                 if(cache.nextTickToCross0 == cache.nextTickToAccum0) revert InfiniteTickLoop1();
             } else {
                 /// @dev - place liquidity on latestTick for continuation when TWAP moves back up
-                if (nextLatestTick < state.latestTick)
-                    //TODO: we need to call insert here
-                    ticks1[state.latestTick].liquidityDelta += int104(int128(uint128(pool1.liquidity) 
-                                                        - ticks1[state.latestTick].liquidityDeltaMinus));
+                if (nextLatestTick < state.latestTick) {
+                    //TODO: test this
+                    tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
+                                                    state.latestTick,
+                                                    cache.nextTickToAccum1,
+                                                    state.accumEpoch
+                                                 );
+                }
+
                 /// @dev - update amount deltas on stopTick
-                _updateAmountDeltas(
-                        ticks1,
-                        cache.stopTick1,
-                        cache.amountInDelta1,
-                        cache.amountOutDelta1,
-                        pool1.liquidity
+                ///TODO: this is messing up our amount deltas and carry percents
+                _stash(
+                        ticks1[cache.stopTick1],
+                        cache,
+                        pool1.liquidity,
+                        false
                 );
+
                 if (nextLatestTick > state.latestTick) {
                     (
                         pool1.liquidity, 
@@ -747,6 +791,9 @@ library Ticks
                         false
                     );
                 }
+                ticks1[cache.stopTick1].liquidityDelta += int104(ticks1[cache.stopTick1].liquidityDeltaMinus);
+                ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
+                tickNodes[cache.stopTick1].accumEpochLast = state.accumEpoch;
                 //TODO: if tickSpread > tickSpacing, we need to cross until accum tick is nextLatestTick
                 break;
             }
@@ -763,7 +810,7 @@ library Ticks
                 tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
-                        0
+                        state.accumEpoch
                 );
                 tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
                 tickNodes[cache.nextTickToCross1].nextTick     = nextLatestTick;
@@ -781,7 +828,7 @@ library Ticks
                 tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                         cache.nextTickToAccum0,
                         cache.nextTickToCross0,
-                        0
+                        state.accumEpoch
                 );
                 tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;
                 tickNodes[cache.nextTickToAccum0].nextTick     = nextLatestTick;

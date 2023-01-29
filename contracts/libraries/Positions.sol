@@ -21,7 +21,7 @@ library Positions
     error InvalidPositionBoundsOrder();
     error InvalidPositionBoundsTwap();
 
-    uint256 internal constant Q64  = 0x10000000000000000;
+    uint256 internal constant Q96  = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     using Positions for mapping(int24 => ICoverPoolStructs.Tick);
@@ -146,7 +146,7 @@ library Positions
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
         } else {
-            /// validate user can remove from position
+            /// validate user can remove from position using this function
             if (params.zeroForOne ? state.latestTick < params.upper || tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
                                   : state.latestTick > params.lower || tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
             ) {
@@ -210,14 +210,15 @@ library Positions
         // or claiming from tick w/ zero fill
         /// @dev - claim tick does not matter if there is no position liquidity
         if (cache.position.liquidity == 0
-        ) {  
+        ) { 
+            if (params.amount > 0) revert NotEnoughPositionLiquidity();
             return (
                     cache.position.amountIn,
                     cache.position.amountOut,
                     params.lower,
                     params.upper,
                     state
-            ); 
+            );
         }
 
         /// validate claim param
@@ -227,13 +228,9 @@ library Positions
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)){
             // position 100% filled
             if (cache.claimTick.accumEpochLast <= cache.position.accumEpochLast) revert WrongTickClaimedAt();
-            {
-                /// @dev - next tick having fee growth means liquidity was cleared
-                uint32 claimNextTickAccumEpoch = params.zeroForOne ? tickNodes[cache.claimTick.previousTick].accumEpochLast 
-                                                                   : tickNodes[cache.claimTick.nextTick].accumEpochLast;
-                if (claimNextTickAccumEpoch > cache.position.accumEpochLast) params.zeroForOne ? cache.removeLower = false 
-                                                                                               : cache.removeUpper = false;
-            }
+
+            params.zeroForOne ? cache.removeLower = false 
+                              : cache.removeUpper = false;
             /// @dev - ignore carryover for last tick of position
             cache.amountInDelta  = ticks[params.claim].amountInDelta - int64(ticks[params.claim].amountInDeltaCarryPercent) 
                                                                     * ticks[params.claim].amountInDelta / 1e18;
@@ -305,7 +302,7 @@ library Positions
         }
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
             //TODO: switch to being the current price if necessary
-            cache.position.claimPriceLast = cache.claimPrice;
+            params.zeroForOne ? cache.removeUpper = false : cache.removeLower = false;
             {
                 // calculate what is claimable
                 //TODO: should this be inside Ticks library?
@@ -324,18 +321,19 @@ library Positions
                     amountInClaimable += FullPrecisionMath.mulDiv(
                                                                     uint128(cache.amountInDelta),
                                                                     cache.position.liquidity, 
-                                                                    Q64
-                                                                );
+                                                                    Q96
+                                                                ) - 1; /// @dev - in case of rounding error
                 } else if (cache.amountInDelta < 0) {
-                    //TODO: handle underflow here
+                    //TODO: handle underflow here                
                     amountInClaimable -= FullPrecisionMath.mulDiv(
                                                                     uint128(-cache.amountInDelta),
                                                                     cache.position.liquidity, 
-                                                                    Q64
-                                                                );
+                                                                    Q96
+                                                                ) + 1; /// @dev - in case of rounding error
                 }
                 //TODO: add to position
                 if (amountInClaimable > 0) {
+                    //TODO: remove swap fees
                     amountInClaimable *= (1e6 + state.swapFee) / 1e6; // factor in swap fees
                     cache.position.amountIn += uint128(amountInClaimable);
                 }
@@ -345,11 +343,12 @@ library Positions
                     cache.position.amountOut += uint128(FullPrecisionMath.mulDiv(
                                                                         uint128(cache.amountOutDelta),
                                                                         cache.position.liquidity, 
-                                                                        Q64
+                                                                        Q96
                                                                     )
                                                        );
                 }
             }
+            cache.position.claimPriceLast = cache.claimPrice;
         }
 
         // if burn or second mint

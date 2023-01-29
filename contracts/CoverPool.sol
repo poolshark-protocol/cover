@@ -234,7 +234,7 @@ contract CoverPool is
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
 
         // update position and get new lower and upper
-        (,,lower,upper, state) = Positions.update(
+        (,,,,state) = Positions.update(
             zeroForOne ? positions0 : positions1,
             zeroForOne ? ticks0 : ticks1,
             tickNodes,
@@ -249,6 +249,7 @@ contract CoverPool is
                 int128(amount)
             )
         );
+        //TODO: add PositionUpdated event
         // if position hasn't changed remove liquidity
         if (claim == (zeroForOne ? upper : lower)) {
             (,state) = Positions.remove(
@@ -293,7 +294,7 @@ contract CoverPool is
                 TwapOracle.calculateAverageTick(inputPool, state.twapLength)
             );
         }
-        (amountIn,amountOut,,,state) = Positions.update(
+        (,,,,state) = Positions.update(
             zeroForOne ? positions0 : positions1,
             zeroForOne ? ticks0 : ticks1,
             tickNodes,
@@ -308,9 +309,13 @@ contract CoverPool is
                 0
             )
         );
+        amountIn = zeroForOne ? positions0[msg.sender][lower][claim].amountIn 
+                              : positions1[msg.sender][claim][upper].amountIn;
+        amountOut = zeroForOne ? positions0[msg.sender][lower][claim].amountOut 
+                               : positions1[msg.sender][claim][upper].amountOut;
         /// zero out balances
-        zeroForOne ? positions0[msg.sender][lower][upper].amountIn = 0 
-                   : positions1[msg.sender][lower][upper].amountIn = 0;
+        zeroForOne ? positions0[msg.sender][lower][claim].amountIn = 0 
+                   : positions1[msg.sender][claim][upper].amountIn = 0;
         zeroForOne ? positions0[msg.sender][lower][upper].amountOut = 0 
                    : positions1[msg.sender][lower][upper].amountOut = 0;
 

@@ -483,7 +483,6 @@ export async function validateBurn(
             upper
         );
     }
-
     //dependent on zeroForOne
     if (zeroForOne) {
         if(!upperTickCleared){

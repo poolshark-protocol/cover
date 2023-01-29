@@ -20,11 +20,43 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
+    "accumulate((int24,int24,uint32),(int104,uint104,int88,int88,uint64,uint64),(int104,uint104,int88,int88,uint64,uint64),uint32,uint128,int128,int128,bool)": FunctionFragment;
     "getMaxLiquidity(int24)": FunctionFragment;
     "quote(bool,uint160,(uint24,int24,uint16,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
     "rollover(int24,int24,uint256,uint256,int128,int128,bool)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "accumulate",
+    values: [
+      {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      boolean
+    ]
+  ): string;
   encodeFunctionData(
     functionFragment: "getMaxLiquidity",
     values: [BigNumberish]
@@ -64,6 +96,7 @@ interface TicksInterface extends ethers.utils.Interface {
     ]
   ): string;
 
+  decodeFunctionResult(functionFragment: "accumulate", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getMaxLiquidity",
     data: BytesLike
@@ -118,6 +151,102 @@ export class Ticks extends BaseContract {
   interface: TicksInterface;
 
   functions: {
+    accumulate(
+      tickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      crossTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumEpoch: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      removeLiquidity: boolean,
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        [
+          BigNumber,
+          BigNumber,
+          [number, number, number] & {
+            previousTick: number;
+            nextTick: number;
+            accumEpochLast: number;
+          },
+          [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+            liquidityDelta: BigNumber;
+            liquidityDeltaMinus: BigNumber;
+            amountInDelta: BigNumber;
+            amountOutDelta: BigNumber;
+            amountInDeltaCarryPercent: BigNumber;
+            amountOutDeltaCarryPercent: BigNumber;
+          },
+          [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+            liquidityDelta: BigNumber;
+            liquidityDeltaMinus: BigNumber;
+            amountInDelta: BigNumber;
+            amountOutDelta: BigNumber;
+            amountInDeltaCarryPercent: BigNumber;
+            amountOutDeltaCarryPercent: BigNumber;
+          }
+        ] & {
+          amountInDelta: BigNumber;
+          amountOutDelta: BigNumber;
+          accumTickNode: [number, number, number] & {
+            previousTick: number;
+            nextTick: number;
+            accumEpochLast: number;
+          };
+          crossTick: [
+            BigNumber,
+            BigNumber,
+            BigNumber,
+            BigNumber,
+            BigNumber,
+            BigNumber
+          ] & {
+            liquidityDelta: BigNumber;
+            liquidityDeltaMinus: BigNumber;
+            amountInDelta: BigNumber;
+            amountOutDelta: BigNumber;
+            amountInDeltaCarryPercent: BigNumber;
+            amountOutDeltaCarryPercent: BigNumber;
+          };
+          accumTick: [
+            BigNumber,
+            BigNumber,
+            BigNumber,
+            BigNumber,
+            BigNumber,
+            BigNumber
+          ] & {
+            liquidityDelta: BigNumber;
+            liquidityDeltaMinus: BigNumber;
+            amountInDelta: BigNumber;
+            amountOutDelta: BigNumber;
+            amountInDeltaCarryPercent: BigNumber;
+            amountOutDeltaCarryPercent: BigNumber;
+          };
+        }
+      ]
+    >;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
@@ -165,6 +294,100 @@ export class Ticks extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber, BigNumber]>;
   };
+
+  accumulate(
+    tickNode: {
+      previousTick: BigNumberish;
+      nextTick: BigNumberish;
+      accumEpochLast: BigNumberish;
+    },
+    crossTick: {
+      liquidityDelta: BigNumberish;
+      liquidityDeltaMinus: BigNumberish;
+      amountInDelta: BigNumberish;
+      amountOutDelta: BigNumberish;
+      amountInDeltaCarryPercent: BigNumberish;
+      amountOutDeltaCarryPercent: BigNumberish;
+    },
+    accumTick: {
+      liquidityDelta: BigNumberish;
+      liquidityDeltaMinus: BigNumberish;
+      amountInDelta: BigNumberish;
+      amountOutDelta: BigNumberish;
+      amountInDeltaCarryPercent: BigNumberish;
+      amountOutDeltaCarryPercent: BigNumberish;
+    },
+    accumEpoch: BigNumberish,
+    currentLiquidity: BigNumberish,
+    amountInDelta: BigNumberish,
+    amountOutDelta: BigNumberish,
+    removeLiquidity: boolean,
+    overrides?: CallOverrides
+  ): Promise<
+    [
+      BigNumber,
+      BigNumber,
+      [number, number, number] & {
+        previousTick: number;
+        nextTick: number;
+        accumEpochLast: number;
+      },
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
+      },
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
+      }
+    ] & {
+      amountInDelta: BigNumber;
+      amountOutDelta: BigNumber;
+      accumTickNode: [number, number, number] & {
+        previousTick: number;
+        nextTick: number;
+        accumEpochLast: number;
+      };
+      crossTick: [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
+      };
+      accumTick: [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        liquidityDelta: BigNumber;
+        liquidityDeltaMinus: BigNumber;
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+        amountInDeltaCarryPercent: BigNumber;
+        amountOutDeltaCarryPercent: BigNumber;
+      };
+    }
+  >;
 
   getMaxLiquidity(
     tickSpacing: BigNumberish,
@@ -214,6 +437,100 @@ export class Ticks extends BaseContract {
   ): Promise<[BigNumber, BigNumber]>;
 
   callStatic: {
+    accumulate(
+      tickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      crossTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumEpoch: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      removeLiquidity: boolean,
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        BigNumber,
+        BigNumber,
+        [number, number, number] & {
+          previousTick: number;
+          nextTick: number;
+          accumEpochLast: number;
+        },
+        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+          liquidityDelta: BigNumber;
+          liquidityDeltaMinus: BigNumber;
+          amountInDelta: BigNumber;
+          amountOutDelta: BigNumber;
+          amountInDeltaCarryPercent: BigNumber;
+          amountOutDeltaCarryPercent: BigNumber;
+        },
+        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+          liquidityDelta: BigNumber;
+          liquidityDeltaMinus: BigNumber;
+          amountInDelta: BigNumber;
+          amountOutDelta: BigNumber;
+          amountInDeltaCarryPercent: BigNumber;
+          amountOutDeltaCarryPercent: BigNumber;
+        }
+      ] & {
+        amountInDelta: BigNumber;
+        amountOutDelta: BigNumber;
+        accumTickNode: [number, number, number] & {
+          previousTick: number;
+          nextTick: number;
+          accumEpochLast: number;
+        };
+        crossTick: [
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          liquidityDelta: BigNumber;
+          liquidityDeltaMinus: BigNumber;
+          amountInDelta: BigNumber;
+          amountOutDelta: BigNumber;
+          amountInDeltaCarryPercent: BigNumber;
+          amountOutDeltaCarryPercent: BigNumber;
+        };
+        accumTick: [
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          liquidityDelta: BigNumber;
+          liquidityDeltaMinus: BigNumber;
+          amountInDelta: BigNumber;
+          amountOutDelta: BigNumber;
+          amountInDeltaCarryPercent: BigNumber;
+          amountOutDeltaCarryPercent: BigNumber;
+        };
+      }
+    >;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
@@ -265,6 +582,36 @@ export class Ticks extends BaseContract {
   filters: {};
 
   estimateGas: {
+    accumulate(
+      tickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      crossTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumEpoch: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      removeLiquidity: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
@@ -304,6 +651,36 @@ export class Ticks extends BaseContract {
   };
 
   populateTransaction: {
+    accumulate(
+      tickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      crossTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumTick: {
+        liquidityDelta: BigNumberish;
+        liquidityDeltaMinus: BigNumberish;
+        amountInDelta: BigNumberish;
+        amountOutDelta: BigNumberish;
+        amountInDeltaCarryPercent: BigNumberish;
+        amountOutDeltaCarryPercent: BigNumberish;
+      },
+      accumEpoch: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      removeLiquidity: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
