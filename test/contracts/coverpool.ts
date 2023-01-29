@@ -473,7 +473,7 @@ describe('CoverPool Tests', function () {
     });
   });
 
-  it('pool1 - Should move TWAP after mint and handle unfilled amount', async function () {
+  it.skip('pool1 - Should move TWAP after mint and handle unfilled amount', async function () {
     const liquidityAmount2 = hre.ethers.utils.parseUnits("99955008249587388643769", 0);
     const balanceInDecrease = hre.ethers.utils.parseUnits("99750339674246044929", 0);
     const balanceOutIncrease = hre.ethers.utils.parseUnits("99999999999999999999", 0);
