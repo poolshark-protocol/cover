@@ -504,28 +504,28 @@ describe('CoverPool Tests', function () {
 
     // move TWAP to tick 20
     //TODO: fix infinite loop HERE
-    // await validateSync(
-    //   hre.props.alice,
-    //   "20"
-    // );
+    await validateSync(
+      hre.props.alice,
+      "20"
+    );
 
-    // // should revert on twap bounds
-    // await validateMint({
-    //   signer:       hre.props.alice,
-    //   recipient:    hre.props.alice.address,
-    //   lowerOld:     "0",
-    //   lower:        "20",
-    //   claim:        "20",
-    //   upper:        "40",
-    //   upperOld:     "887272",
-    //   amount:       tokenAmount,
-    //   zeroForOne:   false,
-    //   balanceInDecrease: tokenAmount,
-    //   liquidityIncrease: liquidityAmount,
-    //   upperTickCleared: false,
-    //   lowerTickCleared: false,
-    //   revertMessage: "InvalidPositionBoundsTwap()"
-    // });
+    // should revert on twap bounds
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "20",
+      upper:        "40",
+      upperOld:     "887272",
+      amount:       tokenAmount,
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: "InvalidPositionBoundsTwap()"
+    });
 
     // await validateSwap({
     //   signer:             hre.props.alice,

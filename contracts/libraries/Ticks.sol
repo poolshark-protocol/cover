@@ -600,10 +600,6 @@ library Ticks
         // console.log("-- START ACCUMULATE LAST BLOCK --");
         state.accumEpoch += 1;
 
-        if(state.latestTick == 0 && nextLatestTick == -20){
-            console.log('is this the infinite loop?');
-        }
-
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0:  state.latestTick,
             nextTickToCross1:  state.latestTick,
@@ -619,7 +615,6 @@ library Ticks
 
         // accum and/or rollover the side which is active
         // 2. rollover and accumulate in the direction the TWAP moves
-
         //TODO: handle ticks not crossed into as a result of big TWAP move - DONE?
         // handle partial tick fill
         // update liquidity and ticks
@@ -675,16 +670,19 @@ library Ticks
                 );
                 if(cache.nextTickToCross0 == cache.nextTickToAccum0) revert InfiniteTickLoop0();
             } else {
-                /// @dev - place liquidity on latestTick for continuation when TWAP moves back up
+                /// @dev - place liquidity at stopTick0 for continuation when TWAP moves back down
                 if (nextLatestTick > state.latestTick) {
                     //TODO: test this
-                    tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
-                                                    state.latestTick,
-                                                    cache.nextTickToAccum0,
-                                                    state.accumEpoch
-                                                 );
-                    ticks0[cache.stopTick0].liquidityDelta += int104(int128(uint128(pool0.liquidity) 
-                                                        - ticks0[state.latestTick].liquidityDeltaMinus));
+                    if (cache.nextTickToAccum0 != cache.stopTick0) {
+                                tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
+                                                                cache.nextTickToAccum0,
+                                                                cache.nextTickToCross0,
+                                                                0
+                                                            );
+                                tickNodes[cache.nextTickToAccum0].nextTick = cache.stopTick0;
+                                tickNodes[cache.nextTickToCross0].previousTick = cache.stopTick0;
+                                
+                    }
                 }
                 /// @dev - update amount deltas on stopTick
                 _stash(
@@ -693,23 +691,8 @@ library Ticks
                         pool0.liquidity,
                         true
                 );
-                if (nextLatestTick < state.latestTick) {
-                    (
-                        pool0.liquidity, 
-                        cache.nextTickToCross0,
-                        cache.nextTickToAccum0
-                    ) = _cross(
-                        ticks0,
-                        tickNodes,
-                        cache.nextTickToCross0,
-                        cache.nextTickToAccum0,
-                        pool0.liquidity,
-                        true
-                    );
-                }
                 ticks0[cache.stopTick0].liquidityDelta += int104(ticks0[cache.stopTick0].liquidityDeltaMinus);
                 ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
-                tickNodes[cache.stopTick0].accumEpochLast = state.accumEpoch;
                 break;
             }
         }
@@ -763,14 +746,17 @@ library Ticks
                 );
                 if(cache.nextTickToCross0 == cache.nextTickToAccum0) revert InfiniteTickLoop1();
             } else {
-                /// @dev - place liquidity on latestTick for continuation when TWAP moves back up
+                /// @dev - place liquidity at stopTick1 for continuation when TWAP moves back up
                 if (nextLatestTick < state.latestTick) {
-                    //TODO: test this
-                    tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
-                                                    state.latestTick,
-                                                    cache.nextTickToAccum1,
-                                                    state.accumEpoch
-                                                 );
+                    if (cache.nextTickToAccum1 != cache.stopTick1) {
+                        tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
+                                                        cache.nextTickToCross1,
+                                                        cache.nextTickToAccum1,
+                                                        0
+                                                    );
+                        tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
+                        tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;           
+                    }
                 }
 
                 /// @dev - update amount deltas on stopTick
@@ -798,16 +784,19 @@ library Ticks
                 }
                 ticks1[cache.stopTick1].liquidityDelta += int104(ticks1[cache.stopTick1].liquidityDeltaMinus);
                 ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
-                tickNodes[cache.stopTick1].accumEpochLast = state.accumEpoch;
+                // tickNodes[cache.stopTick1].accumEpochLast = state.accumEpoch;
                 //TODO: if tickSpread > tickSpacing, we need to cross until accum tick is nextLatestTick
                 break;
             }
         }
-
         //TODO: remove liquidity from all ticks crossed
         //TODO: handle burn when price is between ticks
         //if TWAP moved up
         if (nextLatestTick > state.latestTick) {
+        //                                                 if(state.latestTick == -20 && nextLatestTick == 20){
+        //     console.log('tick -40 previousTick 2:');
+        //     console.logInt(tickNodes[-40].previousTick);
+        // }
             // if this is true we need to insert new latestTick
             if (cache.nextTickToAccum1 != nextLatestTick) {
                 // if this is true we need to delete the old tick
@@ -827,7 +816,7 @@ library Ticks
         } else if (nextLatestTick < state.latestTick) {
             //TODO: if tick is deleted rollover amounts if necessary
             //TODO: do we recalculate deltas if liquidity is removed?
-            if (cache.nextTickToAccum0 != nextLatestTick) {
+            if (cache.nextTickToCross0 != nextLatestTick) {
                 // if this is true we need to delete the old tick
                 //TODO: don't delete old latestTick for now
                 tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
@@ -846,12 +835,14 @@ library Ticks
             pool1.lastTick  = tickNodes[nextLatestTick].previousTick;
         }
         //TODO: delete old latestTick if possible
+
         pool0.nearestTick = tickNodes[nextLatestTick].nextTick;
         pool1.nearestTick = tickNodes[nextLatestTick].previousTick;
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick);
         pool1.price = pool0.price;
         state.latestTick = nextLatestTick;
         // console.log("-- END ACCUMULATE LAST BLOCK --");
+
         return (state, pool0, pool1);
     }
 }
