@@ -20,6 +20,7 @@ library Positions
     error InvalidPositionAmount();
     error InvalidPositionBoundsOrder();
     error InvalidPositionBoundsTwap();
+    error NotImplementedYet();
 
     uint256 internal constant Q96  = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
@@ -242,7 +243,10 @@ library Positions
             uint32 claimNextTickAccumEpoch = params.zeroForOne ? tickNodes[cache.claimTick.previousTick].accumEpochLast 
                                                                : tickNodes[cache.claimTick.nextTick].accumEpochLast;
             if (claimNextTickAccumEpoch > cache.position.accumEpochLast) revert WrongTickClaimedAt();
-            if (params.amount < 0) {
+            console.log('removing amount');
+            console.logInt(params.amount);
+            // revert NotImplementedYet();
+            if (params.amount > 0) {
                 /// @dev - check if liquidity removal required
                 cache.removeLower = params.zeroForOne ? 
                                       true
@@ -260,10 +264,8 @@ library Positions
                 /// @dev - no params.amount deltas for 0% filled
                 ///TODO: handle partial fill at params.lower tick
             }
-            if (params.zeroForOne ? 
-                (state.latestTick < params.claim && state.latestTick >= params.lower) //TODO: not sure if second condition is possible
-              : (state.latestTick > params.claim && state.latestTick <= params.upper) 
-            ) {
+            if (state.latestTick == params.claim) {
+                console.log('handling partial fill');
                 //handle latestTick partial fill
                 uint160 latestTickPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
                 //TODO: stop accumulating the tick before latestTick when moving TWAP

@@ -35,11 +35,10 @@ library Ticks
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         
         if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
-        uint256 nextTickPrice = zeroForOne ? uint256(TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread))
-                                           : uint256(TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread));
+        uint256 nextTickPrice = uint256(TickMath.getSqrtRatioAtTick(state.latestTick));
         uint256 nextPrice = nextTickPrice;
 
         if (zeroForOne) {
@@ -668,7 +667,7 @@ library Ticks
                     pool0.liquidity,
                     true
                 );
-                if(cache.nextTickToCross0 == cache.nextTickToAccum0) revert InfiniteTickLoop0();
+                if(cache.nextTickToCross0 == cache.nextTickToAccum0){ revert InfiniteTickLoop0();}
             } else {
                 /// @dev - place liquidity at stopTick0 for continuation when TWAP moves back down
                 if (nextLatestTick > state.latestTick) {
@@ -793,12 +792,8 @@ library Ticks
         //TODO: handle burn when price is between ticks
         //if TWAP moved up
         if (nextLatestTick > state.latestTick) {
-        //                                                 if(state.latestTick == -20 && nextLatestTick == 20){
-        //     console.log('tick -40 previousTick 2:');
-        //     console.logInt(tickNodes[-40].previousTick);
-        // }
             // if this is true we need to insert new latestTick
-            if (cache.nextTickToAccum1 != nextLatestTick) {
+            if (cache.nextTickToCross1 != nextLatestTick) {
                 // if this is true we need to delete the old tick
                 //TODO: don't delete old latestTick for now
                 tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
@@ -806,8 +801,8 @@ library Ticks
                         cache.nextTickToAccum1,
                         state.accumEpoch
                 );
-                tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
                 tickNodes[cache.nextTickToCross1].nextTick     = nextLatestTick;
+                tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;   
                 //TODO: replace nearestTick with priceLimit for swapping...maybe
             }
             pool0.liquidity = 0;
@@ -824,8 +819,8 @@ library Ticks
                         cache.nextTickToCross0,
                         state.accumEpoch
                 );
-                tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;
                 tickNodes[cache.nextTickToAccum0].nextTick     = nextLatestTick;
+                tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;
                 //TODO: replace nearestTick with priceLimit for swapping...maybe
             }
             pool0.liquidity = pool0.liquidity;
@@ -838,8 +833,8 @@ library Ticks
 
         pool0.nearestTick = tickNodes[nextLatestTick].nextTick;
         pool1.nearestTick = tickNodes[nextLatestTick].previousTick;
-        pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick);
-        pool1.price = pool0.price;
+        pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
+        pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
         state.latestTick = nextLatestTick;
         // console.log("-- END ACCUMULATE LAST BLOCK --");
 

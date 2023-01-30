@@ -518,4 +518,4 @@ export async function validateBurn(
     }
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(BN_ZERO.sub(liquidityAmount));
 
-}
+}4

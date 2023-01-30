@@ -473,6 +473,7 @@ describe('CoverPool Tests', function () {
     });
   });
 
+
   it('pool1 - Should move TWAP after mint and handle unfilled amount', async function () {
     const liquidityAmount2 = hre.ethers.utils.parseUnits("99955008249587388643769", 0);
     const balanceInDecrease = hre.ethers.utils.parseUnits("99750339674246044929", 0);
@@ -527,176 +528,193 @@ describe('CoverPool Tests', function () {
       revertMessage: "InvalidPositionBoundsTwap()"
     });
 
-    // await validateSwap({
-    //   signer:             hre.props.alice,
-    //   recipient:          hre.props.alice.address,
-    //   zeroForOne:         true,
-    //   amountIn:           tokenAmount,
-    //   sqrtPriceLimitX96:  minPrice,
-    //   balanceInDecrease:  BN_ZERO,
-    //   balanceOutIncrease: BN_ZERO,
-    //   finalLiquidity:     BN_ZERO,
-    //   finalPrice:         minPrice,
-    //   revertMessage:      ""
-    // });
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         true,
+      amountIn:           tokenAmount,
+      sqrtPriceLimitX96:  minPrice,
+      balanceInDecrease:  BN_ZERO,
+      balanceOutIncrease: BN_ZERO,
+      finalLiquidity:     BN_ZERO,
+      finalPrice:         minPrice,
+      revertMessage:      ""
+    });
 
-    // //burn should revert
+    //burn should revert
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "40",
+      upper:              "40",
+      liquidityAmount:    liquidityAmount2,
+      zeroForOne:         false,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(1),
+      lowerTickCleared:   true,
+      upperTickCleared:   true,
+      revertMessage:      "NotEnoughPositionLiquidity()"
+    });
+
+    //valid burn
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "0",
+      claim:              "20",
+      upper:              "20",
+      liquidityAmount:    liquidityAmount2,
+      zeroForOne:         false,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(2),
+      lowerTickCleared:   true,
+      upperTickCleared:   true,
+      revertMessage:      ""
+    });
+  });
+
+  it('pool1 - Should not mint position below TWAP', async function () {
+
+    await validateSync(
+      hre.props.alice,
+      "40"
+    );
+
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "20",
+      upper:        "40",
+      upperOld:     "887272",
+      amount:       tokenAmount,
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: "InvalidPositionBoundsTwap()"
+    });
+  });
+
+  it('Should mint, swap, and then claim entire range', async function () {
+    const lowerOld = hre.ethers.utils.parseUnits("0", 0);
+    const lower    = hre.ethers.utils.parseUnits("20", 0);
+    const upperOld = hre.ethers.utils.parseUnits("887272", 0);
+    const upper    = hre.ethers.utils.parseUnits("40", 0);
+    const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+    const feeTaken = hre.ethers.utils.parseUnits("5", 16);
+
+    await validateSync(
+      hre.props.alice,
+      "0"
+    );
+
+    //TODO: this reverts as expected but somehow not caught
+    // await validateMint(
+    //   hre.props.alice,
+    //   hre.props.alice.address,
+    //   lowerOld,
+    //   lower,
+    //   upperOld,
+    //   upper,
+    //   lower,
+    //   tokenAmount,
+    //   false,
+    //   tokenAmount,
+    //   liquidityAmount,
+    //   true,
+    //   false,
+    //   "WrongTickClaimedAt()"
+    // );
+    // // TODO: should lower tick be cleared and upper not be cleared?
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "20",
+      upper:        "40",
+      upperOld:     "887272",
+      amount:       tokenAmount,
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
+
+    await validateSync(
+      hre.props.alice,
+      "20"
+    );
+    // console.log('before swap')
+    // // let minTick = await hre.props.coverPool.tickNodes(minTickIdx);
+    // // console.log('min tick:', minTick.toString());
+    // // let latestTick = await hre.props.coverPool.tickNodes(await hre.props.coverPool.latestTick());
+    // // console.log('latest tick:', latestTick.toString());
+    // // let maxTick = await hre.props.coverPool.tickNodes(maxTickIdx);
+    // // console.log('max tick:', maxTick.toString());
+
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         true,
+      amountIn:           tokenAmount.mul(2),
+      sqrtPriceLimitX96:  minPrice,
+      balanceInDecrease:  BigNumber.from("99750339674246044929"),
+      balanceOutIncrease: BigNumber.from("99999999999999999999"),
+      finalLiquidity:     BN_ZERO,
+      finalPrice:         minPrice,
+      revertMessage:      ""
+    });
+    // console.log('before burn')
+    //TODO: reverts as expected but not caught
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "40",
+      upper:              "40",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         false,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount,
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "WrongTickClaimedAt()"
+    })
+
     // await validateBurn({
     //   signer:             hre.props.alice,
     //   lower:              "20",
-    //   claim:              "40",
-    //   upper:              "40",
-    //   liquidityAmount:    liquidityAmount2,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BN_ZERO,
-    //   balanceOutIncrease: tokenAmount.sub(1),
-    //   lowerTickCleared:   true,
-    //   upperTickCleared:   true,
-    //   revertMessage:      "NotEnoughPositionLiquidity()"
-    // });
-
-    // //valid burn
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "0",
     //   claim:              "20",
-    //   upper:              "20",
-    //   liquidityAmount:    liquidityAmount2,
+    //   upper:              "40",
+    //   liquidityAmount:    liquidityAmount,
     //   zeroForOne:         false,
     //   balanceInIncrease:  BN_ZERO,
-    //   balanceOutIncrease: tokenAmount.sub(2),
-    //   lowerTickCleared:   true,
-    //   upperTickCleared:   true,
-    //   revertMessage:      ""
-    // });
+    //   balanceOutIncrease: tokenAmount,
+    //   lowerTickCleared:   false,
+    //   upperTickCleared:   false,
+    //   revertMessage:      "NotImplementedYet()"
+    // })
+    // 99999999999999999999
+    // 99850134913545280154
+    // console.log('before burn2')
+    // await validateBurn(
+    //   hre.props.alice,
+    //   lower,
+    //   upper,
+    //   lower,
+    //   liquidityAmount,
+    //   false,
+    //   BN_ZERO,
+    //   tokenAmount.sub(1),
+    //   false,
+    //   false,
+    //   ""
+    // )
   });
-
-  // it('Should not mint position with lower below TWAP', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("-887272", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("0", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("50", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("40", 0);
-
-  //   await validateMint(
-  //     hre.props.alice,
-  //     hre.props.alice.address,
-  //     lowerOld,
-  //     lower,
-  //     upperOld,
-  //     upper,
-  //     lower,
-  //     tokenAmount,
-  //     false,
-  //     tokenAmount,
-  //     liquidityAmount,
-  //     false,
-  //     false,
-  //     "InvalidPositionBoundsTwap()"
-  //   );
-  // });
-
-  // it('Should mint, swap, and then claim entire range', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("40", 0);
-  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
-  //   const feeTaken = hre.ethers.utils.parseUnits("5", 16);
-
-  //   let txn = await hre.props.rangePoolMock.setTickCumulatives(
-  //     0,
-  //     0
-  //   );
-  //   await txn.wait();
-
-  //   const lowerOldTickBefore: Tick = await hre.props.coverPool.ticks1("30");
-  //   console.log('upper before tick:', lowerOldTickBefore.toString());
-
-  //   //TODO: this reverts as expected but somehow not caught
-  //   // await validateMint(
-  //   //   hre.props.alice,
-  //   //   hre.props.alice.address,
-  //   //   lowerOld,
-  //   //   lower,
-  //   //   upperOld,
-  //   //   upper,
-  //   //   lower,
-  //   //   tokenAmount,
-  //   //   false,
-  //   //   tokenAmount,
-  //   //   liquidityAmount,
-  //   //   true,
-  //   //   false,
-  //   //   "WrongTickClaimedAt()"
-  //   // );
-  //   // // TODO: should lower tick be cleared and upper not be cleared?
-  //   console.log('before mint')
-  //   await validateMint(
-  //     hre.props.alice,
-  //     hre.props.alice.address,
-  //     lowerOld,
-  //     lower,
-  //     upperOld,
-  //     upper,
-  //     upper,
-  //     tokenAmount,
-  //     false,
-  //     tokenAmount,
-  //     liquidityAmount,
-  //     false,
-  //     true,
-  //     ""
-  //   );
-  //   // console.log('before swap')
-  //   // // let minTick = await hre.props.coverPool.tickNodes(minTickIdx);
-  //   // // console.log('min tick:', minTick.toString());
-  //   // // let latestTick = await hre.props.coverPool.tickNodes(await hre.props.coverPool.latestTick());
-  //   // // console.log('latest tick:', latestTick.toString());
-  //   // // let maxTick = await hre.props.coverPool.tickNodes(maxTickIdx);
-  //   // // console.log('max tick:', maxTick.toString());
-
-  //   await validateSwap(
-  //     hre.props.alice,
-  //     hre.props.alice.address,
-  //     true,
-  //     tokenAmount,
-  //     minPrice,
-  //     BN_ZERO,
-  //     BN_ZERO,
-  //     BN_ZERO,
-  //     minPrice,
-  //     ""
-  //   )
-  //   console.log('before burn')
-  //   //TODO: reverts as expected but not caught
-  //   // await validateBurn(
-  //   //   hre.props.alice,
-  //   //   lower,
-  //   //   upper,
-  //   //   upper,
-  //   //   liquidityAmount,
-  //   //   false,
-  //   //   BN_ZERO,
-  //   //   tokenAmount,
-  //   //   false,
-  //   //   false,
-  //   //   "WrongTickClaimedAt()"
-  //   // )
-  //   console.log('before burn2')
-  //   await validateBurn(
-  //     hre.props.alice,
-  //     lower,
-  //     upper,
-  //     lower,
-  //     liquidityAmount,
-  //     false,
-  //     BN_ZERO,
-  //     tokenAmount.sub(1),
-  //     false,
-  //     false,
-  //     ""
-  //   )
-  // });
 
   // //TODO: these revert catches no longer work inside a library
   // it('Should fail on second claim', async function () {

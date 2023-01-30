@@ -320,6 +320,10 @@ contract CoverPool is
                    : positions1[msg.sender][lower][upper].amountOut = 0;
 
         /// transfer out balances
+        // console.log('erc20 balances');
+        // console.log(ERC20(token0).balanceOf(address(this)));
+        // console.log(ERC20(token1).balanceOf(address(this)));
+        // console.log(amountIn, amountOut);
         _transferOut(msg.sender, zeroForOne ? token1 : token0, amountIn);
         _transferOut(msg.sender, zeroForOne ? token0 : token1, amountOut);
 
@@ -376,6 +380,7 @@ contract CoverPool is
                 state,
                 cache
         );
+        console.log('amount out:', amountOut);
 
         // amountOut += output;
 
