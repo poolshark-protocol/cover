@@ -15,6 +15,7 @@ abstract contract CoverPoolEvents {
         address indexed owner,
         int24 indexed lower,
         int24 indexed upper,
+        int24 claim,
         bool zeroForOne,
         uint128 liquidityBurned
     );

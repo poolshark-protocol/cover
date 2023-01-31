@@ -112,7 +112,7 @@ interface CoverPoolInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "ticks1", data: BytesLike): Result;
 
   events: {
-    "Burn(address,int24,int24,bool,uint128)": EventFragment;
+    "Burn(address,int24,int24,int24,bool,uint128)": EventFragment;
     "Collect(address,uint256,uint256)": EventFragment;
     "Mint(address,int24,int24,bool,uint128)": EventFragment;
     "PoolCreated(address,address,address,uint24,int24)": EventFragment;
@@ -127,10 +127,11 @@ interface CoverPoolInterface extends ethers.utils.Interface {
 }
 
 export type BurnEvent = TypedEvent<
-  [string, number, number, boolean, BigNumber] & {
+  [string, number, number, number, boolean, BigNumber] & {
     owner: string;
     lower: number;
     upper: number;
+    claim: number;
     zeroForOne: boolean;
     liquidityBurned: BigNumber;
   }
@@ -686,18 +687,20 @@ export class CoverPool extends BaseContract {
   };
 
   filters: {
-    "Burn(address,int24,int24,bool,uint128)"(
+    "Burn(address,int24,int24,int24,bool,uint128)"(
       owner?: string | null,
       lower?: BigNumberish | null,
       upper?: BigNumberish | null,
+      claim?: null,
       zeroForOne?: null,
       liquidityBurned?: null
     ): TypedEventFilter<
-      [string, number, number, boolean, BigNumber],
+      [string, number, number, number, boolean, BigNumber],
       {
         owner: string;
         lower: number;
         upper: number;
+        claim: number;
         zeroForOne: boolean;
         liquidityBurned: BigNumber;
       }
@@ -707,14 +710,16 @@ export class CoverPool extends BaseContract {
       owner?: string | null,
       lower?: BigNumberish | null,
       upper?: BigNumberish | null,
+      claim?: null,
       zeroForOne?: null,
       liquidityBurned?: null
     ): TypedEventFilter<
-      [string, number, number, boolean, BigNumber],
+      [string, number, number, number, boolean, BigNumber],
       {
         owner: string;
         lower: number;
         upper: number;
+        claim: number;
         zeroForOne: boolean;
         liquidityBurned: BigNumber;
       }

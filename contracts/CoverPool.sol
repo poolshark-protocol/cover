@@ -233,25 +233,27 @@ contract CoverPool is
         // Ensure no overflow happens when we cast from uint128 to int128.
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
 
-        // update position and get new lower and upper
-        (,,,,state) = Positions.update(
-            zeroForOne ? positions0 : positions1,
-            zeroForOne ? ticks0 : ticks1,
-            tickNodes,
-            state,
-            zeroForOne ? pool0 : pool1,
-            UpdateParams(
-                msg.sender,
-                lower,
-                upper,
-                claim,
-                zeroForOne,
-                int128(amount)
-            )
-        );
+        if (claim != (zeroForOne ? upper : lower) || claim == state.latestTick){
+            // update position and get new lower and upper
+            (,,,,state) = Positions.update(
+                zeroForOne ? positions0 : positions1,
+                zeroForOne ? ticks0 : ticks1,
+                tickNodes,
+                state,
+                zeroForOne ? pool0 : pool1,
+                UpdateParams(
+                    msg.sender,
+                    lower,
+                    upper,
+                    claim,
+                    zeroForOne,
+                    int128(amount)
+                )
+            );
+        }
         //TODO: add PositionUpdated event
         // if position hasn't changed remove liquidity
-        if (claim == (zeroForOne ? upper : lower)) {
+        else {
             (,state) = Positions.remove(
                zeroForOne ? positions0 : positions1,
                zeroForOne ? ticks0 : ticks1,
@@ -267,7 +269,8 @@ contract CoverPool is
             );
         }
         //TODO: get token amounts from _updatePosition return values
-        emit Burn(msg.sender, lower, upper, zeroForOne, amount);
+        //TODO: need to know old ticks and new ticks
+        emit Burn(msg.sender, lower, upper, claim, zeroForOne, amount);
         globalState = state;
     }
 
@@ -320,10 +323,6 @@ contract CoverPool is
                    : positions1[msg.sender][lower][upper].amountOut = 0;
 
         /// transfer out balances
-        // console.log('erc20 balances');
-        // console.log(ERC20(token0).balanceOf(address(this)));
-        // console.log(ERC20(token1).balanceOf(address(this)));
-        // console.log(amountIn, amountOut);
         _transferOut(msg.sender, zeroForOne ? token1 : token0, amountIn);
         _transferOut(msg.sender, zeroForOne ? token0 : token1, amountOut);
 
@@ -340,6 +339,7 @@ contract CoverPool is
         // bytes calldata data
     ) external override lock returns (uint256 amountOut) {
         //TODO: is this needed?
+        //TODO: implement stopPrice for pool/1
         GlobalState memory state = globalState;
         PoolState   memory pool  = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
@@ -380,7 +380,6 @@ contract CoverPool is
                 state,
                 cache
         );
-        console.log('amount out:', amountOut);
 
         // amountOut += output;
 

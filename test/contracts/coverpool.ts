@@ -565,7 +565,7 @@ describe('CoverPool Tests', function () {
       liquidityAmount:    liquidityAmount2,
       zeroForOne:         false,
       balanceInIncrease:  BN_ZERO,
-      balanceOutIncrease: tokenAmount.sub(2),
+      balanceOutIncrease: tokenAmount.sub(3),
       lowerTickCleared:   true,
       upperTickCleared:   true,
       revertMessage:      ""
@@ -685,19 +685,19 @@ describe('CoverPool Tests', function () {
       revertMessage:      "WrongTickClaimedAt()"
     })
 
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "20",
-    //   claim:              "20",
-    //   upper:              "40",
-    //   liquidityAmount:    liquidityAmount,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BN_ZERO,
-    //   balanceOutIncrease: tokenAmount,
-    //   lowerTickCleared:   false,
-    //   upperTickCleared:   false,
-    //   revertMessage:      "NotImplementedYet()"
-    // })
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "20",
+      upper:              "40",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         false,
+      balanceInIncrease:  BigNumber.from("99750314736661126366"),
+      balanceOutIncrease: BigNumber.from("0"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      ""
+    })
     // 99999999999999999999
     // 99850134913545280154
     // console.log('before burn2')

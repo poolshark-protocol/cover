@@ -35,7 +35,7 @@ library Ticks
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         
         if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
         uint256 nextTickPrice = uint256(TickMath.getSqrtRatioAtTick(state.latestTick));
@@ -323,7 +323,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool removeLiquidity
-    ) external view returns(
+    ) external pure returns(
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
         return _accumulate(
@@ -348,7 +348,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool removeLiquidity
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -419,7 +419,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool isPool0
-    ) external view returns (int128, int128) {
+    ) external pure returns (int128, int128) {
         return _rollover(
             nextTickToCross,
             nextTickToAccum,
@@ -439,7 +439,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool isPool0
-    ) internal view returns (int128, int128) {
+    ) internal pure returns (int128, int128) {
         if (currentLiquidity == 0) return (amountInDelta, amountOutDelta);
 
         uint160 accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
