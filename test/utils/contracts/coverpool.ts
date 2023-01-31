@@ -51,7 +51,9 @@ export interface ValidateMintParams {
     upperTickCleared: boolean,
     lowerTickCleared: boolean,
     revertMessage: string,
-    collectRevertMessage?: string
+    collectRevertMessage?: string,
+    expectedLower?: string,
+    expectedUpper?: string
 }
 
 export interface ValidateSwapParams {
@@ -222,6 +224,8 @@ export async function validateMint(
     const lowerTickCleared = params.lowerTickCleared;
     const revertMessage = params.revertMessage;
     const collectRevertMessage = params.collectRevertMessage;
+    const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null;
+    const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null;
 
     //collect first to recreate positions if necessary
     if (!collectRevertMessage){
@@ -260,20 +264,20 @@ export async function validateMint(
         lowerOldTickBefore = await hre.props.coverPool.ticks0(lowerOld);
         lowerTickBefore = await hre.props.coverPool.ticks0(lower);
         upperOldTickBefore = await hre.props.coverPool.ticks0(upperOld);
-        upperTickBefore = await hre.props.coverPool.ticks0(upper);
+        upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper);
         positionBefore = await hre.props.coverPool.positions0(
             recipient,
             lower,
-            upper
+            expectedUpper ? expectedUpper : upper
         );
     } else {
         lowerOldTickBefore = await hre.props.coverPool.ticks1(lowerOld);
-        lowerTickBefore = await hre.props.coverPool.ticks1(lower);
+        lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower);
         upperOldTickBefore = await hre.props.coverPool.ticks1(upperOld);
         upperTickBefore = await hre.props.coverPool.ticks1(upper);
         positionBefore = await hre.props.coverPool.positions1(
             recipient,
-            lower,
+            expectedLower ? expectedLower : lower,
             upper
         );
     }
@@ -322,20 +326,20 @@ export async function validateMint(
         lowerOldTickAfter = await hre.props.coverPool.ticks0(lowerOld);
         lowerTickAfter = await hre.props.coverPool.ticks0(lower);
         upperOldTickAfter = await hre.props.coverPool.ticks0(upperOld);
-        upperTickAfter = await hre.props.coverPool.ticks0(upper);
+        upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper);
         positionAfter = await hre.props.coverPool.positions0(
             recipient,
             lower,
-            upper
+            expectedUpper ? expectedUpper : upper
         );
     } else {
         lowerOldTickAfter = await hre.props.coverPool.ticks1(lowerOld);
-        lowerTickAfter = await hre.props.coverPool.ticks1(lower);
+        lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower);
         upperOldTickAfter = await hre.props.coverPool.ticks1(upperOld);
         upperTickAfter = await hre.props.coverPool.ticks1(upper);
         positionAfter = await hre.props.coverPool.positions1(
             recipient,
-            lower,
+            expectedLower ? expectedLower : lower,
             upper
         );
     }

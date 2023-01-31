@@ -343,6 +343,75 @@ describe('CoverPool Tests', function () {
     });
   });
 
+  it('pool0 - Should handle partial mint', async function () {
+    const liquidityAmount3 = BigNumber.from("49952516624167694475096")
+    const tokenAmount3 = BigNumber.from("50024998748000306423")
+    // move TWAP to tick 0
+    await validateSync(
+      hre.props.admin,
+      "0"
+    );
+
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "-887272",
+      lower:        "-40",
+      claim:        "0",
+      upper:        "0",
+      upperOld:     "0",
+      amount:       tokenAmount,
+      zeroForOne:   true,
+      balanceInDecrease: tokenAmount3,
+      liquidityIncrease: liquidityAmount3,
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: "",
+      expectedUpper: "-20"
+    });
+
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         false,
+      amountIn:           tokenAmount.div(10),
+      sqrtPriceLimitX96:  maxPrice,
+      balanceInDecrease:  BN_ZERO,
+      balanceOutIncrease: BN_ZERO,
+      finalLiquidity:     BN_ZERO,
+      finalPrice:         minPrice,
+      revertMessage:      ""
+    });
+
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-40",
+      claim:              "0",
+      upper:              "0",
+      liquidityAmount:    liquidityAmount3,
+      zeroForOne:         true,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount3.sub(1),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "NotEnoughPositionLiquidity()"
+    });
+
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-40",
+      claim:              "-20",
+      upper:              "-20",
+      liquidityAmount:    liquidityAmount3,
+      zeroForOne:         true,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount3.sub(1),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      ""
+    });
+  });
+
   // move TWAP in range; no-op swap; burn immediately
 
   // move TWAP in range; no-op swap; move TWAP down tickSpread; burn liquidity
