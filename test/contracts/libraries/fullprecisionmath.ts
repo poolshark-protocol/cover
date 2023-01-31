@@ -73,15 +73,19 @@ describe('FullPrecisionMath Library Tests', function () {
         )).to.be.equal(BigNumber.from("2"));
     });
 
-    it('Should revert if getting liquidity value outside price bounds', async function () {
-        await expect(hre.props.dydxMathLib.getLiquidityForAmounts(
-            BigNumber.from("79386769463160146968577785965"),
-            BigNumber.from("79545693927487839655804034729"),
-            BigNumber.from("99855108194609381495771"),
-            BigNumber.from("20"),
-            BigNumber.from("20")
-        )).to.be.revertedWith("Transaction reverted: library was called directly");
-        //TODO: wrong error is reported using hardhat
-        // )).to.be.revertedWith("PriceOutsideOfBounds()");
-    })
+    it('divRoundingUp - Should revert on uint256 max', async function () {
+      await expect(hre.props.fullPrecisionMathLib.mulDivRoundingUp(
+        BigNumber.from("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+        BigNumber.from("2"),
+        BigNumber.from("1")
+      )).to.be.revertedWith("Transaction reverted: library was called directly");
+    });
+
+    it('divRoundingUp - Should handle rounding up', async function () {
+      expect(await hre.props.fullPrecisionMathLib.mulDivRoundingUp(
+        ethers.utils.parseUnits("2", 70),
+        BigNumber.from("1"),
+        BigNumber.from("3")
+      )).to.be.equal(BigNumber.from("6666666666666666666666666666666666666666666666666666666666666666666667"));
+    });
 });

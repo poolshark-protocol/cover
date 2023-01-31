@@ -4,6 +4,9 @@ pragma solidity ^0.8.13;
 /// @notice Math library that facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision.
 library FullPrecisionMath
 {
+
+    error MaxUintExceeded();
+
     function mulDiv(
         uint256 a,
         uint256 b,
@@ -23,7 +26,7 @@ library FullPrecisionMath
         uint256 a,
         uint256 b,
         uint256 denominator
-    ) external pure returns (uint256 result) {
+    ) external view returns (uint256 result) {
         return _mulDivRoundingUp(a, b, denominator);
     }
 
@@ -130,11 +133,11 @@ library FullPrecisionMath
         uint256 a,
         uint256 b,
         uint256 denominator
-    ) internal pure returns (uint256 result) {
+    ) internal view returns (uint256 result) {
         result = _mulDiv(a, b, denominator);
         unchecked {
             if (mulmod(a, b, denominator) != 0) {
-                require(result < type(uint256).max);
+                if(result >= type(uint256).max) revert MaxUintExceeded();
                 result++;
             }
         }

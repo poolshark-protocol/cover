@@ -35,7 +35,7 @@ library Ticks
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         
         if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
         uint256 nextTickPrice = uint256(TickMath.getSqrtRatioAtTick(state.latestTick));
