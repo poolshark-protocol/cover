@@ -543,7 +543,7 @@ library Ticks
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure {
+    ) internal view {
         // return since there is nothing to update
         if (currentLiquidity == 0) return;
 
@@ -553,6 +553,7 @@ library Ticks
             int128 amountInDeltaCarry = int64(stashTick.amountInDeltaCarryPercent) * stashTick.amountInDelta / 1e18;
             int128 newAmountInDelta = stashTick.amountInDelta + amountInDelta;
             if (amountInDelta != 0 && newAmountInDelta != 0) {
+                console.logInt(amountInDelta + amountInDeltaCarry);
                 stashTick.amountInDeltaCarryPercent = uint64(uint128((amountInDelta + amountInDeltaCarry) * 1e18 
                                                 / (newAmountInDelta)));
                 stashTick.amountInDelta += int88(amountInDelta);
@@ -604,7 +605,7 @@ library Ticks
             nextTickToCross1:  state.latestTick,
             nextTickToAccum0:  tickNodes[state.latestTick].previousTick, /// create tick if L > 0 and nextLatestTick != latestTick + tickSpread
             nextTickToAccum1:  tickNodes[state.latestTick].nextTick, /// create tick if L > 0 and nextLatestTick != latestTick - tickSpread
-            stopTick0:  (nextLatestTick > state.latestTick) ? state.latestTick - state.tickSpread : nextLatestTick - state.tickSpread,
+            stopTick0:  (nextLatestTick > state.latestTick) ? state.latestTick - state.tickSpread : nextLatestTick,
             stopTick1:  (nextLatestTick > state.latestTick) ? nextLatestTick   : state.latestTick + state.tickSpread,
             amountInDelta0:  0,
             amountInDelta1:  0,
@@ -651,6 +652,12 @@ library Ticks
                 tickNodes[cache.nextTickToAccum0] = outputs.accumTickNode;
                 ticks1[cache.nextTickToCross0] = outputs.crossTick;
                 ticks1[cache.nextTickToAccum0] = outputs.accumTick;
+                                                                    if (state.latestTick == 20 && nextLatestTick == -20) {
+                        console.log('-40 tick epoch 1');
+                        console.log(tickNodes[-40].accumEpochLast);
+                        console.logInt(cache.nextTickToAccum0);
+                        console.logInt(cache.nextTickToCross0);
+                    }
             }
             //cross otherwise break
             // 
@@ -683,6 +690,13 @@ library Ticks
                                 
                     }
                 }
+                if (state.latestTick == 20 && nextLatestTick == -20) {
+                    console.log('-40 tick epoch 1');
+                    console.log(tickNodes[-40].accumEpochLast);
+                    console.logInt(cache.nextTickToAccum0);
+                    console.logInt(cache.nextTickToCross0);
+                    console.logInt(cache.stopTick0);
+                }
                 /// @dev - update amount deltas on stopTick
                 _stash(
                         ticks0[cache.stopTick0],
@@ -690,6 +704,10 @@ library Ticks
                         pool0.liquidity,
                         true
                 );
+                                                    if (state.latestTick == 20 && nextLatestTick == -20) {
+                        console.log('-40 tick epoch 2');
+                        console.log(tickNodes[-40].accumEpochLast);
+                    }
                 ticks0[cache.stopTick0].liquidityDelta += int104(ticks0[cache.stopTick0].liquidityDeltaMinus);
                 ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
                 break;
@@ -768,18 +786,20 @@ library Ticks
                 );
 
                 if (nextLatestTick > state.latestTick) {
-                    (
-                        pool1.liquidity, 
-                        cache.nextTickToCross1,
-                        cache.nextTickToAccum1
-                    ) = _cross(
-                        ticks1,
-                        tickNodes,
-                        cache.nextTickToCross1,
-                        cache.nextTickToAccum1,
-                        pool1.liquidity,
-                        false
-                    );
+                    if(cache.nextTickToAccum1 < cache.stopTick1) {
+                        (
+                            pool1.liquidity, 
+                            cache.nextTickToCross1,
+                            cache.nextTickToAccum1
+                        ) = _cross(
+                            ticks1,
+                            tickNodes,
+                            cache.nextTickToCross1,
+                            cache.nextTickToAccum1,
+                            pool1.liquidity,
+                            false
+                        );
+                    }
                 }
                 ticks1[cache.stopTick1].liquidityDelta += int104(ticks1[cache.stopTick1].liquidityDeltaMinus);
                 ticks1[cache.stopTick1].liquidityDeltaMinus = 0;

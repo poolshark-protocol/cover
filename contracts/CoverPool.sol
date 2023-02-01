@@ -174,7 +174,6 @@ contract CoverPool is
                     0
                 )
             );
-
             //TODO: check amount consumed from return value
             // creates new position
             (,globalState) = Positions.add(

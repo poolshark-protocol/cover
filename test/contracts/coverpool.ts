@@ -8,6 +8,11 @@ import { mintSigners20 } from '../utils/token';
 import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateSync } from '../utils/contracts/coverpool';
 import { ValidateMintParams } from '../utils/contracts/coverpool';
 
+// TODO: ✔ pool0 - Should handle partial mint (479ms)
+// position before liquidity: BigNumber { _hex: '0x00', _isBigNumber: true }
+//     1) pool0 - Should handle partial range cross w/ unfilled amount
+/// ^this causes infinite tick loop
+
 alice: SignerWithAddress;
 describe('CoverPool Tests', function () {
 
@@ -407,6 +412,78 @@ describe('CoverPool Tests', function () {
       balanceInIncrease:  BN_ZERO,
       balanceOutIncrease: tokenAmount3.sub(1),
       lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      ""
+    });
+  });
+
+  it('pool0 - Should handle partial range cross w/ unfilled amount', async function () {
+    const liquidityAmount4 = BigNumber.from("49952516624167694475096");
+
+    await validateSync(
+      hre.props.admin,
+      "20"
+    );
+    console.log((await hre.props.coverPool.positions0(hre.props.alice.address, BigNumber.from("-40"), BigNumber.from("0"))).toString())
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "-887272",
+      lower:        "-40",
+      claim:        "0",
+      upper:        "0",
+      upperOld:     "20",
+      amount:       tokenAmount,
+      zeroForOne:   true,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount4, 
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
+    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         false,
+      amountIn:           tokenAmount.div(10),
+      sqrtPriceLimitX96:  maxPrice,
+      balanceInDecrease:  BN_ZERO,
+      balanceOutIncrease: BN_ZERO,
+      finalLiquidity:     BN_ZERO,
+      finalPrice:         minPrice,
+      revertMessage:      ""
+    });
+    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    await validateSync(
+      hre.props.admin,
+      "-20"
+    );
+    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-40",
+      claim:              "0",
+      upper:              "0",
+      liquidityAmount:    liquidityAmount4,
+      zeroForOne:         true,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(1),
+      lowerTickCleared:   true,
+      upperTickCleared:   false,
+      revertMessage:      "WrongTickClaimedAt()"
+    });
+    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-40",
+      claim:              "-20",
+      upper:              "0",
+      liquidityAmount:    liquidityAmount4,
+      zeroForOne:         true,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(2),
+      lowerTickCleared:   true,
       upperTickCleared:   false,
       revertMessage:      ""
     });
