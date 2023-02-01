@@ -315,6 +315,11 @@ contract CoverPool is
                               : positions1[msg.sender][claim][upper].amountIn;
         amountOut = zeroForOne ? positions0[msg.sender][lower][claim].amountOut 
                                : positions1[msg.sender][claim][upper].amountOut;
+        console.log('erc20 balances');
+        console.log(ERC20(token1).balanceOf(address(this)));
+        console.log(amountIn);
+        console.log(ERC20(token0).balanceOf(address(this)));
+        console.log(amountOut);
         /// zero out balances
         zeroForOne ? positions0[msg.sender][lower][claim].amountIn = 0 
                    : positions1[msg.sender][claim][upper].amountIn = 0;

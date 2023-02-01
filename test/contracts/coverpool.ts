@@ -424,7 +424,7 @@ describe('CoverPool Tests', function () {
       hre.props.admin,
       "20"
     );
-    console.log((await hre.props.coverPool.positions0(hre.props.alice.address, BigNumber.from("-40"), BigNumber.from("0"))).toString())
+
     await validateMint({
       signer:       hre.props.alice,
       recipient:    hre.props.alice.address,
@@ -441,7 +441,7 @@ describe('CoverPool Tests', function () {
       lowerTickCleared: false,
       revertMessage: ""
     });
-    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+
     await validateSwap({
       signer:             hre.props.alice,
       recipient:          hre.props.alice.address,
@@ -454,12 +454,15 @@ describe('CoverPool Tests', function () {
       finalPrice:         minPrice,
       revertMessage:      ""
     });
-    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    console.log('0 tick:', (await hre.props.coverPool.ticks0("0")).toString())
+    console.log('-20 tick:', (await hre.props.coverPool.ticks0("-20")).toString())
+    // console.log('-20 tick:', (await hre.props.coverPool.tickNodes("-20")).toString())
+    // console.log('-20 amount deltas', (await hre.props.coverPool.ticks0("-20")).toString())
     await validateSync(
       hre.props.admin,
       "-20"
     );
-    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    // console.log('0 amount deltas', (await hre.props.coverPool.ticks0("0")).toString())
     await validateBurn({
       signer:             hre.props.alice,
       lower:              "-40",
@@ -473,7 +476,7 @@ describe('CoverPool Tests', function () {
       upperTickCleared:   false,
       revertMessage:      "WrongTickClaimedAt()"
     });
-    console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+    // console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
     await validateBurn({
       signer:             hre.props.alice,
       lower:              "-40",
@@ -482,7 +485,7 @@ describe('CoverPool Tests', function () {
       liquidityAmount:    liquidityAmount4,
       zeroForOne:         true,
       balanceInIncrease:  BN_ZERO,
-      balanceOutIncrease: tokenAmount.sub(2),
+      balanceOutIncrease: BigNumber.from("99875094950140787193"),
       lowerTickCleared:   true,
       upperTickCleared:   false,
       revertMessage:      ""
