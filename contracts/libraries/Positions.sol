@@ -241,8 +241,6 @@ library Positions
                                                 cache.claimPrice
                                             );
             cache.position.amountIn += uint128(amountInClaimable * (1e6 + state.swapFee) / 1e6); /// @dev - factor in swap fees
-            console.log('amount in check 1:');
-            console.log(cache.position.amountIn);
         }
 
         // check for end of position claim tick
@@ -278,12 +276,8 @@ library Positions
 
             // factor in amount deltas
             if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                console.log('adding amount in deltas');
-
                 cache.amountInDelta  += ticks[params.claim].amountInDelta;
                 cache.amountOutDelta += ticks[params.claim].amountOutDelta;
-                console.logInt(cache.amountInDelta);
-                console.logInt(cache.amountOutDelta);
             }
             // factor in current liquidity auction
             if (state.latestTick == params.claim) {
