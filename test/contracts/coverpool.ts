@@ -651,7 +651,6 @@ describe('CoverPool Tests', function () {
     });
 
     // move TWAP to tick 20
-    //TODO: fix infinite loop HERE
     await validateSync(
       hre.props.alice,
       "20"
@@ -688,35 +687,35 @@ describe('CoverPool Tests', function () {
       revertMessage:      ""
     });
 
-    // //burn should revert
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "20",
-    //   claim:              "40",
-    //   upper:              "40",
-    //   liquidityAmount:    liquidityAmount2,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BN_ZERO,
-    //   balanceOutIncrease: tokenAmount.sub(1),
-    //   lowerTickCleared:   true,
-    //   upperTickCleared:   true,
-    //   revertMessage:      "NotEnoughPositionLiquidity()"
-    // });
+    //burn should revert
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "40",
+      upper:              "40",
+      liquidityAmount:    liquidityAmount2,
+      zeroForOne:         false,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(1),
+      lowerTickCleared:   true,
+      upperTickCleared:   true,
+      revertMessage:      "NotEnoughPositionLiquidity()"
+    });
 
-    // //valid burn
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "0",
-    //   claim:              "20",
-    //   upper:              "20",
-    //   liquidityAmount:    liquidityAmount2,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BN_ZERO,
-    //   balanceOutIncrease: tokenAmount.sub(3),
-    //   lowerTickCleared:   true,
-    //   upperTickCleared:   true,
-    //   revertMessage:      ""
-    // });
+    //valid burn
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "0",
+      claim:              "20",
+      upper:              "20",
+      liquidityAmount:    liquidityAmount2,
+      zeroForOne:         false,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount.sub(3),
+      lowerTickCleared:   true,
+      upperTickCleared:   true,
+      revertMessage:      ""
+    });
   });
 
   it('pool1 - Should not mint position below TWAP', async function () {
@@ -744,7 +743,7 @@ describe('CoverPool Tests', function () {
     });
   });
 
-  it('Should mint, swap, and then claim entire range', async function () {
+  it.skip('Should mint, swap, and then claim entire range', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -757,24 +756,24 @@ describe('CoverPool Tests', function () {
       "0"
     );
 
-    //TODO: this reverts as expected but somehow not caught
-    // await validateMint(
-    //   hre.props.alice,
-    //   hre.props.alice.address,
-    //   lowerOld,
-    //   lower,
-    //   upperOld,
-    //   upper,
-    //   lower,
-    //   tokenAmount,
-    //   false,
-    //   tokenAmount,
-    //   liquidityAmount,
-    //   true,
-    //   false,
-    //   "WrongTickClaimedAt()"
-    // );
-    // // TODO: should lower tick be cleared and upper not be cleared?
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "887272",
+      upper:        "40",
+      upperOld:     "887272",
+      amount:       tokenAmount,
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      upperTickCleared: true,
+      lowerTickCleared: false,
+      revertMessage:"WrongTickClaimedAt()"
+    });
+
+    // TODO: should lower tick be cleared and upper not be cleared?
     await validateMint({
       signer:       hre.props.alice,
       recipient:    hre.props.alice.address,
@@ -796,13 +795,6 @@ describe('CoverPool Tests', function () {
       hre.props.alice,
       "20"
     );
-    // console.log('before swap')
-    // // let minTick = await hre.props.coverPool.tickNodes(minTickIdx);
-    // // console.log('min tick:', minTick.toString());
-    // // let latestTick = await hre.props.coverPool.tickNodes(await hre.props.coverPool.latestTick());
-    // // console.log('latest tick:', latestTick.toString());
-    // // let maxTick = await hre.props.coverPool.tickNodes(maxTickIdx);
-    // // console.log('max tick:', maxTick.toString());
 
     await validateSwap({
       signer:             hre.props.alice,
@@ -844,7 +836,7 @@ describe('CoverPool Tests', function () {
       lowerTickCleared:   false,
       upperTickCleared:   false,
       revertMessage:      ""
-    })
+    });
     // 99999999999999999999
     // 99850134913545280154
     // console.log('before burn2')

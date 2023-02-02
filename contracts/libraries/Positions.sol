@@ -6,6 +6,7 @@ import "./Ticks.sol";
 import "../interfaces/ICoverPoolStructs.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
+import "hardhat/console.sol";
 
 /// @notice Position management library for ranged liquidity.
 library Positions
@@ -242,7 +243,6 @@ library Positions
                                             );
             cache.position.amountIn += uint128(amountInClaimable * (1e6 + state.swapFee) / 1e6); /// @dev - factor in swap fees
         }
-
         // check for end of position claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)){
             // position 100% filled
@@ -251,10 +251,11 @@ library Positions
             params.zeroForOne ? cache.removeLower = false 
                               : cache.removeUpper = false;
             /// @dev - ignore carryover for last tick of position
-            cache.amountInDelta  = ticks[params.claim].amountInDelta - int64(ticks[params.claim].amountInDeltaCarryPercent) 
-                                                                     * ticks[params.claim].amountInDelta / 1e18;
-            cache.amountOutDelta = ticks[params.claim].amountOutDelta - int64(ticks[params.claim].amountOutDeltaCarryPercent)
-                                                                        * ticks[params.claim].amountInDelta / 1e18;
+
+            cache.amountInDelta  = int128(int256(ticks[params.claim].amountInDelta) - int256(int64(ticks[params.claim].amountInDeltaCarryPercent))
+                                                                     * ticks[params.claim].amountInDelta / 1e18);
+            cache.amountOutDelta = int128(int256(ticks[params.claim].amountOutDelta) - int256(int64(ticks[params.claim].amountOutDeltaCarryPercent))
+                                                                        * ticks[params.claim].amountInDelta / 1e18);
         }
         else {
             // zero fill or partial fill

@@ -315,6 +315,7 @@ contract CoverPool is
                               : positions1[msg.sender][claim][upper].amountIn;
         amountOut = zeroForOne ? positions0[msg.sender][lower][claim].amountOut 
                                : positions1[msg.sender][claim][upper].amountOut;
+
         /// zero out balances
         zeroForOne ? positions0[msg.sender][lower][claim].amountIn = 0 
                    : positions1[msg.sender][claim][upper].amountIn = 0;

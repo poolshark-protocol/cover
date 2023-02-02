@@ -19,6 +19,8 @@ library Ticks
     error WrongTickLowerOld();
     error WrongTickUpperOld();
     error NoLiquidityToRollover();
+    error AmountInDeltaNeutral();
+    error AmountOutDeltaNeutral();
 
     uint256 internal constant Q96  = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
@@ -356,7 +358,6 @@ library Ticks
         //update fee growth
         tickNode.accumEpochLast = accumEpoch;
 
-        //check for deltas to carry
         if(crossTick.amountInDeltaCarryPercent > 0){
             //TODO: will this work with negatives?
             int104 amountInDeltaCarry = int64(crossTick.amountInDeltaCarryPercent) 
@@ -374,6 +375,7 @@ library Ticks
                 amountOutDelta += int128(amountOutDeltaCarry);
             }
         }
+
         if (currentLiquidity > 0) {
 
             int256 liquidityDeltaPlus = crossTick.liquidityDelta + int104(crossTick.liquidityDeltaMinus);
@@ -387,12 +389,6 @@ library Ticks
             if(updateAccumDeltas) {
                 accumTick.amountInDelta  += int88(amountInDelta);
                 accumTick.amountOutDelta += int88(amountOutDelta);
-            }
-            uint128 liquidityDeltaMinus = accumTick.liquidityDeltaMinus;
-            if (currentLiquidity == liquidityDeltaMinus) {
-                // clear out deltas
-                amountInDelta = 0;
-                amountOutDelta = 0;
             }
         }
 
@@ -440,7 +436,10 @@ library Ticks
         int128 amountOutDelta,
         bool isPool0
     ) internal pure returns (int128, int128) {
-        if (currentLiquidity == 0) return (amountInDelta, amountOutDelta);
+        if (currentLiquidity == 0) {
+            // zero out deltas
+            return (0, 0);
+        }
 
         uint160 accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
 
@@ -538,6 +537,10 @@ library Ticks
     }
 
     //TODO: pass in specific tick and update in storage on calling function
+    //TODO: amount delta carry percent needs to be adjusted when we add/remove liquidity
+    //TODO: only dilute based on the amount that will be carried
+    //TODO: everytime we cross a tick we need to adjust amount delta
+    //TODO: dilute amountDelta using inactiveLiquidityDeltaMinus + currentLiquidity
     function _stash (
         ICoverPoolStructs.Tick memory stashTick,
         ICoverPoolStructs.AccumulateCache memory cache,
@@ -546,32 +549,44 @@ library Ticks
     ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return stashTick;
-
         // handle amount in delta
-        {
+        {   
             int128 amountInDelta = isPool0 ? cache.amountInDelta0 : cache.amountInDelta1;
             int128 amountInDeltaCarry = int64(stashTick.amountInDeltaCarryPercent) * stashTick.amountInDelta / 1e18;
-            int128 newAmountInDelta = stashTick.amountInDelta + amountInDelta;
-            if (amountInDelta != 0 && newAmountInDelta != 0) {
-                stashTick.amountInDeltaCarryPercent = uint64(uint256(int256(amountInDelta + amountInDeltaCarry) * 1e18 
-                                                / int256(newAmountInDelta)));
-                stashTick.amountInDelta += int88(amountInDelta);
-            } else if (amountInDelta != 0 && newAmountInDelta == 0) {
-                revert NotImplementedYet();
-            }
-        }
+            int128 amountInDeltaNew = amountInDelta + stashTick.amountInDelta;
 
+            /// @dev - amountInDelta should never be greater than 0
+            if(amountInDelta != 0) {
+                if(currentLiquidity == stashTick.liquidityDeltaMinus) {
+                    stashTick.amountInDeltaCarryPercent = uint64(uint256(int256(amountInDeltaCarry) * 1e18 
+                                                    / int256(amountInDeltaNew)));
+                } else {
+                    // we need to update amountInDelta
+                    stashTick.amountInDeltaCarryPercent = uint64(uint256(int256(amountInDelta + amountInDeltaCarry) * 1e18 
+                                                    / int256(amountInDeltaNew)));
+                }
+                stashTick.amountInDelta += int88(amountInDelta);
+            }
+            //if amount delta is zero but liquidity is active...dilute amountInDelta
+             
+        }
         // handle amount out delta
         {
             int128 amountOutDelta = isPool0 ? cache.amountOutDelta0 : cache.amountOutDelta1;
             int128 amountOutDeltaCarry = int64(stashTick.amountOutDeltaCarryPercent) * stashTick.amountOutDelta / 1e18;
-            int128 newAmountOutDelta = stashTick.amountOutDelta + amountOutDelta;
-            if (amountOutDelta != 0 && newAmountOutDelta != 0) {
-                stashTick.amountOutDeltaCarryPercent = uint64(uint256(int256(amountOutDelta + amountOutDeltaCarry) * 1e18 
-                                                        / int256(newAmountOutDelta)));
+            int128 amountOutDeltaNew = stashTick.amountOutDelta + amountOutDelta;
+            if (amountOutDelta != 0) {
+                if(currentLiquidity == stashTick.liquidityDeltaMinus) {
+                    stashTick.amountOutDeltaCarryPercent = uint64(uint256(int256(amountOutDeltaCarry) * 1e18 
+                                                    / int256(amountOutDeltaNew)));
+                }
+
+                else {
+                    // we need to update amountOutDelta
+                    stashTick.amountOutDeltaCarryPercent = uint64(uint256(int256(amountOutDelta + amountOutDeltaCarry) * 1e18 
+                                                    / int256(amountOutDeltaNew)));
+                }
                 stashTick.amountOutDelta += int88(amountOutDelta);
-            } else if (amountOutDelta != 0 && newAmountOutDelta == 0) {
-                revert NotImplementedYet();
             }
         }
 
@@ -733,6 +748,7 @@ library Ticks
                 //accumulate to next tick
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
                 outputs = _accumulate(
+                    //TODO: consolidate cache parameter
                     tickNodes[cache.nextTickToAccum1],
                     ticks1[cache.nextTickToCross1],
                     ticks1[cache.nextTickToAccum1],
