@@ -62,8 +62,6 @@ export interface ValidateSwapParams {
     sqrtPriceLimitX96: BigNumber,
     balanceInDecrease: BigNumber,
     balanceOutIncrease: BigNumber,
-    finalLiquidity: BigNumber,
-    finalPrice: BigNumber,
     revertMessage: string
 }
 
@@ -120,8 +118,6 @@ export async function validateSwap(
     const sqrtPriceLimitX96 = params.sqrtPriceLimitX96;
     const balanceInDecrease = params.balanceInDecrease;
     const balanceOutIncrease = params.balanceOutIncrease;
-    const finalLiquidity = params.finalLiquidity;
-    const finalPrice = params.finalPrice;
     const revertMessage = params.revertMessage;
 
     let balanceInBefore; let balanceOutBefore;

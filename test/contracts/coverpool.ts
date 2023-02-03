@@ -105,10 +105,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount,
       sqrtPriceLimitX96:  minPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      "WaitUntilEnoughObservations()"
+      balanceOutIncrease: BN_ZERO,revertMessage:      "WaitUntilEnoughObservations()"
     });
 
     // burn should revert
@@ -156,10 +153,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount,
       sqrtPriceLimitX96:  minPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      "WaitUntilEnoughObservations()"
+      balanceOutIncrease: BN_ZERO,revertMessage:      "WaitUntilEnoughObservations()"
     });
 
     // burn should revert
@@ -209,8 +203,6 @@ describe('CoverPool Tests', function () {
       sqrtPriceLimitX96:  maxPrice,
       balanceInDecrease:  BN_ZERO,
       balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         maxPrice,
       revertMessage:      ""
     })
 
@@ -285,8 +277,6 @@ describe('CoverPool Tests', function () {
       sqrtPriceLimitX96:  maxPrice,
       balanceInDecrease:  BigNumber.from("99750339674246044929"),
       balanceOutIncrease: BigNumber.from("99999999999999999999"),
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         maxPrice,
       revertMessage:      ""
     });
     // // console.log('before burn')
@@ -408,10 +398,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount.div(10),
       sqrtPriceLimitX96:  maxPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BN_ZERO,revertMessage:      ""
     });
 
     await validateBurn({
@@ -463,10 +450,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount.div(10),
       sqrtPriceLimitX96:  maxPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BN_ZERO,revertMessage:      ""
     });
 
     await validateBurn({
@@ -531,10 +515,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount.div(10),
       sqrtPriceLimitX96:  maxPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BN_ZERO,revertMessage:      ""
     });
 
     await validateSync(
@@ -567,6 +548,63 @@ describe('CoverPool Tests', function () {
       balanceOutIncrease: BigNumber.from("99875094950140787193"),
       lowerTickCleared:   false,
       upperTickCleared:   true,
+      revertMessage:      ""
+    });
+  });
+
+  it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
+    const liquidityAmount4 = BigNumber.from("49902591570441687020675");
+    //TODO: 124905049859212811 leftover from precision loss
+
+    await validateSync(
+      hre.props.admin,
+      "0"
+    );
+
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "-887272",
+      lower:        "-60",
+      claim:        "-20",
+      upper:        "-20",
+      upperOld:     "0",
+      amount:       tokenAmount,
+      zeroForOne:   true,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount4, 
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
+
+    await validateSync(
+      hre.props.admin,
+      "-20"
+    )
+
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         false,
+      amountIn:           tokenAmount.div(10),
+      sqrtPriceLimitX96:  maxPrice,
+      balanceInDecrease:  BigNumber.from("10000000000000000000"),
+      balanceOutIncrease: BigNumber.from("10033044516497125183"),
+      revertMessage:      ""
+    })
+
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-60",
+      claim:              "-20",
+      upper:              "-20",
+      liquidityAmount:    liquidityAmount4,
+      zeroForOne:         true,
+      balanceInIncrease:  BigNumber.from("9999997499999999998"),
+      balanceOutIncrease: BigNumber.from("89875222286520339169"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
       revertMessage:      ""
     });
   });
@@ -625,10 +663,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount,
       sqrtPriceLimitX96:  maxPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BN_ZERO,revertMessage:      ""
     })
     
     // process two burns
@@ -680,10 +715,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount.div(10),
       sqrtPriceLimitX96:  minPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BN_ZERO,revertMessage:      ""
     });
 
     await validateBurn({
@@ -762,10 +794,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount,
       sqrtPriceLimitX96:  minPrice,
       balanceInDecrease:  BN_ZERO,
-      balanceOutIncrease: BN_ZERO,
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BN_ZERO,revertMessage:      ""
     });
 
     //burn should revert
@@ -866,10 +895,7 @@ describe('CoverPool Tests', function () {
       amountIn:           tokenAmount.mul(2),
       sqrtPriceLimitX96:  minPrice,
       balanceInDecrease:  BigNumber.from("99750339674246044929"),
-      balanceOutIncrease: BigNumber.from("99999999999999999999"),
-      finalLiquidity:     BN_ZERO,
-      finalPrice:         minPrice,
-      revertMessage:      ""
+      balanceOutIncrease: BigNumber.from("99999999999999999999"),revertMessage:      ""
     });
 
     await validateBurn({
@@ -912,6 +938,63 @@ describe('CoverPool Tests', function () {
       lowerTickCleared:   false,
       upperTickCleared:   false,
       revertMessage:      "NotEnoughPositionLiquidity()"
+    });
+  });
+
+  it('pool1 - Should move TWAP in range by one, partial fill, and burn', async function () {
+    const liquidityAmount4 = BigNumber.from("49902591570441687020675");
+    //TODO: 124905049859212811 leftover from precision loss
+
+    await validateSync(
+      hre.props.admin,
+      "0"
+    );
+
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "20",
+      upper:        "60",
+      upperOld:     "887272",
+      amount:       tokenAmount,
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount4, 
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
+
+    await validateSync(
+      hre.props.admin,
+      "20"
+    )
+
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         true,
+      amountIn:           tokenAmount.div(10),
+      sqrtPriceLimitX96:  minPrice,
+      balanceInDecrease:  BigNumber.from("10000000000000000000"),
+      balanceOutIncrease: BigNumber.from("10033044516497125183"),
+      revertMessage:      ""
+    })
+
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "20",
+      upper:              "60",
+      liquidityAmount:    liquidityAmount4,
+      zeroForOne:         false,
+      balanceInIncrease:  BigNumber.from("9999997499999999998"),
+      balanceOutIncrease: BigNumber.from("89875222286520339169"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      ""
     });
   });
 
