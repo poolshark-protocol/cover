@@ -251,6 +251,92 @@ describe('CoverPool Tests', function () {
     expect(upperTickNode.nextTick.toString()).to.be.equal("0");
   });
 
+  it('pool0 - Should mint, swap, and then claim entire range', async function () {
+
+    // await validateSync(
+    //   hre.props.alice,
+    //   "0"
+    // );
+
+    // await validateMint({
+    //   signer:       hre.props.alice,
+    //   recipient:    hre.props.alice.address,
+    //   lowerOld:     "-887272",
+    //   lower:        "-40",
+    //   claim:        "-20",
+    //   upper:        "-20",
+    //   upperOld:     "0",
+    //   amount:       tokenAmount,
+    //   zeroForOne:   true,
+    //   balanceInDecrease: tokenAmount,
+    //   liquidityIncrease: liquidityAmount,
+    //   upperTickCleared: false,
+    //   lowerTickCleared: false,
+    //   revertMessage: ""
+    // });
+
+    // await validateSync(
+    //   hre.props.alice,
+    //   "-20"
+    // );
+
+    // await validateSwap({
+    //   signer:             hre.props.alice,
+    //   recipient:          hre.props.alice.address,
+    //   zeroForOne:         false,
+    //   amountIn:           tokenAmount.mul(2),
+    //   sqrtPriceLimitX96:  maxPrice,
+    //   balanceInDecrease:  BigNumber.from("99750339674246044929"),
+    //   balanceOutIncrease: BigNumber.from("99999999999999999999"),
+    //   finalLiquidity:     BN_ZERO,
+    //   finalPrice:         maxPrice,
+    //   revertMessage:      ""
+    // });
+    // // console.log('before burn')
+    // //TODO: reverts as expected but not caught
+    // await validateBurn({
+    //   signer:             hre.props.alice,
+    //   lower:              "20",
+    //   claim:              "40",
+    //   upper:              "40",
+    //   liquidityAmount:    liquidityAmount,
+    //   zeroForOne:         false,
+    //   balanceInIncrease:  BN_ZERO,
+    //   balanceOutIncrease: tokenAmount,
+    //   lowerTickCleared:   false,
+    //   upperTickCleared:   false,
+    //   revertMessage:      "WrongTickClaimedAt()"
+    // })
+
+    // await validateBurn({
+    //   signer:             hre.props.alice,
+    //   lower:              "20",
+    //   claim:              "20",
+    //   upper:              "40",
+    //   liquidityAmount:    liquidityAmount,
+    //   zeroForOne:         false,
+    //   balanceInIncrease:  BigNumber.from("99750314736661126366"),
+    //   balanceOutIncrease: BigNumber.from("0"),
+    //   lowerTickCleared:   false,
+    //   upperTickCleared:   false,
+    //   revertMessage:      ""
+    // });
+
+    // await validateBurn({
+    //   signer:             hre.props.alice,
+    //   lower:              "20",
+    //   claim:              "20",
+    //   upper:              "40",
+    //   liquidityAmount:    liquidityAmount,
+    //   zeroForOne:         false,
+    //   balanceInIncrease:  BigNumber.from("99750314736661126366"),
+    //   balanceOutIncrease: BigNumber.from("0"),
+    //   lowerTickCleared:   false,
+    //   upperTickCleared:   false,
+    //   revertMessage:      "NotEnoughPositionLiquidity()"
+    // });
+  });
+
   it('pool0 - Should revert if tick not divisible by tickSpread', async function () {
      
     // move TWAP to tick 0
@@ -833,22 +919,6 @@ describe('CoverPool Tests', function () {
       upperTickCleared:   false,
       revertMessage:      "NotEnoughPositionLiquidity()"
     });
-    // 99999999999999999999
-    // 99850134913545280154
-    // console.log('before burn2')
-    // await validateBurn(
-    //   hre.props.alice,
-    //   lower,
-    //   upper,
-    //   lower,
-    //   liquidityAmount,
-    //   false,
-    //   BN_ZERO,
-    //   tokenAmount.sub(1),
-    //   false,
-    //   false,
-    //   ""
-    // )
   });
 
   // //TODO: these revert catches no longer work inside a library

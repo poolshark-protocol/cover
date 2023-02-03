@@ -345,30 +345,17 @@ library Positions
                                                                     Q96
                                                                 ) - 1 ///@dev - in case of rounding error
                                                     );
-            } else if (cache.amountOutDelta < 0) {
-                cache.position.amountOut -= uint128(FullPrecisionMath.mulDiv(
-                                                                    uint128(-cache.amountOutDelta),
-                                                                    cache.position.liquidity, 
-                                                                    Q96
-                                                                ) - 1 ///@dev - in case of rounding error
-                                                    );
-            }
+            } /// @dev - amountOutDelta always gt 0
         }
         // factor in deltas for section 1
-        if (cache.amountInDelta > 0) {
-            cache.position.amountIn += uint128(FullPrecisionMath.mulDiv(
-                                                                uint128(cache.amountInDelta),
-                                                                cache.position.liquidity, 
-                                                                Q96
-                                                            ) - 1)  * (1e6 + state.swapFee) / 1e6; /// @dev - in case of rounding error
-        } else if (cache.amountInDelta < 0) {
+        if (cache.amountInDelta < 0) {
             //TODO: handle underflow here          
             cache.position.amountIn -= uint128(FullPrecisionMath.mulDiv(
                                                             uint128(-cache.amountInDelta),
                                                             cache.position.liquidity, 
                                                             Q96
                                                         ) + 1) * (1e6 + state.swapFee) / 1e6; /// @dev - in case of rounding error
-        }
+        } /// @dev - amountInDelta always lt 0
         cache.position.claimPriceLast = (params.claim == state.latestTick) ? pool.price : cache.claimPrice;
 
         // if burn or second mint
