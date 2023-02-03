@@ -367,8 +367,10 @@ contract CoverPool is
             liquidity: pool.liquidity,
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
+            input: amountIn
         });
+
+        cache.input = amountIn - cache.feeAmount;
 
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
@@ -412,7 +414,7 @@ contract CoverPool is
                 pool.feeGrowthCurrentEpoch += uint128(cache.feeAmount); 
                 _transferOut(recipient, token1, cache.input + feeReturn);
             }
-            _transferOut(recipient, token1, amountOut);
+            _transferOut(recipient, token0, amountOut);
             emit Swap(recipient, token1, token0, amountIn, amountOut);
         }
         globalState = state;

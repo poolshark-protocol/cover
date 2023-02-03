@@ -5,8 +5,7 @@ import { gBefore } from '../utils/hooks.test';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from 'ethers';
 import { mintSigners20 } from '../utils/token';
-import { validateMint, BN_ZERO, validateSwap, validateBurn, Tick, PoolState, TickNode, validateSync } from '../utils/contracts/coverpool';
-import { ValidateMintParams } from '../utils/contracts/coverpool';
+import { validateMint, BN_ZERO, validateSwap, validateBurn, PoolState, validateSync } from '../utils/contracts/coverpool';
 
 // TODO: ✔ pool0 - Should handle partial mint (479ms)
 // position before liquidity: BigNumber { _hex: '0x00', _isBigNumber: true }
@@ -249,7 +248,7 @@ describe('CoverPool Tests', function () {
     expect(upperTickNode.nextTick.toString()).to.be.equal("0");
   });
 
-  it.skip('pool0 - Should mint, swap, and then claim entire range', async function () {
+  it('pool0 - Should mint, swap, and then claim entire range 12', async function () {
 
     await validateSync(
       hre.props.alice,
@@ -278,61 +277,61 @@ describe('CoverPool Tests', function () {
       "-20"
     );
 
-    // await validateSwap({
-    //   signer:             hre.props.alice,
-    //   recipient:          hre.props.alice.address,
-    //   zeroForOne:         false,
-    //   amountIn:           tokenAmount.mul(2),
-    //   sqrtPriceLimitX96:  maxPrice,
-    //   balanceInDecrease:  BigNumber.from("99750339674246044929"),
-    //   balanceOutIncrease: BigNumber.from("99999999999999999999"),
-    //   finalLiquidity:     BN_ZERO,
-    //   finalPrice:         maxPrice,
-    //   revertMessage:      ""
-    // });
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         false,
+      amountIn:           tokenAmount.mul(2),
+      sqrtPriceLimitX96:  maxPrice,
+      balanceInDecrease:  BigNumber.from("99750339674246044929"),
+      balanceOutIncrease: BigNumber.from("99999999999999999999"),
+      finalLiquidity:     BN_ZERO,
+      finalPrice:         maxPrice,
+      revertMessage:      ""
+    });
     // // console.log('before burn')
     // //TODO: reverts as expected but not caught
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "20",
-    //   claim:              "40",
-    //   upper:              "40",
-    //   liquidityAmount:    liquidityAmount,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BN_ZERO,
-    //   balanceOutIncrease: tokenAmount,
-    //   lowerTickCleared:   false,
-    //   upperTickCleared:   false,
-    //   revertMessage:      "WrongTickClaimedAt()"
-    // })
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-40",
+      claim:              "-40",
+      upper:              "-20",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         true,
+      balanceInIncrease:  BN_ZERO,
+      balanceOutIncrease: tokenAmount,
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "WrongTickClaimedAt()"
+    })
 
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "20",
-    //   claim:              "20",
-    //   upper:              "40",
-    //   liquidityAmount:    liquidityAmount,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BigNumber.from("99750314736661126366"),
-    //   balanceOutIncrease: BigNumber.from("0"),
-    //   lowerTickCleared:   false,
-    //   upperTickCleared:   false,
-    //   revertMessage:      ""
-    // });
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "-40",
+      claim:              "-20",
+      upper:              "-20",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         true,
+      balanceInIncrease:  BigNumber.from("99750314736661126366"),
+      balanceOutIncrease: BigNumber.from("0"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      ""
+    });
 
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "20",
-    //   claim:              "20",
-    //   upper:              "40",
-    //   liquidityAmount:    liquidityAmount,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BigNumber.from("99750314736661126366"),
-    //   balanceOutIncrease: BigNumber.from("0"),
-    //   lowerTickCleared:   false,
-    //   upperTickCleared:   false,
-    //   revertMessage:      "NotEnoughPositionLiquidity()"
-    // });
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "20",
+      upper:              "40",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         false,
+      balanceInIncrease:  BigNumber.from("99750314736661126366"),
+      balanceOutIncrease: BigNumber.from("0"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "NotEnoughPositionLiquidity()"
+    });
   });
 
   it('pool0 - Should revert if tick not divisible by tickSpread', async function () {
@@ -376,8 +375,6 @@ describe('CoverPool Tests', function () {
       lowerTickCleared: false,
       revertMessage: "InvalidUpperTick()"
     });
-
-   
   });
 
   it('pool0 - Should swap with zero output', async function () {
@@ -544,7 +541,7 @@ describe('CoverPool Tests', function () {
       hre.props.admin,
       "-20"
     );
-    // console.log('0 amount deltas', (await hre.props.coverPool.ticks0("0")).toString())
+
     await validateBurn({
       signer:             hre.props.alice,
       lower:              "-40",
@@ -558,7 +555,7 @@ describe('CoverPool Tests', function () {
       upperTickCleared:   true,
       revertMessage:      "WrongTickClaimedAt()"
     });
-    // console.log('-40 tick:', (await hre.props.coverPool.tickNodes("-40")).toString())
+
     await validateBurn({
       signer:             hre.props.alice,
       lower:              "-40",
@@ -874,8 +871,7 @@ describe('CoverPool Tests', function () {
       finalPrice:         minPrice,
       revertMessage:      ""
     });
-    // // console.log('before burn')
-    // //TODO: reverts as expected but not caught
+
     await validateBurn({
       signer:             hre.props.alice,
       lower:              "20",

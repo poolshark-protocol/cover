@@ -6,7 +6,6 @@ import "../interfaces/ICoverPoolStructs.sol";
 import "../utils/CoverPoolErrors.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
-import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -707,10 +706,6 @@ library Ticks
                                                     true
                                                 );
                 if (nextLatestTick < state.latestTick) {
-                    console.log('tick check');
-                    console.logInt(cache.nextTickToAccum0);
-                    console.logInt(cache.nextTickToCross0);
-                    console.logInt(cache.stopTick0);
                     if(cache.nextTickToAccum0 >= cache.stopTick0) {
                         (
                             pool0.liquidity, 
@@ -870,11 +865,6 @@ library Ticks
         //TODO: nearestTick not necessary - replace with stopPrice to avoid repeated calculation
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
-        console.log('pool state check');
-        console.logInt(cache.nextTickToAccum0);
-        console.logInt(cache.nextTickToCross0);
-        console.log(pool0.price);
-        console.log(pool0.liquidity);
         state.latestTick = nextLatestTick;
         // console.log("-- END ACCUMULATE LAST BLOCK --");
 

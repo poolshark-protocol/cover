@@ -30,7 +30,6 @@ describe('TwapOracle Library Tests', function () {
       const globalState           = await hre.props.coverPool.globalState();
       const lastBlockNumber       = globalState.lastBlockNumber;
       const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch;
-      const nearestTick           = pool0.nearestTick;
       const price                 = pool0.price;
       const latestTick            = globalState.latestTick;
   
@@ -38,7 +37,6 @@ describe('TwapOracle Library Tests', function () {
       expect(lastBlockNumber).to.be.equal(currentBlock);
       expect(feeGrowthCurrentEpoch).to.be.equal(BN_ZERO);
       expect(latestTick).to.be.equal(BN_ZERO);
-      expect(nearestTick).to.be.equal(BN_ZERO);
   
       // console.log("sqrt price:", await (await hre.props.coverPool.sqrtPrice()).toString());
       currentPrice = BigNumber.from("2").pow(96);
