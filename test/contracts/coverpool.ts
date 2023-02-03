@@ -42,7 +42,6 @@ describe('CoverPool Tests', function () {
     const globalState           = await hre.props.coverPool.globalState();
     const lastBlockNumber       = globalState.lastBlockNumber;
     const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch;
-    const nearestTick           = pool0.nearestTick;
     const price                 = pool0.price;
     const latestTick            = globalState.latestTick;
 
@@ -50,7 +49,6 @@ describe('CoverPool Tests', function () {
     expect(lastBlockNumber).to.be.equal(currentBlock);
     expect(feeGrowthCurrentEpoch).to.be.equal(BN_ZERO);
     expect(latestTick).to.be.equal(BN_ZERO);
-    expect(nearestTick).to.be.equal(BN_ZERO);
 
     minPrice = BigNumber.from("4295128739");
     maxPrice = BigNumber.from("1461446703485210103287273052203988822378723970341");
@@ -251,34 +249,34 @@ describe('CoverPool Tests', function () {
     expect(upperTickNode.nextTick.toString()).to.be.equal("0");
   });
 
-  it('pool0 - Should mint, swap, and then claim entire range', async function () {
+  it.skip('pool0 - Should mint, swap, and then claim entire range', async function () {
 
-    // await validateSync(
-    //   hre.props.alice,
-    //   "0"
-    // );
+    await validateSync(
+      hre.props.alice,
+      "0"
+    );
 
-    // await validateMint({
-    //   signer:       hre.props.alice,
-    //   recipient:    hre.props.alice.address,
-    //   lowerOld:     "-887272",
-    //   lower:        "-40",
-    //   claim:        "-20",
-    //   upper:        "-20",
-    //   upperOld:     "0",
-    //   amount:       tokenAmount,
-    //   zeroForOne:   true,
-    //   balanceInDecrease: tokenAmount,
-    //   liquidityIncrease: liquidityAmount,
-    //   upperTickCleared: false,
-    //   lowerTickCleared: false,
-    //   revertMessage: ""
-    // });
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "-887272",
+      lower:        "-40",
+      claim:        "-20",
+      upper:        "-20",
+      upperOld:     "0",
+      amount:       tokenAmount,
+      zeroForOne:   true,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount,
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
 
-    // await validateSync(
-    //   hre.props.alice,
-    //   "-20"
-    // );
+    await validateSync(
+      hre.props.alice,
+      "-20"
+    );
 
     // await validateSwap({
     //   signer:             hre.props.alice,

@@ -266,24 +266,20 @@ export class CoverPool extends BaseContract {
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, number, number] & {
+      [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
         feeGrowthCurrentEpoch: BigNumber;
         price: BigNumber;
-        nearestTick: number;
-        lastTick: number;
       }
     >;
 
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, number, number] & {
+      [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
         feeGrowthCurrentEpoch: BigNumber;
         price: BigNumber;
-        nearestTick: number;
-        lastTick: number;
       }
     >;
 
@@ -421,24 +417,20 @@ export class CoverPool extends BaseContract {
   pool0(
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, number, number] & {
+    [BigNumber, BigNumber, BigNumber] & {
       liquidity: BigNumber;
       feeGrowthCurrentEpoch: BigNumber;
       price: BigNumber;
-      nearestTick: number;
-      lastTick: number;
     }
   >;
 
   pool1(
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, number, number] & {
+    [BigNumber, BigNumber, BigNumber] & {
       liquidity: BigNumber;
       feeGrowthCurrentEpoch: BigNumber;
       price: BigNumber;
-      nearestTick: number;
-      lastTick: number;
     }
   >;
 
@@ -578,24 +570,20 @@ export class CoverPool extends BaseContract {
     pool0(
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, number, number] & {
+      [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
         feeGrowthCurrentEpoch: BigNumber;
         price: BigNumber;
-        nearestTick: number;
-        lastTick: number;
       }
     >;
 
     pool1(
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, number, number] & {
+      [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
         feeGrowthCurrentEpoch: BigNumber;
         price: BigNumber;
-        nearestTick: number;
-        lastTick: number;
       }
     >;
 

@@ -17,8 +17,6 @@ export interface PoolState {
     liquidity: BigNumber,
     feeGrowthCurrentEpoch: BigNumber,
     price: BigNumber,
-    nearestTick: number,
-    lastTick: number,
 }
 
 export interface TickNode {
@@ -142,7 +140,6 @@ export async function validateSwap(
                                         : await hre.props.coverPool.pool0();
     const liquidityBefore             = poolBefore.liquidity;
     const feeGrowthCurrentEpochBefore = poolBefore.feeGrowthCurrentEpoch;
-    const nearestTickBefore           = poolBefore.nearestTick;
     const priceBefore                 = poolBefore.price;
     const latestTickBefore            = (await hre.props.coverPool.globalState()).latestTick;
 
@@ -197,7 +194,6 @@ export async function validateSwap(
                                        : await hre.props.coverPool.pool0();
     const liquidityAfter             = poolAfter.liquidity;
     const feeGrowthCurrentEpochAfter = poolAfter.feeGrowthCurrentEpoch;
-    const nearestTickAfter           = poolAfter.nearestTick;
     const priceAfter                 = poolAfter.price;
     const latestTickAfter            = (await hre.props.coverPool.globalState()).latestTick;
 

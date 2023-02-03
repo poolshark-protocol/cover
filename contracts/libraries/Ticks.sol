@@ -6,6 +6,7 @@ import "../interfaces/ICoverPoolStructs.sol";
 import "../utils/CoverPoolErrors.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
+import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -528,9 +529,6 @@ library Ticks
                 TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
             );
         }
-        //TODO: we might not need nearestTick; always with defined tickSpacing
-        pool0.nearestTick = latestTick;
-        pool1.nearestTick = TickMath.MIN_TICK;
         //TODO: the sqrtPrice cannot move more than 1 tickSpacing away
         pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
@@ -709,7 +707,11 @@ library Ticks
                                                     true
                                                 );
                 if (nextLatestTick < state.latestTick) {
-                    if(cache.nextTickToAccum0 > (nextLatestTick - state.tickSpread)) {
+                    console.log('tick check');
+                    console.logInt(cache.nextTickToAccum0);
+                    console.logInt(cache.nextTickToCross0);
+                    console.logInt(cache.stopTick0);
+                    if(cache.nextTickToAccum0 >= cache.stopTick0) {
                         (
                             pool0.liquidity, 
                             cache.nextTickToCross0,
@@ -729,7 +731,7 @@ library Ticks
                 break;
             }
         }
-        //TODO: add latestTickSpread to stop rolling over
+        // loop over pool1 cache until stopTick1
         while (true) {
             //rollover if past latestTick and TWAP moves up
             if (pool1.liquidity > 0){
@@ -779,64 +781,65 @@ library Ticks
                     pool1.liquidity,
                     false
                 );
+                /// @audit - for testing; remove before production
                 if(cache.nextTickToCross1 == cache.nextTickToAccum1) revert InfiniteTickLoop1(cache.nextTickToCross1);
-            } else {
-                /// @dev - place liquidity at stopTick1 for continuation when TWAP moves back up
-                if (nextLatestTick < state.latestTick) {
-                    if (cache.nextTickToAccum1 != cache.stopTick1) {
-                        tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
-                                                        cache.nextTickToCross1,
-                                                        cache.nextTickToAccum1,
-                                                        0
-                                                    );
-                        tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
-                        tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;           
-                    }
+            } else break;
+        }
+        // post-loop pool1 sync
+        {
+            /// @dev - place liquidity at stopTick1 for continuation when TWAP moves back up
+            if (nextLatestTick < state.latestTick) {
+                if (cache.nextTickToAccum1 != cache.stopTick1) {
+                    tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
+                                                    cache.nextTickToCross1,
+                                                    cache.nextTickToAccum1,
+                                                    0
+                                                );
+                    tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
+                    tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;           
                 }
-                /// @dev - update amount deltas on stopTick
-                ///TODO: this is messing up our amount deltas and carry percents
-                ticks1[cache.stopTick1] = _stash(
-                        ticks1[cache.stopTick1],
-                        cache,
-                        pool1.liquidity,
-                        false
-                );
-                if (nextLatestTick > state.latestTick) {
-                    // if this is true we need to insert new latestTick
-                    if (cache.nextTickToAccum1 != nextLatestTick) {
-                        // if this is true we need to delete the old tick
-                        //TODO: don't delete old latestTick for now
-                        tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
-                                cache.nextTickToCross1,
-                                cache.nextTickToAccum1,
-                                state.accumEpoch
-                        );
-                        tickNodes[cache.nextTickToCross1].nextTick     = nextLatestTick;
-                        tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
-                    }   
-                    //TODO: replace nearestTick with priceLimit for swapping...maybe
-                    if(cache.nextTickToAccum1 <= cache.stopTick1) {
-                        (
-                            pool1.liquidity, 
-                            cache.nextTickToCross1,
-                            cache.nextTickToAccum1
-                        ) = _cross(
-                            ticks1,
-                            tickNodes,
+            }
+            /// @dev - update amount deltas on stopTick
+            ///TODO: this is messing up our amount deltas and carry percents
+            ticks1[cache.stopTick1] = _stash(
+                    ticks1[cache.stopTick1],
+                    cache,
+                    pool1.liquidity,
+                    false
+            );
+            if (nextLatestTick > state.latestTick) {
+                // if this is true we need to insert new latestTick
+                if (cache.nextTickToAccum1 != nextLatestTick) {
+                    // if this is true we need to delete the old tick
+                    //TODO: don't delete old latestTick for now
+                    tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                             cache.nextTickToCross1,
                             cache.nextTickToAccum1,
-                            pool1.liquidity,
-                            false
-                        );
-                    }
-                    pool0.liquidity = 0;
-                    pool1.liquidity = pool1.liquidity;
+                            state.accumEpoch
+                    );
+                    tickNodes[cache.nextTickToCross1].nextTick     = nextLatestTick;
+                    tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
+                }   
+                //TODO: replace nearestTick with priceLimit for swapping...maybe
+                if(cache.nextTickToAccum1 <= cache.stopTick1) {
+                    (
+                        pool1.liquidity, 
+                        cache.nextTickToCross1,
+                        cache.nextTickToAccum1
+                    ) = _cross(
+                        ticks1,
+                        tickNodes,
+                        cache.nextTickToCross1,
+                        cache.nextTickToAccum1,
+                        pool1.liquidity,
+                        false
+                    );
                 }
-                ticks1[cache.stopTick1].liquidityDelta += int104(ticks1[cache.stopTick1].liquidityDeltaMinus);
-                ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
-                //TODO: if tickSpread > tickSpacing, we need to cross until accum tick is nextLatestTick
-                break;
+                pool0.liquidity = 0;
+                pool1.liquidity = pool1.liquidity;
             }
+            ticks1[cache.stopTick1].liquidityDelta += int104(ticks1[cache.stopTick1].liquidityDeltaMinus);
+            ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
         }
         //TODO: remove liquidity from all ticks crossed
         //TODO: handle burn when price is between ticks
@@ -862,15 +865,16 @@ library Ticks
             pool0.liquidity = pool0.liquidity;
             pool1.liquidity = 0;
             //TODO: lastTick instead of nearestTick
-            pool0.lastTick  = cache.nextTickToCross0;
-            pool1.lastTick  = tickNodes[nextLatestTick].previousTick;
         }
         //TODO: delete old latestTick if possible
-        //TODO: nearestTick not necessary - replace with stopPrice
-        pool0.nearestTick = tickNodes[nextLatestTick].nextTick;
-        pool1.nearestTick = tickNodes[nextLatestTick].previousTick;
+        //TODO: nearestTick not necessary - replace with stopPrice to avoid repeated calculation
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
+        console.log('pool state check');
+        console.logInt(cache.nextTickToAccum0);
+        console.logInt(cache.nextTickToCross0);
+        console.log(pool0.price);
+        console.log(pool0.liquidity);
         state.latestTick = nextLatestTick;
         // console.log("-- END ACCUMULATE LAST BLOCK --");
 

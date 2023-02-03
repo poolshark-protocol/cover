@@ -17,8 +17,6 @@ interface ICoverPoolStructs {
         uint128 liquidity;             /// @dev Liquidity currently active
         uint128 feeGrowthCurrentEpoch; /// @dev Global fee growth per liquidity unit in current epoch
         uint160 price;                 /// @dev Starting price current
-        int24   nearestTick;           /// @dev Tick below current price
-        int24   lastTick;              /// @dev Last tick accumulated to
     }
 
     struct TickNode {

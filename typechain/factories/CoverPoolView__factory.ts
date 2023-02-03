@@ -157,16 +157,6 @@ const _abi = [
         name: "price",
         type: "uint160",
       },
-      {
-        internalType: "int24",
-        name: "nearestTick",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "lastTick",
-        type: "int24",
-      },
     ],
     stateMutability: "view",
     type: "function",
@@ -189,16 +179,6 @@ const _abi = [
         internalType: "uint160",
         name: "price",
         type: "uint160",
-      },
-      {
-        internalType: "int24",
-        name: "nearestTick",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "lastTick",
-        type: "int24",
       },
     ],
     stateMutability: "view",
