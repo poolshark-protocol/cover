@@ -26,7 +26,7 @@ library FullPrecisionMath
         uint256 a,
         uint256 b,
         uint256 denominator
-    ) external view returns (uint256 result) {
+    ) external pure returns (uint256 result) {
         return _mulDivRoundingUp(a, b, denominator);
     }
 
@@ -133,7 +133,7 @@ library FullPrecisionMath
         uint256 a,
         uint256 b,
         uint256 denominator
-    ) internal view returns (uint256 result) {
+    ) internal pure returns (uint256 result) {
         result = _mulDiv(a, b, denominator);
         unchecked {
             if (mulmod(a, b, denominator) != 0) {

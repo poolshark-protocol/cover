@@ -21,6 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "accumulate((int24,int24,uint32),(int104,uint104,int88,int88,uint64,uint64),(int104,uint104,int88,int88,uint64,uint64),uint32,uint128,int128,int128,bool)": FunctionFragment;
+    "cross((int24,int24,uint32),int104,int24,int24,uint128,bool)": FunctionFragment;
     "getMaxLiquidity(int24)": FunctionFragment;
     "quote(bool,uint160,(uint24,int24,uint16,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
     "rollover(int24,int24,uint256,uint256,int128,int128,bool)": FunctionFragment;
@@ -49,6 +50,21 @@ interface TicksInterface extends ethers.utils.Interface {
         amountOutDelta: BigNumberish;
         amountInDeltaCarryPercent: BigNumberish;
         amountOutDeltaCarryPercent: BigNumberish;
+      },
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      boolean
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "cross",
+    values: [
+      {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
       },
       BigNumberish,
       BigNumberish,
@@ -97,6 +113,7 @@ interface TicksInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "accumulate", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "cross", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getMaxLiquidity",
     data: BytesLike
@@ -247,6 +264,20 @@ export class Ticks extends BaseContract {
       ]
     >;
 
+    cross(
+      accumTickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      liquidityDelta: BigNumberish,
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentLiquidity: BigNumberish,
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, number, number]>;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
@@ -388,6 +419,20 @@ export class Ticks extends BaseContract {
       };
     }
   >;
+
+  cross(
+    accumTickNode: {
+      previousTick: BigNumberish;
+      nextTick: BigNumberish;
+      accumEpochLast: BigNumberish;
+    },
+    liquidityDelta: BigNumberish,
+    nextTickToCross: BigNumberish,
+    nextTickToAccum: BigNumberish,
+    currentLiquidity: BigNumberish,
+    zeroForOne: boolean,
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, number, number]>;
 
   getMaxLiquidity(
     tickSpacing: BigNumberish,
@@ -531,6 +576,20 @@ export class Ticks extends BaseContract {
       }
     >;
 
+    cross(
+      accumTickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      liquidityDelta: BigNumberish,
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentLiquidity: BigNumberish,
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, number, number]>;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
@@ -612,6 +671,20 @@ export class Ticks extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    cross(
+      accumTickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      liquidityDelta: BigNumberish,
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentLiquidity: BigNumberish,
+      zeroForOne: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
@@ -678,6 +751,20 @@ export class Ticks extends BaseContract {
       amountInDelta: BigNumberish,
       amountOutDelta: BigNumberish,
       removeLiquidity: boolean,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    cross(
+      accumTickNode: {
+        previousTick: BigNumberish;
+        nextTick: BigNumberish;
+        accumEpochLast: BigNumberish;
+      },
+      liquidityDelta: BigNumberish,
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentLiquidity: BigNumberish,
+      zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

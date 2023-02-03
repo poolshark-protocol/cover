@@ -91,18 +91,18 @@ library Ticks
     }
 
     function cross(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
-        int24 currentTick,
+        ICoverPoolStructs.TickNode calldata accumTickNode,
+        int104 liquidityDelta,
         int24 nextTickToCross,
+        int24 nextTickToAccum,
         uint128 currentLiquidity,
         bool zeroForOne
-    ) external view returns (uint256, int24, int24) {
+    ) external pure returns (uint256, int24, int24) {
         return _cross(
-            ticks,
-            tickNodes,
-            currentTick,
+            accumTickNode,
+            liquidityDelta,
             nextTickToCross,
+            nextTickToAccum,
             currentLiquidity,
             zeroForOne
         );
@@ -110,27 +110,26 @@ library Ticks
 
     //maybe call ticks on msg.sender to get tick
     function _cross(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
-        int24 currentTick,
+        ICoverPoolStructs.TickNode memory accumTickNode,
+        int104 liquidityDelta,
         int24 nextTickToCross,
+        int24 nextTickToAccum,
         uint128 currentLiquidity,
         bool zeroForOne
-    ) internal view returns (uint128, int24, int24) {
-        currentTick = nextTickToCross;
-        int128 liquidityDelta = ticks[nextTickToCross].liquidityDelta;
+    ) internal pure returns (uint128, int24, int24) {
+        nextTickToCross = nextTickToAccum;
 
         if(liquidityDelta > 0) {
-            currentLiquidity += uint128(liquidityDelta);
+            currentLiquidity += uint128(uint104(liquidityDelta));
         } else {
-            currentLiquidity -= uint128(-liquidityDelta);
+            currentLiquidity -= uint128(uint104(-liquidityDelta));
         }
         if (zeroForOne) {
-            nextTickToCross = tickNodes[nextTickToCross].previousTick;
+            nextTickToAccum = accumTickNode.previousTick;
         } else {
-            nextTickToCross = tickNodes[nextTickToCross].nextTick;
+            nextTickToAccum = accumTickNode.nextTick;
         }
-        return (currentLiquidity, currentTick, nextTickToCross);
+        return (currentLiquidity, nextTickToCross, nextTickToAccum);
     }
 
     //TODO: ALL TICKS NEED TO BE CREATED WITH 
@@ -324,7 +323,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool removeLiquidity
-    ) external view returns(
+    ) external pure returns(
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
         return _accumulate(
@@ -340,6 +339,7 @@ library Ticks
         );
     }
 
+    //TODO: deltas struct so just that can be passed in
     //TODO: accumulate takes Tick and TickNode structs instead of storage pointer
     function _accumulate(
         ICoverPoolStructs.TickNode memory tickNode, /// tickNodes[nextTickToAccum]
@@ -351,7 +351,7 @@ library Ticks
         int128 amountOutDelta,
         bool removeLiquidity,
         bool updateAccumDeltas
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -543,7 +543,7 @@ library Ticks
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return stashTick;
         // handle amount in delta
@@ -675,8 +675,8 @@ library Ticks
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0
                 ) = _cross(
-                    ticks0,
-                    tickNodes,
+                    tickNodes[cache.nextTickToAccum0],
+                    ticks0[cache.nextTickToAccum0].liquidityDelta,
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
                     pool0.liquidity,
@@ -712,8 +712,8 @@ library Ticks
                             cache.nextTickToCross0,
                             cache.nextTickToAccum0
                         ) = _cross(
-                            ticks0,
-                            tickNodes,
+                            tickNodes[cache.nextTickToAccum0],
+                            ticks0[cache.nextTickToAccum0].liquidityDelta,
                             cache.nextTickToCross0,
                             cache.nextTickToAccum0,
                             pool0.liquidity,
@@ -769,8 +769,8 @@ library Ticks
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1
                 ) = _cross(
-                    ticks1,
-                    tickNodes,
+                    tickNodes[cache.nextTickToAccum1],
+                    ticks1[cache.nextTickToAccum1].liquidityDelta,
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
                     pool1.liquidity,
@@ -822,8 +822,8 @@ library Ticks
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1
                     ) = _cross(
-                        ticks1,
-                        tickNodes,
+                        tickNodes[cache.nextTickToAccum1],
+                        ticks1[cache.nextTickToAccum1].liquidityDelta,
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
                         pool1.liquidity,
