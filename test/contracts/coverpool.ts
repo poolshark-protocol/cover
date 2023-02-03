@@ -743,7 +743,7 @@ describe('CoverPool Tests', function () {
     });
   });
 
-  it.skip('Should mint, swap, and then claim entire range', async function () {
+  it('pool1 - Should mint, swap, and then claim entire range', async function () {
     const lowerOld = hre.ethers.utils.parseUnits("0", 0);
     const lower    = hre.ethers.utils.parseUnits("20", 0);
     const upperOld = hre.ethers.utils.parseUnits("887272", 0);
@@ -756,24 +756,6 @@ describe('CoverPool Tests', function () {
       "0"
     );
 
-    await validateMint({
-      signer:       hre.props.alice,
-      recipient:    hre.props.alice.address,
-      lowerOld:     "0",
-      lower:        "20",
-      claim:        "887272",
-      upper:        "40",
-      upperOld:     "887272",
-      amount:       tokenAmount,
-      zeroForOne:   false,
-      balanceInDecrease: tokenAmount,
-      liquidityIncrease: liquidityAmount,
-      upperTickCleared: true,
-      lowerTickCleared: false,
-      revertMessage:"WrongTickClaimedAt()"
-    });
-
-    // TODO: should lower tick be cleared and upper not be cleared?
     await validateMint({
       signer:       hre.props.alice,
       recipient:    hre.props.alice.address,
@@ -808,8 +790,8 @@ describe('CoverPool Tests', function () {
       finalPrice:         minPrice,
       revertMessage:      ""
     });
-    // console.log('before burn')
-    //TODO: reverts as expected but not caught
+    // // console.log('before burn')
+    // //TODO: reverts as expected but not caught
     await validateBurn({
       signer:             hre.props.alice,
       lower:              "20",
@@ -836,6 +818,20 @@ describe('CoverPool Tests', function () {
       lowerTickCleared:   false,
       upperTickCleared:   false,
       revertMessage:      ""
+    });
+
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "20",
+      upper:              "40",
+      liquidityAmount:    liquidityAmount,
+      zeroForOne:         false,
+      balanceInIncrease:  BigNumber.from("99750314736661126366"),
+      balanceOutIncrease: BigNumber.from("0"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "NotEnoughPositionLiquidity()"
     });
     // 99999999999999999999
     // 99850134913545280154

@@ -175,6 +175,8 @@ contract CoverPool is
                 )
             );
             //TODO: check amount consumed from return value
+            //TODO: would be nice to reject invalid claim ticks on mint
+            //      don't think we can because of the 'double mint' scenario
             // creates new position
             (,globalState) = Positions.add(
                 zeroForOne ? positions0 : positions1,

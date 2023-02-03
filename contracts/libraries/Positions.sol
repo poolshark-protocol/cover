@@ -100,7 +100,7 @@ library Positions
             cache.position.accumEpochLast = state.accumEpoch;
             cache.position.claimPriceLast = params.zeroForOne ? uint160(cache.priceUpper) : uint160(cache.priceLower);
         } else {
-            /// validate user can still add to position
+            /// safety check...might be unnecessary given the user is forced to update()
             if (params.zeroForOne ? state.latestTick < params.upper || tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
                                   : state.latestTick > params.lower || tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
             ) {
