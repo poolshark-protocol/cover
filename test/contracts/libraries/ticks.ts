@@ -128,4 +128,18 @@ describe('Ticks Library Tests', function () {
         expect(result[0]).to.be.equal(BigNumber.from("-79184604449414017477223073"));
         expect(result[1]).to.be.equal(BigNumber.from("79263824696439249340797497"));
     });
+
+    it('rollover() - pool1 - Should return 0 if currentLiquidity is 0', async function () {
+        const result = await hre.props.ticksLib.rollover(
+            BigNumber.from("0"),
+            BigNumber.from("20"),
+            BigNumber.from("79228162514264337593543950336"),
+            BigNumber.from("0"),
+            BigNumber.from("0"),
+            BigNumber.from("0"),
+            false
+        )
+        expect(result[0]).to.be.equal(BigNumber.from("0"));
+        expect(result[1]).to.be.equal(BigNumber.from("0"));
+    });
 });

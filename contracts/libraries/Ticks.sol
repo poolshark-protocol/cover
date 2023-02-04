@@ -228,6 +228,7 @@ library Ticks
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 lower,
         int24 upper,
         uint104 amount,
