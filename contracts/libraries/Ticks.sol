@@ -36,7 +36,7 @@ library Ticks
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         
         if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
         uint256 nextTickPrice = uint256(TickMath.getSqrtRatioAtTick(state.latestTick));
@@ -53,9 +53,9 @@ library Ticks
                 // calculate price after swap
                 uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input);
                 /// @auditor - check tests to see if we need overflow handle
-                if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
-                    newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
-                }
+                // if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
+                //     newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
+                // }
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price);
                 cache.price = newPrice;
                 cache.input = 0;
