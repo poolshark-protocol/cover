@@ -74,7 +74,7 @@ library Positions
             }
         }
 
-        if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
+        if (liquidityMinted > uint104(type(int104).max)) revert LiquidityOverflow();
         if (params.lower == params.upper) revert InvalidPositionBoundsTwap();
 
         return (params.lowerOld, params.lower, params.upper, params.upperOld, params.amount, liquidityMinted);

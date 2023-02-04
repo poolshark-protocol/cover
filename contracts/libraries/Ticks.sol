@@ -6,6 +6,7 @@ import "../interfaces/ICoverPoolStructs.sol";
 import "../utils/CoverPoolErrors.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
+import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -51,13 +52,8 @@ library Ticks
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
-                uint256 newPrice = uint256(
-                    FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input)
-                );
-                //TODO: test case if price didn't move because so little was swapped
-                if (!(nextPrice <= newPrice && newPrice < cache.price)) {
-                    newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
-                }
+                /// @auditor - do we need to handle overflow for newPrice?
+                uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input);
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price);
                 cache.price = newPrice;
                 cache.input = 0;
@@ -86,26 +82,7 @@ library Ticks
                 cache.input -= maxDy;
             }
         }
-
         return (cache, amountOut);
-    }
-
-    function cross(
-        ICoverPoolStructs.TickNode calldata accumTickNode,
-        int104 liquidityDelta,
-        int24 nextTickToCross,
-        int24 nextTickToAccum,
-        uint128 currentLiquidity,
-        bool zeroForOne
-    ) external pure returns (uint256, int24, int24) {
-        return _cross(
-            accumTickNode,
-            liquidityDelta,
-            nextTickToCross,
-            nextTickToAccum,
-            currentLiquidity,
-            zeroForOne
-        );
     }
 
     //maybe call ticks on msg.sender to get tick
@@ -251,7 +228,6 @@ library Ticks
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 lower,
         int24 upper,
         uint104 amount,
@@ -260,22 +236,23 @@ library Ticks
         bool removeUpper
     ) external {
         //TODO: we can only delete is lower != MIN_TICK or latestTick and all values are 0
-        bool deleteLowerTick = false;
+        // bool deleteLowerTick = false;
         //TODO: we can only delete is upper != MAX_TICK or latestTick and all values are 0
-        bool deleteUpperTick = false;
-        if (deleteLowerTick) {
-            // Delete lower tick.
-            int24 previous = tickNodes[lower].previousTick;
-            int24 next     = tickNodes[lower].nextTick;
-            if(next != upper || !deleteUpperTick) {
-                tickNodes[previous].nextTick = next;
-                tickNodes[next].previousTick = previous;
-            } else {
-                int24 upperNextTick = tickNodes[upper].nextTick;
-                tickNodes[tickNodes[lower].previousTick].nextTick = upperNextTick;
-                tickNodes[upperNextTick].previousTick = previous;
-            }
-        }
+        //TODO: can be handled by using inactiveLiquidity == 0 and activeLiquidity == 0
+        // bool deleteUpperTick = false;
+        // if (deleteLowerTick) {
+        //     // Delete lower tick.
+        //     int24 previous = tickNodes[lower].previousTick;
+        //     int24 next     = tickNodes[lower].nextTick;
+        //     if(next != upper || !deleteUpperTick) {
+        //         tickNodes[previous].nextTick = next;
+        //         tickNodes[next].previousTick = previous;
+        //     } else {
+        //         int24 upperNextTick = tickNodes[upper].nextTick;
+        //         tickNodes[tickNodes[lower].previousTick].nextTick = upperNextTick;
+        //         tickNodes[upperNextTick].previousTick = previous;
+        //     }
+        // }
         if (removeLower) {
             if (isPool0) {
                 ticks[lower].liquidityDelta += int104(amount);
@@ -285,21 +262,21 @@ library Ticks
             }
         }
 
-        //TODO: could also modify amounts and then check if liquidityDelta and liquidityDeltaMinus are both zero
-        if (deleteUpperTick) {
-            // Delete upper tick.
-            int24 previous = tickNodes[upper].previousTick;
-            int24 next     = tickNodes[upper].nextTick;
+        //TODO: can be handled using inactiveLiquidity and activeLiquidity == 0
+        // if (deleteUpperTick) {
+        //     // Delete upper tick.
+        //     int24 previous = tickNodes[upper].previousTick;
+        //     int24 next     = tickNodes[upper].nextTick;
 
-            if(previous != lower || !deleteLowerTick) {
-                tickNodes[previous].nextTick = next;
-                tickNodes[next].previousTick = previous;
-            } else {
-                int24 lowerPrevTick = tickNodes[lower].previousTick;
-                tickNodes[lowerPrevTick].nextTick = next;
-                tickNodes[next].previousTick = lowerPrevTick;
-            }
-        }
+        //     if(previous != lower || !deleteLowerTick) {
+        //         tickNodes[previous].nextTick = next;
+        //         tickNodes[next].previousTick = previous;
+        //     } else {
+        //         int24 lowerPrevTick = tickNodes[lower].previousTick;
+        //         tickNodes[lowerPrevTick].nextTick = next;
+        //         tickNodes[next].previousTick = lowerPrevTick;
+        //     }
+        // }
         //TODO: we need to know what tick they're claiming from
         //TODO: that is the tick that should have liquidity values modified
         //TODO: keep unchecked block?
@@ -312,31 +289,6 @@ library Ticks
             }
         }
         /// @dev - we can never delete ticks due to amount deltas
-    }
-
-    function accumulate(
-        ICoverPoolStructs.TickNode calldata tickNode, /// tickNodes[nextTickToAccum]
-        ICoverPoolStructs.Tick calldata crossTick,
-        ICoverPoolStructs.Tick calldata accumTick,
-        uint32 accumEpoch,
-        uint128 currentLiquidity,
-        int128 amountInDelta,
-        int128 amountOutDelta,
-        bool removeLiquidity
-    ) external pure returns(
-        ICoverPoolStructs.AccumulateOutputs memory
-    ) {
-        return _accumulate(
-            tickNode,
-            crossTick,
-            accumTick,
-            accumEpoch,
-            currentLiquidity,
-            amountInDelta,
-            amountOutDelta,
-            removeLiquidity,
-            true
-        );
     }
 
     //TODO: deltas struct so just that can be passed in
@@ -354,7 +306,6 @@ library Ticks
     ) internal pure returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
-
         //update fee growth
         tickNode.accumEpochLast = accumEpoch;
 
@@ -367,7 +318,7 @@ library Ticks
             amountInDelta += amountInDeltaCarry;
             /// @dev - amountOutDelta cannot exist without amountInDelta
             if(crossTick.amountOutDeltaCarryPercent > 0){
-            //TODO: will this work with negatives?
+                //TODO: will this work with negatives?
                 int256 amountOutDeltaCarry = int64(crossTick.amountOutDeltaCarryPercent) 
                                                 * crossTick.amountOutDelta / 1e18;
                 crossTick.amountOutDelta -= int88(amountOutDeltaCarry);

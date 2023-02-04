@@ -998,6 +998,116 @@ describe('CoverPool Tests', function () {
     });
   });
 
+  it('pool1 - Should revert for liquidity overflow', async function () {
+    const liquidityAmount4 = BigNumber.from("49902591570441687020675");
+    //TODO: 124905049859212811 leftover from precision loss
+
+    await validateSync(
+      hre.props.admin,
+      "0"
+    );
+
+    await mintSigners20(
+      hre.props.token1,
+      tokenAmount.mul(10000000),
+      [hre.props.alice, hre.props.bob]
+    )
+
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "20",
+      upper:        "60",
+      upperOld:     "887272",
+      amount:       tokenAmount.mul(ethers.utils.parseUnits("34",17)),
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount.mul(ethers.utils.parseUnits("34",17)),
+      liquidityIncrease: liquidityAmount4, 
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: "LiquidityOverflow()"
+    });
+
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "20",
+      claim:              "20",
+      upper:              "60",
+      liquidityAmount:    liquidityAmount4,
+      zeroForOne:         false,
+      balanceInIncrease:  BigNumber.from("0"),
+      balanceOutIncrease: BigNumber.from("99875219786520339160"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      "NotEnoughPositionLiquidity()"
+    });
+  });
+
+  it('pool1 - Should move TWAP in range by one, partial fill w/ overflow on newPrice, and burn', async function () {
+    const liquidityAmount4 = BigNumber.from("4992755409730469074788564544585");
+    //TODO: 124905049859212811 leftover from precision loss
+
+    await validateSync(
+      hre.props.admin,
+      "0"
+    );
+
+    await mintSigners20(
+      hre.props.token1,
+      tokenAmount.mul(ethers.utils.parseUnits("34",17)),
+      [hre.props.alice, hre.props.bob]
+    )
+
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "0",
+      lower:        "20",
+      claim:        "20",
+      upper:        "40",
+      upperOld:     "887272",
+      amount:       tokenAmount.mul(ethers.utils.parseUnits("50",6)),
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount.mul(ethers.utils.parseUnits("50",6)),
+      liquidityIncrease: liquidityAmount4, 
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
+
+    await validateSync(
+      hre.props.admin,
+      "20"
+    );
+
+    await validateSwap({
+      signer:             hre.props.alice,
+      recipient:          hre.props.alice.address,
+      zeroForOne:         true,
+      amountIn:           tokenAmount.div(10),
+      sqrtPriceLimitX96:  minPrice,
+      balanceInDecrease:  BigNumber.from("10000000000000000000"),
+      balanceOutIncrease: BigNumber.from("10035058059821880699"),
+      revertMessage:      ""
+    });
+
+    // await validateBurn({
+    //   signer:             hre.props.alice,
+    //   lower:              "20",
+    //   claim:              "20",
+    //   upper:              "60",
+    //   liquidityAmount:    liquidityAmount4,
+    //   zeroForOne:         false,
+    //   balanceInIncrease:  BigNumber.from("0"),
+    //   balanceOutIncrease: BigNumber.from("99875219786520339160"),
+    //   lowerTickCleared:   false,
+    //   upperTickCleared:   false,
+    //   revertMessage:      ""
+    // });
+  });
+
   // //TODO: these revert catches no longer work inside a library
   // it('Should fail on second claim', async function () {
   //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
