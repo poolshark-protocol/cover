@@ -63,7 +63,7 @@ contract CoverPool is
         feeTo       = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
-        GlobalState memory state = GlobalState(0,0,0,0,0,0,0);
+        GlobalState memory state = GlobalState(0,0,0,0,0,0,0,0);
         state.swapFee         = _swapFee;
         state.tickSpread      = _tickSpread;
         state.twapLength      = _twapLength;
@@ -92,6 +92,7 @@ contract CoverPool is
     function _initialize(GlobalState memory state) internal {
         //TODO: store values in memory then write to state
         state.latestTick = state.latestTick / int24(state.tickSpread) * int24(state.tickSpread);
+        state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
         state.accumEpoch = 1;
         Ticks.initialize(
             tickNodes,

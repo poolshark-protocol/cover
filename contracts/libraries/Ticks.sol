@@ -11,6 +11,7 @@ import "./DyDxMath.sol";
 library Ticks
 {
     error NotImplementedYet();
+    error InvalidLatestTick();
     error InfiniteTickLoop0(int24);
     error InfiniteTickLoop1(int24);
     error WrongTickOrder();
@@ -39,7 +40,7 @@ library Ticks
     ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         
         if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
-        uint256 nextTickPrice = uint256(TickMath.getSqrtRatioAtTick(state.latestTick));
+        uint256 nextTickPrice = state.latestPrice;
         uint256 nextPrice = nextTickPrice;
 
         if (zeroForOne) {
@@ -464,24 +465,17 @@ library Ticks
         uint32 accumEpoch,
         int24 tickSpread 
     ) external {
-        if (latestTick != TickMath.MIN_TICK && latestTick != TickMath.MAX_TICK) {
-            tickNodes[latestTick] = ICoverPoolStructs.TickNode(
-                TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
-            );
-            tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
-                TickMath.MIN_TICK, latestTick, accumEpoch
-            );
-            tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
-                latestTick, TickMath.MAX_TICK, accumEpoch
-            );
-        } else if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) {
-            tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
-                TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
-            );
-            tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
-                TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
-            );
-        }
+        /// @dev - assume latestTick is not MIN_TICK or MAX_TICK
+        // if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) revert InvalidLatestTick();
+        tickNodes[latestTick] = ICoverPoolStructs.TickNode(
+            TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
+        );
+        tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
+            TickMath.MIN_TICK, latestTick, accumEpoch
+        );
+        tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
+            latestTick, TickMath.MAX_TICK, accumEpoch
+        );
         //TODO: the sqrtPrice cannot move more than 1 tickSpacing away
         pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
@@ -820,6 +814,7 @@ library Ticks
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
         state.latestTick = nextLatestTick;
+        state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
         // console.log("-- END ACCUMULATE LAST BLOCK --");
 
         return (state, pool0, pool1);

@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
-    "quote(bool,uint160,(uint24,int24,uint16,uint32,uint8,int24,uint32),(uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint24,int24,uint16,int24,uint32,uint32,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
     "rollover(int24,int24,uint256,uint256,int128,int128,bool)": FunctionFragment;
   };
 
@@ -35,13 +35,14 @@ interface TicksInterface extends ethers.utils.Interface {
       boolean,
       BigNumberish,
       {
+        unlocked: BigNumberish;
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
-        lastBlockNumber: BigNumberish;
-        unlocked: BigNumberish;
         latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
       },
       {
         price: BigNumberish;
@@ -127,13 +128,14 @@ export class Ticks extends BaseContract {
       zeroForOne: boolean,
       priceLimit: BigNumberish,
       state: {
+        unlocked: BigNumberish;
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
-        lastBlockNumber: BigNumberish;
-        unlocked: BigNumberish;
         latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
       },
       cache: {
         price: BigNumberish;
@@ -175,13 +177,14 @@ export class Ticks extends BaseContract {
     zeroForOne: boolean,
     priceLimit: BigNumberish,
     state: {
+      unlocked: BigNumberish;
       swapFee: BigNumberish;
       tickSpread: BigNumberish;
       twapLength: BigNumberish;
-      lastBlockNumber: BigNumberish;
-      unlocked: BigNumberish;
       latestTick: BigNumberish;
+      lastBlockNumber: BigNumberish;
       accumEpoch: BigNumberish;
+      latestPrice: BigNumberish;
     },
     cache: {
       price: BigNumberish;
@@ -223,13 +226,14 @@ export class Ticks extends BaseContract {
       zeroForOne: boolean,
       priceLimit: BigNumberish,
       state: {
+        unlocked: BigNumberish;
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
-        lastBlockNumber: BigNumberish;
-        unlocked: BigNumberish;
         latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
       },
       cache: {
         price: BigNumberish;
@@ -274,13 +278,14 @@ export class Ticks extends BaseContract {
       zeroForOne: boolean,
       priceLimit: BigNumberish,
       state: {
+        unlocked: BigNumberish;
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
-        lastBlockNumber: BigNumberish;
-        unlocked: BigNumberish;
         latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
       },
       cache: {
         price: BigNumberish;
@@ -313,13 +318,14 @@ export class Ticks extends BaseContract {
       zeroForOne: boolean,
       priceLimit: BigNumberish,
       state: {
+        unlocked: BigNumberish;
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
-        lastBlockNumber: BigNumberish;
-        unlocked: BigNumberish;
         latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
       },
       cache: {
         price: BigNumberish;

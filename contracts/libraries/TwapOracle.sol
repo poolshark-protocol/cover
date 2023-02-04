@@ -9,7 +9,12 @@ import "./TickMath.sol";
 // will the blockTimestamp be consistent across the entire block?
 library TwapOracle
 {
+    error WaitUntilBelowMaxTick();
+    error WaitUntilAboveMinTick();
+    // @AUDIT - set for Ethereum mainnet; adjust for Arbitrum mainnet
     uint16 public constant blockTime = 12;
+    /// @dev - adjust for deployment
+    uint32 public constant startBlock = 0;
 
     // @dev increase pool observations if not sufficient
     // @dev must be deterministic since called externally
@@ -31,6 +36,8 @@ library TwapOracle
         secondsAgos[1] = blockTime * twapLength;
         (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
+        if (averageTick == TickMath.MAX_TICK) revert WaitUntilBelowMaxTick();
+        if (averageTick == TickMath.MIN_TICK) revert WaitUntilAboveMinTick();
     }
 
     function isPoolObservationsEnough(address pool, uint16 twapLength) external view returns (bool) {

@@ -23,6 +23,7 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     "blockTime()": FunctionFragment;
     "calculateAverageTick(IRangePool,uint16)": FunctionFragment;
     "isPoolObservationsEnough(address,uint16)": FunctionFragment;
+    "startBlock()": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "blockTime", values?: undefined): string;
@@ -34,6 +35,10 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     functionFragment: "isPoolObservationsEnough",
     values: [string, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "startBlock",
+    values?: undefined
+  ): string;
 
   decodeFunctionResult(functionFragment: "blockTime", data: BytesLike): Result;
   decodeFunctionResult(
@@ -44,6 +49,7 @@ interface TwapOracleInterface extends ethers.utils.Interface {
     functionFragment: "isPoolObservationsEnough",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "startBlock", data: BytesLike): Result;
 
   events: {};
 }
@@ -105,6 +111,8 @@ export class TwapOracle extends BaseContract {
       twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    startBlock(overrides?: CallOverrides): Promise<[number]>;
   };
 
   blockTime(overrides?: CallOverrides): Promise<number>;
@@ -121,6 +129,8 @@ export class TwapOracle extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  startBlock(overrides?: CallOverrides): Promise<number>;
+
   callStatic: {
     blockTime(overrides?: CallOverrides): Promise<number>;
 
@@ -135,6 +145,8 @@ export class TwapOracle extends BaseContract {
       twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    startBlock(overrides?: CallOverrides): Promise<number>;
   };
 
   filters: {};
@@ -153,6 +165,8 @@ export class TwapOracle extends BaseContract {
       twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    startBlock(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -169,5 +183,7 @@ export class TwapOracle extends BaseContract {
       twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    startBlock(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

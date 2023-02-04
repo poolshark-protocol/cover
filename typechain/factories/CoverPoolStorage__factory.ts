@@ -103,6 +103,11 @@ const _abi = [
     name: "globalState",
     outputs: [
       {
+        internalType: "uint8",
+        name: "unlocked",
+        type: "uint8",
+      },
+      {
         internalType: "uint24",
         name: "swapFee",
         type: "uint24",
@@ -118,24 +123,24 @@ const _abi = [
         type: "uint16",
       },
       {
-        internalType: "uint32",
-        name: "lastBlockNumber",
-        type: "uint32",
-      },
-      {
-        internalType: "uint8",
-        name: "unlocked",
-        type: "uint8",
-      },
-      {
         internalType: "int24",
         name: "latestTick",
         type: "int24",
       },
       {
         internalType: "uint32",
+        name: "lastBlockNumber",
+        type: "uint32",
+      },
+      {
+        internalType: "uint32",
         name: "accumEpoch",
         type: "uint32",
+      },
+      {
+        internalType: "uint160",
+        name: "latestPrice",
+        type: "uint160",
       },
     ],
     stateMutability: "view",

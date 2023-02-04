@@ -3,13 +3,17 @@ pragma solidity ^0.8.13;
 
 interface ICoverPoolStructs {
     struct GlobalState {
+        uint8  unlocked;
+        //TODO: change swapFee to uint16
         uint24 swapFee;         /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
+        //TODO: change to uint16 
         int24  tickSpread;      /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16 twapLength;      /// @dev number of blocks used for TWAP sampling
+        int24  latestTick;      /// @dev latest updated inputPool price tick
+        //TODO: offset of startBlock
         uint32 lastBlockNumber; /// @dev last block checked for reference price update
-        uint8  unlocked;
-        int24  latestTick;      /// @dev Latest updated inputPool price tick
         uint32 accumEpoch;
+        uint160 latestPrice;      /// @dev price of latestTick
     }
     
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick

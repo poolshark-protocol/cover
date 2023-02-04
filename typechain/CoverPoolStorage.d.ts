@@ -124,14 +124,15 @@ export class CoverPoolStorage extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number, number] & {
+      [number, number, number, number, number, number, number, BigNumber] & {
+        unlocked: number;
         swapFee: number;
         tickSpread: number;
         twapLength: number;
-        lastBlockNumber: number;
-        unlocked: number;
         latestTick: number;
+        lastBlockNumber: number;
         accumEpoch: number;
+        latestPrice: BigNumber;
       }
     >;
 
@@ -230,14 +231,15 @@ export class CoverPoolStorage extends BaseContract {
   globalState(
     overrides?: CallOverrides
   ): Promise<
-    [number, number, number, number, number, number, number] & {
+    [number, number, number, number, number, number, number, BigNumber] & {
+      unlocked: number;
       swapFee: number;
       tickSpread: number;
       twapLength: number;
-      lastBlockNumber: number;
-      unlocked: number;
       latestTick: number;
+      lastBlockNumber: number;
       accumEpoch: number;
+      latestPrice: BigNumber;
     }
   >;
 
@@ -336,14 +338,15 @@ export class CoverPoolStorage extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number, number] & {
+      [number, number, number, number, number, number, number, BigNumber] & {
+        unlocked: number;
         swapFee: number;
         tickSpread: number;
         twapLength: number;
-        lastBlockNumber: number;
-        unlocked: number;
         latestTick: number;
+        lastBlockNumber: number;
         accumEpoch: number;
+        latestPrice: BigNumber;
       }
     >;
 
