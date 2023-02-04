@@ -6,7 +6,6 @@ import "../interfaces/ICoverPoolStructs.sol";
 import "../utils/CoverPoolErrors.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
-import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -52,8 +51,11 @@ library Ticks
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
-                /// @auditor - do we need to handle overflow for newPrice?
                 uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input);
+                /// @auditor - check tests to see if we need overflow handle
+                if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
+                    newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
+                }
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price);
                 cache.price = newPrice;
                 cache.input = 0;
@@ -70,7 +72,7 @@ library Ticks
                 // We can swap within the current range.
                 // Calculate new price after swap: ΔP = Δy/L.
                 uint256 newPrice = cache.price +
-                    FullPrecisionMath.mulDiv(cache.input, 0x1000000000000000000000000, cache.liquidity);
+                    FullPrecisionMath.mulDiv(cache.input, Q96, cache.liquidity);
                 // Calculate output of swap
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice);
                 cache.price = newPrice;

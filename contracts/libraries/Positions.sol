@@ -6,7 +6,6 @@ import "./Ticks.sol";
 import "../interfaces/ICoverPoolStructs.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
-import "hardhat/console.sol";
 
 /// @notice Position management library for ranged liquidity.
 library Positions

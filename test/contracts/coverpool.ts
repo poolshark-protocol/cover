@@ -1046,31 +1046,31 @@ describe('CoverPool Tests', function () {
   });
 
   it('pool1 - Should move TWAP in range by one, partial fill w/ overflow on newPrice, and burn', async function () {
-    const liquidityAmount4 = BigNumber.from("4992755409730469074788564544585");
-    //TODO: 124905049859212811 leftover from precision loss
+    const liquidityAmount4 = BigNumber.from("31849338570933576034964240875");
+    /// @auditor -> this doesn't cause overflow...liquidity*values maxes out at 2.69e70...max uint256 is 1.15e77
 
     await validateSync(
       hre.props.admin,
-      "0"
+      "60"
     );
 
     await mintSigners20(
       hre.props.token1,
-      tokenAmount.mul(ethers.utils.parseUnits("34",17)),
+      tokenAmount.mul(ethers.utils.parseUnits("34",55)),
       [hre.props.alice, hre.props.bob]
     )
 
     await validateMint({
       signer:       hre.props.alice,
       recipient:    hre.props.alice.address,
-      lowerOld:     "0",
-      lower:        "20",
-      claim:        "20",
-      upper:        "40",
+      lowerOld:     "60",
+      lower:        "600000",
+      claim:        "600000",
+      upper:        "600020",
       upperOld:     "887272",
-      amount:       tokenAmount.mul(ethers.utils.parseUnits("50",6)),
+      amount:       tokenAmount.mul(ethers.utils.parseUnits("34",17)),
       zeroForOne:   false,
-      balanceInDecrease: tokenAmount.mul(ethers.utils.parseUnits("50",6)),
+      balanceInDecrease: tokenAmount.mul(ethers.utils.parseUnits("34",17)),
       liquidityIncrease: liquidityAmount4, 
       upperTickCleared: false,
       lowerTickCleared: false,
@@ -1079,7 +1079,7 @@ describe('CoverPool Tests', function () {
 
     await validateSync(
       hre.props.admin,
-      "20"
+      "600000"
     );
 
     await validateSwap({
@@ -1088,24 +1088,24 @@ describe('CoverPool Tests', function () {
       zeroForOne:         true,
       amountIn:           tokenAmount.div(10),
       sqrtPriceLimitX96:  minPrice,
-      balanceInDecrease:  BigNumber.from("10000000000000000000"),
-      balanceOutIncrease: BigNumber.from("10035058059821880699"),
+      balanceInDecrease:  BigNumber.from("2984665930559"),
+      balanceOutIncrease: BigNumber.from("339999999999999999999999999997721907021"),
       revertMessage:      ""
     });
 
-    // await validateBurn({
-    //   signer:             hre.props.alice,
-    //   lower:              "20",
-    //   claim:              "20",
-    //   upper:              "60",
-    //   liquidityAmount:    liquidityAmount4,
-    //   zeroForOne:         false,
-    //   balanceInIncrease:  BigNumber.from("0"),
-    //   balanceOutIncrease: BigNumber.from("99875219786520339160"),
-    //   lowerTickCleared:   false,
-    //   upperTickCleared:   false,
-    //   revertMessage:      ""
-    // });
+    await validateBurn({
+      signer:             hre.props.alice,
+      lower:              "600000",
+      claim:              "600000",
+      upper:              "600020",
+      liquidityAmount:    liquidityAmount4,
+      zeroForOne:         false,
+      balanceInIncrease:  BigNumber.from("2984665184391"),
+      balanceOutIncrease: BigNumber.from("0"),
+      lowerTickCleared:   false,
+      upperTickCleared:   false,
+      revertMessage:      ""
+    });
   });
 
   // //TODO: these revert catches no longer work inside a library
