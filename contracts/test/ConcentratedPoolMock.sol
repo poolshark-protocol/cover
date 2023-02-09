@@ -9,6 +9,7 @@ contract ConcentratedPoolMock is IConcentratedPool {
 
     address public token0;
     address public token1;
+    int24   public tickSpacing;
     uint256 swapFee;
 
     uint16 observationCardinality;
@@ -20,12 +21,14 @@ contract ConcentratedPoolMock is IConcentratedPool {
     constructor(
         address _token0,
         address _token1,
-        uint24  _swapFee
+        uint24  _swapFee,
+        int24   _tickSpacing
     ) {
         require(_token0 < _token1, "wrong token order");
         token0  = _token0;
         token1  = _token1;
         swapFee = _swapFee;
+        tickSpacing = _tickSpacing;
     }
 
     function slot0()

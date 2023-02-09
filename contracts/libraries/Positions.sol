@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
 import "./TickMath.sol";
@@ -28,9 +28,9 @@ library Positions
         mapping(address => mapping(int24 => mapping(int24 => IPoolsharkHedgePoolStructs.Position))) storage positions,
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.GlobalState storage state,
+        IPoolsharkHedgePoolStructs.GlobalState memory state,
         IPoolsharkHedgePoolStructs.AddParams memory params
-    ) external returns (uint128) {
+    ) external returns (uint128, IPoolsharkHedgePoolStructs.GlobalState memory) {
         //TODO: dilute amountDeltas when adding liquidity
         IPoolsharkHedgePoolStructs.PositionCache memory cache = IPoolsharkHedgePoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
@@ -39,7 +39,7 @@ library Positions
         });
         /// call if claim != lower and liquidity being added
         /// initialize new position
-        if (params.amount == 0) return 0;
+        if (params.amount == 0) return (0, state);
         if (cache.position.liquidity == 0) {
             console.log('new position');
             cache.position.accumEpochLast = state.accumEpoch;
@@ -74,16 +74,16 @@ library Positions
         positions[params.owner][params.lower][params.upper] = cache.position;
                 console.log(positions[params.owner][params.lower][params.upper].liquidity);
 
-        return params.amount;
+        return (params.amount, state);
     }
 
     function remove(
         mapping(address => mapping(int24 => mapping(int24 => IPoolsharkHedgePoolStructs.Position))) storage positions,
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.GlobalState storage state,
+        IPoolsharkHedgePoolStructs.GlobalState memory state,
         IPoolsharkHedgePoolStructs.RemoveParams memory params
-    ) external returns (uint128) {
+    ) external returns (uint128, IPoolsharkHedgePoolStructs.GlobalState memory) {
         //TODO: dilute amountDeltas when adding liquidity
         IPoolsharkHedgePoolStructs.PositionCache memory cache = IPoolsharkHedgePoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
@@ -92,7 +92,7 @@ library Positions
         });
         /// call if claim != lower and liquidity being added
         /// initialize new position
-        if (params.amount == 0) return 0;
+        if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
         } else {
@@ -139,17 +139,17 @@ library Positions
         console.log('position liquidity check:', cache.position.liquidity);
         console.log(positions[params.owner][params.lower][params.upper].liquidity);
 
-        return params.amount;
+        return (params.amount, state);
     }
 
     function update(
         mapping(address => mapping(int24 => mapping(int24 => IPoolsharkHedgePoolStructs.Position))) storage positions,
         mapping(int24 => IPoolsharkHedgePoolStructs.Tick) storage ticks,
         mapping(int24 => IPoolsharkHedgePoolStructs.TickNode) storage tickNodes,
-        IPoolsharkHedgePoolStructs.GlobalState storage state,
+        IPoolsharkHedgePoolStructs.GlobalState memory state,
         IPoolsharkHedgePoolStructs.PoolState storage pool,
         IPoolsharkHedgePoolStructs.UpdateParams memory params
-    ) external returns (uint128, uint128, int24, int24) {
+    ) external returns (uint128, uint128, int24, int24, IPoolsharkHedgePoolStructs.GlobalState memory) {
         IPoolsharkHedgePoolStructs.UpdatePositionCache memory cache = IPoolsharkHedgePoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             feeGrowthCurrentEpoch: pool.feeGrowthCurrentEpoch,
@@ -166,7 +166,16 @@ library Positions
         if (params.amount < 0 && uint128(-params.amount) > cache.position.liquidity) revert NotEnoughPositionLiquidity();
                 if (cache.position.liquidity == 0 
          || params.claim == (params.zeroForOne ? params.upper : params.lower)
-        ) { console.log('update return early early'); return (cache.position.amountIn,cache.position.amountOut,params.lower,params.upper); }
+        ) { 
+            console.log('update return early early'); 
+            return (
+                    cache.position.amountIn,
+                    cache.position.amountOut,
+                    params.lower,
+                    params.upper,
+                    state
+            ); 
+        }
         //TODO: add to mint call
         // /// validate mint amount 
         // if (amount > 0 && uint128(amount) + cache.position.liquidity > MAX_TICK_LIQUIDITY) revert MaxTickLiquidity();
@@ -358,7 +367,8 @@ library Positions
             cache.position.amountIn,
             cache.position.amountOut, 
             params.zeroForOne ? params.lower : params.claim, 
-            params.zeroForOne ? params.claim : params.upper
+            params.zeroForOne ? params.claim : params.upper,
+            state
         );
     }
 }

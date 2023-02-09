@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./PoolsharkHedgePool.sol";
 import "./interfaces/IPoolsharkHedgePoolFactory.sol";
 import "./interfaces/IConcentratedFactory.sol";
@@ -11,6 +11,7 @@ contract PoolsharkHedgePoolFactory is
     IPoolsharkHedgePoolFactory
 {
     error IdenticalTokenAddresses();
+    error InvalidTokenDecimals();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     
@@ -26,7 +27,8 @@ contract PoolsharkHedgePoolFactory is
     function createHedgePool(
         address fromToken,
         address destToken,
-        uint256 swapFee
+        uint256 swapFee,
+        uint24  tickSpread
     ) external override returns (address pool) {
         
         // validate token pair
@@ -35,11 +37,11 @@ contract PoolsharkHedgePoolFactory is
         }
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
-        // if(ERC20(token0).decimals() == 0) revert("ERROR: token0 decimals are zero.");
-        // if(ERC20(token1).decimals() == 0) revert("ERROR: token1 decimals are zero.");
+        if(ERC20(token0).decimals() == 0) revert InvalidTokenDecimals();
+        if(ERC20(token1).decimals() == 0) revert InvalidTokenDecimals();
 
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(token0, token1, swapFee));
+        bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread));
         if (poolMapping[key] != address(0)){
             revert PoolAlreadyExists();
         }
@@ -60,7 +62,7 @@ contract PoolsharkHedgePoolFactory is
                         inputPool,
                         libraries,
                         uint24(swapFee),
-                        tickSpacing
+                        int24(tickSpread)
                     )
                 );
 
@@ -74,7 +76,8 @@ contract PoolsharkHedgePoolFactory is
     function getHedgePool(
         address fromToken,
         address destToken,
-        uint256 fee
+        uint256 fee,
+        uint24  tickSpread
     ) public override view returns (address) {
 
         // set lexographical token address ordering
@@ -82,7 +85,7 @@ contract PoolsharkHedgePoolFactory is
         address token1 = fromToken < destToken ? destToken : fromToken;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(token0, token1, fee));
+        bytes32 key = keccak256(abi.encode(token0, token1, fee, tickSpread));
 
         return poolMapping[key];
     }

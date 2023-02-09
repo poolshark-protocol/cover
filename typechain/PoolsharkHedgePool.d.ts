@@ -24,12 +24,12 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     "burn(int24,int24,int24,bool,uint128)": FunctionFragment;
     "collect(int24,int24,int24,bool)": FunctionFragment;
     "feeTo()": FunctionFragment;
+    "globalState()": FunctionFragment;
     "mint(int24,int24,int24,int24,int24,uint128,bool)": FunctionFragment;
     "pool0()": FunctionFragment;
     "pool1()": FunctionFragment;
     "positions0(address,int24,int24)": FunctionFragment;
     "positions1(address,int24,int24)": FunctionFragment;
-    "state()": FunctionFragment;
     "swap(address,bool,uint256,uint160)": FunctionFragment;
     "tickNodes(int24)": FunctionFragment;
     "ticks0(int24)": FunctionFragment;
@@ -46,6 +46,10 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish, BigNumberish, boolean]
   ): string;
   encodeFunctionData(functionFragment: "feeTo", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "globalState",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "mint",
     values: [
@@ -68,7 +72,6 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
     functionFragment: "positions1",
     values: [string, BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "state", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "swap",
     values: [string, boolean, BigNumberish, BigNumberish]
@@ -90,12 +93,15 @@ interface PoolsharkHedgePoolInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "collect", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "feeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "globalState",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pool0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pool1", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "positions0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "positions1", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "state", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tickNodes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ticks0", data: BytesLike): Result;
@@ -228,6 +234,19 @@ export class PoolsharkHedgePool extends BaseContract {
 
     feeTo(overrides?: CallOverrides): Promise<[string]>;
 
+    globalState(
+      overrides?: CallOverrides
+    ): Promise<
+      [number, number, number, number, number, number] & {
+        swapFee: number;
+        tickSpread: number;
+        lastBlockNumber: number;
+        unlocked: number;
+        latestTick: number;
+        accumEpoch: number;
+      }
+    >;
+
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
@@ -290,19 +309,6 @@ export class PoolsharkHedgePool extends BaseContract {
         claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
-      }
-    >;
-
-    state(
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number, number, number, number, number] & {
-        unlocked: number;
-        latestTick: number;
-        accumEpoch: number;
-        lastBlockNumber: number;
-        swapFee: number;
-        tickSpacing: number;
       }
     >;
 
@@ -375,6 +381,19 @@ export class PoolsharkHedgePool extends BaseContract {
 
   feeTo(overrides?: CallOverrides): Promise<string>;
 
+  globalState(
+    overrides?: CallOverrides
+  ): Promise<
+    [number, number, number, number, number, number] & {
+      swapFee: number;
+      tickSpread: number;
+      lastBlockNumber: number;
+      unlocked: number;
+      latestTick: number;
+      accumEpoch: number;
+    }
+  >;
+
   mint(
     lowerOld: BigNumberish,
     lower: BigNumberish,
@@ -437,19 +456,6 @@ export class PoolsharkHedgePool extends BaseContract {
       claimPriceLast: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
-    }
-  >;
-
-  state(
-    overrides?: CallOverrides
-  ): Promise<
-    [number, number, number, number, number, number] & {
-      unlocked: number;
-      latestTick: number;
-      accumEpoch: number;
-      lastBlockNumber: number;
-      swapFee: number;
-      tickSpacing: number;
     }
   >;
 
@@ -524,6 +530,19 @@ export class PoolsharkHedgePool extends BaseContract {
 
     feeTo(overrides?: CallOverrides): Promise<string>;
 
+    globalState(
+      overrides?: CallOverrides
+    ): Promise<
+      [number, number, number, number, number, number] & {
+        swapFee: number;
+        tickSpread: number;
+        lastBlockNumber: number;
+        unlocked: number;
+        latestTick: number;
+        accumEpoch: number;
+      }
+    >;
+
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
@@ -586,19 +605,6 @@ export class PoolsharkHedgePool extends BaseContract {
         claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
-      }
-    >;
-
-    state(
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number, number, number, number, number] & {
-        unlocked: number;
-        latestTick: number;
-        accumEpoch: number;
-        lastBlockNumber: number;
-        swapFee: number;
-        tickSpacing: number;
       }
     >;
 
@@ -828,6 +834,8 @@ export class PoolsharkHedgePool extends BaseContract {
 
     feeTo(overrides?: CallOverrides): Promise<BigNumber>;
 
+    globalState(overrides?: CallOverrides): Promise<BigNumber>;
+
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
@@ -856,8 +864,6 @@ export class PoolsharkHedgePool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    state(overrides?: CallOverrides): Promise<BigNumber>;
 
     swap(
       recipient: string,
@@ -899,6 +905,8 @@ export class PoolsharkHedgePool extends BaseContract {
 
     feeTo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    globalState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
@@ -927,8 +935,6 @@ export class PoolsharkHedgePool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
-
-    state(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     swap(
       recipient: string,

@@ -7,6 +7,8 @@ import "hardhat/console.sol";
 /// @notice Math library that facilitates ranged liquidity calculations.
 library DyDxMath
 {
+    uint256 internal constant Q96 = 0x1000000000000000000000000;
+
     function getDy(
         uint256 liquidity,
         uint256 priceLower,
@@ -33,9 +35,9 @@ library DyDxMath
     ) internal pure returns (uint256 dy) {
         unchecked {
             if (roundUp) {
-                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, 0x1000000000000000000000000);
+                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
             } else {
-                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, 0x1000000000000000000000000);
+                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
             }
         }
     }
@@ -54,7 +56,7 @@ library DyDxMath
             }
         }
     }
-
+    //TODO: debug math for this to validate numbers
     function getLiquidityForAmounts(
         uint256 priceLower,
         uint256 priceUpper,
@@ -64,15 +66,15 @@ library DyDxMath
     ) external pure returns (uint256 liquidity) {
         unchecked {
             if (priceUpper <= currentPrice) {
-                liquidity = FullPrecisionMath.mulDiv(dy, 0x1000000000000000000000000, priceUpper - priceLower);
+                liquidity = FullPrecisionMath.mulDiv(dy, Q96, priceUpper - priceLower);
             } else if (currentPrice <= priceLower) {
                 liquidity = FullPrecisionMath.mulDiv(
                     dx,
-                    FullPrecisionMath.mulDiv(priceLower, priceUpper, 0x1000000000000000000000000),
+                    FullPrecisionMath.mulDiv(priceLower, priceUpper, Q96),
                     priceUpper - priceLower
                 );
             } else {
-                uint256 liquidity1 = FullPrecisionMath.mulDiv(dy, 0x1000000000000000000000000, currentPrice - priceLower);
+                uint256 liquidity1 = FullPrecisionMath.mulDiv(dy, Q96, currentPrice - priceLower);
                 liquidity = liquidity1;
             }
         }

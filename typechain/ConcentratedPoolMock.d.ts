@@ -25,6 +25,7 @@ interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
     "observe(uint32[])": FunctionFragment;
     "setTickCumulatives(int56,int56)": FunctionFragment;
     "slot0()": FunctionFragment;
+    "tickSpacing()": FunctionFragment;
     "token0()": FunctionFragment;
     "token1()": FunctionFragment;
   };
@@ -42,6 +43,10 @@ interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "slot0", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "tickSpacing",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "token0", values?: undefined): string;
   encodeFunctionData(functionFragment: "token1", values?: undefined): string;
 
@@ -55,6 +60,10 @@ interface ConcentratedPoolMockInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "slot0", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "tickSpacing",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "token0", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "token1", data: BytesLike): Result;
 
@@ -140,6 +149,8 @@ export class ConcentratedPoolMock extends BaseContract {
       }
     >;
 
+    tickSpacing(overrides?: CallOverrides): Promise<[number]>;
+
     token0(overrides?: CallOverrides): Promise<[string]>;
 
     token1(overrides?: CallOverrides): Promise<[string]>;
@@ -179,6 +190,8 @@ export class ConcentratedPoolMock extends BaseContract {
       unlocked: boolean;
     }
   >;
+
+  tickSpacing(overrides?: CallOverrides): Promise<number>;
 
   token0(overrides?: CallOverrides): Promise<string>;
 
@@ -220,6 +233,8 @@ export class ConcentratedPoolMock extends BaseContract {
       }
     >;
 
+    tickSpacing(overrides?: CallOverrides): Promise<number>;
+
     token0(overrides?: CallOverrides): Promise<string>;
 
     token1(overrides?: CallOverrides): Promise<string>;
@@ -246,6 +261,8 @@ export class ConcentratedPoolMock extends BaseContract {
 
     slot0(overrides?: CallOverrides): Promise<BigNumber>;
 
+    tickSpacing(overrides?: CallOverrides): Promise<BigNumber>;
+
     token0(overrides?: CallOverrides): Promise<BigNumber>;
 
     token1(overrides?: CallOverrides): Promise<BigNumber>;
@@ -269,6 +286,8 @@ export class ConcentratedPoolMock extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     slot0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    tickSpacing(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     token0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

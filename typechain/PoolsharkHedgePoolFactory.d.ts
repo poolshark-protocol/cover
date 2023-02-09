@@ -22,9 +22,9 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   functions: {
     "concentratedFactory()": FunctionFragment;
-    "createHedgePool(address,address,uint256)": FunctionFragment;
+    "createHedgePool(address,address,uint256,uint24)": FunctionFragment;
     "feeTierTickSpacing(uint256)": FunctionFragment;
-    "getHedgePool(address,address,uint256)": FunctionFragment;
+    "getHedgePool(address,address,uint256,uint24)": FunctionFragment;
     "libraries()": FunctionFragment;
     "owner()": FunctionFragment;
     "poolList(uint256)": FunctionFragment;
@@ -37,7 +37,7 @@ interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createHedgePool",
-    values: [string, string, BigNumberish]
+    values: [string, string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "feeTierTickSpacing",
@@ -45,7 +45,7 @@ interface PoolsharkHedgePoolFactoryInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getHedgePool",
-    values: [string, string, BigNumberish]
+    values: [string, string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "libraries", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -149,6 +149,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       swapFee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -161,6 +162,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       fee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -179,6 +181,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
     fromToken: string,
     destToken: string,
     swapFee: BigNumberish,
+    tickSpread: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -191,6 +194,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
     fromToken: string,
     destToken: string,
     fee: BigNumberish,
+    tickSpread: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -209,6 +213,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       swapFee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -221,6 +226,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       fee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -276,6 +282,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       swapFee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -288,6 +295,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       fee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -309,6 +317,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       swapFee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -321,6 +330,7 @@ export class PoolsharkHedgePoolFactory extends BaseContract {
       fromToken: string,
       destToken: string,
       fee: BigNumberish,
+      tickSpread: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

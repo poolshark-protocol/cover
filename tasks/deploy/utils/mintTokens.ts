@@ -19,6 +19,7 @@ export class MintTokens {
         const signers = await ethers.getSigners();
         hre.props.alice = signers[0];
         console.log(hre.network.name)
+        console.log('running address:', hre.props.alice.address)
         if(hre.network.name == "hardhat"){
             hre.props.bob   = signers[1];
             hre.carol       = signers[2];
@@ -40,13 +41,13 @@ export class MintTokens {
         );
         
         const token0Balance = await hre.props.token0.balanceOf(
-            "0x4ec744F218397F315EE4AB53A49D3D33019BfD05"
+            "0xAc553A368D938D38B6ca742c761fcCDc25fac90a"
         );
-        console.log("0x4ec744F218397F315EE4AB53A49D3D33019BfD05", 'token 0 balance:', token0Balance.toString());
+        console.log("0xAc553A368D938D38B6ca742c761fcCDc25fac90a", 'token 0 balance:', token0Balance.toString());
         const token1Balance = await hre.props.token1.balanceOf(
-            "0x4ec744F218397F315EE4AB53A49D3D33019BfD05"
+            "0xAc553A368D938D38B6ca742c761fcCDc25fac90a"
         );
-        console.log("0x4ec744F218397F315EE4AB53A49D3D33019BfD05", 'token 1 balance:', token1Balance.toString());
+        console.log("0xAc553A368D938D38B6ca742c761fcCDc25fac90a", 'token 1 balance:', token1Balance.toString());
     }
 
     public async postDeployment() {

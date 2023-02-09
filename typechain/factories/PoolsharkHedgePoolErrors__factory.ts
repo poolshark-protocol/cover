@@ -27,6 +27,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvalidTickSpread",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "InvalidToken",
     type: "error",
   },

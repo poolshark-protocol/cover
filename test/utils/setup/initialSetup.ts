@@ -1,6 +1,8 @@
 import { network } from "hardhat";
 import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { DeployAssist } from "../../../scripts/util/deployAssist";
+import { ContractDeploymentsKeys } from "../../../scripts/util/files/contractDeploymentKeys";
+import { ContractDeploymentsJson } from "../../../scripts/util/files/contractDeploymentsJson";
 import { readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
 import { Token20__factory, PoolsharkHedgePoolFactory__factory, ConcentratedFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, PoolsharkHedgePoolUtils__factory, Positions__factory } from "../../../typechain";
 
@@ -9,19 +11,16 @@ export class InitialSetup {
     private token0Decimals = 18;
     private token1Decimals = 18;
     private deployAssist: DeployAssist;
+    private contractDeploymentsJson: ContractDeploymentsJson;
+    private contractDeploymentsKeys: ContractDeploymentsKeys;
 
     constructor() {
         this.deployAssist = new DeployAssist();
+        this.contractDeploymentsJson = new ContractDeploymentsJson();
+        this.contractDeploymentsKeys = new ContractDeploymentsKeys();
     }
 
     public async initialHedgePoolSetup(): Promise<number> {
-
-        // const tokenA = await new Token20__factory(hre.props.alice).deploy(
-        //     "Token20A",
-        //     "TOKEN20A",
-        //     this.token0Decimals,
-        //     {nonce: nonce}
-        // );
 
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()];
 
@@ -131,43 +130,67 @@ export class InitialSetup {
             ]
         );
 
-        const libraries = await new PoolsharkHedgePoolUtils__factory(hre.props.alice)
-                                                        .deploy(
-                                                            {nonce: hre.nonce}
-                                                        );
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            PoolsharkHedgePoolUtils__factory,
+            'hedgePoolUtils',
+            [],
+        );
 
-        hre.nonce += 1;
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            TickMath__factory,
+            'tickMathLib',
+            [],
+        );
 
-        const tickMathLib = await new TickMath__factory(hre.props.alice).deploy();
-        hre.nonce += 1;
-        const fullPrecisionMathLib = await new FullPrecisionMath__factory(hre.props.alice).deploy();
-        hre.nonce += 1;
-        const dydxMathLib = await new DyDxMath__factory(
-                                        {
-                                            "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address
-                                        },
-                                        hre.props.alice
-                            ).deploy();
-        hre.nonce += 1;
-        const ticksLib = await new Ticks__factory(
-                                        {
-                                            "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address,
-                                            "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
-                                            "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address
-                                        },
-                                        hre.props.alice
-                        ).deploy();
-        hre.nonce += 1;
-        const positionsLib = await new Positions__factory(
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            FullPrecisionMath__factory,
+            'fullPrecisionMathLib',
+            [],
+        );
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            DyDxMath__factory,
+            'dydxMathLib',
+            [],
             {
-                "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address,
-                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
-                "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address,
-                "contracts/libraries/Ticks.sol:Ticks": ticksLib.address
+                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address
+            }
+        );
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Ticks__factory,
+            'ticksLib',
+            [],
+            {
+                "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address,
+                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address,
+                "contracts/libraries/TickMath.sol:TickMath": hre.props.tickMathLib.address
             },
-            hre.props.alice
-        ).deploy();
-        hre.nonce += 1;
+        );
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Positions__factory,
+            'positionsLib',
+            [],
+            {
+                "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address,
+                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address,
+                "contracts/libraries/TickMath.sol:TickMath": hre.props.tickMathLib.address,
+                "contracts/libraries/Ticks.sol:Ticks": hre.props.ticksLib.address
+            },
+        );
         
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -176,29 +199,33 @@ export class InitialSetup {
             'hedgePoolFactory',
             [
                 hre.props.concentratedFactoryMock.address,
-                libraries.address
+                hre.props.hedgePoolUtils.address
             ],
             {
-                "contracts/libraries/Positions.sol:Positions": positionsLib.address,
-                "contracts/libraries/Ticks.sol:Ticks": ticksLib.address,
-                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": fullPrecisionMathLib.address,
-                "contracts/libraries/TickMath.sol:TickMath": tickMathLib.address,
-                "contracts/libraries/DyDxMath.sol:DyDxMath": dydxMathLib.address
+                "contracts/libraries/Positions.sol:Positions": hre.props.positionsLib.address,
+                "contracts/libraries/Ticks.sol:Ticks": hre.props.ticksLib.address,
+                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address,
+                "contracts/libraries/TickMath.sol:TickMath": hre.props.tickMathLib.address,
+                "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address
             }
         );
-        hre.nonce += 1;
+        // // hre.nonce += 1;
 
         const createPoolTxn = await hre.props.hedgePoolFactory.createHedgePool(
                                     hre.props.token0.address,
                                     hre.props.token1.address,
-                                    "500"
+                                    "500",
+                                    "20"
                                 );
         await createPoolTxn.wait();
+
+        hre.nonce += 1;
         
         const hedgePoolAddress = await hre.props.hedgePoolFactory.getHedgePool(
                                     hre.props.token0.address,
                                     hre.props.token1.address,
-                                    "500"
+                                    "500",
+                                    "20"
                                 );
         hre.props.hedgePool = await hre.ethers.getContractAt("PoolsharkHedgePool", hedgePoolAddress);
 
@@ -209,9 +236,9 @@ export class InitialSetup {
             hre.props.hedgePool,
             [
                 hre.props.concentratedPoolMock.address,
-                libraries.address,
+                hre.props.hedgePoolUtils.address,
                 "500",
-                "10"
+                "20"
             ]
         );
 
@@ -219,9 +246,27 @@ export class InitialSetup {
     }
 
     public async readHedgePoolSetup(nonce: number): Promise<number> {
-        const token0Address = await readDeploymentsFile("token0", hre.network.config.chainId);
-        const token1Address = await readDeploymentsFile("token1", hre.network.config.chainId);
-        const hedgePoolAddress = await readDeploymentsFile("poolsharkHedgePool", hre.network.config.chainId);
+        const token0Address = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                                                                    {
+                                                                        networkName: hre.network.name,
+                                                                        objectName: 'token0'
+                                                                    },
+                                                                    'readHedgePoolSetup'
+                                                                )).contractAddress
+        const token1Address = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                                                                    {
+                                                                        networkName: hre.network.name,
+                                                                        objectName: 'token1'
+                                                                    },
+                                                                    'readHedgePoolSetup'
+                                                                )).contractAddress
+        const hedgePoolAddress = (await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                                                                        {
+                                                                            networkName: hre.network.name,
+                                                                            objectName: 'hedgePool'
+                                                                        },
+                                                                        'readHedgePoolSetup'
+                                                                )).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt("Token20", token0Address);
         hre.props.token1 = await hre.ethers.getContractAt("Token20", token1Address);

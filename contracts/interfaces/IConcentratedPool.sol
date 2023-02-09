@@ -12,6 +12,7 @@ interface IConcentratedPool
 
     function token0() external view returns (address);
     function token1() external view returns (address);
+    function tickSpacing() external view returns(int24);
 
     
     /// @notice The 0th storage slot in the pool stores many values, and is exposed as a single method to save gas

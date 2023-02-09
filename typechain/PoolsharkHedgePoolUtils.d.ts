@@ -250,7 +250,7 @@ export class PoolsharkHedgePoolUtils extends BaseContract {
       pool: string,
       overrides?: CallOverrides
     ): Promise<
-      [boolean, number] & { initializable: boolean; startingTick: number }
+      [number, number] & { initializable: number; startingTick: number }
     >;
 
     isPoolObservationsEnough(

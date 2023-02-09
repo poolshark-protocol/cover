@@ -53,7 +53,7 @@ export class DeployAssist {
         network: SUPPORTED_NETWORKS,
         contractFactory: T,
         objectName: string,
-        constructorArguments: any[],
+        constructorArguments?: any[],
         linkedLibraries?: any,
         contractName?: string
     ): Promise<Contract> {
@@ -61,22 +61,21 @@ export class DeployAssist {
         // @ts-ignore
         contractName = contractName ?? contractFactory.name.split('__')[0];
         console.log(hre.props.admin.address);
-        // @ts-ignore
-        console.log("Contract deployed", contractFactory.name);
 
-        console.log(hre.props.admin.address);
-
-        const contract: Contract = !linkedLibraries ?
+        let contract: Contract;
+        if(linkedLibraries) {
             // @ts-ignore
-            await new contractFactory(hre.props.admin).deploy(
-                ...constructorArguments,
-                { nonce: hre.nonce }
-            )
-          : // @ts-ignore
-            await new contractFactory(linkedLibraries, hre.props.admin).deploy(
+            contract = await new contractFactory(linkedLibraries, hre.props.admin).deploy(
                 ...constructorArguments,
                 { nonce: hre.nonce }
             );
+        } else {
+            // @ts-ignore
+            contract = await new contractFactory(hre.props.admin).deploy(
+                ...constructorArguments,
+                { nonce: hre.nonce }
+            )
+        }
 
         await contract.deployTransaction.wait(1);
 
@@ -108,6 +107,7 @@ export class DeployAssist {
         constructorArguments: any[]
     ) {
         if (
+            // true
             !this.isLocal()
         ) {
             this.logContractDeployment(
@@ -118,7 +118,10 @@ export class DeployAssist {
             );
         }
 
-        if (!this.isLocal()) {
+        if (
+            // true
+            !this.isLocal()
+        ) {
             await this.contractDeploymentsJson.writeContractDeploymentsJsonFile(
                 network,
                 contractName,

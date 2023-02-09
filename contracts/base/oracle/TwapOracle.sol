@@ -21,12 +21,12 @@ abstract contract TwapOracle is
 
     // @dev increase pool observations if not sufficient
     // @dev must be deterministic since called externally
-    function initializePoolObservations(IConcentratedPool pool) external returns (bool initializable, int24 startingTick) {
+    function initializePoolObservations(IConcentratedPool pool) external returns (uint8 initializable, int24 startingTick) {
         if (!_isPoolObservationsEnough(pool)) {
             _increaseV3Observations(address(pool));
-            return (false, 0);
+            return (0, 0);
         }
-        return (true, _calculateAverageTick(pool));
+        return (1, _calculateAverageTick(pool));
     }
 
     function calculateAverageTick(IConcentratedPool pool) external view returns (int24 averageTick) {

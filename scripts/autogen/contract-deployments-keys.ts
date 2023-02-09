@@ -1,36 +1,237 @@
 import { ContractDeploymentsKey } from "../util/files/contractDeploymentsJson";
 
 export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
+
     {
-        networkName: 'goerli',
+        networkName: 'hardhat',
         objectName: 'tokenA'
     },
     {
-        networkName: 'goerli',
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
         objectName: 'tokenB'
     },
     {
-        networkName: 'goerli',
-        objectName: 'token0'
+        networkName: 'hardhat',
+        objectName: 'tokenA'
     },
     {
-        networkName: 'goerli',
-        objectName: 'token1'
+        networkName: 'hardhat',
+        objectName: 'tokenA'
     },
     {
-        networkName: 'goerli',
-        objectName: 'concentratedFactoryMock'
+        networkName: 'hardhat',
+        objectName: 'tokenA'
     },
     {
-        networkName: 'goerli',
-        objectName: 'concentratedPoolMock'
+        networkName: 'hardhat',
+        objectName: 'tokenA'
     },
     {
-        networkName: 'goerli',
-        objectName: 'hedgePoolFactory'
+        networkName: 'hardhat',
+        objectName: 'tokenA'
     },
     {
-        networkName: 'goerli',
-        objectName: 'hedgePool'
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
+    },
+    {
+        networkName: 'hardhat',
+        objectName: 'tokenA'
     },
 ];

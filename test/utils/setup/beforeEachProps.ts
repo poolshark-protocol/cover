@@ -2,14 +2,20 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { getNonce } from "../../../tasks/utils";
-import { ConcentratedFactoryMock, ConcentratedPoolMock, PoolsharkHedgePool, PoolsharkHedgePoolFactory, Token20 } from "../../../typechain";
+import { ConcentratedFactoryMock, ConcentratedPoolMock, DyDxMath, FullPrecisionMath, PoolsharkHedgePool, PoolsharkHedgePoolFactory, PoolsharkHedgePoolUtils, Positions, TickMath, Ticks, Token20 } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
 
 export interface BeforeEachProps {
     hedgePool: PoolsharkHedgePool;
     hedgePoolFactory: PoolsharkHedgePoolFactory;
+    hedgePoolUtils: PoolsharkHedgePoolUtils;
     concentratedFactoryMock: ConcentratedFactoryMock;
     concentratedPoolMock: ConcentratedPoolMock;
+    tickMathLib: TickMath;
+    dydxMathLib: DyDxMath;
+    fullPrecisionMathLib: FullPrecisionMath;
+    ticksLib: Ticks;
+    positionsLib: Positions;
     tokenA: Token20;
     tokenB: Token20;
     token0: Token20;
@@ -46,8 +52,14 @@ export class GetBeforeEach {
     public retrieveProps(): BeforeEachProps {
         let hedgePool: PoolsharkHedgePool;
         let hedgePoolFactory: PoolsharkHedgePoolFactory;
+        let hedgePoolUtils: PoolsharkHedgePoolUtils;
         let concentratedFactoryMock: ConcentratedFactoryMock;
         let concentratedPoolMock: ConcentratedPoolMock;
+        let tickMathLib: TickMath;
+        let dydxMathLib: DyDxMath;
+        let fullPrecisionMathLib: FullPrecisionMath;
+        let ticksLib: Ticks;
+        let positionsLib: Positions;
         let tokenA: Token20;
         let tokenB: Token20;
         let token0: Token20;
@@ -61,8 +73,14 @@ export class GetBeforeEach {
         return {
             hedgePool,
             hedgePoolFactory,
+            hedgePoolUtils,
             concentratedFactoryMock,
             concentratedPoolMock,
+            tickMathLib,
+            dydxMathLib,
+            fullPrecisionMathLib,
+            ticksLib,
+            positionsLib,
             tokenA,
             tokenB,
             token0,
