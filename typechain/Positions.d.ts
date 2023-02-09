@@ -21,17 +21,42 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint24,int24,uint16,int24,uint32,uint32,uint160)))": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "getMaxLiquidity",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "validate",
+    values: [
+      {
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        state: {
+          unlocked: BigNumberish;
+          swapFee: BigNumberish;
+          tickSpread: BigNumberish;
+          twapLength: BigNumberish;
+          latestTick: BigNumberish;
+          lastBlockNumber: BigNumberish;
+          accumEpoch: BigNumberish;
+          latestPrice: BigNumberish;
+        };
+      }
+    ]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "getMaxLiquidity",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "validate", data: BytesLike): Result;
 
   events: {};
 }
@@ -84,6 +109,32 @@ export class Positions extends BaseContract {
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
+
+    validate(
+      params: {
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        state: {
+          unlocked: BigNumberish;
+          swapFee: BigNumberish;
+          tickSpread: BigNumberish;
+          twapLength: BigNumberish;
+          latestTick: BigNumberish;
+          lastBlockNumber: BigNumberish;
+          accumEpoch: BigNumberish;
+          latestPrice: BigNumberish;
+        };
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [number, number, number, number, BigNumber, BigNumber] & {
+        liquidityMinted: BigNumber;
+      }
+    >;
   };
 
   getMaxLiquidity(
@@ -91,11 +142,63 @@ export class Positions extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  validate(
+    params: {
+      lowerOld: BigNumberish;
+      lower: BigNumberish;
+      upper: BigNumberish;
+      upperOld: BigNumberish;
+      zeroForOne: boolean;
+      amount: BigNumberish;
+      state: {
+        unlocked: BigNumberish;
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
+      };
+    },
+    overrides?: CallOverrides
+  ): Promise<
+    [number, number, number, number, BigNumber, BigNumber] & {
+      liquidityMinted: BigNumber;
+    }
+  >;
+
   callStatic: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    validate(
+      params: {
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        state: {
+          unlocked: BigNumberish;
+          swapFee: BigNumberish;
+          tickSpread: BigNumberish;
+          twapLength: BigNumberish;
+          latestTick: BigNumberish;
+          lastBlockNumber: BigNumberish;
+          accumEpoch: BigNumberish;
+          latestPrice: BigNumberish;
+        };
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [number, number, number, number, BigNumber, BigNumber] & {
+        liquidityMinted: BigNumber;
+      }
+    >;
   };
 
   filters: {};
@@ -105,11 +208,55 @@ export class Positions extends BaseContract {
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    validate(
+      params: {
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        state: {
+          unlocked: BigNumberish;
+          swapFee: BigNumberish;
+          tickSpread: BigNumberish;
+          twapLength: BigNumberish;
+          latestTick: BigNumberish;
+          lastBlockNumber: BigNumberish;
+          accumEpoch: BigNumberish;
+          latestPrice: BigNumberish;
+        };
+      },
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    validate(
+      params: {
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        state: {
+          unlocked: BigNumberish;
+          swapFee: BigNumberish;
+          tickSpread: BigNumberish;
+          twapLength: BigNumberish;
+          latestTick: BigNumberish;
+          lastBlockNumber: BigNumberish;
+          accumEpoch: BigNumberish;
+          latestPrice: BigNumberish;
+        };
+      },
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

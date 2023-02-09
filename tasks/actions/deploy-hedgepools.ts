@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps';
 import { DEPLOY_HEDGEPOOLS } from '../constants/taskNames';
-import { DeployHedgePools } from '../deploy/utils/deployHedgePools';
+import { DeployHedgePools } from '../deploy/utils/deployCoverPools';
 
 class DeployHedgePoolsTask {
     public deployHedgePools: DeployHedgePools;

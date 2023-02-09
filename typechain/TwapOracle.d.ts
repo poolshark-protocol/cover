@@ -11,7 +11,6 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
-  Overrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -21,54 +20,36 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TwapOracleInterface extends ethers.utils.Interface {
   functions: {
-    "calculateAverageTick(address)": FunctionFragment;
-    "concentratedFactory()": FunctionFragment;
-    "getSqrtPriceLimitX96(bool)": FunctionFragment;
-    "initializePoolObservations(address)": FunctionFragment;
-    "isPoolObservationsEnough(address)": FunctionFragment;
+    "blockTime()": FunctionFragment;
+    "calculateAverageTick(IRangePool,uint16)": FunctionFragment;
+    "isPoolObservationsEnough(address,uint16)": FunctionFragment;
+    "startBlock()": FunctionFragment;
   };
 
+  encodeFunctionData(functionFragment: "blockTime", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "calculateAverageTick",
-    values: [string]
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "concentratedFactory",
+    functionFragment: "isPoolObservationsEnough",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "startBlock",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "getSqrtPriceLimitX96",
-    values: [boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "initializePoolObservations",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isPoolObservationsEnough",
-    values: [string]
-  ): string;
 
+  decodeFunctionResult(functionFragment: "blockTime", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "calculateAverageTick",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "concentratedFactory",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getSqrtPriceLimitX96",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "initializePoolObservations",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "isPoolObservationsEnough",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "startBlock", data: BytesLike): Result;
 
   events: {};
 }
@@ -117,126 +98,92 @@ export class TwapOracle extends BaseContract {
   interface: TwapOracleInterface;
 
   functions: {
+    blockTime(overrides?: CallOverrides): Promise<[number]>;
+
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[number] & { averageTick: number }>;
 
-    concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
-
-    getSqrtPriceLimitX96(
-      zeroForOne: boolean,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    startBlock(overrides?: CallOverrides): Promise<[number]>;
   };
+
+  blockTime(overrides?: CallOverrides): Promise<number>;
 
   calculateAverageTick(
     pool: string,
+    twapLength: BigNumberish,
     overrides?: CallOverrides
   ): Promise<number>;
 
-  concentratedFactory(overrides?: CallOverrides): Promise<string>;
-
-  getSqrtPriceLimitX96(
-    zeroForOne: boolean,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  initializePoolObservations(
-    pool: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   isPoolObservationsEnough(
     pool: string,
+    twapLength: BigNumberish,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  startBlock(overrides?: CallOverrides): Promise<number>;
+
   callStatic: {
+    blockTime(overrides?: CallOverrides): Promise<number>;
+
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<number>;
 
-    concentratedFactory(overrides?: CallOverrides): Promise<string>;
-
-    getSqrtPriceLimitX96(
-      zeroForOne: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number] & { initializable: number; startingTick: number }
-    >;
-
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    startBlock(overrides?: CallOverrides): Promise<number>;
   };
 
   filters: {};
 
   estimateGas: {
+    blockTime(overrides?: CallOverrides): Promise<BigNumber>;
+
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getSqrtPriceLimitX96(
-      zeroForOne: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    startBlock(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
+    blockTime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     calculateAverageTick(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    concentratedFactory(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getSqrtPriceLimitX96(
-      zeroForOne: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    initializePoolObservations(
-      pool: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     isPoolObservationsEnough(
       pool: string,
+      twapLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    startBlock(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

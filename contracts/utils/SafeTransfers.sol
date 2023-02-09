@@ -2,9 +2,10 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../utils/PoolsharkErrors.sol";
+import "../utils/CoverPoolErrors.sol";
+import "hardhat/console.sol";
 
-abstract contract SafeTransfers is PoolsharkTransferErrors {
+abstract contract SafeTransfers is CoverTransferErrors {
     /**
      * @dev Similar to EIP20 transfer, except it handles a False result from `transferFrom` and reverts in that case.
      *      This will revert due to insufficient balance or insufficient allowance.

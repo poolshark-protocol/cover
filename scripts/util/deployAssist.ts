@@ -60,7 +60,6 @@ export class DeployAssist {
 
         // @ts-ignore
         contractName = contractName ?? contractFactory.name.split('__')[0];
-        console.log(hre.props.admin.address);
 
         let contract: Contract;
         if(linkedLibraries) {
@@ -79,7 +78,7 @@ export class DeployAssist {
 
         await contract.deployTransaction.wait(1);
 
-        console.log("Waiting for confirmation");
+        // console.log("Waiting for confirmation");
 
         await this.saveContractDeployment(
             network,
@@ -89,7 +88,7 @@ export class DeployAssist {
             constructorArguments
         );
 
-        console.log("Saving contract deployment");
+        // console.log("Saving contract deployment");
 
         hre.props[objectName] = contract;
         hre.props[objectName]._admin = hre.props.admin;
@@ -141,7 +140,7 @@ export class DeployAssist {
         objectName: string
     ) {
 
-        if (this.isLocal()) {
+        if (!this.isLocal()) {
             await this.contractDeploymentsJson.deleteContractDeploymentsJsonFile(
                 network,
                 objectName

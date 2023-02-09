@@ -21,17 +21,56 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint24,int24,uint16,int24,uint32,uint32,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
+    "rollover(int24,int24,uint256,uint256,int128,int128,bool)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "getMaxLiquidity",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "quote",
+    values: [
+      boolean,
+      BigNumberish,
+      {
+        unlocked: BigNumberish;
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
+      },
+      {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      }
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rollover",
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      boolean
+    ]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "getMaxLiquidity",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "rollover", data: BytesLike): Result;
 
   events: {};
 }
@@ -84,6 +123,49 @@ export class Ticks extends BaseContract {
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        unlocked: BigNumberish;
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+          price: BigNumber;
+          liquidity: BigNumber;
+          feeAmount: BigNumber;
+          input: BigNumber;
+        },
+        BigNumber
+      ] & { amountOut: BigNumber }
+    >;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber]>;
   };
 
   getMaxLiquidity(
@@ -91,11 +173,97 @@ export class Ticks extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  quote(
+    zeroForOne: boolean,
+    priceLimit: BigNumberish,
+    state: {
+      unlocked: BigNumberish;
+      swapFee: BigNumberish;
+      tickSpread: BigNumberish;
+      twapLength: BigNumberish;
+      latestTick: BigNumberish;
+      lastBlockNumber: BigNumberish;
+      accumEpoch: BigNumberish;
+      latestPrice: BigNumberish;
+    },
+    cache: {
+      price: BigNumberish;
+      liquidity: BigNumberish;
+      feeAmount: BigNumberish;
+      input: BigNumberish;
+    },
+    overrides?: CallOverrides
+  ): Promise<
+    [
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        price: BigNumber;
+        liquidity: BigNumber;
+        feeAmount: BigNumber;
+        input: BigNumber;
+      },
+      BigNumber
+    ] & { amountOut: BigNumber }
+  >;
+
+  rollover(
+    nextTickToCross: BigNumberish,
+    nextTickToAccum: BigNumberish,
+    currentPrice: BigNumberish,
+    currentLiquidity: BigNumberish,
+    amountInDelta: BigNumberish,
+    amountOutDelta: BigNumberish,
+    isPool0: boolean,
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, BigNumber]>;
+
   callStatic: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        unlocked: BigNumberish;
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+          price: BigNumber;
+          liquidity: BigNumber;
+          feeAmount: BigNumber;
+          input: BigNumber;
+        },
+        BigNumber
+      ] & { amountOut: BigNumber }
+    >;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber]>;
   };
 
   filters: {};
@@ -105,11 +273,77 @@ export class Ticks extends BaseContract {
       tickSpacing: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        unlocked: BigNumberish;
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     getMaxLiquidity(
       tickSpacing: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    quote(
+      zeroForOne: boolean,
+      priceLimit: BigNumberish,
+      state: {
+        unlocked: BigNumberish;
+        swapFee: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        latestTick: BigNumberish;
+        lastBlockNumber: BigNumberish;
+        accumEpoch: BigNumberish;
+        latestPrice: BigNumberish;
+      },
+      cache: {
+        price: BigNumberish;
+        liquidity: BigNumberish;
+        feeAmount: BigNumberish;
+        input: BigNumberish;
+      },
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    rollover(
+      nextTickToCross: BigNumberish,
+      nextTickToAccum: BigNumberish,
+      currentPrice: BigNumberish,
+      currentLiquidity: BigNumberish,
+      amountInDelta: BigNumberish,
+      amountOutDelta: BigNumberish,
+      isPool0: boolean,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };

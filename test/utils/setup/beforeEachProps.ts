@@ -1,20 +1,18 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber } from "ethers";
-import { SUPPORTED_NETWORKS } from "../../../scripts/constants/supportedNetworks";
 import { getNonce } from "../../../tasks/utils";
-import { ConcentratedFactoryMock, ConcentratedPoolMock, DyDxMath, FullPrecisionMath, PoolsharkHedgePool, PoolsharkHedgePoolFactory, PoolsharkHedgePoolUtils, Positions, TickMath, Ticks, Token20 } from "../../../typechain";
+import { RangeFactoryMock, RangePoolMock, DyDxMath, FullPrecisionMath, CoverPool, CoverPoolFactory, Positions, TickMath, Ticks, Token20, TwapOracle } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
 
 export interface BeforeEachProps {
-    hedgePool: PoolsharkHedgePool;
-    hedgePoolFactory: PoolsharkHedgePoolFactory;
-    hedgePoolUtils: PoolsharkHedgePoolUtils;
-    concentratedFactoryMock: ConcentratedFactoryMock;
-    concentratedPoolMock: ConcentratedPoolMock;
+    coverPool: CoverPool;
+    coverPoolFactory: CoverPoolFactory;
+    rangeFactoryMock: RangeFactoryMock;
+    rangePoolMock: RangePoolMock;
     tickMathLib: TickMath;
     dydxMathLib: DyDxMath;
     fullPrecisionMathLib: FullPrecisionMath;
     ticksLib: Ticks;
+    twapOracleLib: TwapOracle;
     positionsLib: Positions;
     tokenA: Token20;
     tokenB: Token20;
@@ -46,19 +44,19 @@ export class GetBeforeEach {
             hre.carol       = signers[2];
         }
         hre.nonce = await getNonce(hre, hre.props.alice.address);
-        this.nonce = await this.initialSetup.initialHedgePoolSetup();
+        this.nonce = await this.initialSetup.initialCoverPoolSetup();
     };
 
     public retrieveProps(): BeforeEachProps {
-        let hedgePool: PoolsharkHedgePool;
-        let hedgePoolFactory: PoolsharkHedgePoolFactory;
-        let hedgePoolUtils: PoolsharkHedgePoolUtils;
-        let concentratedFactoryMock: ConcentratedFactoryMock;
-        let concentratedPoolMock: ConcentratedPoolMock;
+        let coverPool: CoverPool;
+        let coverPoolFactory: CoverPoolFactory;
+        let rangeFactoryMock: RangeFactoryMock;
+        let rangePoolMock: RangePoolMock;
         let tickMathLib: TickMath;
         let dydxMathLib: DyDxMath;
         let fullPrecisionMathLib: FullPrecisionMath;
         let ticksLib: Ticks;
+        let twapOracleLib: TwapOracle;
         let positionsLib: Positions;
         let tokenA: Token20;
         let tokenB: Token20;
@@ -71,15 +69,15 @@ export class GetBeforeEach {
         let carol: SignerWithAddress;
 
         return {
-            hedgePool,
-            hedgePoolFactory,
-            hedgePoolUtils,
-            concentratedFactoryMock,
-            concentratedPoolMock,
+            coverPool,
+            coverPoolFactory,
+            rangeFactoryMock,
+            rangePoolMock,
             tickMathLib,
             dydxMathLib,
             fullPrecisionMathLib,
             ticksLib,
+            twapOracleLib,
             positionsLib,
             tokenA,
             tokenB,

@@ -6,19 +6,20 @@ type Token @entity {
     decimals: BigInt!
 }
 
-type HedgePool @entity {
+type CoverPool @entity {
     # poolAddress
     id: ID!
     factory: Bytes!
     token0: Token!
     token1: Token!
     inputPool: Bytes!
+    tickSpread: BigInt!
 }
 
 type Position @entity {
     # poolAddress + owner + lower + upper
     id: ID!
-    pool: HedgePool!
+    pool: CoverPool!
     txnHash: Bytes!
     createdBy: Bytes!
     createdAtTimestamp: BigInt!

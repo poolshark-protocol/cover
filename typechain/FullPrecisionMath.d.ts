@@ -20,10 +20,15 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface FullPrecisionMathInterface extends ethers.utils.Interface {
   functions: {
+    "divRoundingUp(uint256,uint256)": FunctionFragment;
     "mulDiv(uint256,uint256,uint256)": FunctionFragment;
     "mulDivRoundingUp(uint256,uint256,uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "divRoundingUp",
+    values: [BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "mulDiv",
     values: [BigNumberish, BigNumberish, BigNumberish]
@@ -33,6 +38,10 @@ interface FullPrecisionMathInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "divRoundingUp",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "mulDiv", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "mulDivRoundingUp",
@@ -86,6 +95,12 @@ export class FullPrecisionMath extends BaseContract {
   interface: FullPrecisionMathInterface;
 
   functions: {
+    divRoundingUp(
+      x: BigNumberish,
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { z: BigNumber }>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -100,6 +115,12 @@ export class FullPrecisionMath extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { result: BigNumber }>;
   };
+
+  divRoundingUp(
+    x: BigNumberish,
+    y: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   mulDiv(
     a: BigNumberish,
@@ -116,6 +137,12 @@ export class FullPrecisionMath extends BaseContract {
   ): Promise<BigNumber>;
 
   callStatic: {
+    divRoundingUp(
+      x: BigNumberish,
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -134,6 +161,12 @@ export class FullPrecisionMath extends BaseContract {
   filters: {};
 
   estimateGas: {
+    divRoundingUp(
+      x: BigNumberish,
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,
@@ -150,6 +183,12 @@ export class FullPrecisionMath extends BaseContract {
   };
 
   populateTransaction: {
+    divRoundingUp(
+      x: BigNumberish,
+      y: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     mulDiv(
       a: BigNumberish,
       b: BigNumberish,

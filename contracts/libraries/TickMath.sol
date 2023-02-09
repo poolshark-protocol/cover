@@ -10,12 +10,13 @@ library TickMath {
     /// @dev The maximum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**128 - 1.
     int24 internal constant MAX_TICK = -MIN_TICK;
     /// @dev The minimum value that can be returned from #getSqrtRatioAtTick - equivalent to getSqrtRatioAtTick(MIN_TICK).
-    uint160 internal constant MIN_SQRT_RATIO = 4294967296;
+    uint160 internal constant MIN_SQRT_RATIO = 4295128739;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick - equivalent to getSqrtRatioAtTick(MAX_TICK).
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
     error TickOutOfBounds();
     error PriceOutOfBounds(); 
+    error WaitUntilEnoughObservations();
 
     function getSqrtRatioAtTick(int24 tick) external pure returns (uint160 getSqrtPriceX96) {
         return _getSqrtRatioAtTick(tick);
@@ -64,7 +65,7 @@ library TickMath {
     }
 
     function validatePrice(uint160 price) external pure {
-        if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert PriceOutOfBounds();
+        if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) { revert PriceOutOfBounds();}
     }
 
     /// @notice Calculates the greatest tick value such that getRatioAtTick(tick) <= ratio.
@@ -78,7 +79,7 @@ library TickMath {
         uint256 ratio = uint256(sqrtPriceX96) << 32;
 
         uint256 r = ratio;
-        uint256 msb;
+        uint256 msb = 0;
 
         assembly {
             let f := shl(7, gt(r, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
@@ -119,102 +120,101 @@ library TickMath {
             let f := gt(r, 0x1)
             msb := or(msb, f)
         }
-        unchecked {
-            if (msb >= 128) r = ratio >> (msb - 127);
-            else r = ratio << (127 - msb);
 
-            int256 log_2 = (int256(msb) - 128) << 64;
+        if (msb >= 128) r = ratio >> (msb - 127);
+        else r = ratio << (127 - msb);
 
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(63, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(62, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(61, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(60, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(59, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(58, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(57, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(56, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(55, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(54, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(53, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(52, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(51, f))
-                r := shr(f, r)
-            }
-            assembly {
-                r := shr(127, mul(r, r))
-                let f := shr(128, r)
-                log_2 := or(log_2, shl(50, f))
-            }
+        int256 log_2 = (int256(msb) - 128) << 64;
 
-            int256 log_sqrt10001 = log_2 * 255738958999603826347141; // 128.128 number.
-
-            int24 tickLow = int24((log_sqrt10001 - 3402992956809132418596140100660247210) >> 128);
-            int24 tickHi = int24((log_sqrt10001 + 291339464771989622907027621153398088495) >> 128);
-
-            tick = tickLow == tickHi ? tickLow : _getSqrtRatioAtTick(tickHi) <= sqrtPriceX96 ? tickHi : tickLow;
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(63, f))
+            r := shr(f, r)
         }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(62, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(61, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(60, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(59, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(58, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(57, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(56, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(55, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(54, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(53, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(52, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(51, f))
+            r := shr(f, r)
+        }
+        assembly {
+            r := shr(127, mul(r, r))
+            let f := shr(128, r)
+            log_2 := or(log_2, shl(50, f))
+        }
+
+        int256 log_sqrt10001 = log_2 * 255738958999603826347141; // 128.128 number
+
+        int24 tickLow = int24((log_sqrt10001 - 3402992956809132418596140100660247210) >> 128);
+        int24 tickHi = int24((log_sqrt10001 + 291339464771989622907027621153398088495) >> 128);
+
+        tick = tickLow == tickHi ? tickLow : _getSqrtRatioAtTick(tickHi) <= sqrtPriceX96 ? tickHi : tickLow;
     }
 }
