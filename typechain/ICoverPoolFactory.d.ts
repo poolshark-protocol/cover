@@ -21,7 +21,6 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
   functions: {
-    "concentratedFactory()": FunctionFragment;
     "createCoverPool(address,address,uint256,uint24,uint16)": FunctionFragment;
     "feeTierTickSpacing(uint256)": FunctionFragment;
     "getCoverPool(address,address,uint256,uint24,uint16)": FunctionFragment;
@@ -29,12 +28,9 @@ interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
     "owner()": FunctionFragment;
     "poolList(uint256)": FunctionFragment;
     "poolMapping(bytes32)": FunctionFragment;
+    "rangePoolFactory()": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "concentratedFactory",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "createCoverPool",
     values: [string, string, BigNumberish, BigNumberish, BigNumberish]
@@ -57,11 +53,11 @@ interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
     functionFragment: "poolMapping",
     values: [BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "rangePoolFactory",
+    values?: undefined
+  ): string;
 
-  decodeFunctionResult(
-    functionFragment: "concentratedFactory",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "createCoverPool",
     data: BytesLike
@@ -79,6 +75,10 @@ interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "poolList", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "poolMapping",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "rangePoolFactory",
     data: BytesLike
   ): Result;
 
@@ -144,8 +144,6 @@ export class ICoverPoolFactory extends BaseContract {
   interface: ICoverPoolFactoryInterface;
 
   functions: {
-    concentratedFactory(overrides?: CallOverrides): Promise<[string]>;
-
     createCoverPool(
       fromToken: string,
       destToken: string,
@@ -176,9 +174,9 @@ export class ICoverPoolFactory extends BaseContract {
     poolList(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
 
     poolMapping(arg0: BytesLike, overrides?: CallOverrides): Promise<[string]>;
-  };
 
-  concentratedFactory(overrides?: CallOverrides): Promise<string>;
+    rangePoolFactory(overrides?: CallOverrides): Promise<[string]>;
+  };
 
   createCoverPool(
     fromToken: string,
@@ -211,9 +209,9 @@ export class ICoverPoolFactory extends BaseContract {
 
   poolMapping(arg0: BytesLike, overrides?: CallOverrides): Promise<string>;
 
-  callStatic: {
-    concentratedFactory(overrides?: CallOverrides): Promise<string>;
+  rangePoolFactory(overrides?: CallOverrides): Promise<string>;
 
+  callStatic: {
     createCoverPool(
       fromToken: string,
       destToken: string,
@@ -244,6 +242,8 @@ export class ICoverPoolFactory extends BaseContract {
     poolList(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
     poolMapping(arg0: BytesLike, overrides?: CallOverrides): Promise<string>;
+
+    rangePoolFactory(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {
@@ -287,8 +287,6 @@ export class ICoverPoolFactory extends BaseContract {
   };
 
   estimateGas: {
-    concentratedFactory(overrides?: CallOverrides): Promise<BigNumber>;
-
     createCoverPool(
       fromToken: string,
       destToken: string,
@@ -319,13 +317,11 @@ export class ICoverPoolFactory extends BaseContract {
     poolList(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
     poolMapping(arg0: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
+
+    rangePoolFactory(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    concentratedFactory(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     createCoverPool(
       fromToken: string,
       destToken: string,
@@ -362,5 +358,7 @@ export class ICoverPoolFactory extends BaseContract {
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    rangePoolFactory(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

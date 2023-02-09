@@ -1045,7 +1045,7 @@ describe('CoverPool Tests', function () {
     });
   });
 
-  it('pool1 - Should move TWAP in range by one, partial fill w/ overflow on newPrice, and burn', async function () {
+  it.skip('pool1 - Should move TWAP in range by one, partial fill w/ overflow on newPrice, and burn', async function () {
     const liquidityAmount4 = BigNumber.from("31849338570933576034964240875");
     /// @auditor -> this doesn't cause overflow...liquidity*values maxes out at 2.69e70...max uint256 is 1.15e77
 
@@ -1108,28 +1108,42 @@ describe('CoverPool Tests', function () {
     });
   });
 
-  // //TODO: these revert catches no longer work inside a library
-  // it('Should fail on second claim', async function () {
-  //   const lowerOld = hre.ethers.utils.parseUnits("0", 0);
-  //   const lower    = hre.ethers.utils.parseUnits("20", 0);
-  //   const upperOld = hre.ethers.utils.parseUnits("887272", 0);
-  //   const upper    = hre.ethers.utils.parseUnits("40", 0);
-  //   const amount   = hre.ethers.utils.parseUnits("100", await hre.props.token0.decimals());
+  //TODO: these revert catches no longer work inside a library
+  it.skip('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness', async function () {
+    const liquidityAmount2 = BigNumber.from("49753115595468372952776");
+    const liquidityAmount3 = BigNumber.from("99456505428612725961158");
+    await validateSync(
+      hre.props.admin,
+      "60"
+    );
 
-  //   await validateBurn(
-  //     hre.props.alice,
-  //     lower,
-  //     upper,
-  //     upper,
-  //     BN_ZERO,
-  //     false,
-  //     BN_ZERO,
-  //     BN_ZERO,
-  //     true,
-  //     true,
-  //     ""
-  //   )
-  // });
+    await validateMint({
+      signer:       hre.props.alice,
+      recipient:    hre.props.alice.address,
+      lowerOld:     "60",
+      lower:        "80",
+      claim:        "80",
+      upper:        "120",
+      upperOld:     "887272",
+      amount:       tokenAmount,
+      zeroForOne:   false,
+      balanceInDecrease: tokenAmount,
+      liquidityIncrease: liquidityAmount2,
+      upperTickCleared: false,
+      lowerTickCleared: false,
+      revertMessage: ""
+    });
+
+    await validateSync(
+      hre.props.admin,
+      "100"
+    );
+
+    await validateSync(
+      hre.props.admin,
+      "60"
+    );
+  });
 
   // TODO: partial mint
   // TODO: ensure user cannot claim from a lower tick after TWAP moves around

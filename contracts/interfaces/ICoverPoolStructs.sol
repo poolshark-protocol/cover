@@ -32,10 +32,13 @@ interface ICoverPoolStructs {
     struct Tick {
         int104  liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
         uint104 liquidityDeltaMinus; // represent LPs for token0 -> token1
+        uint128 liquidityDeltaMinusInactive;
+        //TODO: change to uint since we know in is negative and out is positive
         int88   amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
         int88   amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
         uint64  amountInDeltaCarryPercent;
         uint64  amountOutDeltaCarryPercent;
+        //TODO: wrap amountDeltas in a single struct
     }
  
     // balance needs to be immediately transferred to the position owner

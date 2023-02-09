@@ -54,19 +54,6 @@ const _abi = [
     type: "event",
   },
   {
-    inputs: [],
-    name: "concentratedFactory",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "address",
@@ -217,6 +204,19 @@ const _abi = [
       },
     ],
     name: "poolMapping",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "rangePoolFactory",
     outputs: [
       {
         internalType: "address",

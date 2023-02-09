@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-/// @notice Trident concentrated Liquidity pool mint callback receiver.
 interface IPositionManager {
     function mintCallback(
         address token0,

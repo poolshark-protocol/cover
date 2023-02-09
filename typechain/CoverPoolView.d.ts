@@ -201,9 +201,18 @@ export class CoverPoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
+        liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
         amountInDeltaCarryPercent: BigNumber;
@@ -215,9 +224,18 @@ export class CoverPoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
+        liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
         amountInDeltaCarryPercent: BigNumber;
@@ -308,9 +326,18 @@ export class CoverPoolView extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
+      liquidityDeltaMinusInactive: BigNumber;
       amountInDelta: BigNumber;
       amountOutDelta: BigNumber;
       amountInDeltaCarryPercent: BigNumber;
@@ -322,9 +349,18 @@ export class CoverPoolView extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       liquidityDelta: BigNumber;
       liquidityDeltaMinus: BigNumber;
+      liquidityDeltaMinusInactive: BigNumber;
       amountInDelta: BigNumber;
       amountOutDelta: BigNumber;
       amountInDeltaCarryPercent: BigNumber;
@@ -415,9 +451,18 @@ export class CoverPoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
+        liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
         amountInDeltaCarryPercent: BigNumber;
@@ -429,9 +474,18 @@ export class CoverPoolView extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         liquidityDelta: BigNumber;
         liquidityDeltaMinus: BigNumber;
+        liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
         amountInDeltaCarryPercent: BigNumber;

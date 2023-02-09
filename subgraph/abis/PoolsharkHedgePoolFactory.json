@@ -3,7 +3,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_concentratedFactory",
+          "name": "_rangePoolFactory",
           "type": "address"
         },
         {
@@ -69,7 +69,7 @@
     },
     {
       "inputs": [],
-      "name": "concentratedFactory",
+      "name": "rangePoolFactory",
       "outputs": [
         {
           "internalType": "address",

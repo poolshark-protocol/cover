@@ -40,7 +40,7 @@
             ],
             "created": "2023-01-15T22:41:02.715Z"
         },
-        "concentratedFactoryMock": {
+        "rangePoolFactoryMock": {
             "contractName": "ConcentratedFactoryMock",
             "contractAddress": "0x50a012e4473b9b856eEF172C8ef1d54f34972e8E",
             "constructorArguments": [

@@ -6,6 +6,7 @@ import "../interfaces/ICoverPoolStructs.sol";
 import "../utils/CoverPoolErrors.sol";
 import "./FullPrecisionMath.sol";
 import "./DyDxMath.sol";
+import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks
@@ -81,7 +82,7 @@ library Ticks
             } else {
                 // Swap & cross the tick.
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice);
-                cache.price = nextTickPrice;
+                cache.price = nextPrice;
                 cache.input -= maxDy;
             }
         }
@@ -153,13 +154,13 @@ library Ticks
             if (isPool0) {
                 ticks[lower] = ICoverPoolStructs.Tick(
                     -int104(amount),
-                    amount,
+                    amount,0,
                     0,0,0,0
                 );
             } else {
                 ticks[lower] = ICoverPoolStructs.Tick(
                     int104(amount),
-                    0,
+                    0,0,
                     0,0,0,0
                 );
             }
@@ -196,13 +197,13 @@ library Ticks
             if (isPool0) {
                 ticks[upper] = ICoverPoolStructs.Tick(
                     int104(amount),
-                    0,
+                    0,0,
                     0,0,0,0
                 );
             } else {
                 ticks[upper] = ICoverPoolStructs.Tick(
                     -int104(amount),
-                    amount,
+                    amount,0,
                     0,0,0,0
                 );
             }
@@ -307,19 +308,26 @@ library Ticks
         int128 amountOutDelta,
         bool removeLiquidity,
         bool updateAccumDeltas
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
         //update fee growth
         tickNode.accumEpochLast = accumEpoch;
 
         if(crossTick.amountInDeltaCarryPercent > 0){
-            //TODO: will this work with negatives?
-            int104 amountInDeltaCarry = int64(crossTick.amountInDeltaCarryPercent) 
-                                            * crossTick.amountInDelta / 1e18;
-            crossTick.amountInDelta -= int88(amountInDeltaCarry);
-            crossTick.amountInDeltaCarryPercent = 0;
-            amountInDelta += amountInDeltaCarry;
+
+            /// @dev - assume amountInDelta is always <= 0
+            // uint256 amountInDeltaCarry = uint256(uint88(crossTick.amountInDelta));
+            uint256 amountInDeltaCarry = (uint256(crossTick.amountInDeltaCarryPercent)
+                                            * uint256(uint88(crossTick.amountInDelta)) / 1e18);
+            console.log(amountInDeltaCarry);
+            console.logInt(crossTick.amountInDelta);
+            console.log(crossTick.amountInDeltaCarryPercent);
+            console.logInt(amountInDelta);
+            revert NotImplementedYet();
+            // crossTick.amountInDelta -= int88(amountInDeltaCarry);
+            // crossTick.amountInDeltaCarryPercent = 0;
+            // amountInDelta += amountInDeltaCarry;
             /// @dev - amountOutDelta cannot exist without amountInDelta
             if(crossTick.amountOutDeltaCarryPercent > 0){
                 //TODO: will this work with negatives?

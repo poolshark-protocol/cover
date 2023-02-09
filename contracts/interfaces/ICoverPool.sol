@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "./ICoverPoolStructs.sol";
 
-/// @notice Trident Concentrated Liquidity Pool interface.
 interface ICoverPool is  ICoverPoolStructs {
 
     function collect(

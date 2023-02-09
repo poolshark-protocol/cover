@@ -16,10 +16,10 @@ contract CoverPoolFactory is
     error WaitUntilEnoughObservations();
     
     constructor(
-        address _concentratedFactory
+        address _rangePoolFactory
     ) {
         owner = msg.sender;
-        concentratedFactory = _concentratedFactory;
+        rangePoolFactory = _rangePoolFactory;
     }
 
     function createCoverPool(
@@ -29,15 +29,16 @@ contract CoverPoolFactory is
         uint24  tickSpread,
         uint16  twapLength
     ) external override returns (address pool) {
-        
+        // validate input value range
+        //TODO: check twapLength > 5
         // validate token pair
         if (fromToken == destToken) {
             revert IdenticalTokenAddresses();
         }
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
-        if(ERC20(token0).decimals() == 0) revert InvalidTokenDecimals();
-        if(ERC20(token1).decimals() == 0) revert InvalidTokenDecimals();
+        if(ERC20(fromToken).decimals() == 0) revert InvalidTokenDecimals();
+        if(ERC20(destToken).decimals() == 0) revert InvalidTokenDecimals();
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread, twapLength));
@@ -46,7 +47,7 @@ contract CoverPoolFactory is
         }
 
         // check fee tier exists and get tick spacing
-        int24 tickSpacing = IRangeFactory(concentratedFactory).feeTierTickSpacing(uint24(swapFee));
+        int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(uint24(swapFee));
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
         }
@@ -93,6 +94,6 @@ contract CoverPoolFactory is
         address destToken,
         uint256 swapFee
     ) internal view returns (address) {
-        return IRangeFactory(concentratedFactory).getPool(fromToken, destToken, uint24(swapFee));
+        return IRangeFactory(rangePoolFactory).getPool(fromToken, destToken, uint24(swapFee));
     }
 }

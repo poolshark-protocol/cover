@@ -101,6 +101,12 @@ const _abi = [
       },
       {
         indexed: false,
+        internalType: "int24",
+        name: "claim",
+        type: "int24",
+      },
+      {
+        indexed: false,
         internalType: "bool",
         name: "zeroForOne",
         type: "bool",

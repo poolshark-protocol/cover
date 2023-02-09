@@ -10,7 +10,6 @@ import "./DyDxMath.sol";
 /// @notice Position management library for ranged liquidity.
 library Positions
 {
-    error NotEnoughPositionLiquidity();
     error InvalidClaimTick();
     error LiquidityOverflow();
     error WrongTickClaimedAt();
@@ -20,6 +19,7 @@ library Positions
     error InvalidPositionAmount();
     error InvalidPositionBoundsOrder();
     error InvalidPositionBoundsTwap();
+    error NotEnoughPositionLiquidity();
     error NotImplementedYet();
 
     uint256 internal constant Q96  = 0x1000000000000000000000000;
@@ -35,7 +35,9 @@ library Positions
         ICoverPoolStructs.ValidateParams memory params
     ) external pure returns (int24, int24, int24, int24, uint128, uint256 liquidityMinted) {
         if (params.lower % int24(params.state.tickSpread) != 0) revert InvalidLowerTick();
+        if (params.lower <= TickMath.MIN_TICK) revert InvalidLowerTick();
         if (params.upper % int24(params.state.tickSpread) != 0) revert InvalidUpperTick();
+        if (params.upper >= TickMath.MAX_TICK) revert InvalidUpperTick();
         if (params.amount == 0) revert InvalidPositionAmount();
         if (params.lower >= params.upper) revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {

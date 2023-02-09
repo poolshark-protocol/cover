@@ -6,7 +6,7 @@ abstract contract ICoverPoolFactory {
     mapping(uint256 => uint256) public feeTierTickSpacing;
 
     address public owner;
-    address public concentratedFactory;
+    address public rangePoolFactory;
     address public libraries;
 
     mapping(bytes32 => address) public poolMapping;

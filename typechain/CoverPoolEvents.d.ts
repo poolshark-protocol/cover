@@ -23,7 +23,7 @@ interface CoverPoolEventsInterface extends ethers.utils.Interface {
   events: {
     "Burn(address,int24,int24,int24,bool,uint128)": EventFragment;
     "Collect(address,uint256,uint256)": EventFragment;
-    "Mint(address,int24,int24,bool,uint128)": EventFragment;
+    "Mint(address,int24,int24,int24,bool,uint128)": EventFragment;
     "PoolCreated(address,address,address,uint24,int24)": EventFragment;
     "Swap(address,address,address,uint256,uint256)": EventFragment;
   };
@@ -55,10 +55,11 @@ export type CollectEvent = TypedEvent<
 >;
 
 export type MintEvent = TypedEvent<
-  [string, number, number, boolean, BigNumber] & {
+  [string, number, number, number, boolean, BigNumber] & {
     owner: string;
     lower: number;
     upper: number;
+    claim: number;
     zeroForOne: boolean;
     liquidityMinted: BigNumber;
   }
@@ -188,18 +189,20 @@ export class CoverPoolEvents extends BaseContract {
       { sender: string; amount0: BigNumber; amount1: BigNumber }
     >;
 
-    "Mint(address,int24,int24,bool,uint128)"(
+    "Mint(address,int24,int24,int24,bool,uint128)"(
       owner?: string | null,
       lower?: BigNumberish | null,
       upper?: BigNumberish | null,
+      claim?: null,
       zeroForOne?: null,
       liquidityMinted?: null
     ): TypedEventFilter<
-      [string, number, number, boolean, BigNumber],
+      [string, number, number, number, boolean, BigNumber],
       {
         owner: string;
         lower: number;
         upper: number;
+        claim: number;
         zeroForOne: boolean;
         liquidityMinted: BigNumber;
       }
@@ -209,14 +212,16 @@ export class CoverPoolEvents extends BaseContract {
       owner?: string | null,
       lower?: BigNumberish | null,
       upper?: BigNumberish | null,
+      claim?: null,
       zeroForOne?: null,
       liquidityMinted?: null
     ): TypedEventFilter<
-      [string, number, number, boolean, BigNumber],
+      [string, number, number, number, boolean, BigNumber],
       {
         owner: string;
         lower: number;
         upper: number;
+        claim: number;
         zeroForOne: boolean;
         liquidityMinted: BigNumber;
       }

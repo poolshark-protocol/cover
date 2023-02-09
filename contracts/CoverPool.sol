@@ -200,6 +200,7 @@ contract CoverPool is
             msg.sender,
             lower,
             upper,
+            claim, //TODO: not sure if needed for subgraph
             zeroForOne,
             uint128(liquidityMinted)
         );
