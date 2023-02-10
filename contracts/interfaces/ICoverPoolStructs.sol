@@ -5,9 +5,9 @@ interface ICoverPoolStructs {
     struct GlobalState {
         uint8  unlocked;
         //TODO: change swapFee to uint16
-        uint24 swapFee;         /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
+        uint16 swapFee;         /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
         //TODO: change to uint16 
-        int24  tickSpread;      /// @dev this is a integer multiple of the inputPool tickSpacing
+        int16  tickSpread;      /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16 twapLength;      /// @dev number of blocks used for TWAP sampling
         int24  latestTick;      /// @dev latest updated inputPool price tick
         //TODO: offset of startBlock
@@ -30,12 +30,12 @@ interface ICoverPoolStructs {
     }
 
     struct Tick {
-        int104  liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
-        uint104 liquidityDeltaMinus; // represent LPs for token0 -> token1
+        int128  liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
+        uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
         //TODO: change to uint since we know in is negative and out is positive
-        int88   amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
-        int88   amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
+        int128   amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
+        int128   amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
         uint64  amountInDeltaCarryPercent;
         uint64  amountOutDeltaCarryPercent;
         //TODO: wrap amountDeltas in a single struct

@@ -66,14 +66,14 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "uint256",
+        internalType: "uint16",
         name: "fee",
-        type: "uint256",
+        type: "uint16",
       },
       {
-        internalType: "uint24",
+        internalType: "int16",
         name: "tickSpread",
-        type: "uint24",
+        type: "int16",
       },
       {
         internalType: "uint16",
@@ -124,14 +124,14 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "uint256",
+        internalType: "uint16",
         name: "fee",
-        type: "uint256",
+        type: "uint16",
       },
       {
-        internalType: "uint24",
+        internalType: "int16",
         name: "tickSpread",
-        type: "uint24",
+        type: "int16",
       },
       {
         internalType: "uint16",

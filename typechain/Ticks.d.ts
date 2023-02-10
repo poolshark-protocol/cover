@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
-    "quote(bool,uint160,(uint8,uint24,int24,uint16,int24,uint32,uint32,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
     "rollover(int24,int24,uint256,uint256,int128,int128,bool)": FunctionFragment;
   };
 

@@ -92,7 +92,7 @@ library Ticks
     //maybe call ticks on msg.sender to get tick
     function _cross(
         ICoverPoolStructs.TickNode memory accumTickNode,
-        int104 liquidityDelta,
+        int128 liquidityDelta,
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
@@ -101,9 +101,9 @@ library Ticks
         nextTickToCross = nextTickToAccum;
 
         if(liquidityDelta > 0) {
-            currentLiquidity += uint128(uint104(liquidityDelta));
+            currentLiquidity += uint128(uint128(liquidityDelta));
         } else {
-            currentLiquidity -= uint128(uint104(-liquidityDelta));
+            currentLiquidity -= uint128(uint128(-liquidityDelta));
         }
         if (zeroForOne) {
             nextTickToAccum = accumTickNode.previousTick;
@@ -121,7 +121,7 @@ library Ticks
         int24 lower,
         int24 upperOld,
         int24 upper,
-        uint104 amount,
+        uint128 amount,
         bool isPool0
     ) public {
         //TODO: doesn't check if upper/lowerOld is greater/less than MAX/MIN_TICK
@@ -143,23 +143,23 @@ library Ticks
             // tick exists
             //TODO: ensure amount < type(int128).max()
             if (isPool0) {
-                ticks[lower].liquidityDelta      -= int104(amount);
+                ticks[lower].liquidityDelta      -= int128(amount);
                 ticks[lower].liquidityDeltaMinus += amount;
             } else {
-                ticks[lower].liquidityDelta      += int104(amount);
+                ticks[lower].liquidityDelta      += int128(amount);
             }
         } else if (lower != TickMath.MIN_TICK) {
             // tick does not exist and we must insert
             //TODO: handle new TWAP being in between lowerOld and lower
             if (isPool0) {
                 ticks[lower] = ICoverPoolStructs.Tick(
-                    -int104(amount),
+                    -int128(amount),
                     amount,0,
                     0,0,0,0
                 );
             } else {
                 ticks[lower] = ICoverPoolStructs.Tick(
-                    int104(amount),
+                    int128(amount),
                     0,0,
                     0,0,0,0
                 );
@@ -188,21 +188,21 @@ library Ticks
         ) {
             // We are adding liquidity to an existing tick.
             if (isPool0) {
-                ticks[upper].liquidityDelta      += int104(amount);
+                ticks[upper].liquidityDelta      += int128(amount);
             } else {
-                ticks[upper].liquidityDelta      -= int104(amount);
+                ticks[upper].liquidityDelta      -= int128(amount);
                 ticks[upper].liquidityDeltaMinus += amount;
             }
         } else if (upper != TickMath.MAX_TICK) {
             if (isPool0) {
                 ticks[upper] = ICoverPoolStructs.Tick(
-                    int104(amount),
+                    int128(amount),
                     0,0,
                     0,0,0,0
                 );
             } else {
                 ticks[upper] = ICoverPoolStructs.Tick(
-                    -int104(amount),
+                    -int128(amount),
                     amount,0,
                     0,0,0,0
                 );
@@ -235,7 +235,7 @@ library Ticks
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         int24 lower,
         int24 upper,
-        uint104 amount,
+        uint128 amount,
         bool isPool0,
         bool removeLower,
         bool removeUpper
@@ -260,10 +260,10 @@ library Ticks
         // }
         if (removeLower) {
             if (isPool0) {
-                ticks[lower].liquidityDelta += int104(amount);
+                ticks[lower].liquidityDelta += int128(amount);
                 ticks[lower].liquidityDeltaMinus -= amount;
             } else {
-                ticks[lower].liquidityDelta -= int104(amount);
+                ticks[lower].liquidityDelta -= int128(amount);
             }
         }
 
@@ -287,9 +287,9 @@ library Ticks
         //TODO: keep unchecked block?
         if (removeUpper) {
             if (isPool0) {
-                ticks[upper].liquidityDelta -= int104(amount);
+                ticks[upper].liquidityDelta -= int128(amount);
             } else {
-                ticks[upper].liquidityDelta += int104(amount);
+                ticks[upper].liquidityDelta += int128(amount);
                 ticks[upper].liquidityDeltaMinus -= amount;
             }
         }
@@ -319,7 +319,7 @@ library Ticks
             /// @dev - assume amountInDelta is always <= 0
             // uint256 amountInDeltaCarry = uint256(uint88(crossTick.amountInDelta));
             uint256 amountInDeltaCarry = (uint256(crossTick.amountInDeltaCarryPercent)
-                                            * uint256(uint88(crossTick.amountInDelta)) / 1e18);
+                                            * uint256(uint128(crossTick.amountInDelta)) / 1e18);
             console.log(amountInDeltaCarry);
             console.logInt(crossTick.amountInDelta);
             console.log(crossTick.amountInDeltaCarryPercent);
@@ -341,7 +341,7 @@ library Ticks
 
         if (currentLiquidity > 0) {
 
-            int256 liquidityDeltaPlus = crossTick.liquidityDelta + int104(crossTick.liquidityDeltaMinus);
+            int256 liquidityDeltaPlus = crossTick.liquidityDelta + int128(crossTick.liquidityDeltaMinus);
             if (liquidityDeltaPlus > 0 && currentLiquidity > uint256(liquidityDeltaPlus)) {
                 /// @dev - amount deltas get diluted when liquidity is added
                 int256 liquidityPercentIncrease = int256(liquidityDeltaPlus * 1e18 / int256(int128(currentLiquidity)));
@@ -677,7 +677,7 @@ library Ticks
                         );
                     }
                 }
-                ticks0[cache.stopTick0].liquidityDelta += int104(ticks0[cache.stopTick0].liquidityDeltaMinus);
+                ticks0[cache.stopTick0].liquidityDelta += int128(ticks0[cache.stopTick0].liquidityDeltaMinus);
                 ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
                 break;
             }
@@ -789,7 +789,7 @@ library Ticks
                 pool0.liquidity = 0;
                 pool1.liquidity = pool1.liquidity;
             }
-            ticks1[cache.stopTick1].liquidityDelta += int104(ticks1[cache.stopTick1].liquidityDeltaMinus);
+            ticks1[cache.stopTick1].liquidityDelta += int128(ticks1[cache.stopTick1].liquidityDeltaMinus);
             ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
         }
         //TODO: remove liquidity from all ticks crossed

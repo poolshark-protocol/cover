@@ -42,8 +42,8 @@ contract CoverPool is
 
     constructor(
         address _inputPool,
-        uint24  _swapFee, 
-        int24   _tickSpread,
+        uint16  _swapFee, 
+        int16   _tickSpread,
         uint16  _twapLength
     ) {
         // validate swap fee

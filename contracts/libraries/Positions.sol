@@ -75,7 +75,7 @@ library Positions
             }
         }
 
-        if (liquidityMinted > uint104(type(int104).max)) revert LiquidityOverflow();
+        if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
         if (params.lower == params.upper) revert InvalidPositionBoundsTwap();
 
         return (params.lowerOld, params.lower, params.upper, params.upperOld, params.amount, liquidityMinted);
@@ -119,7 +119,7 @@ library Positions
             params.lower,
             params.upperOld,
             params.upper,
-            uint104(params.amount),
+            uint128(params.amount),
             params.zeroForOne
         );
 
@@ -143,13 +143,11 @@ library Positions
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper)
         });
-        /// call if claim != lower and liquidity being added
-        /// initialize new position
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
         } else {
-            /// validate user can remove from position using this function
+            /// @dev - validate user can remove from position using this function
             if (params.zeroForOne ? state.latestTick < params.upper || tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
                                   : state.latestTick > params.lower || tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
             ) {
@@ -162,7 +160,7 @@ library Positions
             tickNodes,
             params.lower,
             params.upper,
-            uint104(params.amount),
+            uint128(params.amount),
             params.zeroForOne,
             true,
             true
@@ -371,7 +369,7 @@ library Positions
                 tickNodes,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
-                uint104(uint128(params.amount)),
+                uint128(uint128(params.amount)),
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper

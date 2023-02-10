@@ -13,7 +13,7 @@ contract CoverPoolFactory is
     error InvalidTokenDecimals();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
-    error WaitUntilEnoughObservations();
+    error InvalidTickSpread();
     
     constructor(
         address _rangePoolFactory
@@ -25,8 +25,8 @@ contract CoverPoolFactory is
     function createCoverPool(
         address fromToken,
         address destToken,
-        uint256 swapFee,
-        uint24  tickSpread,
+        uint16  swapFee,
+        int16   tickSpread,
         uint16  twapLength
     ) external override returns (address pool) {
         // validate input value range
@@ -50,6 +50,8 @@ contract CoverPoolFactory is
         int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(uint24(swapFee));
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
+        } else if (tickSpread <= tickSpacing) {
+            revert InvalidTickSpread();
         }
 
         address inputPool = getInputPool(token0, token1, swapFee);
@@ -58,8 +60,8 @@ contract CoverPoolFactory is
         pool =  address(
                     new CoverPool(
                         inputPool,
-                        uint24(swapFee),
-                        int24(tickSpread),
+                        uint16(swapFee),
+                        int16(tickSpread),
                         twapLength
                     )
                 );
@@ -74,8 +76,8 @@ contract CoverPoolFactory is
     function getCoverPool(
         address fromToken,
         address destToken,
-        uint256 fee,
-        uint24  tickSpread,
+        uint16  fee,
+        int16   tickSpread,
         uint16  twapLength
     ) public override view returns (address) {
 
