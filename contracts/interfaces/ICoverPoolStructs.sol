@@ -13,6 +13,7 @@ interface ICoverPoolStructs {
         //TODO: offset of startBlock
         uint32 lastBlockNumber; /// @dev last block checked for reference price update
         uint32 accumEpoch;
+        uint128 liquidityGlobal;
         uint160 latestPrice;      /// @dev price of latestTick
     }
     

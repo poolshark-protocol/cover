@@ -138,6 +138,11 @@ const _abi = [
         type: "uint32",
       },
       {
+        internalType: "uint128",
+        name: "liquidityGlobal",
+        type: "uint128",
+      },
+      {
         internalType: "uint160",
         name: "latestPrice",
         type: "uint160",

@@ -223,16 +223,16 @@ export async function validateMint(
     if (!collectRevertMessage){
         const txn = await hre.props.coverPool.connect(params.signer).collect(
             lower,
-            upper,
             claim,
+            upper,
             zeroForOne
         );
         await txn.wait();
     } else {
         await expect(hre.props.coverPool.connect(params.signer).collect(
             lower,
-            upper,
             claim,
+            upper,
             zeroForOne
         )).to.be.revertedWith(collectRevertMessage);
     }
@@ -277,9 +277,9 @@ export async function validateMint(
         const txn = await hre.props.coverPool.connect(params.signer).mint(
             lowerOld,
             lower,
-            upperOld,
-            upper,
             claim,
+            upper,
+            upperOld,
             amountDesired,
             zeroForOne
           );
@@ -288,9 +288,9 @@ export async function validateMint(
         await expect(hre.props.coverPool.connect(params.signer).mint(
             lowerOld,
             lower,
-            upperOld,
-            upper,
             claim,
+            upper,
+            upperOld,
             amountDesired,
             zeroForOne
         )).to.be.revertedWith(revertMessage);
@@ -421,8 +421,8 @@ export async function validateBurn(
     if (revertMessage == ""){
         const burnTxn = await hre.props.coverPool.connect(signer).burn(
             lower,
-            upper,
             claim,
+            upper,
             zeroForOne,
             liquidityAmount
           );
@@ -430,16 +430,16 @@ export async function validateBurn(
         //TODO: expect balances to remain unchanged until collect
         const collectTxn = await hre.props.coverPool.connect(signer).collect(
             lower,
-            upper,
             claim,
+            upper,
             zeroForOne
         );
         await collectTxn.wait();
     } else {
         await expect(hre.props.coverPool.connect(signer).burn(
             lower,
-            upper,
             claim,
+            upper,
             zeroForOne,
             liquidityAmount
           )).to.be.revertedWith(revertMessage);

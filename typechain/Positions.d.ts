@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
     "getMaxLiquidity(int24)": FunctionFragment;
-    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint160)))": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint128,uint160)))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -46,6 +46,7 @@ interface PositionsInterface extends ethers.utils.Interface {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       }
@@ -126,6 +127,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },
@@ -158,6 +160,7 @@ export class Positions extends BaseContract {
         latestTick: BigNumberish;
         lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
       };
     },
@@ -190,6 +193,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },
@@ -225,6 +229,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },
@@ -254,6 +259,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },

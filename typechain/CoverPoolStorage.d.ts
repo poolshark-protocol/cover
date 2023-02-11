@@ -124,7 +124,17 @@ export class CoverPoolStorage extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number, number, BigNumber] & {
+      [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        BigNumber,
+        BigNumber
+      ] & {
         unlocked: number;
         swapFee: number;
         tickSpread: number;
@@ -132,6 +142,7 @@ export class CoverPoolStorage extends BaseContract {
         latestTick: number;
         lastBlockNumber: number;
         accumEpoch: number;
+        liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
       }
     >;
@@ -249,7 +260,17 @@ export class CoverPoolStorage extends BaseContract {
   globalState(
     overrides?: CallOverrides
   ): Promise<
-    [number, number, number, number, number, number, number, BigNumber] & {
+    [
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      BigNumber,
+      BigNumber
+    ] & {
       unlocked: number;
       swapFee: number;
       tickSpread: number;
@@ -257,6 +278,7 @@ export class CoverPoolStorage extends BaseContract {
       latestTick: number;
       lastBlockNumber: number;
       accumEpoch: number;
+      liquidityGlobal: BigNumber;
       latestPrice: BigNumber;
     }
   >;
@@ -374,7 +396,17 @@ export class CoverPoolStorage extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number, number, BigNumber] & {
+      [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        BigNumber,
+        BigNumber
+      ] & {
         unlocked: number;
         swapFee: number;
         tickSpread: number;
@@ -382,6 +414,7 @@ export class CoverPoolStorage extends BaseContract {
         latestTick: number;
         lastBlockNumber: number;
         accumEpoch: number;
+        liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
       }
     >;

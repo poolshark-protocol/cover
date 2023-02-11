@@ -11,10 +11,12 @@ import "hardhat/console.sol";
 /// @notice Tick management library for ranged liquidity.
 library Ticks
 {
+    //TODO: alphabetize errors
     error NotImplementedYet();
     error InvalidLatestTick();
     error InfiniteTickLoop0(int24);
     error InfiniteTickLoop1(int24);
+    error LiquidityOverflow();
     error WrongTickOrder();
     error WrongTickLowerRange();
     error WrongTickUpperRange();
@@ -117,48 +119,45 @@ library Ticks
     function insert(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.GlobalState memory state,
         int24 lowerOld,
         int24 lower,
         int24 upperOld,
         int24 upper,
         uint128 amount,
         bool isPool0
-    ) public {
-        //TODO: doesn't check if upper/lowerOld is greater/less than MAX/MIN_TICK
-        if (lower >= upper || lowerOld >= upperOld) {
-            revert WrongTickOrder();
-        }
-        if (TickMath.MIN_TICK > lower) {
-            revert WrongTickLowerRange();
-        }
-        if (upper > TickMath.MAX_TICK) {
-            revert WrongTickUpperRange();
-        }
-        //TODO: merge Tick and TickData -> ticks0 and ticks1
-        //TODO: handle lower = latestTick
-        if (ticks[lower].liquidityDelta != 0 
-            || ticks[lower].liquidityDeltaMinus != 0
-            || ticks[lower].amountInDelta != 0
+    ) public returns (ICoverPoolStructs.GlobalState memory) {
+        /// @auditor - validation of ticks is in Positions.validate
+        // load into memory to reduce storage reads/writes
+        ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
+        ICoverPoolStructs.Tick memory tickLower = ticks[lower];
+        if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
+        if (type(uint128).max - state.liquidityGlobal < amount) revert LiquidityOverflow();
+        /// @auditor lower or upper = latestTick -> should not be possible
+        /// @auditor - should we check overflow/underflow of lower and upper ticks?
+        /// @auditor - we need to be able to deprecate pools if necessary; so not much reason to do overflow/underflow check
+        if (tickLower.liquidityDelta != 0 
+            || tickLower.liquidityDeltaMinus != 0
+            || tickLower.liquidityDeltaMinusInactive != 0
+            || lower == TickMath.MIN_TICK
         ) {
-            // tick exists
-            //TODO: ensure amount < type(int128).max()
             if (isPool0) {
-                ticks[lower].liquidityDelta      -= int128(amount);
-                ticks[lower].liquidityDeltaMinus += amount;
+                tickLower.liquidityDelta      -= int128(amount);
+                tickLower.liquidityDeltaMinus += amount;
             } else {
-                ticks[lower].liquidityDelta      += int128(amount);
+                tickLower.liquidityDelta      += int128(amount);
             }
         } else if (lower != TickMath.MIN_TICK) {
-            // tick does not exist and we must insert
-            //TODO: handle new TWAP being in between lowerOld and lower
+            /// @auditor new latestTick being in between lowerOld and lower handled by Positions.validate()
+            // insert new tick
             if (isPool0) {
-                ticks[lower] = ICoverPoolStructs.Tick(
+                tickLower = ICoverPoolStructs.Tick(
                     -int128(amount),
                     amount,0,
                     0,0,0,0
                 );
             } else {
-                ticks[lower] = ICoverPoolStructs.Tick(
+                tickLower = ICoverPoolStructs.Tick(
                     int128(amount),
                     0,0,
                     0,0,0,0
@@ -169,7 +168,7 @@ library Ticks
         if(tickNodes[lower].nextTick == tickNodes[lower].previousTick && lower != TickMath.MIN_TICK) {
             int24 oldNextTick = tickNodes[lowerOld].nextTick;
             if (upper < oldNextTick) { oldNextTick = upper; }
-            /// @dev - don't set previous tick so upper can be initialized
+            /// @auditor - don't set previous tick so upper can be initialized
             else { tickNodes[oldNextTick].previousTick = lower; }
 
             if (lowerOld >= lower || lower >= oldNextTick) {
@@ -182,26 +181,26 @@ library Ticks
             );
             tickNodes[lowerOld].nextTick = lower;
         }
-        if (ticks[upper].liquidityDelta != 0 
-            || ticks[upper].liquidityDeltaMinus != 0
-            || ticks[lower].amountInDelta != 0
+        if (tickUpper.liquidityDelta != 0 
+            || tickUpper.liquidityDeltaMinus != 0
+            || tickUpper.amountInDelta != 0
+            || upper == TickMath.MAX_TICK
         ) {
-            // We are adding liquidity to an existing tick.
             if (isPool0) {
-                ticks[upper].liquidityDelta      += int128(amount);
+                tickUpper.liquidityDelta      += int128(amount);
             } else {
-                ticks[upper].liquidityDelta      -= int128(amount);
-                ticks[upper].liquidityDeltaMinus += amount;
+                tickUpper.liquidityDelta      -= int128(amount);
+                tickUpper.liquidityDeltaMinus += amount;
             }
         } else if (upper != TickMath.MAX_TICK) {
             if (isPool0) {
-                ticks[upper] = ICoverPoolStructs.Tick(
+                tickUpper = ICoverPoolStructs.Tick(
                     int128(amount),
                     0,0,
                     0,0,0,0
                 );
             } else {
-                ticks[upper] = ICoverPoolStructs.Tick(
+                tickUpper = ICoverPoolStructs.Tick(
                     -int128(amount),
                     amount,0,
                     0,0,0,0
@@ -228,11 +227,15 @@ library Ticks
             tickNodes[oldPrevTick].nextTick = upper;
             tickNodes[upperOld].previousTick = upper;
         }
+        ticks[lower] = tickLower;
+        ticks[upper] = tickUpper;
+        return state;
     }
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.GlobalState memory state,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -241,10 +244,73 @@ library Ticks
         bool removeUpper
     ) external {
         //TODO: we can only delete is lower != MIN_TICK or latestTick and all values are 0
-        // bool deleteLowerTick = false;
+
+
+        // bool deleteLowerTick = false; bool deleteUpperTick = false;
+
         //TODO: we can only delete is upper != MAX_TICK or latestTick and all values are 0
         //TODO: can be handled by using inactiveLiquidity == 0 and activeLiquidity == 0
-        // bool deleteUpperTick = false;
+        {
+            ICoverPoolStructs.Tick memory tickLower = ticks[lower];
+            if (removeLower) {
+                if (isPool0) {
+                    tickLower.liquidityDelta += int128(amount);
+                    tickLower.liquidityDeltaMinus -= amount;
+                } else {
+                    tickLower.liquidityDelta -= int128(amount);
+                }     
+            } else {
+                if (isPool0) {
+                    tickLower.liquidityDeltaMinusInactive -= amount;
+                }
+            }
+            /// @dev - do not remove amountDeltas being carried over
+            // if tick is empty clear deltas
+            // if (tickLower.liquidityDelta == 0 && tickLower.liquidityDeltaMinus == 0 && tickLower.liquidityDeltaMinusInactive == 0) {
+            //     tickLower.amountInDelta = 0;
+            //     tickLower.amountOutDelta = 0;
+            //     tickLower.amountInDeltaCarryPercent = 0;
+            //     tickLower.amountOutDeltaCarryPercent = 0;
+            //     if (lower != state.latestTick) {
+            //         deleteLowerTick = true;
+            //     }
+            // }
+            ticks[lower] = tickLower;
+        }
+
+        //TODO: can be handled using inactiveLiquidity and activeLiquidity == 0
+
+        //TODO: we need to know what tick they're claiming from
+        //TODO: that is the tick that should have liquidity values modified
+        //TODO: keep unchecked block?
+        {
+            ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
+            if (removeUpper) {
+                if (isPool0) {
+                    tickUpper.liquidityDelta -= int128(amount);
+                } else {
+                    tickUpper.liquidityDelta += int128(amount);
+                    tickUpper.liquidityDeltaMinus -= amount;
+                }
+            } else {
+                if (!isPool0) {
+                    tickUpper.liquidityDeltaMinusInactive -= amount;
+                }
+            }
+            /// @dev - do not remove amountDeltas being carried over
+            // if tick is empty clear deltas
+            // if (tickUpper.liquidityDelta == 0 && tickUpper.liquidityDeltaMinus == 0 && tickUpper.liquidityDeltaMinusInactive == 0) {
+            //     tickUpper.amountInDelta = 0;
+            //     tickUpper.amountOutDelta = 0;
+            //     tickUpper.amountInDeltaCarryPercent = 0;
+            //     tickUpper.amountOutDeltaCarryPercent = 0;
+            //     if (upper != state.latestTick) {
+            //         deleteUpperTick = true;
+            //     }
+            // }
+            ticks[upper] = tickUpper;
+        }
+
         // if (deleteLowerTick) {
         //     // Delete lower tick.
         //     int24 previous = tickNodes[lower].previousTick;
@@ -258,16 +324,6 @@ library Ticks
         //         tickNodes[upperNextTick].previousTick = previous;
         //     }
         // }
-        if (removeLower) {
-            if (isPool0) {
-                ticks[lower].liquidityDelta += int128(amount);
-                ticks[lower].liquidityDeltaMinus -= amount;
-            } else {
-                ticks[lower].liquidityDelta -= int128(amount);
-            }
-        }
-
-        //TODO: can be handled using inactiveLiquidity and activeLiquidity == 0
         // if (deleteUpperTick) {
         //     // Delete upper tick.
         //     int24 previous = tickNodes[upper].previousTick;
@@ -282,17 +338,6 @@ library Ticks
         //         tickNodes[next].previousTick = lowerPrevTick;
         //     }
         // }
-        //TODO: we need to know what tick they're claiming from
-        //TODO: that is the tick that should have liquidity values modified
-        //TODO: keep unchecked block?
-        if (removeUpper) {
-            if (isPool0) {
-                ticks[upper].liquidityDelta -= int128(amount);
-            } else {
-                ticks[upper].liquidityDelta += int128(amount);
-                ticks[upper].liquidityDeltaMinus -= amount;
-            }
-        }
         /// @dev - we can never delete ticks due to amount deltas
     }
 
@@ -357,6 +402,7 @@ library Ticks
 
         //remove all liquidity from cross tick
         if (removeLiquidity) {
+            crossTick.liquidityDeltaMinusInactive = crossTick.liquidityDeltaMinus;
             crossTick.liquidityDelta = 0;
             crossTick.liquidityDeltaMinus = 0;
         }
@@ -677,6 +723,7 @@ library Ticks
                         );
                     }
                 }
+                ticks0[cache.stopTick0].liquidityDeltaMinusInactive = ticks0[cache.stopTick0].liquidityDeltaMinus;
                 ticks0[cache.stopTick0].liquidityDelta += int128(ticks0[cache.stopTick0].liquidityDeltaMinus);
                 ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
                 break;
@@ -789,6 +836,7 @@ library Ticks
                 pool0.liquidity = 0;
                 pool1.liquidity = pool1.liquidity;
             }
+            ticks1[cache.stopTick1].liquidityDeltaMinusInactive = ticks1[cache.stopTick1].liquidityDeltaMinus;
             ticks1[cache.stopTick1].liquidityDelta += int128(ticks1[cache.stopTick1].liquidityDeltaMinus);
             ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
         }

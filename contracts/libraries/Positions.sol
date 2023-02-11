@@ -35,11 +35,12 @@ library Positions
         ICoverPoolStructs.ValidateParams memory params
     ) external pure returns (int24, int24, int24, int24, uint128, uint256 liquidityMinted) {
         if (params.lower % int24(params.state.tickSpread) != 0) revert InvalidLowerTick();
-        if (params.lower <= TickMath.MIN_TICK) revert InvalidLowerTick();
+        //TODO: latestTick should never be MAX_TICK or MIN_TICK
+        if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
         if (params.upper % int24(params.state.tickSpread) != 0) revert InvalidUpperTick();
-        if (params.upper >= TickMath.MAX_TICK) revert InvalidUpperTick();
+        if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
         if (params.amount == 0) revert InvalidPositionAmount();
-        if (params.lower >= params.upper) revert InvalidPositionBoundsOrder();
+        if (params.lower >= params.upper || params.lowerOld >= params.upperOld) revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {
             if (params.lower >= params.state.latestTick) revert InvalidPositionBoundsTwap();
         } else {
@@ -112,9 +113,10 @@ library Positions
         // /// validate mint amount is not over max tick liquidity
         // if (amount > 0 && uint128(amount) + cache.position.liquidity > MAX_TICK_LIQUIDITY) revert MaxTickLiquidity();
 
-        Ticks.insert(
+        state = Ticks.insert(
             ticks,
             tickNodes,
+            state,
             params.lowerOld,
             params.lower,
             params.upperOld,
@@ -158,6 +160,7 @@ library Positions
         Ticks.remove(
             ticks,
             tickNodes,
+            state,
             params.lower,
             params.upper,
             uint128(params.amount),
@@ -367,6 +370,7 @@ library Positions
             Ticks.remove(
                 ticks,
                 tickNodes,
+                state,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 uint128(uint128(params.amount)),

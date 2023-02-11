@@ -222,8 +222,8 @@ export class CoverPool extends BaseContract {
   functions: {
     burn(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -231,8 +231,8 @@ export class CoverPool extends BaseContract {
 
     collect(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -242,7 +242,17 @@ export class CoverPool extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number, number, BigNumber] & {
+      [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        BigNumber,
+        BigNumber
+      ] & {
         unlocked: number;
         swapFee: number;
         tickSpread: number;
@@ -250,6 +260,7 @@ export class CoverPool extends BaseContract {
         latestTick: number;
         lastBlockNumber: number;
         accumEpoch: number;
+        liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
       }
     >;
@@ -257,9 +268,9 @@ export class CoverPool extends BaseContract {
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
+      upperOld: BigNumberish,
       amountDesired: BigNumberish,
       zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -392,8 +403,8 @@ export class CoverPool extends BaseContract {
 
   burn(
     lower: BigNumberish,
-    upper: BigNumberish,
     claim: BigNumberish,
+    upper: BigNumberish,
     zeroForOne: boolean,
     amount: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -401,8 +412,8 @@ export class CoverPool extends BaseContract {
 
   collect(
     lower: BigNumberish,
-    upper: BigNumberish,
     claim: BigNumberish,
+    upper: BigNumberish,
     zeroForOne: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -412,7 +423,17 @@ export class CoverPool extends BaseContract {
   globalState(
     overrides?: CallOverrides
   ): Promise<
-    [number, number, number, number, number, number, number, BigNumber] & {
+    [
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      BigNumber,
+      BigNumber
+    ] & {
       unlocked: number;
       swapFee: number;
       tickSpread: number;
@@ -420,6 +441,7 @@ export class CoverPool extends BaseContract {
       latestTick: number;
       lastBlockNumber: number;
       accumEpoch: number;
+      liquidityGlobal: BigNumber;
       latestPrice: BigNumber;
     }
   >;
@@ -427,9 +449,9 @@ export class CoverPool extends BaseContract {
   mint(
     lowerOld: BigNumberish,
     lower: BigNumberish,
-    upperOld: BigNumberish,
-    upper: BigNumberish,
     claim: BigNumberish,
+    upper: BigNumberish,
+    upperOld: BigNumberish,
     amountDesired: BigNumberish,
     zeroForOne: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -562,8 +584,8 @@ export class CoverPool extends BaseContract {
   callStatic: {
     burn(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       amount: BigNumberish,
       overrides?: CallOverrides
@@ -571,8 +593,8 @@ export class CoverPool extends BaseContract {
 
     collect(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<
@@ -584,7 +606,17 @@ export class CoverPool extends BaseContract {
     globalState(
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, number, number, number, BigNumber] & {
+      [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        BigNumber,
+        BigNumber
+      ] & {
         unlocked: number;
         swapFee: number;
         tickSpread: number;
@@ -592,6 +624,7 @@ export class CoverPool extends BaseContract {
         latestTick: number;
         lastBlockNumber: number;
         accumEpoch: number;
+        liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
       }
     >;
@@ -599,9 +632,9 @@ export class CoverPool extends BaseContract {
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
+      upperOld: BigNumberish,
       amountDesired: BigNumberish,
       zeroForOne: boolean,
       overrides?: CallOverrides
@@ -899,8 +932,8 @@ export class CoverPool extends BaseContract {
   estimateGas: {
     burn(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -908,8 +941,8 @@ export class CoverPool extends BaseContract {
 
     collect(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -921,9 +954,9 @@ export class CoverPool extends BaseContract {
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
+      upperOld: BigNumberish,
       amountDesired: BigNumberish,
       zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -975,8 +1008,8 @@ export class CoverPool extends BaseContract {
   populateTransaction: {
     burn(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -984,8 +1017,8 @@ export class CoverPool extends BaseContract {
 
     collect(
       lower: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
       zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -997,9 +1030,9 @@ export class CoverPool extends BaseContract {
     mint(
       lowerOld: BigNumberish,
       lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
       claim: BigNumberish,
+      upper: BigNumberish,
+      upperOld: BigNumberish,
       amountDesired: BigNumberish,
       zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }

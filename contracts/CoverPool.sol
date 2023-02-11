@@ -11,8 +11,7 @@ import "./libraries/Ticks.sol";
 import "./libraries/TwapOracle.sol";
 import "./libraries/Positions.sol";
 
-/// @notice Poolshark Directional Liquidity pool implementation.
-/// @dev SafeTransfers contains CoverPoolErrors
+/// @notice Poolshark Cover Pool Implementation
 contract CoverPool is
     ICoverPool,
     CoverPoolStorage,
@@ -22,8 +21,6 @@ contract CoverPool is
     CoverPositionErrors,
     SafeTransfers
 {
-    /// @dev Reference: tickSpacing of 100 -> 1% between ticks.
-    uint128 internal immutable MAX_TICK_LIQUIDITY;
 
     address internal immutable factory;
     address internal immutable token0;
@@ -63,21 +60,16 @@ contract CoverPool is
         feeTo       = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
-        GlobalState memory state = GlobalState(0,0,0,0,0,0,0,0);
+        GlobalState memory state = GlobalState(0,0,0,0,0,0,0,0,0);
         state.swapFee         = _swapFee;
         state.tickSpread      = _tickSpread;
         state.twapLength      = _twapLength;
         state.lastBlockNumber = uint32(block.number);
 
-        // set max liquidity per tick
-        MAX_TICK_LIQUIDITY = Ticks.getMaxLiquidity(_tickSpread);
-
-        // set default initial values
-        //TODO: insertSingle or pass MAX_TICK as upper
+        // set initial ticks
         _ensureInitialized(state);
     }
 
-    //TODO: test this check
     function _ensureInitialized(GlobalState memory state) internal {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
@@ -90,7 +82,6 @@ contract CoverPool is
     }
 
     function _initialize(GlobalState memory state) internal {
-        //TODO: store values in memory then write to state
         state.latestTick = state.latestTick / int24(state.tickSpread) * int24(state.tickSpread);
         state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
         state.accumEpoch = 1;
@@ -104,15 +95,13 @@ contract CoverPool is
         );
     }
     //TODO: create transfer function to transfer ownership
-    //TODO: reorder params to upperOld being last (logical order)
-
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
     function mint(
         int24 lowerOld,
         int24 lower,
-        int24 upperOld,
-        int24 upper,
         int24 claim,
+        int24 upper,
+        int24 upperOld,
         uint128 amountDesired,
         bool zeroForOne
     ) external lock {
@@ -209,8 +198,8 @@ contract CoverPool is
 
     function burn(
         int24 lower,
-        int24 upper,
         int24 claim,
+        int24 upper,
         bool zeroForOne,
         uint128 amount
     ) external lock {
@@ -279,8 +268,8 @@ contract CoverPool is
 
     function collect(
         int24 lower,
-        int24 upper,
         int24 claim,
+        int24 upper,
         bool  zeroForOne
     ) public lock returns (uint256 amountIn, uint256 amountOut) {
         GlobalState memory state = globalState;
