@@ -678,6 +678,9 @@ library Ticks
                 tickNodes[cache.nextTickToAccum0] = outputs.accumTickNode;
                 ticks0[cache.nextTickToCross0] = outputs.crossTick;
                 ticks0[cache.nextTickToAccum0] = outputs.accumTick;
+            } else {
+                cache.amountInDelta0 = 0;
+                cache.amountOutDelta0 = 0;
             }
             //cross otherwise break
             // 
@@ -788,7 +791,10 @@ library Ticks
                 tickNodes[cache.nextTickToAccum1] = outputs.accumTickNode;
                 ticks1[cache.nextTickToCross1] = outputs.crossTick;
                 ticks1[cache.nextTickToAccum1] = outputs.accumTick;
-            } 
+            } else {
+                cache.amountInDelta1 = 0;
+                cache.amountOutDelta1 = 0;
+            }
             //cross otherwise break
             if (cache.nextTickToAccum1 < cache.stopTick1) {
                 (
