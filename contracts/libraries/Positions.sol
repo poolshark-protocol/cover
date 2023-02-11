@@ -253,10 +253,9 @@ library Positions
             params.zeroForOne ? cache.removeLower = false 
                               : cache.removeUpper = false;
             /// @dev - ignore carryover for last tick of position
-
-            cache.amountInDelta  = int128(int256(ticks[params.claim].amountInDelta) - int256(int64(ticks[params.claim].amountInDeltaCarryPercent))
+            cache.amountInDelta  = uint128(uint256(ticks[params.claim].amountInDelta) - uint256(ticks[params.claim].amountInDeltaCarryPercent)
                                                                      * ticks[params.claim].amountInDelta / 1e18);
-            cache.amountOutDelta = int128(int256(ticks[params.claim].amountOutDelta) - int256(int64(ticks[params.claim].amountOutDeltaCarryPercent))
+            cache.amountOutDelta = uint128(uint256(ticks[params.claim].amountOutDelta) - uint256(ticks[params.claim].amountOutDeltaCarryPercent)
                                                                         * ticks[params.claim].amountInDelta / 1e18);
         }
         else {
@@ -350,10 +349,10 @@ library Positions
             } /// @dev - amountOutDelta always gt 0
         }
         // factor in deltas for section 1
-        if (cache.amountInDelta < 0) {
+        if (cache.amountInDelta > 0) {
             //TODO: handle underflow here          
             cache.position.amountIn -= uint128(FullPrecisionMath.mulDiv(
-                                                            uint128(-cache.amountInDelta),
+                                                            cache.amountInDelta,
                                                             cache.position.liquidity, 
                                                             Q96
                                                         ) + 1) * (1e6 + state.swapFee) / 1e6; /// @dev - in case of rounding error

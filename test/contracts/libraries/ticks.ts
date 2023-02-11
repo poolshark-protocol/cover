@@ -111,7 +111,7 @@ describe('Ticks Library Tests', function () {
             BigNumber.from("0"),
             true
         )
-        expect(result[0]).to.be.equal(BigNumber.from("-79263824696439249340797497"));
+        expect(result[0]).to.be.equal(BigNumber.from("79263824696439249340797497"));
         expect(result[1]).to.be.equal(BigNumber.from("79184604449414017477223073"));
     });
 
@@ -125,7 +125,7 @@ describe('Ticks Library Tests', function () {
             BigNumber.from("0"),
             false
         )
-        expect(result[0]).to.be.equal(BigNumber.from("-79184604449414017477223073"));
+        expect(result[0]).to.be.equal(BigNumber.from("79184604449414017477223073"));
         expect(result[1]).to.be.equal(BigNumber.from("79263824696439249340797497"));
     });
 

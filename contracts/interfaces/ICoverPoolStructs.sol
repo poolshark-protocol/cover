@@ -35,8 +35,8 @@ interface ICoverPoolStructs {
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
         //TODO: change to uint since we know in is negative and out is positive
-        int128   amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
-        int128   amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
+        uint128   amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
+        uint128   amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
         uint64  amountInDeltaCarryPercent;
         uint64  amountOutDeltaCarryPercent;
         //TODO: wrap amountDeltas in a single struct
@@ -112,8 +112,8 @@ interface ICoverPoolStructs {
         TickNode claimTick;
         bool removeLower;
         bool removeUpper;
-        int128 amountInDelta;
-        int128 amountOutDelta;
+        uint128 amountInDelta;
+        uint128 amountOutDelta;
     }
 
     struct AccumulateCache {
@@ -123,15 +123,15 @@ interface ICoverPoolStructs {
         int24   nextTickToAccum1;
         int24   stopTick0;
         int24   stopTick1;
-        int128  amountInDelta0; 
-        int128  amountInDelta1; 
-        int128  amountOutDelta0;
-        int128  amountOutDelta1;
+        uint128  amountInDelta0; 
+        uint128  amountInDelta1; 
+        uint128  amountOutDelta0;
+        uint128  amountOutDelta1;
     }
 
     struct AccumulateOutputs {
-        int128 amountInDelta;
-        int128 amountOutDelta;
+        uint128 amountInDelta;
+        uint128 amountOutDelta;
         TickNode accumTickNode;
         Tick crossTick;
         Tick accumTick;

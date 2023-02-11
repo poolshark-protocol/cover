@@ -347,14 +347,14 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "int128",
+        internalType: "uint128",
         name: "amountInDelta",
-        type: "int128",
+        type: "uint128",
       },
       {
-        internalType: "int128",
+        internalType: "uint128",
         name: "amountOutDelta",
-        type: "int128",
+        type: "uint128",
       },
       {
         internalType: "uint64",
@@ -396,14 +396,14 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "int128",
+        internalType: "uint128",
         name: "amountInDelta",
-        type: "int128",
+        type: "uint128",
       },
       {
-        internalType: "int128",
+        internalType: "uint128",
         name: "amountOutDelta",
-        type: "int128",
+        type: "uint128",
       },
       {
         internalType: "uint64",

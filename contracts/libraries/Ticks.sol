@@ -350,8 +350,8 @@ library Ticks
         ICoverPoolStructs.Tick memory accumTick,
         uint32 accumEpoch,
         uint128 currentLiquidity,
-        int128 amountInDelta,
-        int128 amountOutDelta,
+        uint128 amountInDelta,
+        uint128 amountOutDelta,
         bool removeLiquidity,
         bool updateAccumDeltas
     ) internal view returns (
@@ -367,9 +367,9 @@ library Ticks
             uint256 amountInDeltaCarry = (uint256(crossTick.amountInDeltaCarryPercent)
                                             * uint256(uint128(crossTick.amountInDelta)) / 1e18);
             console.log(amountInDeltaCarry);
-            console.logInt(crossTick.amountInDelta);
+            console.log(crossTick.amountInDelta);
             console.log(crossTick.amountInDeltaCarryPercent);
-            console.logInt(amountInDelta);
+            console.log(amountInDelta);
             revert NotImplementedYet();
             // crossTick.amountInDelta -= int88(amountInDeltaCarry);
             // crossTick.amountInDeltaCarryPercent = 0;
@@ -377,27 +377,26 @@ library Ticks
             /// @dev - amountOutDelta cannot exist without amountInDelta
             if(crossTick.amountOutDeltaCarryPercent > 0){
                 //TODO: will this work with negatives?
-                int256 amountOutDeltaCarry = int64(crossTick.amountOutDeltaCarryPercent) 
-                                                * crossTick.amountOutDelta / 1e18;
-                crossTick.amountOutDelta -= int88(amountOutDeltaCarry);
+                uint128 amountOutDeltaCarry = uint128(crossTick.amountOutDeltaCarryPercent 
+                                                * crossTick.amountOutDelta / 1e18);
+                crossTick.amountOutDelta += amountOutDeltaCarry;
                 crossTick.amountOutDeltaCarryPercent = 0;
-                amountOutDelta += int128(amountOutDeltaCarry);
+                amountOutDelta += amountOutDeltaCarry;
             }
         }
 
         if (currentLiquidity > 0) {
-
             int256 liquidityDeltaPlus = crossTick.liquidityDelta + int128(crossTick.liquidityDeltaMinus);
             if (liquidityDeltaPlus > 0 && currentLiquidity > uint256(liquidityDeltaPlus)) {
                 /// @dev - amount deltas get diluted when liquidity is added
                 int256 liquidityPercentIncrease = int256(liquidityDeltaPlus * 1e18 / int256(int128(currentLiquidity)));
-                amountOutDelta = int128(int256(amountOutDelta) * 1e18 / (1e18 + liquidityPercentIncrease));
-                amountInDelta = int128(int256(amountInDelta) * 1e18 /(1e18 + liquidityPercentIncrease));
+                amountOutDelta = uint128(uint256(amountOutDelta) * 1e18 / uint256(1e18 + liquidityPercentIncrease));
+                amountInDelta = uint128(uint256(amountInDelta) * 1e18 / uint256(1e18 + liquidityPercentIncrease));
             }
             // skip if stopTick
             if(updateAccumDeltas) {
-                accumTick.amountInDelta  += int88(amountInDelta);
-                accumTick.amountOutDelta += int88(amountOutDelta);
+                accumTick.amountInDelta  += amountInDelta;
+                accumTick.amountOutDelta += amountOutDelta;
             }
         }
 
@@ -422,10 +421,10 @@ library Ticks
         int24 nextTickToAccum,
         uint256 currentPrice,
         uint256 currentLiquidity,
-        int128 amountInDelta,
-        int128 amountOutDelta,
+        uint128 amountInDelta,
+        uint128 amountOutDelta,
         bool isPool0
-    ) external view returns (int128, int128) {
+    ) external view returns (uint128, uint128) {
         return _rollover(
             nextTickToCross,
             nextTickToAccum,
@@ -442,10 +441,10 @@ library Ticks
         int24 nextTickToAccum,
         uint256 currentPrice,
         uint256 currentLiquidity,
-        int128 amountInDelta,
-        int128 amountOutDelta,
+        uint128 amountInDelta,
+        uint128 amountOutDelta,
         bool isPool0
-    ) internal view returns (int128, int128) {
+    ) internal view returns (uint128, uint128) {
         if (currentLiquidity == 0) {
             // zero out deltas
             return (0, 0);
@@ -499,26 +498,25 @@ library Ticks
         }
         console.log(amountOutLeftover);
         console.log(amountInUnfilled);
+        console.log(currentLiquidity);
 
 
         //TODO: ensure this will not overflow with 32 bits
         //TODO: return this value to limit storage reads and writes
-        amountInDelta -= int128(uint128(
-                                            FullPrecisionMath.mulDiv(
-                                                amountInUnfilled,
-                                                Q96,
-                                                currentLiquidity
-                                            )
-                                        )
+        amountInDelta += uint128(
+                                    FullPrecisionMath.mulDiv(
+                                        amountInUnfilled,
+                                        Q96,
+                                        currentLiquidity
+                                    )
                                 );
-        amountOutDelta += int128(uint128(
-                                            FullPrecisionMath.mulDiv(
-                                                amountOutLeftover,
-                                                Q96, 
-                                                currentLiquidity
-                                            )
-                                        )
-                                );
+        amountOutDelta += uint128(
+                                    FullPrecisionMath.mulDiv(
+                                        amountOutLeftover,
+                                        Q96, 
+                                        currentLiquidity
+                                    )
+                                 );
         return (amountInDelta, amountOutDelta);
     }
 
@@ -561,42 +559,42 @@ library Ticks
         if (currentLiquidity == 0) return stashTick;
         // handle amount in delta
         {   
-            int128 amountInDelta = isPool0 ? cache.amountInDelta0 : cache.amountInDelta1;
-            int128 amountInDeltaCarry = int64(stashTick.amountInDeltaCarryPercent) * stashTick.amountInDelta / 1e18;
-            int128 amountInDeltaNew = amountInDelta + stashTick.amountInDelta;
+            uint128 amountInDelta = isPool0 ? cache.amountInDelta0 : cache.amountInDelta1;
+            uint128 amountInDeltaCarry = stashTick.amountInDeltaCarryPercent * stashTick.amountInDelta / 1e18;
+            uint128 amountInDeltaNew = amountInDelta + stashTick.amountInDelta;
 
             /// @dev - amountInDelta should never be greater than 0
             if(amountInDelta != 0) {
                 if(currentLiquidity == stashTick.liquidityDeltaMinus) {
-                    stashTick.amountInDeltaCarryPercent = uint64(uint256(int256(amountInDeltaCarry) * 1e18 
-                                                    / int256(amountInDeltaNew)));
+                    stashTick.amountInDeltaCarryPercent = uint64(uint256(amountInDeltaCarry) * 1e18 
+                                                    / amountInDeltaNew);
                 } else {
                     // we need to update amountInDelta
-                    stashTick.amountInDeltaCarryPercent = uint64(uint256(int256(amountInDelta + amountInDeltaCarry) * 1e18 
-                                                    / int256(amountInDeltaNew)));
+                    stashTick.amountInDeltaCarryPercent = uint64(uint256(amountInDelta + amountInDeltaCarry) * 1e18 
+                                                    / amountInDeltaNew);
                 }
-                stashTick.amountInDelta += int88(amountInDelta);
+                stashTick.amountInDelta += amountInDelta;
             }
             //if amount delta is zero but liquidity is active...dilute amountInDelta
              
         }
         // handle amount out delta
         {
-            int128 amountOutDelta = isPool0 ? cache.amountOutDelta0 : cache.amountOutDelta1;
-            int128 amountOutDeltaCarry = int64(stashTick.amountOutDeltaCarryPercent) * stashTick.amountOutDelta / 1e18;
-            int128 amountOutDeltaNew = stashTick.amountOutDelta + amountOutDelta;
+            uint128 amountOutDelta = isPool0 ? cache.amountOutDelta0 : cache.amountOutDelta1;
+            uint128 amountOutDeltaCarry = stashTick.amountOutDeltaCarryPercent * stashTick.amountOutDelta / 1e18;
+            uint128 amountOutDeltaNew = stashTick.amountOutDelta + amountOutDelta;
             if (amountOutDelta != 0) {
                 if(currentLiquidity == stashTick.liquidityDeltaMinus) {
-                    stashTick.amountOutDeltaCarryPercent = uint64(uint256(int256(amountOutDeltaCarry) * 1e18 
-                                                    / int256(amountOutDeltaNew)));
+                    stashTick.amountOutDeltaCarryPercent = uint64(uint256(amountOutDeltaCarry) * 1e18 
+                                                    / amountOutDeltaNew);
                 }
 
                 else {
                     // we need to update amountOutDelta
-                    stashTick.amountOutDeltaCarryPercent = uint64(uint256(int256(amountOutDelta + amountOutDeltaCarry) * 1e18 
-                                                    / int256(amountOutDeltaNew)));
+                    stashTick.amountOutDeltaCarryPercent = uint64(uint256(amountOutDelta + amountOutDeltaCarry) * 1e18 
+                                                    / amountOutDeltaNew);
                 }
-                stashTick.amountOutDelta += int88(amountOutDelta);
+                stashTick.amountOutDelta += amountOutDelta;
             }
         }
 
