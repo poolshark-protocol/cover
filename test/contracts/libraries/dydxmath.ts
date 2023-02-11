@@ -72,6 +72,14 @@ describe('DyDxMath Library Tests', function () {
         )).to.be.equal(BigNumber.from("199102091646158105192"));
     });
 
+    it('Should get accurate dy value when rounding up', async function () {
+      expect(await hre.props.dydxMathLib.getDx(
+          BigNumber.from("49753115595468372952776"),
+          BigNumber.from("79704936542881920863903188246"),
+          BigNumber.from("79864497946249373242464395035")
+      )).to.be.equal(BigNumber.from("98807230566561618195"));
+    });
+
     it('Should revert if getting liquidity value outside price bounds', async function () {
         await expect(hre.props.dydxMathLib.getLiquidityForAmounts(
             BigNumber.from("79386769463160146968577785965"),

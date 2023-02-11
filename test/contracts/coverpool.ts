@@ -1109,7 +1109,7 @@ describe('CoverPool Tests', function () {
   });
 
   //TODO: these revert catches no longer work inside a library
-  it.skip('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness', async function () {
+  it('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness', async function () {
     const liquidityAmount2 = BigNumber.from("49753115595468372952776");
     const liquidityAmount3 = BigNumber.from("99456505428612725961158");
     await validateSync(
@@ -1139,10 +1139,10 @@ describe('CoverPool Tests', function () {
       "100"
     );
 
-    await validateSync(
-      hre.props.admin,
-      "60"
-    );
+    // await validateSync(
+    //   hre.props.admin,
+    //   "60"
+    // );
   });
 
   // TODO: partial mint

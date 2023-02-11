@@ -40,7 +40,7 @@ library Ticks
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         
         if(zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0) return (cache, 0);
         uint256 nextTickPrice = state.latestPrice;
@@ -58,6 +58,7 @@ library Ticks
                 uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(liquidityPadded, cache.price, liquidityPadded + cache.price * cache.input);
                 /// @auditor - check tests to see if we need overflow handle
                 // if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
+                //     console.log('overflow check');
                 //     newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
                 // }
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price);
@@ -424,7 +425,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool isPool0
-    ) external pure returns (int128, int128) {
+    ) external view returns (int128, int128) {
         return _rollover(
             nextTickToCross,
             nextTickToAccum,
@@ -444,7 +445,7 @@ library Ticks
         int128 amountInDelta,
         int128 amountOutDelta,
         bool isPool0
-    ) internal pure returns (int128, int128) {
+    ) internal view returns (int128, int128) {
         if (currentLiquidity == 0) {
             // zero out deltas
             return (0, 0);
@@ -452,12 +453,19 @@ library Ticks
 
         uint160 accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
 
+        console.log('accumPrice');
+        console.log(isPool0);
+        console.log(accumPrice);
+        console.log(currentPrice);
+        console.logInt(nextTickToCross);
+        console.logInt(nextTickToAccum);
+
         /// @dev - early return; nothing to rollover
         if (currentPrice == accumPrice)
             return (amountInDelta, amountOutDelta);
 
         uint160 crossPrice = TickMath.getSqrtRatioAtTick(nextTickToCross);
-
+        console.log(crossPrice);
         if (isPool0 ? currentPrice > accumPrice 
                     : currentPrice < accumPrice)
         currentPrice = accumPrice;
@@ -489,6 +497,9 @@ library Ticks
                 currentPrice
             );
         }
+        console.log(amountOutLeftover);
+        console.log(amountInUnfilled);
+
 
         //TODO: ensure this will not overflow with 32 bits
         //TODO: return this value to limit storage reads and writes
@@ -643,7 +654,8 @@ library Ticks
                     cache.amountOutDelta0
                 ) = _rollover(
                     cache.nextTickToCross0,
-                    cache.nextTickToAccum0,
+                    (cache.nextTickToAccum0 < cache.stopTick0) ? cache.stopTick0 
+                                                               : cache.nextTickToAccum0,
                     pool0.price,
                     pool0.liquidity,
                     cache.amountInDelta0,
@@ -733,13 +745,17 @@ library Ticks
         while (true) {
             //rollover if past latestTick and TWAP moves up
             if (pool1.liquidity > 0){
+                console.log('latestTick');
+                console.logInt(state.latestTick);
+                console.logInt(nextLatestTick);
                 (
                     cache.amountInDelta1,
                     cache.amountOutDelta1
                 ) = _rollover(
                     cache.nextTickToCross1,
-                    cache.nextTickToAccum1,
-                    pool1.price, //TODO: update price on each iteration
+                    (cache.nextTickToAccum1 > cache.stopTick1) ? cache.stopTick1 
+                                                               : cache.nextTickToAccum1,
+                    pool1.price,
                     pool1.liquidity,
                     cache.amountInDelta1,
                     cache.amountOutDelta1,
@@ -747,6 +763,16 @@ library Ticks
                 );
                 //accumulate to next tick
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
+                if(state.latestTick == 100 && nextLatestTick == 60) {
+                    console.logInt(state.latestTick);
+                    console.logInt(nextLatestTick);
+                    console.log('accumulating from:');
+                    console.log('cross tick');
+                    console.log(pool1.liquidity);
+                    console.logInt(cache.nextTickToCross1);
+                    console.logInt(cache.nextTickToAccum1);
+                }
+
                 outputs = _accumulate(
                     //TODO: consolidate cache parameter
                     tickNodes[cache.nextTickToAccum1],
