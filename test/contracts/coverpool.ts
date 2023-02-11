@@ -1138,7 +1138,10 @@ describe('CoverPool Tests', function () {
       hre.props.admin,
       "100"
     );
-
+    
+    console.log((await hre.props.coverPool.ticks1("80")).toString());
+    console.log((await hre.props.coverPool.ticks1("100")).toString());
+    console.log((await hre.props.coverPool.ticks1("120")).toString());
     // await validateSync(
     //   hre.props.admin,
     //   "60"

@@ -359,6 +359,7 @@ library Ticks
     ) {
         //update fee growth
         tickNode.accumEpochLast = accumEpoch;
+        console.log(updateAccumDeltas);
 
         if(crossTick.amountInDeltaCarryPercent > 0){
 
@@ -671,7 +672,8 @@ library Ticks
                     cache.amountInDelta0, /// @dev - amount deltas will be 0 initially
                     cache.amountOutDelta0,
                     true,
-                    cache.nextTickToAccum0 < cache.stopTick0
+                    nextLatestTick > state.latestTick ? cache.nextTickToAccum0 > cache.stopTick0 
+                                                      : cache.nextTickToAccum0 < cache.stopTick0
                 );
                 cache.amountInDelta0 = outputs.amountInDelta;
                 cache.amountOutDelta0 = outputs.amountOutDelta;
@@ -773,7 +775,8 @@ library Ticks
                     console.logInt(cache.nextTickToCross1);
                     console.logInt(cache.nextTickToAccum1);
                 }
-
+                console.log('amount delta before');
+                console.log(ticks1[120].amountInDelta);
                 outputs = _accumulate(
                     //TODO: consolidate cache parameter
                     tickNodes[cache.nextTickToAccum1],
@@ -784,13 +787,16 @@ library Ticks
                     cache.amountInDelta1, /// @dev - amount deltas will be 1 initially
                     cache.amountOutDelta1,
                     true,
-                    cache.nextTickToAccum1 > cache.stopTick1
+                    nextLatestTick > state.latestTick ? cache.nextTickToAccum1 < cache.stopTick1 
+                                                      : cache.nextTickToAccum1 > cache.stopTick1
                 );
                 cache.amountInDelta1 = outputs.amountInDelta;
                 cache.amountOutDelta1 = outputs.amountOutDelta;
                 tickNodes[cache.nextTickToAccum1] = outputs.accumTickNode;
                 ticks1[cache.nextTickToCross1] = outputs.crossTick;
                 ticks1[cache.nextTickToAccum1] = outputs.accumTick;
+                console.log('amount delta after');
+                console.log(ticks1[120].amountInDelta);
             } else {
                 cache.amountInDelta1 = 0;
                 cache.amountOutDelta1 = 0;
