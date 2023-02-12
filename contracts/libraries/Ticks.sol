@@ -354,8 +354,9 @@ library Ticks
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
         //update tick epoch
-        tickNode.accumEpochLast = accumEpoch;
-        console.log(updateAccumDeltas);
+        if(updateAccumDeltas) {
+            tickNode.accumEpochLast = accumEpoch;
+        }
 
         if(crossTick.amountInDeltaCarryPercent > 0){
             /// @dev - assume amountInDelta is always <= 0
@@ -730,6 +731,7 @@ library Ticks
                 ticks0[cache.stopTick0].liquidityDeltaMinusInactive = ticks0[cache.stopTick0].liquidityDeltaMinus;
                 ticks0[cache.stopTick0].liquidityDelta += int128(ticks0[cache.stopTick0].liquidityDeltaMinus);
                 ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
+                tickNodes[cache.stopTick0].accumEpochLast = state.accumEpoch;
                 break;
             }
         }
@@ -862,6 +864,7 @@ library Ticks
             ticks1[cache.stopTick1].liquidityDeltaMinusInactive = ticks1[cache.stopTick1].liquidityDeltaMinus;
             ticks1[cache.stopTick1].liquidityDelta += int128(ticks1[cache.stopTick1].liquidityDeltaMinus);
             ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
+            tickNodes[cache.stopTick1].accumEpochLast = state.accumEpoch;
         }
         //TODO: remove liquidity from all ticks crossed
         //TODO: handle burn when price is between ticks

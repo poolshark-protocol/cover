@@ -1133,16 +1133,20 @@ describe('CoverPool Tests', function () {
       lowerTickCleared: false,
       revertMessage: ""
     });
-
+    console.log((await hre.props.coverPool.tickNodes("120")).toString());
     await validateSync(
       hre.props.admin,
       "100"
     );
-
+    console.log((await hre.props.coverPool.positions1(hre.props.alice.address, "80", "120")).toString());
+    console.log((await hre.props.coverPool.tickNodes("120")).toString());
     await validateSync(
       hre.props.admin,
       "60"
     );
+
+    console.log((await hre.props.coverPool.ticks1("120")).toString());
+    console.log((await hre.props.coverPool.tickNodes("120")).toString());
   });
 
   // TODO: partial mint
