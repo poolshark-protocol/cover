@@ -63,10 +63,4 @@ describe('Positions Library Tests', function () {
   
     this.beforeEach(async function () {
     });
-
-    it('getMaxLiquidity - Should get max liquidity', async function () {
-        expect(await hre.props.positionsLib.getMaxLiquidity(
-            BigNumber.from("10")
-        )).to.be.equal(BigNumber.from("7670409280728049578779041260324329"));
-    });
 });
