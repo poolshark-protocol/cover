@@ -357,32 +357,25 @@ library Ticks
     ) internal view returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
-        //update fee growth
+        //update tick epoch
         tickNode.accumEpochLast = accumEpoch;
         console.log(updateAccumDeltas);
 
         if(crossTick.amountInDeltaCarryPercent > 0){
-
             /// @dev - assume amountInDelta is always <= 0
             // uint256 amountInDeltaCarry = uint256(uint88(crossTick.amountInDelta));
-            uint256 amountInDeltaCarry = (uint256(crossTick.amountInDeltaCarryPercent)
-                                            * uint256(uint128(crossTick.amountInDelta)) / 1e18);
-            console.log(amountInDeltaCarry);
-            console.log(crossTick.amountInDelta);
-            console.log(crossTick.amountInDeltaCarryPercent);
-            console.log(amountInDelta);
-            revert NotImplementedYet();
-            // crossTick.amountInDelta -= int88(amountInDeltaCarry);
-            // crossTick.amountInDeltaCarryPercent = 0;
-            // amountInDelta += amountInDeltaCarry;
+            uint128 amountInDeltaCarry = uint128(uint256(crossTick.amountInDeltaCarryPercent)
+                                            * uint256(crossTick.amountInDelta) / 1e18);
+            crossTick.amountInDelta -= amountInDeltaCarry;
+            crossTick.amountInDeltaCarryPercent = 0;
+            amountInDelta += amountInDeltaCarry;
             /// @dev - amountOutDelta cannot exist without amountInDelta
             if(crossTick.amountOutDeltaCarryPercent > 0){
-                //TODO: will this work with negatives?
-                uint128 amountOutDeltaCarry = uint128(crossTick.amountOutDeltaCarryPercent 
-                                                * crossTick.amountOutDelta / 1e18);
-                crossTick.amountOutDelta += amountOutDeltaCarry;
+                uint128 amountOutDeltaCarry = uint128(uint256(crossTick.amountOutDeltaCarryPercent) 
+                                                * uint256(crossTick.amountOutDelta) / 1e18);
+                crossTick.amountOutDelta -= uint128(amountOutDeltaCarry);
                 crossTick.amountOutDeltaCarryPercent = 0;
-                amountOutDelta += amountOutDeltaCarry;
+                amountOutDelta += amountOutDeltaCarry;   
             }
         }
 
@@ -767,8 +760,6 @@ library Ticks
                 //accumulate to next tick
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
                 if(state.latestTick == 100 && nextLatestTick == 60) {
-                    console.logInt(state.latestTick);
-                    console.logInt(nextLatestTick);
                     console.log('accumulating from:');
                     console.log('cross tick');
                     console.log(pool1.liquidity);
