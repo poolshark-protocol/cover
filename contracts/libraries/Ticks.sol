@@ -129,14 +129,11 @@ library Ticks
         ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
         ICoverPoolStructs.Tick memory tickLower = ticks[lower];
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
-        if (type(uint128).max - state.liquidityGlobal < amount) revert LiquidityOverflow();
+        if ((uint128(type(int128).max) - state.liquidityGlobal) < amount) revert LiquidityOverflow();
         /// @auditor lower or upper = latestTick -> should not be possible
         /// @auditor - should we check overflow/underflow of lower and upper ticks?
         /// @auditor - we need to be able to deprecate pools if necessary; so not much reason to do overflow/underflow check
-        if (tickLower.liquidityDelta != 0 
-            || tickLower.liquidityDeltaMinus != 0
-            || tickLower.liquidityDeltaMinusInactive != 0
-            || lower == TickMath.MIN_TICK
+        if (tickNodes[upper].nextTick != tickNodes[upper].previousTick
         ) {
             if (isPool0) {
                 tickLower.liquidityDelta      -= int128(amount);
