@@ -20,15 +20,10 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "getMaxLiquidity(int24)": FunctionFragment;
     "quote(bool,uint160,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
     "rollover(int24,int24,uint256,uint256,uint128,uint128,bool)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "getMaxLiquidity",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(
     functionFragment: "quote",
     values: [
@@ -66,10 +61,6 @@ interface TicksInterface extends ethers.utils.Interface {
     ]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "getMaxLiquidity",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "rollover", data: BytesLike): Result;
 
@@ -120,11 +111,6 @@ export class Ticks extends BaseContract {
   interface: TicksInterface;
 
   functions: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,
@@ -169,11 +155,6 @@ export class Ticks extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber, BigNumber]>;
   };
-
-  getMaxLiquidity(
-    tickSpacing: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   quote(
     zeroForOne: boolean,
@@ -220,11 +201,6 @@ export class Ticks extends BaseContract {
   ): Promise<[BigNumber, BigNumber]>;
 
   callStatic: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,
@@ -273,11 +249,6 @@ export class Ticks extends BaseContract {
   filters: {};
 
   estimateGas: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,
@@ -314,11 +285,6 @@ export class Ticks extends BaseContract {
   };
 
   populateTransaction: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,

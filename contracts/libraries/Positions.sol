@@ -27,10 +27,6 @@ library Positions
 
     using Positions for mapping(int24 => ICoverPoolStructs.Tick);
 
-    function getMaxLiquidity(int24 tickSpacing) external pure returns (uint128) {
-        return type(uint128).max / uint128(uint24(TickMath.MAX_TICK) / (2 * uint24(tickSpacing)));
-    }
-
     function validate(
         ICoverPoolStructs.ValidateParams memory params
     ) external pure returns (int24, int24, int24, int24, uint128, uint256 liquidityMinted) {
