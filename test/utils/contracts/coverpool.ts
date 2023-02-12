@@ -397,6 +397,10 @@ export async function validateBurn(
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address);
     }
 
+    // console.log('pool balance before')
+    // console.log((await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+    // console.log((await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+
     let lowerTickBefore:    Tick;
     let upperTickBefore:    Tick;
     let positionBefore:     Position;
@@ -455,6 +459,9 @@ export async function validateBurn(
         balanceInAfter  = await hre.props.token0.balanceOf(signer.address);
         balanceOutAfter = await hre.props.token1.balanceOf(signer.address);
     }
+    // console.log('pool balance after')
+    // console.log((await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+    // console.log((await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
 
     expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease);
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease);

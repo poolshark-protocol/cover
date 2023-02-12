@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
     "quote(bool,uint160,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
-    "rollover(int24,int24,uint256,uint256,uint128,uint128,bool)": FunctionFragment;
+    "rollover((int24,int24,int24,int24,int24,int24,uint128,uint128,uint128,uint128),uint256,uint256,bool)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -51,10 +51,18 @@ interface TicksInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "rollover",
     values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
+      {
+        nextTickToCross0: BigNumberish;
+        nextTickToCross1: BigNumberish;
+        nextTickToAccum0: BigNumberish;
+        nextTickToAccum1: BigNumberish;
+        stopTick0: BigNumberish;
+        stopTick1: BigNumberish;
+        amountInDelta0: BigNumberish;
+        amountInDelta1: BigNumberish;
+        amountOutDelta0: BigNumberish;
+        amountOutDelta1: BigNumberish;
+      },
       BigNumberish,
       BigNumberish,
       boolean
@@ -145,15 +153,49 @@ export class Ticks extends BaseContract {
     >;
 
     rollover(
-      nextTickToCross: BigNumberish,
-      nextTickToAccum: BigNumberish,
+      cache: {
+        nextTickToCross0: BigNumberish;
+        nextTickToCross1: BigNumberish;
+        nextTickToAccum0: BigNumberish;
+        nextTickToAccum1: BigNumberish;
+        stopTick0: BigNumberish;
+        stopTick1: BigNumberish;
+        amountInDelta0: BigNumberish;
+        amountInDelta1: BigNumberish;
+        amountOutDelta0: BigNumberish;
+        amountOutDelta1: BigNumberish;
+      },
       currentPrice: BigNumberish,
       currentLiquidity: BigNumberish,
-      amountInDelta: BigNumberish,
-      amountOutDelta: BigNumberish,
       isPool0: boolean,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber]>;
+    ): Promise<
+      [
+        [
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          nextTickToCross0: number;
+          nextTickToCross1: number;
+          nextTickToAccum0: number;
+          nextTickToAccum1: number;
+          stopTick0: number;
+          stopTick1: number;
+          amountInDelta0: BigNumber;
+          amountInDelta1: BigNumber;
+          amountOutDelta0: BigNumber;
+          amountOutDelta1: BigNumber;
+        }
+      ]
+    >;
   };
 
   quote(
@@ -190,15 +232,47 @@ export class Ticks extends BaseContract {
   >;
 
   rollover(
-    nextTickToCross: BigNumberish,
-    nextTickToAccum: BigNumberish,
+    cache: {
+      nextTickToCross0: BigNumberish;
+      nextTickToCross1: BigNumberish;
+      nextTickToAccum0: BigNumberish;
+      nextTickToAccum1: BigNumberish;
+      stopTick0: BigNumberish;
+      stopTick1: BigNumberish;
+      amountInDelta0: BigNumberish;
+      amountInDelta1: BigNumberish;
+      amountOutDelta0: BigNumberish;
+      amountOutDelta1: BigNumberish;
+    },
     currentPrice: BigNumberish,
     currentLiquidity: BigNumberish,
-    amountInDelta: BigNumberish,
-    amountOutDelta: BigNumberish,
     isPool0: boolean,
     overrides?: CallOverrides
-  ): Promise<[BigNumber, BigNumber]>;
+  ): Promise<
+    [
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
+      nextTickToCross0: number;
+      nextTickToCross1: number;
+      nextTickToAccum0: number;
+      nextTickToAccum1: number;
+      stopTick0: number;
+      stopTick1: number;
+      amountInDelta0: BigNumber;
+      amountInDelta1: BigNumber;
+      amountOutDelta0: BigNumber;
+      amountOutDelta1: BigNumber;
+    }
+  >;
 
   callStatic: {
     quote(
@@ -235,15 +309,47 @@ export class Ticks extends BaseContract {
     >;
 
     rollover(
-      nextTickToCross: BigNumberish,
-      nextTickToAccum: BigNumberish,
+      cache: {
+        nextTickToCross0: BigNumberish;
+        nextTickToCross1: BigNumberish;
+        nextTickToAccum0: BigNumberish;
+        nextTickToAccum1: BigNumberish;
+        stopTick0: BigNumberish;
+        stopTick1: BigNumberish;
+        amountInDelta0: BigNumberish;
+        amountInDelta1: BigNumberish;
+        amountOutDelta0: BigNumberish;
+        amountOutDelta1: BigNumberish;
+      },
       currentPrice: BigNumberish,
       currentLiquidity: BigNumberish,
-      amountInDelta: BigNumberish,
-      amountOutDelta: BigNumberish,
       isPool0: boolean,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber]>;
+    ): Promise<
+      [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        nextTickToCross0: number;
+        nextTickToCross1: number;
+        nextTickToAccum0: number;
+        nextTickToAccum1: number;
+        stopTick0: number;
+        stopTick1: number;
+        amountInDelta0: BigNumber;
+        amountInDelta1: BigNumber;
+        amountOutDelta0: BigNumber;
+        amountOutDelta1: BigNumber;
+      }
+    >;
   };
 
   filters: {};
@@ -273,12 +379,20 @@ export class Ticks extends BaseContract {
     ): Promise<BigNumber>;
 
     rollover(
-      nextTickToCross: BigNumberish,
-      nextTickToAccum: BigNumberish,
+      cache: {
+        nextTickToCross0: BigNumberish;
+        nextTickToCross1: BigNumberish;
+        nextTickToAccum0: BigNumberish;
+        nextTickToAccum1: BigNumberish;
+        stopTick0: BigNumberish;
+        stopTick1: BigNumberish;
+        amountInDelta0: BigNumberish;
+        amountInDelta1: BigNumberish;
+        amountOutDelta0: BigNumberish;
+        amountOutDelta1: BigNumberish;
+      },
       currentPrice: BigNumberish,
       currentLiquidity: BigNumberish,
-      amountInDelta: BigNumberish,
-      amountOutDelta: BigNumberish,
       isPool0: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -309,12 +423,20 @@ export class Ticks extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     rollover(
-      nextTickToCross: BigNumberish,
-      nextTickToAccum: BigNumberish,
+      cache: {
+        nextTickToCross0: BigNumberish;
+        nextTickToCross1: BigNumberish;
+        nextTickToAccum0: BigNumberish;
+        nextTickToAccum1: BigNumberish;
+        stopTick0: BigNumberish;
+        stopTick1: BigNumberish;
+        amountInDelta0: BigNumberish;
+        amountInDelta1: BigNumberish;
+        amountOutDelta0: BigNumberish;
+        amountOutDelta1: BigNumberish;
+      },
       currentPrice: BigNumberish,
       currentLiquidity: BigNumberish,
-      amountInDelta: BigNumberish,
-      amountOutDelta: BigNumberish,
       isPool0: boolean,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

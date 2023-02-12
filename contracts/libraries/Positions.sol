@@ -239,7 +239,7 @@ library Positions
                                                 cache.position.claimPriceLast,
                                                 cache.claimPrice
                                             );
-            cache.position.amountIn += uint128(amountInClaimable * (1e6 + state.swapFee) / 1e6); /// @dev - factor in swap fees
+            cache.position.amountIn += uint128(amountInClaimable);/// @dev - factor in swap fees at the end * (1e6 + state.swapFee) / 1e6); /// @dev - factor in swap fees
         }
         // check for end of position claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)){
@@ -279,24 +279,23 @@ library Positions
             }
             // factor in current liquidity auction
             if (state.latestTick == params.claim) {
-                // section 3
+                // section 2
                 cache.position.amountOut += uint128(params.zeroForOne ? 
-                                                DyDxMath.getDy(
+                                                DyDxMath.getDx(
                                                     cache.position.liquidity,
                                                     pool.price,
                                                     cache.claimPrice
                                                 )
-                                                : DyDxMath.getDx(
+                                                : DyDxMath.getDy(
                                                     cache.position.liquidity, 
                                                     cache.claimPrice,
                                                     pool.price
                                                 )
-                                            ) * (1e6 + state.swapFee) / 1e6; /// @dev - factor in swap fees
-                                                ///@dev - 1 of 4e6 is lost due to dust
-                // section 4
+                                            );
+                // section 3
                 {
                     uint160 latestSpreadPrice = params.zeroForOne ? TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread)
-                                                                : TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
+                                                                  : TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
                     // modify claim price for section 4
                     cache.claimPrice = latestSpreadPrice;
                     cache.position.amountIn += uint128(params.zeroForOne ? 
@@ -310,7 +309,7 @@ library Positions
                                                         pool.price,
                                                         latestSpreadPrice
                                                     )
-                                                ) * (1e6 + state.swapFee) / 1e6; /// @dev - factor in swap fees
+                                                ); /// @dev - factor in swap fees at end
                                                     ///@dev - 1 of 4e6 is lost due to dust
                 }
                 // modify current liquidity
@@ -320,7 +319,7 @@ library Positions
             }
         }
         {
-            //section 2
+            //section 4
             if(params.amount > 0) {
                 cache.position.amountOut += uint128(params.zeroForOne ? 
                     DyDxMath.getDx(
@@ -340,19 +339,25 @@ library Positions
                                                                     uint128(cache.amountOutDelta),
                                                                     cache.position.liquidity, 
                                                                     Q96
-                                                                ) - 1 ///@dev - in case of rounding error
+                                                                )
                                                     );
-            } /// @dev - amountOutDelta always gt 0
+            }
         }
         // factor in deltas for section 1
+        // console.log('section 1 before deltas');
+        // console.log(cache.position.amountIn);
         if (cache.amountInDelta > 0) {
             //TODO: handle underflow here          
             cache.position.amountIn -= uint128(FullPrecisionMath.mulDiv(
                                                             cache.amountInDelta,
                                                             cache.position.liquidity, 
                                                             Q96
-                                                        ) + 1) * (1e6 + state.swapFee) / 1e6; /// @dev - in case of rounding error
+                                                        ) + 1); /// @dev - in case of rounding error
+            /// @auditor - how should we handle this for rounding^
         } /// @dev - amountInDelta always lt 0
+        // factor in swap fees
+        cache.position.amountIn = cache.position.amountIn * 1e6 / (1e6 - state.swapFee);
+        // mark last claim price
         cache.position.claimPriceLast = (params.claim == state.latestTick) ? pool.price : cache.claimPrice;
 
         // if burn or second mint
