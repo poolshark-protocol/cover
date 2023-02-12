@@ -35,8 +35,8 @@ interface ICoverPoolStructs {
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
         //TODO: change to uint since we know in is negative and out is positive
-        uint128   amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
-        uint128   amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
+        uint128 amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
+        uint128 amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
         uint64  amountInDeltaCarryPercent;
         uint64  amountOutDeltaCarryPercent;
         //TODO: wrap amountDeltas in a single struct

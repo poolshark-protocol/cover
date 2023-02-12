@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { getNonce } from "../../../tasks/utils";
-import { RangeFactoryMock, RangePoolMock, DyDxMath, FullPrecisionMath, CoverPool, CoverPoolFactory, Positions, TickMath, Ticks, Token20, TwapOracle } from "../../../typechain";
+import { RangeFactoryMock, RangePoolMock, DyDxMath, FullPrecisionMath, CoverPool, CoverPoolFactory, Positions, TickMath, Ticks, Token20, TwapOracle, Epochs } from "../../../typechain";
 import { InitialSetup } from "./initialSetup";
 
 export interface BeforeEachProps {
@@ -10,6 +10,7 @@ export interface BeforeEachProps {
     rangePoolMock: RangePoolMock;
     tickMathLib: TickMath;
     dydxMathLib: DyDxMath;
+    epochsLib: Epochs;
     fullPrecisionMathLib: FullPrecisionMath;
     ticksLib: Ticks;
     twapOracleLib: TwapOracle;
@@ -54,6 +55,7 @@ export class GetBeforeEach {
         let rangePoolMock: RangePoolMock;
         let tickMathLib: TickMath;
         let dydxMathLib: DyDxMath;
+        let epochsLib: Epochs;
         let fullPrecisionMathLib: FullPrecisionMath;
         let ticksLib: Ticks;
         let twapOracleLib: TwapOracle;
@@ -75,6 +77,7 @@ export class GetBeforeEach {
             rangePoolMock,
             tickMathLib,
             dydxMathLib,
+            epochsLib,
             fullPrecisionMathLib,
             ticksLib,
             twapOracleLib,

@@ -4,7 +4,7 @@ import { DeployAssist } from "../../../scripts/util/deployAssist";
 import { ContractDeploymentsKeys } from "../../../scripts/util/files/contractDeploymentKeys";
 import { ContractDeploymentsJson } from "../../../scripts/util/files/contractDeploymentsJson";
 import { readDeploymentsFile, writeDeploymentsFile } from "../../../tasks/utils";
-import { Token20__factory, CoverPoolFactory__factory, RangeFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, Positions__factory, TwapOracle__factory } from "../../../typechain";
+import { Token20__factory, CoverPoolFactory__factory, RangeFactoryMock__factory, Ticks__factory, TickMath__factory, DyDxMath__factory, FullPrecisionMath__factory, Positions__factory, TwapOracle__factory, Epochs__factory } from "../../../typechain";
 
 export class InitialSetup {
 
@@ -160,6 +160,19 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            Epochs__factory,
+            'epochsLib',
+            [],
+            {
+                "contracts/libraries/TickMath.sol:TickMath": hre.props.tickMathLib.address,
+                "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address,
+                "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address
+            }
+        );
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Ticks__factory,
             'ticksLib',
             [],
@@ -206,7 +219,8 @@ export class InitialSetup {
                 "contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath": hre.props.fullPrecisionMathLib.address,
                 "contracts/libraries/TickMath.sol:TickMath": hre.props.tickMathLib.address,
                 "contracts/libraries/DyDxMath.sol:DyDxMath": hre.props.dydxMathLib.address,
-                "contracts/libraries/TwapOracle.sol:TwapOracle": hre.props.twapOracleLib.address
+                "contracts/libraries/TwapOracle.sol:TwapOracle": hre.props.twapOracleLib.address,
+                "contracts/libraries/Epochs.sol:Epochs": hre.props.epochsLib.address
             }
         );
         // // hre.nonce += 1;

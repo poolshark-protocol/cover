@@ -10,6 +10,7 @@ import "./utils/CoverPoolErrors.sol";
 import "./libraries/Ticks.sol";
 import "./libraries/TwapOracle.sol";
 import "./libraries/Positions.sol";
+import "./libraries/Epochs.sol";
 
 /// @notice Poolshark Cover Pool Implementation
 contract CoverPool is
@@ -110,7 +111,7 @@ contract CoverPool is
         if(block.number != globalState.lastBlockNumber) {
             globalState.lastBlockNumber = uint32(block.number);
             //can save a couple 100 gas if we skip this when no update
-            (globalState, pool0, pool1) = Ticks.accumulateLastBlock(
+            (globalState, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickNodes,
@@ -210,7 +211,7 @@ contract CoverPool is
                 state,
                 pool0, 
                 pool1
-            ) = Ticks.accumulateLastBlock(
+            ) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickNodes,
@@ -279,7 +280,7 @@ contract CoverPool is
                 state,
                 pool0, 
                 pool1
-            ) = Ticks.accumulateLastBlock(
+            ) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickNodes,
@@ -338,7 +339,7 @@ contract CoverPool is
         TickMath.validatePrice(priceLimit);
         if(block.number != state.lastBlockNumber) {
             state.lastBlockNumber = uint32(block.number);
-            (state, pool0, pool1) = Ticks.accumulateLastBlock(
+            (state, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickNodes,
