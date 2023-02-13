@@ -88,6 +88,30 @@ library Ticks
         return (cache, amountOut);
     }
 
+    function initialize(
+        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.PoolState storage pool0,
+        ICoverPoolStructs.PoolState storage pool1,
+        int24 latestTick,
+        uint32 accumEpoch,
+        int24 tickSpread 
+    ) external {
+        /// @dev - assume latestTick is not MIN_TICK or MAX_TICK
+        // if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) revert InvalidLatestTick();
+        tickNodes[latestTick] = ICoverPoolStructs.TickNode(
+            TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
+        );
+        tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
+            TickMath.MIN_TICK, latestTick, accumEpoch
+        );
+        tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
+            latestTick, TickMath.MAX_TICK, accumEpoch
+        );
+        //TODO: the sqrtPrice cannot move more than 1 tickSpacing away
+        pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
+        pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
+    }
+
     //TODO: ALL TICKS NEED TO BE CREATED WITH 
     function insert(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
@@ -102,10 +126,10 @@ library Ticks
     ) public returns (ICoverPoolStructs.GlobalState memory) {
         /// @auditor - validation of ticks is in Positions.validate
         // load into memory to reduce storage reads/writes
-        ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
-        ICoverPoolStructs.Tick memory tickLower = ticks[lower];
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
         if ((uint128(type(int128).max) - state.liquidityGlobal) < amount) revert LiquidityOverflow();
+        ICoverPoolStructs.Tick memory tickLower = ticks[lower];
+        ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
         /// @auditor lower or upper = latestTick -> should not be possible
         /// @auditor - should we check overflow/underflow of lower and upper ticks?
         /// @auditor - we need to be able to deprecate pools if necessary; so not much reason to do overflow/underflow check
@@ -115,25 +139,7 @@ library Ticks
                 tickLower.liquidityDelta      -= int128(amount);
                 tickLower.liquidityDeltaMinus += amount;
             } else {
-                if (tickLower.amountInDeltaCarryPercent > 0) {
-                    //adjust deltas for liquidity being added
-                    uint256 liquidityDeltaPlus = uint128(tickLower.liquidityDelta + int128(tickLower.liquidityDeltaMinus));
-                    uint256 amountInDeltaCarry = uint256(tickLower.amountInDelta) * uint256(tickLower.amountInDeltaCarryPercent) / 1e18;
-                    tickLower.amountInDelta -= uint128(amountInDeltaCarry);
-                    uint256 amountInCarryNew = uint128(
-                                                        FullPrecisionMath.mulDiv(
-                                                                                    FullPrecisionMath.mulDiv(
-                                                                                        amountInDeltaCarry,
-                                                                                        liquidityDeltaPlus,
-                                                                                        Q96
-                                                                                    ),
-                                                                                    Q96,
-                                                                                    liquidityDeltaPlus + amount
-                                                                                )
-                                                      );
-                    tickLower.amountInDeltaCarryPercent = uint64(amountInCarryNew * tickLower.amountInDelta / 1e18);
-                    tickLower.amountInDelta += uint128(amountInCarryNew);
-                }
+                tickLower = _dilute(tickLower, amount);
                 tickLower.liquidityDelta      += int128(amount);
             }
         } else {
@@ -152,8 +158,6 @@ library Ticks
                 );
             }
             /// @auditor new latestTick being in between lowerOld and lower handled by Positions.validate()
-        }
-        if(tickNodes[lower].nextTick == tickNodes[lower].previousTick) {
             int24 oldNextTick = tickNodes[lowerOld].nextTick;
             if (upper < oldNextTick) { oldNextTick = upper; }
             /// @auditor - don't set previous tick so upper can be initialized
@@ -169,18 +173,16 @@ library Ticks
             );
             tickNodes[lowerOld].nextTick = lower;
         }
-        if (tickUpper.liquidityDelta != 0 
-            || tickUpper.liquidityDeltaMinus != 0
-            || tickUpper.amountInDelta != 0
-            || upper == TickMath.MAX_TICK
-        ) {
+        /// @auditor -> is it safe to add to liquidityDelta w/o Tick struct initialization
+        if (tickNodes[upper].nextTick != tickNodes[upper].previousTick) {
             if (isPool0) {
+                tickUpper = _dilute(tickUpper, amount);
                 tickUpper.liquidityDelta      += int128(amount);
             } else {
                 tickUpper.liquidityDelta      -= int128(amount);
                 tickUpper.liquidityDeltaMinus += amount;
             }
-        } else if (upper != TickMath.MAX_TICK) {
+        } else {
             if (isPool0) {
                 tickUpper = ICoverPoolStructs.Tick(
                     int128(amount),
@@ -194,8 +196,6 @@ library Ticks
                     0,0,0,0
                 );
             }
-        }
-        if(tickNodes[upper].nextTick == tickNodes[upper].previousTick && upper != TickMath.MAX_TICK) {
             int24 oldPrevTick = tickNodes[upperOld].previousTick;
             if (lower > oldPrevTick) oldPrevTick = lower;
             //TODO: handle new TWAP being in between upperOld and upper
@@ -206,7 +206,6 @@ library Ticks
                 ) {
                 revert WrongTickUpperOld();
             }
-
             tickNodes[upper] = ICoverPoolStructs.TickNode(
                 oldPrevTick,
                 upperOld,
@@ -232,8 +231,6 @@ library Ticks
         bool removeUpper
     ) external {
         //TODO: we can only delete is lower != MIN_TICK or latestTick and all values are 0
-
-
         // bool deleteLowerTick = false; bool deleteUpperTick = false;
 
         //TODO: we can only delete is upper != MAX_TICK or latestTick and all values are 0
@@ -242,13 +239,22 @@ library Ticks
             ICoverPoolStructs.Tick memory tickLower = ticks[lower];
             if (removeLower) {
                 if (isPool0) {
+                    if (amount == tickLower.liquidityDeltaMinus) {
+                        tickLower = _filter(tickLower, false);
+                    }
                     tickLower.liquidityDelta += int128(amount);
                     tickLower.liquidityDeltaMinus -= amount;
                 } else {
+                    _filter(tickLower, true);
                     tickLower.liquidityDelta -= int128(amount);
                 }     
             } else {
                 if (isPool0) {
+                    if (lower == upper) {
+                        if(amount == tickLower.liquidityDeltaMinusInactive) {
+                            tickLower = _filter(tickLower, false);
+                        }
+                    }
                     tickLower.liquidityDeltaMinusInactive -= amount;
                 }
             }
@@ -275,13 +281,22 @@ library Ticks
             ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
             if (removeUpper) {
                 if (isPool0) {
+                    _filter(tickUpper, true);
                     tickUpper.liquidityDelta -= int128(amount);
                 } else {
+                    if (amount == tickUpper.liquidityDeltaMinus) {
+                        tickUpper = _filter(tickUpper, false);
+                    }
                     tickUpper.liquidityDelta += int128(amount);
                     tickUpper.liquidityDeltaMinus -= amount;
                 }
             } else {
                 if (!isPool0) {
+                    if (lower == upper) {
+                        if(amount == tickUpper.liquidityDeltaMinusInactive) {
+                            tickUpper = _filter(tickUpper, false);
+                        }
+                    }
                     tickUpper.liquidityDeltaMinusInactive -= amount;
                 }
             }
@@ -329,27 +344,85 @@ library Ticks
         /// @dev - we can never delete ticks due to amount deltas
     }
 
-    function initialize(
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
-        ICoverPoolStructs.PoolState storage pool0,
-        ICoverPoolStructs.PoolState storage pool1,
-        int24 latestTick,
-        uint32 accumEpoch,
-        int24 tickSpread 
-    ) external {
-        /// @dev - assume latestTick is not MIN_TICK or MAX_TICK
-        // if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) revert InvalidLatestTick();
-        tickNodes[latestTick] = ICoverPoolStructs.TickNode(
-            TickMath.MIN_TICK, TickMath.MAX_TICK, accumEpoch
-        );
-        tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
-            TickMath.MIN_TICK, latestTick, accumEpoch
-        );
-        tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
-            latestTick, TickMath.MAX_TICK, accumEpoch
-        );
-        //TODO: the sqrtPrice cannot move more than 1 tickSpacing away
-        pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
-        pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
+    function _dilute(
+        ICoverPoolStructs.Tick memory tick,
+        uint128 amount
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+        if (tick.amountInDeltaCarryPercent > 0) {
+            //adjust deltas for liquidity being added
+            uint256 liquidityDeltaPlus = uint128(tick.liquidityDelta + int128(tick.liquidityDeltaMinus));
+            {
+                // adjust amountIn delta values
+                uint256 amountInDeltaCarry = uint256(tick.amountInDelta) * uint256(tick.amountInDeltaCarryPercent) / 1e18;
+                tick.amountInDelta -= uint128(amountInDeltaCarry);
+                uint256 amountInCarryNew = uint128(
+                                                    FullPrecisionMath.mulDiv(
+                                                                                FullPrecisionMath.mulDiv(
+                                                                                    amountInDeltaCarry,
+                                                                                    liquidityDeltaPlus,
+                                                                                    Q96
+                                                                                ),
+                                                                                Q96,
+                                                                                liquidityDeltaPlus + amount
+                                                                            )
+                                                );
+                tick.amountInDeltaCarryPercent = uint64(amountInCarryNew * tick.amountInDelta / 1e18);
+                tick.amountInDelta += uint128(amountInCarryNew);
+            }
+            if (tick.amountOutDeltaCarryPercent > 0) {
+                // adjust amountOut delta values
+                uint256 amountOutDeltaCarry = uint256(tick.amountOutDelta) * uint256(tick.amountOutDeltaCarryPercent) / 1e18;
+                tick.amountOutDelta -= uint128(amountOutDeltaCarry);
+                uint256 amountOutCarryNew = uint128(
+                                                    FullPrecisionMath.mulDiv(
+                                                                                FullPrecisionMath.mulDiv(
+                                                                                    amountOutDeltaCarry,
+                                                                                    liquidityDeltaPlus,
+                                                                                    Q96
+                                                                                ),
+                                                                                Q96,
+                                                                                liquidityDeltaPlus + amount
+                                                                            )
+                                                );
+                tick.amountOutDeltaCarryPercent = uint64(amountOutCarryNew * tick.amountOutDelta / 1e18);
+                tick.amountOutDelta += uint128(amountOutCarryNew);  
+            }
+        }
+        return tick;
+    }
+
+    function _filter(
+        ICoverPoolStructs.Tick memory tick,
+        bool filterCarry
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+        if(filterCarry) {
+            if (tick.amountInDeltaCarryPercent > 0) {
+                // filter out deltas being carried to next tick
+                {
+                    tick.amountInDelta -= uint128(uint256(tick.amountInDelta) * uint256(tick.amountInDeltaCarryPercent) / 1e18);
+                    tick.amountInDeltaCarryPercent = 0;
+                }
+                if (tick.amountOutDeltaCarryPercent > 0) {
+                    tick.amountOutDelta -= uint128(uint256(tick.amountOutDelta) * uint256(tick.amountOutDeltaCarryPercent) / 1e18);
+                    tick.amountOutDeltaCarryPercent = 0;
+                }
+            }
+        } else {
+            if (tick.amountInDeltaCarryPercent > 0) {
+                // filter out deltas left on tick
+                {
+                    tick.amountInDelta = uint128(uint256(tick.amountInDelta) * uint256(tick.amountInDeltaCarryPercent) / 1e18);
+                    tick.amountInDeltaCarryPercent = 1e18;
+                }
+                if (tick.amountOutDeltaCarryPercent > 0) {
+                    tick.amountOutDelta = uint128(uint256(tick.amountOutDelta) * uint256(tick.amountOutDeltaCarryPercent) / 1e18);
+                    tick.amountOutDeltaCarryPercent = 1e18;
+                }
+            } else {
+                tick.amountInDelta = 0;
+                tick.amountOutDelta = 0;
+            }
+        }
+        return tick;
     }
 }
