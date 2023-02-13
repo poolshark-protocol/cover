@@ -57,7 +57,7 @@ library Epochs {
         uint128 amountOutDelta,
         bool removeLiquidity,
         bool updateAccumDeltas
-    ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
+    ) internal pure returns (ICoverPoolStructs.AccumulateOutputs memory) {
         
         // update tick epoch
         if (accumTick.liquidityDeltaMinus > 0) {
@@ -143,7 +143,7 @@ library Epochs {
         uint256 currentPrice,
         uint256 currentLiquidity,
         bool isPool0
-    ) external view returns (ICoverPoolStructs.AccumulateCache memory) {
+    ) external pure returns (ICoverPoolStructs.AccumulateCache memory) {
         ICoverPoolStructs.AccumulateCache memory accumCache = cache;
         return _rollover(accumCache, currentPrice, currentLiquidity, isPool0);
     }
@@ -153,7 +153,7 @@ library Epochs {
         uint256 currentPrice,
         uint256 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.AccumulateCache memory) {
+    ) internal pure returns (ICoverPoolStructs.AccumulateCache memory) {
         if (currentLiquidity == 0) {
             // zero out deltas
             return (cache);
@@ -222,7 +222,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return stashTick;
         // handle amount in delta
