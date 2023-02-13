@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import "./ICoverPoolStructs.sol";
+import './ICoverPoolStructs.sol';
 
-interface ICoverPool is  ICoverPoolStructs {
-
+interface ICoverPool is ICoverPoolStructs {
     function collect(
         int24 lower,
         int24 upper,
         int24 claim,
-        bool  zeroForOne
+        bool zeroForOne
     ) external returns (uint256 amountIn, uint256 amountOut);
 
     function mint(
@@ -35,6 +34,10 @@ interface ICoverPool is  ICoverPoolStructs {
         bool zeroForOne,
         uint256 amountIn,
         uint160 priceLimit
-        // bytes calldata data
-    ) external returns (uint256 amountOut);
+    )
+        external
+        returns (
+            // bytes calldata data
+            uint256 amountOut
+        );
 }

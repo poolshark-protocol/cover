@@ -20,14 +20,9 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
-    "getMaxLiquidity(int24)": FunctionFragment;
-    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint24,int24,uint16,int24,uint32,uint32,uint160)))": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint128,uint160)))": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "getMaxLiquidity",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(
     functionFragment: "validate",
     values: [
@@ -46,16 +41,13 @@ interface PositionsInterface extends ethers.utils.Interface {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       }
     ]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "getMaxLiquidity",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "validate", data: BytesLike): Result;
 
   events: {};
@@ -105,11 +97,6 @@ export class Positions extends BaseContract {
   interface: PositionsInterface;
 
   functions: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     validate(
       params: {
         lowerOld: BigNumberish;
@@ -126,6 +113,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },
@@ -136,11 +124,6 @@ export class Positions extends BaseContract {
       }
     >;
   };
-
-  getMaxLiquidity(
-    tickSpacing: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   validate(
     params: {
@@ -158,6 +141,7 @@ export class Positions extends BaseContract {
         latestTick: BigNumberish;
         lastBlockNumber: BigNumberish;
         accumEpoch: BigNumberish;
+        liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
       };
     },
@@ -169,11 +153,6 @@ export class Positions extends BaseContract {
   >;
 
   callStatic: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     validate(
       params: {
         lowerOld: BigNumberish;
@@ -190,6 +169,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },
@@ -204,11 +184,6 @@ export class Positions extends BaseContract {
   filters: {};
 
   estimateGas: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     validate(
       params: {
         lowerOld: BigNumberish;
@@ -225,6 +200,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },
@@ -233,11 +209,6 @@ export class Positions extends BaseContract {
   };
 
   populateTransaction: {
-    getMaxLiquidity(
-      tickSpacing: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     validate(
       params: {
         lowerOld: BigNumberish;
@@ -254,6 +225,7 @@ export class Positions extends BaseContract {
           latestTick: BigNumberish;
           lastBlockNumber: BigNumberish;
           accumEpoch: BigNumberish;
+          liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
         };
       },

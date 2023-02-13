@@ -21,9 +21,9 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface CoverPoolFactoryInterface extends ethers.utils.Interface {
   functions: {
-    "createCoverPool(address,address,uint256,uint24,uint16)": FunctionFragment;
+    "createCoverPool(address,address,uint16,int16,uint16)": FunctionFragment;
     "feeTierTickSpacing(uint256)": FunctionFragment;
-    "getCoverPool(address,address,uint256,uint24,uint16)": FunctionFragment;
+    "getCoverPool(address,address,uint16,int16,uint16)": FunctionFragment;
     "libraries()": FunctionFragment;
     "owner()": FunctionFragment;
     "poolList(uint256)": FunctionFragment;

@@ -1,32 +1,32 @@
-import { ContractDeploymentsKeys } from "./files/contractDeploymentKeys";
-import { ContractDeploymentsJson, ContractDeploymentsKey } from "./files/contractDeploymentsJson";
-import { DeploymentActionsJson } from "./files/deploymentActionsJson";
-import { LOCAL_NETWORKS, SUPPORTED_NETWORKS, TESTNET_NETWORKS } from "../constants/supportedNetworks";
-import { ContractFactory, Contract } from "ethers";
-import { greenLog, yellowLog, redLog } from "../constants/colorLog";
-import { CONTRACT_DEPLOYMENT_KEYS } from "../autogen/contract-deployments-keys";
+import { ContractDeploymentsKeys } from './files/contractDeploymentKeys'
+import { ContractDeploymentsJson, ContractDeploymentsKey } from './files/contractDeploymentsJson'
+import { DeploymentActionsJson } from './files/deploymentActionsJson'
+import {
+    LOCAL_NETWORKS,
+    SUPPORTED_NETWORKS,
+    TESTNET_NETWORKS,
+} from '../constants/supportedNetworks'
+import { ContractFactory, Contract } from 'ethers'
+import { greenLog, yellowLog, redLog } from '../constants/colorLog'
+import { CONTRACT_DEPLOYMENT_KEYS } from '../autogen/contract-deployments-keys'
 
 export class DeployAssist {
-    private contractDeploymentsJson: ContractDeploymentsJson;
-    private contractDeploymentsKeys: ContractDeploymentsKeys;
-    private deploymentActions: DeploymentActionsJson;
+    private contractDeploymentsJson: ContractDeploymentsJson
+    private contractDeploymentsKeys: ContractDeploymentsKeys
+    private deploymentActions: DeploymentActionsJson
 
     constructor() {
-        this.contractDeploymentsJson = new ContractDeploymentsJson();
-        this.contractDeploymentsKeys = new ContractDeploymentsKeys();
-        this.deploymentActions = new DeploymentActionsJson();
+        this.contractDeploymentsJson = new ContractDeploymentsJson()
+        this.contractDeploymentsKeys = new ContractDeploymentsKeys()
+        this.deploymentActions = new DeploymentActionsJson()
     }
 
     public isLocal(): boolean {
-        return (
-            hre.network.name === LOCAL_NETWORKS.HARDHAT.toString()
-        );
+        return hre.network.name === LOCAL_NETWORKS.HARDHAT.toString()
     }
 
     public isTestnet(): boolean {
-        return (
-            hre.network.name === TESTNET_NETWORKS.GOERLI.toString()
-        );
+        return hre.network.name === TESTNET_NETWORKS.GOERLI.toString()
     }
 
     public async deployContractWithRetry<T extends ContractFactory>(
@@ -34,9 +34,9 @@ export class DeployAssist {
         contractFactory: T,
         objectName: string,
         constructorArguments: any[],
-        linkedLibraries?: any 
+        linkedLibraries?: any
     ): Promise<Contract> {
-        let contract: Contract;
+        let contract: Contract
 
         contract = await this.deployContract(
             network,
@@ -44,9 +44,9 @@ export class DeployAssist {
             objectName,
             constructorArguments,
             linkedLibraries
-        );
+        )
 
-        return contract;
+        return contract
     }
 
     private async deployContract<T extends ContractFactory>(
@@ -57,26 +57,24 @@ export class DeployAssist {
         linkedLibraries?: any,
         contractName?: string
     ): Promise<Contract> {
-
         // @ts-ignore
-        contractName = contractName ?? contractFactory.name.split('__')[0];
+        contractName = contractName ?? contractFactory.name.split('__')[0]
 
-        let contract: Contract;
-        if(linkedLibraries) {
+        let contract: Contract
+        if (linkedLibraries) {
             // @ts-ignore
             contract = await new contractFactory(linkedLibraries, hre.props.admin).deploy(
                 ...constructorArguments,
                 { nonce: hre.nonce }
-            );
+            )
         } else {
             // @ts-ignore
-            contract = await new contractFactory(hre.props.admin).deploy(
-                ...constructorArguments,
-                { nonce: hre.nonce }
-            )
+            contract = await new contractFactory(hre.props.admin).deploy(...constructorArguments, {
+                nonce: hre.nonce,
+            })
         }
 
-        await contract.deployTransaction.wait(1);
+        await contract.deployTransaction.wait(1)
 
         // console.log("Waiting for confirmation");
 
@@ -86,16 +84,16 @@ export class DeployAssist {
             objectName,
             contract,
             constructorArguments
-        );
+        )
 
         // console.log("Saving contract deployment");
 
-        hre.props[objectName] = contract;
-        hre.props[objectName]._admin = hre.props.admin;
+        hre.props[objectName] = contract
+        hre.props[objectName]._admin = hre.props.admin
 
-        hre.nonce += 1;
+        hre.nonce += 1
 
-        return contract;
+        return contract
     }
 
     public async saveContractDeployment(
@@ -109,12 +107,7 @@ export class DeployAssist {
             // true
             !this.isLocal()
         ) {
-            this.logContractDeployment(
-                network,
-                contractName,
-                objectName,
-                contract.address
-            );
+            this.logContractDeployment(network, contractName, objectName, contract.address)
         }
 
         if (
@@ -127,28 +120,24 @@ export class DeployAssist {
                 objectName,
                 contract.address,
                 constructorArguments
-            );
+            )
             await this.contractDeploymentsKeys.addContractDeploymentKey({
                 networkName: network,
                 objectName: objectName,
-            });
+            })
         }
     }
 
-    public async deleteContractDeployment(
-        network: SUPPORTED_NETWORKS,
-        objectName: string
-    ) {
-
+    public async deleteContractDeployment(network: SUPPORTED_NETWORKS, objectName: string) {
         if (!this.isLocal()) {
             await this.contractDeploymentsJson.deleteContractDeploymentsJsonFile(
                 network,
                 objectName
-            );
+            )
             await this.contractDeploymentsKeys.addContractDeploymentKey({
                 networkName: network,
                 objectName: objectName,
-            });
+            })
         }
     }
 
@@ -158,10 +147,7 @@ export class DeployAssist {
         objectName: string,
         contractAddress: string
     ) {
-        console.log(
-            `🛰️ ${network}:${contractName}:${objectName} deployed:`,
-            contractAddress
-        );
+        console.log(`🛰️ ${network}:${contractName}:${objectName} deployed:`, contractAddress)
     }
 
     public async getContract(
@@ -172,55 +158,51 @@ export class DeployAssist {
         const addr = await this.contractDeploymentsJson.getContractAddress({
             networkName,
             objectName,
-        });
+        })
 
-        console.log(addr);
+        console.log(addr)
 
-        return await hre.ethers.getContractAt(contractName, addr);
+        return await hre.ethers.getContractAt(contractName, addr)
     }
 
-    private async getScrubbedConstructorArguments(
-        key: ContractDeploymentsKey
-    ): Promise<any[]> {
+    private async getScrubbedConstructorArguments(key: ContractDeploymentsKey): Promise<any[]> {
         const originalConstructorArguments: any[] =
-            await this.contractDeploymentsJson.getConstructorArguments(key);
-        const constructorArguments: any[] = originalConstructorArguments;
+            await this.contractDeploymentsJson.getConstructorArguments(key)
+        const constructorArguments: any[] = originalConstructorArguments
 
         originalConstructorArguments.forEach((arg, i) => {
             if (arg.gasLimit !== undefined || arg.value !== undefined) {
-                constructorArguments.splice(i, 1);
+                constructorArguments.splice(i, 1)
             }
-        });
+        })
 
-        return constructorArguments;
+        return constructorArguments
     }
 
     public async verifyContracts() {
-
         console.log(CONTRACT_DEPLOYMENT_KEYS.length)
 
         for (let k = 0; k < CONTRACT_DEPLOYMENT_KEYS.length; k++) {
-            const key: ContractDeploymentsKey = CONTRACT_DEPLOYMENT_KEYS[k];
+            const key: ContractDeploymentsKey = CONTRACT_DEPLOYMENT_KEYS[k]
 
-            const contractName = await this.contractDeploymentsJson.getContractName(key);
-            console.log(contractName);
-            console.log('test');
+            const contractName = await this.contractDeploymentsJson.getContractName(key)
+            console.log(contractName)
+            console.log('test')
             const contract = await this.getContract(
                 contractName,
                 key.networkName as SUPPORTED_NETWORKS,
                 key.objectName
-            );
-            console.log('test');
-            const constructorArguments =
-                await this.getScrubbedConstructorArguments(key);
-            console.log('test');
+            )
+            console.log('test')
+            const constructorArguments = await this.getScrubbedConstructorArguments(key)
+            console.log('test')
             await this.verifyContract(
                 key.networkName,
                 contractName,
                 key.objectName,
                 contract.address,
                 constructorArguments
-            );
+            )
         }
     }
 
@@ -233,31 +215,31 @@ export class DeployAssist {
     ) {
         console.log(
             `\n🔎 Verifying ${contractName}:${objectName} contract on ${networkName.toUpperCase()} scanner: ${address}\n`
-        );
+        )
 
         try {
-            await hre.run('verify:verify', { address, constructorArguments });
+            await hre.run('verify:verify', { address, constructorArguments })
 
             console.log(
                 `\n🔎 ${contractName} contract verified on ${networkName.toUpperCase()} scanner: ${address}\n`
-            );
+            )
 
             greenLog(
                 `\n✅ Verified ${contractName}:${objectName} contract on ${networkName.toUpperCase()} scanner: ${address}\n`
-            );
+            )
         } catch (error: any) {
             if (error.message.includes('Reason: Already Verified')) {
                 yellowLog(
                     `\n🔎 ${contractName} contract already verified on ${networkName.toUpperCase()} scanner: ${address}\n`
-                );
+                )
             } else if (error.message.includes('Forbidden: Access is denied.')) {
                 yellowLog(
                     `\n🔎 Please visit ${address} on ${networkName.toUpperCase()} scanner to view verified contract.\n`
-                );
+                )
             } else if (error.message.includes('Missing or invalid ApiKey')) {
-                redLog(`\n🔎 (⚠️ ) Missing or invalid ApiKey: ${address}\n`);
+                redLog(`\n🔎 (⚠️ ) Missing or invalid ApiKey: ${address}\n`)
             } else {
-                redLog(`\n🔎 ${error}\n`);
+                redLog(`\n🔎 ${error}\n`)
             }
         }
     }

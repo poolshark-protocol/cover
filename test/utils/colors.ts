@@ -9,12 +9,12 @@ enum COLORS {
 }
 
 interface BinaryValue {
-    value: string;
+    value: string
 }
 
 type Colors = {
-    [color in COLORS]: BinaryValue;
-};
+    [color in COLORS]: BinaryValue
+}
 
 export const TEXT_COLOR: Colors = {
     RED: {
@@ -38,7 +38,7 @@ export const TEXT_COLOR: Colors = {
     RESET: {
         value: '\u001b[0m',
     },
-};
+}
 
 export const BACKGROUND_COLOR: Colors = {
     RED: {
@@ -62,57 +62,52 @@ export const BACKGROUND_COLOR: Colors = {
     RESET: {
         value: '\u001b[0m',
     },
-};
+}
 
 export function debugLog({
     name = '...',
     shouldLog = true,
     variables,
 }: {
-    name?: string;
-    shouldLog?: boolean;
-    variables: any[];
+    name?: string
+    shouldLog?: boolean
+    variables: any[]
 }): void {
-    if (!shouldLog) return;
-    greenLog(`🐛 DEBUG LOG { ${name} }:`);
+    if (!shouldLog) return
+    greenLog(`🐛 DEBUG LOG { ${name} }:`)
     variables.forEach((variable) => {
         if (variable) {
-            yellowLog(`\t${variable}\n`);
+            yellowLog(`\t${variable}\n`)
         } else {
-            redLog(`\t${variable}\n`);
+            redLog(`\t${variable}\n`)
         }
-    });
+    })
 }
 
 export function redLog(message: string) {
-    colorLog(COLORS.RED, message);
+    colorLog(COLORS.RED, message)
 }
 
 export function greenLog(message: string) {
-    colorLog(COLORS.GREEN, message);
+    colorLog(COLORS.GREEN, message)
 }
 
 export function yellowLog(message: string) {
-    colorLog(COLORS.YELLOW, message);
+    colorLog(COLORS.YELLOW, message)
 }
 
 export function blueLog(message: string) {
-    colorLog(COLORS.BLUE, message);
+    colorLog(COLORS.BLUE, message)
 }
 
 export function purpleLog(message: string) {
-    colorLog(COLORS.PURPLE, message);
+    colorLog(COLORS.PURPLE, message)
 }
 
 export function cyanLog(message: string) {
-    colorLog(COLORS.CYAN, message);
+    colorLog(COLORS.CYAN, message)
 }
 
 function colorLog(color: COLORS, message: string) {
-    console.log(
-        '%s%s%s',
-        TEXT_COLOR[color].value,
-        message,
-        TEXT_COLOR[COLORS.RESET].value
-    );
+    console.log('%s%s%s', TEXT_COLOR[color].value, message, TEXT_COLOR[COLORS.RESET].value)
 }

@@ -105,14 +105,14 @@ const _abi = [
         type: "uint8",
       },
       {
-        internalType: "uint24",
+        internalType: "uint16",
         name: "swapFee",
-        type: "uint24",
+        type: "uint16",
       },
       {
-        internalType: "int24",
+        internalType: "int16",
         name: "tickSpread",
-        type: "int24",
+        type: "int16",
       },
       {
         internalType: "uint16",
@@ -133,6 +133,11 @@ const _abi = [
         internalType: "uint32",
         name: "accumEpoch",
         type: "uint32",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidityGlobal",
+        type: "uint128",
       },
       {
         internalType: "uint160",
@@ -327,14 +332,14 @@ const _abi = [
     name: "ticks0",
     outputs: [
       {
-        internalType: "int104",
+        internalType: "int128",
         name: "liquidityDelta",
-        type: "int104",
+        type: "int128",
       },
       {
-        internalType: "uint104",
+        internalType: "uint128",
         name: "liquidityDeltaMinus",
-        type: "uint104",
+        type: "uint128",
       },
       {
         internalType: "uint128",
@@ -342,14 +347,14 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "int88",
+        internalType: "uint128",
         name: "amountInDelta",
-        type: "int88",
+        type: "uint128",
       },
       {
-        internalType: "int88",
+        internalType: "uint128",
         name: "amountOutDelta",
-        type: "int88",
+        type: "uint128",
       },
       {
         internalType: "uint64",
@@ -376,14 +381,14 @@ const _abi = [
     name: "ticks1",
     outputs: [
       {
-        internalType: "int104",
+        internalType: "int128",
         name: "liquidityDelta",
-        type: "int104",
+        type: "int128",
       },
       {
-        internalType: "uint104",
+        internalType: "uint128",
         name: "liquidityDeltaMinus",
-        type: "uint104",
+        type: "uint128",
       },
       {
         internalType: "uint128",
@@ -391,14 +396,14 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "int88",
+        internalType: "uint128",
         name: "amountInDelta",
-        type: "int88",
+        type: "uint128",
       },
       {
-        internalType: "int88",
+        internalType: "uint128",
         name: "amountOutDelta",
-        type: "int88",
+        type: "uint128",
       },
       {
         internalType: "uint64",

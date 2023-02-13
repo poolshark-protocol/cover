@@ -1,34 +1,31 @@
-import { task } from 'hardhat/config';
-import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps';
-import { DEPLOY_HEDGEPOOLS, VERIFY_CONTRACTS } from '../constants/taskNames';
-import { VerifyContracts } from './utils/verifyContracts';
+import { task } from 'hardhat/config'
+import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps'
+import { DEPLOY_HEDGEPOOLS, VERIFY_CONTRACTS } from '../constants/taskNames'
+import { VerifyContracts } from './utils/verifyContracts'
 
 class VerifyContractsTask {
-    public deployHedgePools: VerifyContracts;
-    public getBeforeEach: GetBeforeEach;
+    public deployHedgePools: VerifyContracts
+    public getBeforeEach: GetBeforeEach
 
     constructor() {
-        this.deployHedgePools = new VerifyContracts();
-        this.getBeforeEach = new GetBeforeEach();
-        hre.props = this.getBeforeEach.retrieveProps();
+        this.deployHedgePools = new VerifyContracts()
+        this.getBeforeEach = new GetBeforeEach()
+        hre.props = this.getBeforeEach.retrieveProps()
     }
 }
 
 task(VERIFY_CONTRACTS)
     .setDescription('Verifies all contracts')
-    .setAction(async function ({
-        ethers
-    }) {
-        const deployHedgePools: VerifyContractsTask = new VerifyContractsTask();
+    .setAction(async function ({ ethers }) {
+        const deployHedgePools: VerifyContractsTask = new VerifyContractsTask()
 
-        if (!deployHedgePools.deployHedgePools.canDeploy()) return;
+        if (!deployHedgePools.deployHedgePools.canDeploy()) return
 
-        await deployHedgePools.deployHedgePools.preDeployment();
+        await deployHedgePools.deployHedgePools.preDeployment()
 
-        await deployHedgePools.deployHedgePools.runDeployment();
+        await deployHedgePools.deployHedgePools.runDeployment()
 
-        await deployHedgePools.deployHedgePools.postDeployment();
+        await deployHedgePools.deployHedgePools.postDeployment()
 
-        console.log('Contract verification complete.\n');
-});
-
+        console.log('Contract verification complete.\n')
+    })

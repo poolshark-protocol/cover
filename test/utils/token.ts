@@ -1,6 +1,6 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber, BigNumberish, Contract } from "ethers";
-import { Token20 } from "../../typechain";
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { BigNumber, BigNumberish, Contract } from 'ethers'
+import { Token20 } from '../../typechain'
 
 export async function mintSigners20(
     token: Contract,
@@ -8,7 +8,7 @@ export async function mintSigners20(
     signers: SignerWithAddress[]
 ): Promise<void> {
     for (let signer of signers) {
-        await token.connect(hre.props.alice).mint(signer.address, amount);
+        await token.connect(hre.props.alice).mint(signer.address, amount)
     }
 }
 
@@ -17,7 +17,7 @@ export async function mintAddresses20(
     amount: BigNumberish,
     address: string
 ): Promise<void> {
-    await token.connect(hre.props.alice).mint(address, amount);
+    await token.connect(hre.props.alice).mint(address, amount)
 }
 
 export async function mintSigners1155(
@@ -27,6 +27,6 @@ export async function mintSigners1155(
     signers: SignerWithAddress[]
 ): Promise<void> {
     for (let signer of signers) {
-        await token.connect(hre.props.alice).mint(signer.address, id, amount);
+        await token.connect(hre.props.alice).mint(signer.address, id, amount)
     }
 }

@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../utils/CoverPoolErrors.sol";
-import "hardhat/console.sol";
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '../utils/CoverPoolErrors.sol';
+import 'hardhat/console.sol';
 
 abstract contract SafeTransfers is CoverTransferErrors {
     /**
@@ -16,17 +16,14 @@ abstract contract SafeTransfers is CoverTransferErrors {
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
     // slither-disable-next-line assembly
-    function _transferIn(
-        address token,
-        uint256 amount
-    ) internal virtual returns (uint256) {
+    function _transferIn(address token, uint256 amount) internal virtual returns (uint256) {
         if (token == address(0)) {
             if (msg.value < amount) revert TransferFailed(msg.sender, address(this));
             return amount;
         }
         IERC20 erc20Token = IERC20(token);
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
-        
+
         // ? We are checking the transfer, but since we are doing so in an assembly block
         // ? Slither does not pick up on that and results in a hit
         // slither-disable-next-line unchecked-transfer
@@ -58,14 +55,14 @@ abstract contract SafeTransfers is CoverTransferErrors {
     }
 
     /**
-    * @dev Similar to EIP20 transfer, except it handles a False success from `transfer` and returns an explanatory
-    *      error code rather than reverting. If caller has not called checked protocol's balance, this may revert due to
-    *      insufficient cash held in this contract. If caller has checked protocol's balance prior to this call, and verified
-    *      it is >= amount, this should not revert in normal conditions.
-    *
-    *      Note: This wrapper safely handles non-standard ERC-20 tokens that do not return a value.
-    *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
-    */
+     * @dev Similar to EIP20 transfer, except it handles a False success from `transfer` and returns an explanatory
+     *      error code rather than reverting. If caller has not called checked protocol's balance, this may revert due to
+     *      insufficient cash held in this contract. If caller has checked protocol's balance prior to this call, and verified
+     *      it is >= amount, this should not revert in normal conditions.
+     *
+     *      Note: This wrapper safely handles non-standard ERC-20 tokens that do not return a value.
+     *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
+     */
     // slither-disable-next-line assembly
     function _transferOut(
         address to,

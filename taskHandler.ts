@@ -1,9 +1,14 @@
-import { SUPPORTED_NETWORKS } from './scripts/constants/supportedNetworks';
-import { DEPLOY_HEDGEPOOLS, MINT_POSITION, MINT_TOKENS, VERIFY_CONTRACTS } from './tasks/constants/taskNames';
-import { purpleLog } from './test/utils/colors';
+import { SUPPORTED_NETWORKS } from './scripts/constants/supportedNetworks'
+import {
+    DEPLOY_HEDGEPOOLS,
+    MINT_POSITION,
+    MINT_TOKENS,
+    VERIFY_CONTRACTS,
+} from './tasks/constants/taskNames'
+import { purpleLog } from './test/utils/colors'
 
 export function handleHardhatTasks() {
-    handleCoverPoolTasks();
+    handleCoverPoolTasks()
 }
 
 function handleCoverPoolTasks() {
@@ -13,20 +18,20 @@ function handleCoverPoolTasks() {
     //     break;
     // }
     if (process.argv.includes(DEPLOY_HEDGEPOOLS)) {
-        import('./tasks/deploy/deploy-coverpools');
-        logTask(DEPLOY_HEDGEPOOLS);
+        import('./tasks/deploy/deploy-coverpools')
+        logTask(DEPLOY_HEDGEPOOLS)
     } else if (process.argv.includes(MINT_TOKENS)) {
-        import('./tasks/deploy/mint-tokens');
-        logTask(MINT_TOKENS);
+        import('./tasks/deploy/mint-tokens')
+        logTask(MINT_TOKENS)
     } else if (process.argv.includes(MINT_POSITION)) {
-        import('./tasks/deploy/mint-position');
-        logTask(MINT_POSITION);
+        import('./tasks/deploy/mint-position')
+        logTask(MINT_POSITION)
     } else if (process.argv.includes(VERIFY_CONTRACTS)) {
-        import('./tasks/deploy/verify-contracts');
-        logTask(VERIFY_CONTRACTS);
+        import('./tasks/deploy/verify-contracts')
+        logTask(VERIFY_CONTRACTS)
     }
 }
 
 function logTask(taskName: string) {
-    purpleLog(`\n🎛  Running ${taskName} task...\n`);
+    purpleLog(`\n🎛  Running ${taskName} task...\n`)
 }

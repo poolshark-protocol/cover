@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 abstract contract ICoverPoolFactory {
-
     mapping(uint256 => uint256) public feeTierTickSpacing;
 
     address public owner;
@@ -24,16 +23,16 @@ abstract contract ICoverPoolFactory {
     function createCoverPool(
         address fromToken,
         address destToken,
-        uint256 fee,
-        uint24  tickSpread,
-        uint16  twapLength
+        uint16 fee,
+        int16 tickSpread,
+        uint16 twapLength
     ) external virtual returns (address book);
 
     function getCoverPool(
         address fromToken,
         address destToken,
-        uint256 fee,
-        uint24  tickSpread,
-        uint16  twapLength
-    ) external virtual view returns (address);
+        uint16 fee,
+        int16 tickSpread,
+        uint16 twapLength
+    ) external view virtual returns (address);
 }

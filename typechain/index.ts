@@ -16,6 +16,7 @@ export type { IPositionManager } from "./IPositionManager";
 export type { IRangeFactory } from "./IRangeFactory";
 export type { IRangePool } from "./IRangePool";
 export type { DyDxMath } from "./DyDxMath";
+export type { Epochs } from "./Epochs";
 export type { FullPrecisionMath } from "./FullPrecisionMath";
 export type { Positions } from "./Positions";
 export type { TickMath } from "./TickMath";
@@ -47,6 +48,7 @@ export { IPositionManager__factory } from "./factories/IPositionManager__factory
 export { IRangeFactory__factory } from "./factories/IRangeFactory__factory";
 export { IRangePool__factory } from "./factories/IRangePool__factory";
 export { DyDxMath__factory } from "./factories/DyDxMath__factory";
+export { Epochs__factory } from "./factories/Epochs__factory";
 export { FullPrecisionMath__factory } from "./factories/FullPrecisionMath__factory";
 export { Positions__factory } from "./factories/Positions__factory";
 export { TickMath__factory } from "./factories/TickMath__factory";

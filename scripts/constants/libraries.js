@@ -1,3 +1,3 @@
 module.exports = {
-    SomeLibrary: "0x...",
-};
+    SomeLibrary: '0x...',
+}
