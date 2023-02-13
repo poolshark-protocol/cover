@@ -48,7 +48,7 @@ library Epochs {
     //TODO: accumulate takes Tick and TickNode structs instead of storage pointer
     //TODO: bool stashDeltas might be better to avoid duplicate code
     function _accumulate(
-        ICoverPoolStructs.TickNode memory tickNode, /// tickNodes[nextTickToAccum]
+        ICoverPoolStructs.TickNode memory accumTickNode, /// tickNodes[nextTickToAccum]
         ICoverPoolStructs.Tick memory crossTick,
         ICoverPoolStructs.Tick memory accumTick,
         uint32 accumEpoch,
@@ -58,41 +58,41 @@ library Epochs {
         bool removeLiquidity,
         bool updateAccumDeltas
     ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
-        //update tick epoch
-        if (updateAccumDeltas) {
-            tickNode.accumEpochLast = accumEpoch;
+        
+        // update tick epoch
+        if (accumTick.liquidityDeltaMinus > 0) {
+            accumTickNode.accumEpochLast = accumEpoch;
         }
 
+        /// @dev - dilute deltas based on newly added and inactive removed liquidity
         if (currentLiquidity > 0) {
             uint128 liquidityDeltaPlus = uint128(
                 crossTick.liquidityDelta + int128(crossTick.liquidityDeltaMinus)
             );
-            if (liquidityDeltaPlus > 0 && currentLiquidity > uint256(liquidityDeltaPlus)) {
-                /// @dev - amount deltas get diluted when liquidity is added
-                uint256 amountInCached = FullPrecisionMath.mulDiv(
+            uint256 amountInCached = FullPrecisionMath.mulDiv(
                     amountInDelta,
                     currentLiquidity - liquidityDeltaPlus, /// @dev - calculate amountIn amount w/o added liquidity
                     Q96
-                );
+            );
+            uint256 amountOutCached = FullPrecisionMath.mulDiv(
+                amountOutDelta,
+                currentLiquidity - liquidityDeltaPlus, /// @dev - calculate amountOut amount w/o added liquidity
+                Q96
+            );
+            // if there was liquidity added
+            if (liquidityDeltaPlus > 0 && currentLiquidity > uint256(liquidityDeltaPlus)) {
+                /// @dev - amount deltas get diluted when liquidity is added
                 amountInDelta = uint128(
-                    FullPrecisionMath.mulDiv(amountInCached, Q96, currentLiquidity)
+                    FullPrecisionMath.mulDiv(amountInCached, Q96, currentLiquidity + accumTick.liquidityDeltaMinusInactive)
                 );
-                uint256 amountOutCached = FullPrecisionMath.mulDiv(
-                    amountOutDelta,
-                    currentLiquidity - liquidityDeltaPlus, /// @dev - calculate amountOut amount w/o added liquidity
-                    Q96
-                );
+
                 amountOutDelta = uint128(
-                    FullPrecisionMath.mulDiv(amountOutCached, Q96, currentLiquidity) /// @dev - divide by currentLiquidity to split deltas properly
+                    FullPrecisionMath.mulDiv(amountOutCached, Q96, currentLiquidity + accumTick.liquidityDeltaMinusInactive) /// @dev - divide by currentLiquidity to split deltas properly
                 );
-            }
-            // skip if stopTick
-            if (updateAccumDeltas) {
-                accumTick.amountInDelta += amountInDelta;
-                accumTick.amountOutDelta += amountOutDelta;
             }
         }
 
+        // migrate carryover deltas from cross tick to accum tick
         if (crossTick.amountInDeltaCarryPercent > 0) {
             /// @dev - assume amountInDelta is always <= 0
             // uint256 amountInDeltaCarry = uint256(uint88(crossTick.amountInDelta));
@@ -122,11 +122,17 @@ library Epochs {
             crossTick.liquidityDeltaMinus = 0;
         }
 
+        // should be true unless stopTick
+        if (updateAccumDeltas) {
+            accumTick.amountInDelta += amountInDelta;
+            accumTick.amountOutDelta += amountOutDelta;
+        }
+
         return
             ICoverPoolStructs.AccumulateOutputs(
                 amountInDelta,
                 amountOutDelta,
-                tickNode,
+                accumTickNode,
                 crossTick,
                 accumTick
             );
@@ -229,6 +235,7 @@ library Epochs {
             /// @dev - amountInDelta should never be greater than 0
             if (amountInDelta != 0) {
                 if (currentLiquidity == stashTick.liquidityDeltaMinus) {
+                    // nothing carried so adjust carry percent
                     stashTick.amountInDeltaCarryPercent = uint64(
                         (uint256(amountInDeltaCarry) * 1e18) / amountInDeltaNew
                     );
@@ -237,10 +244,9 @@ library Epochs {
                     stashTick.amountInDeltaCarryPercent = uint64(
                         (uint256(amountInDelta + amountInDeltaCarry) * 1e18) / amountInDeltaNew
                     );
-                }
+                } /// @dev - liquidityDeltaMinusInactive accounted for in accumulate function
                 stashTick.amountInDelta += amountInDelta;
             }
-            //if amount delta is zero but liquidity is active...dilute amountInDelta
         }
         // handle amount out delta
         {

@@ -279,6 +279,7 @@ library Positions {
                 );
             cache.position.amountIn += uint128(amountInClaimable); /// @dev - factor in swap fees at the end * (1e6 + state.swapFee) / 1e6); /// @dev - factor in swap fees
         }
+
         // check for end of position claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
             // position 100% filled
@@ -321,10 +322,14 @@ library Positions {
                     : true;
             }
 
-            // factor in amount deltas
             if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+                // factor in tick and carry deltas
                 cache.amountInDelta += ticks[params.claim].amountInDelta;
                 cache.amountOutDelta += ticks[params.claim].amountOutDelta;
+            } else {
+                // factor in carry deltas
+                cache.amountInDelta += ticks[params.claim].amountInDelta * ticks[params.claim].amountInDeltaCarryPercent / 1e18;
+                cache.amountOutDelta += ticks[params.claim].amountOutDelta * ticks[params.claim].amountOutDeltaCarryPercent / 1e18;
             }
             // factor in current liquidity auction
             if (state.latestTick == params.claim) {
