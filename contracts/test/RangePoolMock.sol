@@ -1,15 +1,14 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import "../interfaces/IRangePool.sol";
-import "./RangePoolMock.sol";
+import '../interfaces/IRangePool.sol';
+import './RangePoolMock.sol';
 
 contract RangePoolMock is IRangePool {
-
     address internal admin;
     address public token0;
     address public token1;
-    int24   public tickSpacing;
+    int24 public tickSpacing;
     uint256 swapFee;
 
     uint16 observationCardinality;
@@ -21,13 +20,13 @@ contract RangePoolMock is IRangePool {
     constructor(
         address _token0,
         address _token1,
-        uint24  _swapFee,
-        int24   _tickSpacing
+        uint24 _swapFee,
+        int24 _tickSpacing
     ) {
-        require(_token0 < _token1, "wrong token order");
+        require(_token0 < _token1, 'wrong token order');
         admin = msg.sender;
-        token0  = _token0;
-        token1  = _token1;
+        token0 = _token0;
+        token1 = _token1;
         swapFee = _swapFee;
         tickSpacing = _tickSpacing;
         observationCardinality = 4;
@@ -35,35 +34,29 @@ contract RangePoolMock is IRangePool {
     }
 
     function slot0()
-    external view
-    returns (
-        uint160 sqrtPriceX96,
-        int24 tick,
-        uint16 observationIndex,
-        uint16 cardinality,
-        uint16 cardinalityNext,
-        uint8 feeProtocol,
-        bool unlocked
-    ) {
-        return (
-            1 << 96,
-            0,
-            4,
-            observationCardinality,
-            observationCardinalityNext,
-            100,
-            true
-        );
+        external
+        view
+        returns (
+            uint160 sqrtPriceX96,
+            int24 tick,
+            uint16 observationIndex,
+            uint16 cardinality,
+            uint16 cardinalityNext,
+            uint8 feeProtocol,
+            bool unlocked
+        )
+    {
+        return (1 << 96, 0, 4, observationCardinality, observationCardinalityNext, 100, true);
     }
 
-    function observe(
-        uint32[] calldata secondsAgos
-    )
-    external view
-    returns (
-        int56[] memory tickCumulatives,
-        uint160[] memory secondsPerLiquidityCumulativeX128s
-    ) {
+    function observe(uint32[] calldata secondsAgos)
+        external
+        view
+        returns (
+            int56[] memory tickCumulatives,
+            uint160[] memory secondsPerLiquidityCumulativeX128s
+        )
+    {
         secondsAgos;
         tickCumulatives = new int56[](secondsAgos.length);
         tickCumulatives[0] = int56(tickCumulative0);
@@ -73,23 +66,16 @@ contract RangePoolMock is IRangePool {
         secondsPerLiquidityCumulativeX128s[1] = uint160(949568438263103965182699);
     }
 
-    function increaseObservationCardinalityNext(
-        uint16 cardinalityNext
-    ) external {
+    function increaseObservationCardinalityNext(uint16 cardinalityNext) external {
         observationCardinalityNext = cardinalityNext;
     }
 
-    function setTickCumulatives(
-        int56 _tickCumulative0,
-        int56 _tickCumulative1
-    ) external {
+    function setTickCumulatives(int56 _tickCumulative0, int56 _tickCumulative1) external {
         tickCumulative0 = _tickCumulative0;
         tickCumulative1 = _tickCumulative1;
     }
 
-    function setObservationCardinality(
-        uint16 _observationCardinality
-    ) external {
+    function setObservationCardinality(uint16 _observationCardinality) external {
         observationCardinality = _observationCardinality;
     }
 }

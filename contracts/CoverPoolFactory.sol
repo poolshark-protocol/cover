@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./CoverPool.sol";
-import "./interfaces/ICoverPoolFactory.sol";
-import "./interfaces/IRangeFactory.sol";
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import './CoverPool.sol';
+import './interfaces/ICoverPoolFactory.sol';
+import './interfaces/IRangeFactory.sol';
 
-contract CoverPoolFactory is 
-    ICoverPoolFactory
-{
+contract CoverPoolFactory is ICoverPoolFactory {
     error IdenticalTokenAddresses();
     error InvalidTokenDecimals();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     error InvalidTickSpread();
-    
-    constructor(
-        address _rangePoolFactory
-    ) {
+
+    constructor(address _rangePoolFactory) {
         owner = msg.sender;
         rangePoolFactory = _rangePoolFactory;
     }
@@ -25,9 +21,9 @@ contract CoverPoolFactory is
     function createCoverPool(
         address fromToken,
         address destToken,
-        uint16  swapFee,
-        int16   tickSpread,
-        uint16  twapLength
+        uint16 swapFee,
+        int16 tickSpread,
+        uint16 twapLength
     ) external override returns (address pool) {
         // validate input value range
         //TODO: check twapLength > 5
@@ -37,12 +33,12 @@ contract CoverPoolFactory is
         }
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
-        if(ERC20(fromToken).decimals() == 0) revert InvalidTokenDecimals();
-        if(ERC20(destToken).decimals() == 0) revert InvalidTokenDecimals();
+        if (ERC20(fromToken).decimals() == 0) revert InvalidTokenDecimals();
+        if (ERC20(destToken).decimals() == 0) revert InvalidTokenDecimals();
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread, twapLength));
-        if (poolMapping[key] != address(0)){
+        if (poolMapping[key] != address(0)) {
             revert PoolAlreadyExists();
         }
 
@@ -57,14 +53,7 @@ contract CoverPoolFactory is
         address inputPool = getInputPool(token0, token1, swapFee);
 
         // launch pool and save address
-        pool =  address(
-                    new CoverPool(
-                        inputPool,
-                        uint16(swapFee),
-                        int16(tickSpread),
-                        twapLength
-                    )
-                );
+        pool = address(new CoverPool(inputPool, uint16(swapFee), int16(tickSpread), twapLength));
 
         poolMapping[key] = pool;
         poolList.push(pool);
@@ -76,11 +65,10 @@ contract CoverPoolFactory is
     function getCoverPool(
         address fromToken,
         address destToken,
-        uint16  fee,
-        int16   tickSpread,
-        uint16  twapLength
-    ) public override view returns (address) {
-
+        uint16 fee,
+        int16 tickSpread,
+        uint16 twapLength
+    ) public view override returns (address) {
         // set lexographical token address ordering
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;

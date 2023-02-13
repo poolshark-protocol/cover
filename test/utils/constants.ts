@@ -8,18 +8,18 @@ export const ERC20_ABI: string[] = [
     'function transfer(address to, uint amount)',
     'function transferFrom(address sender, address recipient, uint256 amount)',
     'event Transfer(address indexed from, address indexed to, uint amount)',
-];
+]
 
-export const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export const retryAsyncOperation = ({
     operation,
     delay = 1000,
     retries = 1,
 }: {
-    operation: any;
-    delay?: number;
-    retries?: number;
+    operation: any
+    delay?: number
+    retries?: number
 }) =>
     new Promise((resolve, reject) => {
         return operation()
@@ -27,18 +27,11 @@ export const retryAsyncOperation = ({
             .catch((reason: string) => {
                 if (retries > 0) {
                     return wait(delay)
-                        .then(
-                            retryAsyncOperation.bind(
-                                null,
-                                operation,
-                                delay,
-                                retries - 1
-                            )
-                        )
+                        .then(retryAsyncOperation.bind(null, operation, delay, retries - 1))
                         .then(resolve)
-                        .catch(reject);
+                        .catch(reject)
                 }
 
-                return reject(reason);
-            });
-    });
+                return reject(reason)
+            })
+    })

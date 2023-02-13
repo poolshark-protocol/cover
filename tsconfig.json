@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
-      "resolveJsonModule": true,
-      "esModuleInterop": true
+        "resolveJsonModule": true,
+        "esModuleInterop": true
     }
 }
-  

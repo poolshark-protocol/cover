@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import "./FullPrecisionMath.sol";
+import './FullPrecisionMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
-library DyDxMath
-{
+library DyDxMath {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     error PriceOutsideBounds();
@@ -42,9 +41,12 @@ library DyDxMath
         uint256 priceUpper
     ) internal pure returns (uint256 dx) {
         unchecked {
-            dx = FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
+            dx =
+                FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) /
+                priceLower;
         }
     }
+
     //TODO: debug math for this to validate numbers
     function getLiquidityForAmounts(
         uint256 priceLower,

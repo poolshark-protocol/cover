@@ -3,41 +3,25 @@
         "tokenA": {
             "contractName": "Token20",
             "contractAddress": "0xdcF62D25FD6aD48277989E93827fD9CCf650975f",
-            "constructorArguments": [
-                "Token20A",
-                "TOKEN20A",
-                18
-            ],
+            "constructorArguments": ["Token20A", "TOKEN20A", 18],
             "created": "2023-01-15T22:40:48.926Z"
         },
         "tokenB": {
             "contractName": "Token20",
             "contractAddress": "0x52167F1EC8940e5b8FC642bB86F3c0C6F0A4899D",
-            "constructorArguments": [
-                "Token20B",
-                "TOKEN20B",
-                18
-            ],
+            "constructorArguments": ["Token20B", "TOKEN20B", 18],
             "created": "2023-01-15T22:41:02.670Z"
         },
         "token0": {
             "contractName": "Token20",
             "contractAddress": "0x52167F1EC8940e5b8FC642bB86F3c0C6F0A4899D",
-            "constructorArguments": [
-                "Token20B",
-                "TOKEN20B",
-                18
-            ],
+            "constructorArguments": ["Token20B", "TOKEN20B", 18],
             "created": "2023-01-15T22:41:02.710Z"
         },
         "token1": {
             "contractName": "Token20",
             "contractAddress": "0xdcF62D25FD6aD48277989E93827fD9CCf650975f",
-            "constructorArguments": [
-                "Token20A",
-                "TOKEN20A",
-                18
-            ],
+            "constructorArguments": ["Token20A", "TOKEN20A", 18],
             "created": "2023-01-15T22:41:02.715Z"
         },
         "rangePoolFactoryMock": {

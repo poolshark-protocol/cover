@@ -3,52 +3,52 @@ pragma solidity ^0.8.13;
 
 interface ICoverPoolStructs {
     struct GlobalState {
-        uint8  unlocked;
+        uint8 unlocked;
         //TODO: change swapFee to uint16
-        uint16 swapFee;         /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
-        //TODO: change to uint16 
-        int16  tickSpread;      /// @dev this is a integer multiple of the inputPool tickSpacing
-        uint16 twapLength;      /// @dev number of blocks used for TWAP sampling
-        int24  latestTick;      /// @dev latest updated inputPool price tick
+        uint16 swapFee; /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
+        //TODO: change to uint16
+        int16 tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
+        uint16 twapLength; /// @dev number of blocks used for TWAP sampling
+        int24 latestTick; /// @dev latest updated inputPool price tick
         //TODO: offset of startBlock
         uint32 lastBlockNumber; /// @dev last block checked for reference price update
         uint32 accumEpoch;
         uint128 liquidityGlobal;
-        uint160 latestPrice;      /// @dev price of latestTick
+        uint160 latestPrice; /// @dev price of latestTick
     }
-    
+
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
     struct PoolState {
-        uint128 liquidity;             /// @dev Liquidity currently active
+        uint128 liquidity; /// @dev Liquidity currently active
         uint128 feeGrowthCurrentEpoch; /// @dev Global fee growth per liquidity unit in current epoch
-        uint160 price;                 /// @dev Starting price current
+        uint160 price; /// @dev Starting price current
     }
 
     struct TickNode {
-        int24    previousTick;
-        int24    nextTick;
-        uint32   accumEpochLast;   // Used to check for claim updates
+        int24 previousTick;
+        int24 nextTick;
+        uint32 accumEpochLast; // Used to check for claim updates
     }
 
     struct Tick {
-        int128  liquidityDelta;      //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
+        int128 liquidityDelta; //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
         //TODO: change to uint since we know in is negative and out is positive
-        uint128 amountInDelta;       //TODO: amount deltas are Q24x64 ; should always be negative?
-        uint128 amountOutDelta;      //TODO: make sure this won't overflow if amount is unfilled; should always be positive
-        uint64  amountInDeltaCarryPercent;
-        uint64  amountOutDeltaCarryPercent;
+        uint128 amountInDelta; //TODO: amount deltas are Q24x64 ; should always be negative?
+        uint128 amountOutDelta; //TODO: make sure this won't overflow if amount is unfilled; should always be positive
+        uint64 amountInDeltaCarryPercent;
+        uint64 amountOutDeltaCarryPercent;
         //TODO: wrap amountDeltas in a single struct
     }
- 
+
     // balance needs to be immediately transferred to the position owner
     struct Position {
-        uint128 liquidity;           // expected amount to be used not actual
-        uint32  accumEpochLast;      // last feeGrowth this position was updated at
-        uint160 claimPriceLast;      // highest price claimed at
-        uint128 amountIn;            // token amount already claimed; balance
-        uint128 amountOut;           // necessary for non-custodial positions
+        uint128 liquidity; // expected amount to be used not actual
+        uint32 accumEpochLast; // last feeGrowth this position was updated at
+        uint160 claimPriceLast; // highest price claimed at
+        uint128 amountIn; // token amount already claimed; balance
+        uint128 amountOut; // necessary for non-custodial positions
     }
 
     //TODO: should we have a recipient field here?
@@ -117,16 +117,16 @@ interface ICoverPoolStructs {
     }
 
     struct AccumulateCache {
-        int24   nextTickToCross0;
-        int24   nextTickToCross1;
-        int24   nextTickToAccum0;
-        int24   nextTickToAccum1;
-        int24   stopTick0;
-        int24   stopTick1;
-        uint128  amountInDelta0; 
-        uint128  amountInDelta1; 
-        uint128  amountOutDelta0;
-        uint128  amountOutDelta1;
+        int24 nextTickToCross0;
+        int24 nextTickToCross1;
+        int24 nextTickToAccum0;
+        int24 nextTickToAccum1;
+        int24 stopTick0;
+        int24 stopTick1;
+        uint128 amountInDelta0;
+        uint128 amountInDelta1;
+        uint128 amountOutDelta0;
+        uint128 amountOutDelta1;
     }
 
     struct AccumulateOutputs {
@@ -137,5 +137,3 @@ interface ICoverPoolStructs {
         Tick accumTick;
     }
 }
-    
-    
