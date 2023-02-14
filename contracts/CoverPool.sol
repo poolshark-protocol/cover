@@ -305,7 +305,7 @@ contract CoverPool is
                 pool0,
                 pool1,
                 state,
-                TwapOracle.calculateAverageTick(inputPool, state.twapLength)
+                TwapOracle.calculateAverageTick(inputPool, state.twapLength) //TODO: move to syncLatest
             );
         }
 
@@ -321,6 +321,7 @@ contract CoverPool is
             liquidity: pool.liquidity,
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
+            auctionDepth: (block.number - state.genesisBlock - state.auctionStart),
             input: amountIn,
             amountInDelta: 0
         });
@@ -376,6 +377,7 @@ contract CoverPool is
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
             input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
+            auctionDepth: (block.number - state.genesisBlock - state.auctionStart), 
             amountInDelta: 0
         });
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?

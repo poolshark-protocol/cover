@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "quote(bool,uint160,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint32,uint16,uint32,uint128,uint160),(uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -33,11 +33,11 @@ interface TicksInterface extends ethers.utils.Interface {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
         genesisBlock: BigNumberish;
         lastBlock: BigNumberish;
         auctionStart: BigNumberish;
-        auctionLength: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
@@ -47,6 +47,7 @@ interface TicksInterface extends ethers.utils.Interface {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        auctionDepth: BigNumberish;
         amountInDelta: BigNumberish;
       }
     ]
@@ -109,11 +110,11 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
         genesisBlock: BigNumberish;
         lastBlock: BigNumberish;
         auctionStart: BigNumberish;
-        auctionLength: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
@@ -123,16 +124,18 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        auctionDepth: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
           price: BigNumber;
           liquidity: BigNumber;
           feeAmount: BigNumber;
           input: BigNumber;
+          auctionDepth: BigNumber;
           amountInDelta: BigNumber;
         },
         BigNumber
@@ -148,11 +151,11 @@ export class Ticks extends BaseContract {
       swapFee: BigNumberish;
       tickSpread: BigNumberish;
       twapLength: BigNumberish;
+      auctionLength: BigNumberish;
       latestTick: BigNumberish;
       genesisBlock: BigNumberish;
       lastBlock: BigNumberish;
       auctionStart: BigNumberish;
-      auctionLength: BigNumberish;
       accumEpoch: BigNumberish;
       liquidityGlobal: BigNumberish;
       latestPrice: BigNumberish;
@@ -162,16 +165,18 @@ export class Ticks extends BaseContract {
       liquidity: BigNumberish;
       feeAmount: BigNumberish;
       input: BigNumberish;
+      auctionDepth: BigNumberish;
       amountInDelta: BigNumberish;
     },
     overrides?: CallOverrides
   ): Promise<
     [
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         price: BigNumber;
         liquidity: BigNumber;
         feeAmount: BigNumber;
         input: BigNumber;
+        auctionDepth: BigNumber;
         amountInDelta: BigNumber;
       },
       BigNumber
@@ -187,11 +192,11 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
         genesisBlock: BigNumberish;
         lastBlock: BigNumberish;
         auctionStart: BigNumberish;
-        auctionLength: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
@@ -201,16 +206,18 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        auctionDepth: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
           price: BigNumber;
           liquidity: BigNumber;
           feeAmount: BigNumber;
           input: BigNumber;
+          auctionDepth: BigNumber;
           amountInDelta: BigNumber;
         },
         BigNumber
@@ -229,11 +236,11 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
         genesisBlock: BigNumberish;
         lastBlock: BigNumberish;
         auctionStart: BigNumberish;
-        auctionLength: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
@@ -243,6 +250,7 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        auctionDepth: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
@@ -258,11 +266,11 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
         genesisBlock: BigNumberish;
         lastBlock: BigNumberish;
         auctionStart: BigNumberish;
-        auctionLength: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
@@ -272,6 +280,7 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        auctionDepth: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides

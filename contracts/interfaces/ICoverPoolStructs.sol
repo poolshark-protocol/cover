@@ -9,11 +9,11 @@ interface ICoverPoolStructs {
         //TODO: change to uint16
         int16 tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16 twapLength; /// @dev number of blocks used for TWAP sampling
+        uint16 auctionLength; /// @dev number of blocks to improve price by tickSpread
         int24 latestTick; /// @dev latest updated inputPool price tick
         uint32 genesisBlock; /// @dev reference block for which auctionStart is an offset of
         uint32 lastBlock;    /// @dev last block checked
         uint32 auctionStart; /// @dev last block price reference was updated
-        uint16 auctionLength; /// @dev number of blocks to improve price by tickSpread
         uint32 accumEpoch;
         uint128 liquidityGlobal;
         uint160 latestPrice; /// @dev price of latestTick
@@ -97,6 +97,7 @@ interface ICoverPoolStructs {
         uint256 liquidity;
         uint256 feeAmount;
         uint256 input;
+        uint256 auctionDepth;
         uint256 amountInDelta;
     }
 

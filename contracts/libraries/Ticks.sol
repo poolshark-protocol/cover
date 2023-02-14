@@ -40,7 +40,6 @@ library Ticks {
             return (cache, 0);
         uint256 nextTickPrice = state.latestPrice;
         uint256 nextPrice = nextTickPrice;
-
         if (zeroForOne) {
             // Trading token 0 (x) for token 1 (y).
             // price  is decreasing.
@@ -48,6 +47,10 @@ library Ticks {
                 nextPrice = priceLimit;
             }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price);
+            // check if we can increase input to account for auction
+            // if we can't, subtract amount inputted at the end
+            // store amountInDelta in pool either way
+            // putting in less either way
             if (cache.input <= maxDx) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;

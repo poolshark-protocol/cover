@@ -142,11 +142,11 @@ export class CoverPoolView extends BaseContract {
         swapFee: number;
         tickSpread: number;
         twapLength: number;
+        auctionLength: number;
         latestTick: number;
         genesisBlock: number;
         lastBlock: number;
         auctionStart: number;
-        auctionLength: number;
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
@@ -284,11 +284,11 @@ export class CoverPoolView extends BaseContract {
       swapFee: number;
       tickSpread: number;
       twapLength: number;
+      auctionLength: number;
       latestTick: number;
       genesisBlock: number;
       lastBlock: number;
       auctionStart: number;
-      auctionLength: number;
       accumEpoch: number;
       liquidityGlobal: BigNumber;
       latestPrice: BigNumber;
@@ -426,11 +426,11 @@ export class CoverPoolView extends BaseContract {
         swapFee: number;
         tickSpread: number;
         twapLength: number;
+        auctionLength: number;
         latestTick: number;
         genesisBlock: number;
         lastBlock: number;
         auctionStart: number;
-        auctionLength: number;
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;

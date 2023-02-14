@@ -120,6 +120,11 @@ const _abi = [
         type: "uint16",
       },
       {
+        internalType: "uint16",
+        name: "auctionLength",
+        type: "uint16",
+      },
+      {
         internalType: "int24",
         name: "latestTick",
         type: "int24",
@@ -138,11 +143,6 @@ const _abi = [
         internalType: "uint32",
         name: "auctionStart",
         type: "uint32",
-      },
-      {
-        internalType: "uint16",
-        name: "auctionLength",
-        type: "uint16",
       },
       {
         internalType: "uint32",
