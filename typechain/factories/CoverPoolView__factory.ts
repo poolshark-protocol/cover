@@ -126,8 +126,23 @@ const _abi = [
       },
       {
         internalType: "uint32",
-        name: "lastBlockNumber",
+        name: "genesisBlock",
         type: "uint32",
+      },
+      {
+        internalType: "uint32",
+        name: "lastBlock",
+        type: "uint32",
+      },
+      {
+        internalType: "uint32",
+        name: "auctionStart",
+        type: "uint32",
+      },
+      {
+        internalType: "uint16",
+        name: "auctionLength",
+        type: "uint16",
       },
       {
         internalType: "uint32",
@@ -159,7 +174,7 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "feeGrowthCurrentEpoch",
+        name: "amountInDelta",
         type: "uint128",
       },
       {
@@ -182,7 +197,7 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "feeGrowthCurrentEpoch",
+        name: "amountInDelta",
         type: "uint128",
       },
       {

@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
-    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint128,uint160)))": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint32,uint16,uint32,uint128,uint160)))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -39,7 +39,10 @@ interface PositionsInterface extends ethers.utils.Interface {
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           latestTick: BigNumberish;
-          lastBlockNumber: BigNumberish;
+          genesisBlock: BigNumberish;
+          lastBlock: BigNumberish;
+          auctionStart: BigNumberish;
+          auctionLength: BigNumberish;
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
@@ -111,7 +114,10 @@ export class Positions extends BaseContract {
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           latestTick: BigNumberish;
-          lastBlockNumber: BigNumberish;
+          genesisBlock: BigNumberish;
+          lastBlock: BigNumberish;
+          auctionStart: BigNumberish;
+          auctionLength: BigNumberish;
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
@@ -139,7 +145,10 @@ export class Positions extends BaseContract {
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
         latestTick: BigNumberish;
-        lastBlockNumber: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
+        auctionLength: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
@@ -167,7 +176,10 @@ export class Positions extends BaseContract {
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           latestTick: BigNumberish;
-          lastBlockNumber: BigNumberish;
+          genesisBlock: BigNumberish;
+          lastBlock: BigNumberish;
+          auctionStart: BigNumberish;
+          auctionLength: BigNumberish;
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
@@ -198,7 +210,10 @@ export class Positions extends BaseContract {
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           latestTick: BigNumberish;
-          lastBlockNumber: BigNumberish;
+          genesisBlock: BigNumberish;
+          lastBlock: BigNumberish;
+          auctionStart: BigNumberish;
+          auctionLength: BigNumberish;
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
@@ -223,7 +238,10 @@ export class Positions extends BaseContract {
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           latestTick: BigNumberish;
-          lastBlockNumber: BigNumberish;
+          genesisBlock: BigNumberish;
+          lastBlock: BigNumberish;
+          auctionStart: BigNumberish;
+          auctionLength: BigNumberish;
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;

@@ -205,7 +205,8 @@ export class InitialSetup {
             hre.props.token1.address,
             '500',
             '20',
-            '5'
+            '5',
+            '20'
         )
         await createPoolTxn.wait()
 
@@ -216,7 +217,8 @@ export class InitialSetup {
             hre.props.token1.address,
             '500',
             '20',
-            '5'
+            '5',
+            '20'
         )
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
 
@@ -225,7 +227,7 @@ export class InitialSetup {
             'CoverPool',
             'coverPool',
             hre.props.coverPool,
-            [hre.props.rangePoolMock.address, '500', '20', '5']
+            [hre.props.rangePoolMock.address, '500', '20', '5', '20']
         )
 
         return hre.nonce

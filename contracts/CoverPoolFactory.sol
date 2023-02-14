@@ -23,7 +23,8 @@ contract CoverPoolFactory is ICoverPoolFactory {
         address destToken,
         uint16 swapFee,
         int16 tickSpread,
-        uint16 twapLength
+        uint16 twapLength,
+        uint16 auctionLength
     ) external override returns (address pool) {
         // validate input value range
         //TODO: check twapLength > 5
@@ -37,7 +38,7 @@ contract CoverPoolFactory is ICoverPoolFactory {
         if (ERC20(destToken).decimals() == 0) revert InvalidTokenDecimals();
 
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread, twapLength, auctionLength));
         if (poolMapping[key] != address(0)) {
             revert PoolAlreadyExists();
         }
@@ -53,13 +54,13 @@ contract CoverPoolFactory is ICoverPoolFactory {
         address inputPool = getInputPool(token0, token1, swapFee);
 
         // launch pool and save address
-        pool = address(new CoverPool(inputPool, uint16(swapFee), int16(tickSpread), twapLength));
+        pool = address(new CoverPool(inputPool, uint16(swapFee), int16(tickSpread), twapLength, auctionLength));
 
         poolMapping[key] = pool;
         poolList.push(pool);
 
         // emit event for indexers
-        emit PoolCreated(token0, token1, uint24(swapFee), int24(tickSpread), twapLength, pool);
+        emit PoolCreated(token0, token1, uint24(swapFee), int24(tickSpread), twapLength, auctionLength, pool);
     }
 
     function getCoverPool(
@@ -67,14 +68,15 @@ contract CoverPoolFactory is ICoverPoolFactory {
         address destToken,
         uint16 fee,
         int16 tickSpread,
-        uint16 twapLength
+        uint16 twapLength,
+        uint16 auctionLength
     ) public view override returns (address) {
         // set lexographical token address ordering
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(token0, token1, fee, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, fee, tickSpread, twapLength, auctionLength));
 
         return poolMapping[key];
     }

@@ -15,7 +15,7 @@ export interface Position {
 
 export interface PoolState {
     liquidity: BigNumber
-    feeGrowthCurrentEpoch: BigNumber
+    amountInDelta: BigNumber
     price: BigNumber
 }
 
@@ -131,7 +131,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         ? await hre.props.coverPool.pool1()
         : await hre.props.coverPool.pool0()
     const liquidityBefore = poolBefore.liquidity
-    const feeGrowthCurrentEpochBefore = poolBefore.feeGrowthCurrentEpoch
+    const amountInDeltaBefore = poolBefore.amountInDelta
     const priceBefore = poolBefore.price
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
 
@@ -175,7 +175,7 @@ export async function validateSwap(params: ValidateSwapParams) {
         ? await hre.props.coverPool.pool1()
         : await hre.props.coverPool.pool0()
     const liquidityAfter = poolAfter.liquidity
-    const feeGrowthCurrentEpochAfter = poolAfter.feeGrowthCurrentEpoch
+    const amountInDeltaAfter = poolAfter.amountInDelta
     const priceAfter = poolAfter.price
     const latestTickAfter = (await hre.props.coverPool.globalState()).latestTick
 

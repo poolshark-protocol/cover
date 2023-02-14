@@ -231,7 +231,6 @@ library Positions {
     {
         ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
-            feeGrowthCurrentEpoch: pool.feeGrowthCurrentEpoch,
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
             claimPrice: TickMath.getSqrtRatioAtTick(params.claim),

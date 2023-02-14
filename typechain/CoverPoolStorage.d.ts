@@ -132,6 +132,9 @@ export class CoverPoolStorage extends BaseContract {
         number,
         number,
         number,
+        number,
+        number,
+        number,
         BigNumber,
         BigNumber
       ] & {
@@ -140,7 +143,10 @@ export class CoverPoolStorage extends BaseContract {
         tickSpread: number;
         twapLength: number;
         latestTick: number;
-        lastBlockNumber: number;
+        genesisBlock: number;
+        lastBlock: number;
+        auctionStart: number;
+        auctionLength: number;
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
@@ -152,7 +158,7 @@ export class CoverPoolStorage extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
-        feeGrowthCurrentEpoch: BigNumber;
+        amountInDelta: BigNumber;
         price: BigNumber;
       }
     >;
@@ -162,7 +168,7 @@ export class CoverPoolStorage extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
-        feeGrowthCurrentEpoch: BigNumber;
+        amountInDelta: BigNumber;
         price: BigNumber;
       }
     >;
@@ -268,6 +274,9 @@ export class CoverPoolStorage extends BaseContract {
       number,
       number,
       number,
+      number,
+      number,
+      number,
       BigNumber,
       BigNumber
     ] & {
@@ -276,7 +285,10 @@ export class CoverPoolStorage extends BaseContract {
       tickSpread: number;
       twapLength: number;
       latestTick: number;
-      lastBlockNumber: number;
+      genesisBlock: number;
+      lastBlock: number;
+      auctionStart: number;
+      auctionLength: number;
       accumEpoch: number;
       liquidityGlobal: BigNumber;
       latestPrice: BigNumber;
@@ -288,7 +300,7 @@ export class CoverPoolStorage extends BaseContract {
   ): Promise<
     [BigNumber, BigNumber, BigNumber] & {
       liquidity: BigNumber;
-      feeGrowthCurrentEpoch: BigNumber;
+      amountInDelta: BigNumber;
       price: BigNumber;
     }
   >;
@@ -298,7 +310,7 @@ export class CoverPoolStorage extends BaseContract {
   ): Promise<
     [BigNumber, BigNumber, BigNumber] & {
       liquidity: BigNumber;
-      feeGrowthCurrentEpoch: BigNumber;
+      amountInDelta: BigNumber;
       price: BigNumber;
     }
   >;
@@ -404,6 +416,9 @@ export class CoverPoolStorage extends BaseContract {
         number,
         number,
         number,
+        number,
+        number,
+        number,
         BigNumber,
         BigNumber
       ] & {
@@ -412,7 +427,10 @@ export class CoverPoolStorage extends BaseContract {
         tickSpread: number;
         twapLength: number;
         latestTick: number;
-        lastBlockNumber: number;
+        genesisBlock: number;
+        lastBlock: number;
+        auctionStart: number;
+        auctionLength: number;
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
@@ -424,7 +442,7 @@ export class CoverPoolStorage extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
-        feeGrowthCurrentEpoch: BigNumber;
+        amountInDelta: BigNumber;
         price: BigNumber;
       }
     >;
@@ -434,7 +452,7 @@ export class CoverPoolStorage extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         liquidity: BigNumber;
-        feeGrowthCurrentEpoch: BigNumber;
+        amountInDelta: BigNumber;
         price: BigNumber;
       }
     >;

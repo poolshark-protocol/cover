@@ -45,6 +45,12 @@ const _abi = [
       },
       {
         indexed: false,
+        internalType: "uint16",
+        name: "auctionLength",
+        type: "uint16",
+      },
+      {
+        indexed: false,
         internalType: "address",
         name: "pool",
         type: "address",
@@ -78,6 +84,11 @@ const _abi = [
       {
         internalType: "uint16",
         name: "twapLength",
+        type: "uint16",
+      },
+      {
+        internalType: "uint16",
+        name: "auctionLength",
         type: "uint16",
       },
     ],
@@ -136,6 +147,11 @@ const _abi = [
       {
         internalType: "uint16",
         name: "twapLength",
+        type: "uint16",
+      },
+      {
+        internalType: "uint16",
+        name: "auctionLength",
         type: "uint16",
       },
     ],

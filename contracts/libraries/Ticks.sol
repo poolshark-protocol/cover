@@ -6,7 +6,6 @@ import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
-
 // import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.

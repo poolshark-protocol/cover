@@ -290,6 +290,8 @@ library Epochs {
             ICoverPoolStructs.PoolState memory
         )
     {
+        // update last block checked
+        state.lastBlock = uint32(block.number);
         // only accumulate if latestTick needs to move
         if (nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread)) {
             return (state, pool0, pool1);
@@ -536,6 +538,7 @@ library Epochs {
         //TODO: nearestTick not necessary - replace with stopPrice to avoid repeated calculation
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
+        state.auctionStart = uint32(block.number - state.genesisBlock);
         state.latestTick = nextLatestTick;
         state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
         // console.log("-- END ACCUMULATE LAST BLOCK --");

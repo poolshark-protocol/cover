@@ -38,7 +38,8 @@ describe('CoverPoolFactory Tests', function () {
                     '0x0000000000000000000000000000000000000000',
                     '500',
                     '20',
-                    '5'
+                    '5',
+                    '20'
                 )
         ).to.be.revertedWith('IdenticalTokenAddresses()')
     })
@@ -52,7 +53,8 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '500',
                     '20',
-                    '5'
+                    '5',
+                    '20'
                 )
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
@@ -66,7 +68,8 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '1000',
                     '20',
-                    '5'
+                    '5',
+                    '20'
                 )
         ).to.be.revertedWith('FeeTierNotSupported()')
     })
@@ -81,7 +84,8 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '1000',
                     '20',
-                    '5'
+                    '5',
+                    '20'
                 )
         ).to.be.revertedWith('InvalidTokenDecimals()')
         await hre.props.token0.connect(hre.props.admin).setDecimals(18)
@@ -97,7 +101,8 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '1000',
                     '20',
-                    '5'
+                    '5',
+                    '20'
                 )
         ).to.be.revertedWith('InvalidTokenDecimals()')
         await hre.props.token1.connect(hre.props.admin).setDecimals(18)

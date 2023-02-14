@@ -10,8 +10,10 @@ interface ICoverPoolStructs {
         int16 tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16 twapLength; /// @dev number of blocks used for TWAP sampling
         int24 latestTick; /// @dev latest updated inputPool price tick
-        //TODO: offset of startBlock
-        uint32 lastBlockNumber; /// @dev last block checked for reference price update
+        uint32 genesisBlock; /// @dev reference block for which auctionStart is an offset of
+        uint32 lastBlock;    /// @dev last block checked
+        uint32 auctionStart; /// @dev last block price reference was updated
+        uint16 auctionLength; /// @dev number of blocks to improve price by tickSpread
         uint32 accumEpoch;
         uint128 liquidityGlobal;
         uint160 latestPrice; /// @dev price of latestTick
@@ -20,7 +22,7 @@ interface ICoverPoolStructs {
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
     struct PoolState {
         uint128 liquidity; /// @dev Liquidity currently active
-        uint128 feeGrowthCurrentEpoch; /// @dev Global fee growth per liquidity unit in current epoch
+        uint128 amountInDelta; /// @dev Delta for the current tick auction
         uint160 price; /// @dev Starting price current
     }
 
@@ -95,6 +97,7 @@ interface ICoverPoolStructs {
         uint256 liquidity;
         uint256 feeAmount;
         uint256 input;
+        uint256 amountInDelta;
     }
 
     struct PositionCache {
@@ -105,7 +108,6 @@ interface ICoverPoolStructs {
 
     struct UpdatePositionCache {
         Position position;
-        uint232 feeGrowthCurrentEpoch;
         uint160 priceLower;
         uint160 priceUpper;
         uint160 claimPrice;

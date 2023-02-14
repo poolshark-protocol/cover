@@ -125,43 +125,6 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "address",
-        name: "pool",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "token0",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "token1",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint24",
-        name: "fee",
-        type: "uint24",
-      },
-      {
-        indexed: false,
-        internalType: "int24",
-        name: "tickSpacing",
-        type: "int24",
-      },
-    ],
-    name: "PoolCreated",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: true,
         internalType: "address",
         name: "recipient",

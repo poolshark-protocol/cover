@@ -41,7 +41,8 @@ contract CoverPool is
         address _inputPool,
         uint16 _swapFee,
         int16 _tickSpread,
-        uint16 _twapLength
+        uint16 _twapLength,
+        uint16 _auctionLength
     ) {
         // validate swap fee
         if (_swapFee > MAX_FEE) revert InvalidSwapFee();
@@ -52,18 +53,19 @@ contract CoverPool is
             revert InvalidTickSpread();
 
         // set addresses
-        factory = msg.sender;
-        token0 = IRangePool(_inputPool).token0();
-        token1 = IRangePool(_inputPool).token1();
+        factory   = msg.sender;
+        token0    = IRangePool(_inputPool).token0();
+        token1    = IRangePool(_inputPool).token1();
         inputPool = IRangePool(_inputPool);
-        feeTo = ICoverPoolFactory(msg.sender).owner();
+        feeTo     = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
-        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0);
-        state.swapFee = _swapFee;
-        state.tickSpread = _tickSpread;
-        state.twapLength = _twapLength;
-        state.lastBlockNumber = uint32(block.number);
+        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        state.swapFee       = _swapFee;
+        state.tickSpread    = _tickSpread;
+        state.twapLength    = _twapLength;
+        state.auctionLength = _auctionLength;
+        state.genesisBlock  = uint32(block.number);
 
         // set initial ticks
         _ensureInitialized(state);
@@ -85,6 +87,7 @@ contract CoverPool is
     function _initialize(GlobalState memory state) internal {
         state.latestTick = (state.latestTick / int24(state.tickSpread)) * int24(state.tickSpread);
         state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
+        state.auctionStart = uint32(block.number - state.genesisBlock);
         state.accumEpoch = 1;
         Ticks.initialize(
             tickNodes,
@@ -109,8 +112,7 @@ contract CoverPool is
     ) external lock {
         /// @dev - don't allow mints until we have enough observations from inputPool
         //TODO: move tick update check here
-        if (block.number != globalState.lastBlockNumber) {
-            globalState.lastBlockNumber = uint32(block.number);
+        if (block.number != globalState.lastBlock) {
             //can save a couple 100 gas if we skip this when no update
             (globalState, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
@@ -184,8 +186,7 @@ contract CoverPool is
         uint128 amount
     ) external lock {
         GlobalState memory state = globalState;
-        if (block.number != state.lastBlockNumber) {
-            state.lastBlockNumber = uint32(block.number);
+        if (block.number != state.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
@@ -236,8 +237,7 @@ contract CoverPool is
         bool zeroForOne
     ) public lock returns (uint256 amountIn, uint256 amountOut) {
         GlobalState memory state = globalState;
-        if (block.number != state.lastBlockNumber) {
-            state.lastBlockNumber = uint32(block.number);
+        if (block.number != state.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
@@ -297,8 +297,7 @@ contract CoverPool is
         GlobalState memory state = globalState;
         PoolState memory pool = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
-        if (block.number != state.lastBlockNumber) {
-            state.lastBlockNumber = uint32(block.number);
+        if (block.number != state.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
@@ -322,7 +321,8 @@ contract CoverPool is
             liquidity: pool.liquidity,
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn
+            input: amountIn,
+            amountInDelta: 0
         });
 
         cache.input = amountIn - cache.feeAmount;
@@ -342,7 +342,7 @@ contract CoverPool is
                     (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
                 );
                 cache.feeAmount -= feeReturn;
-                pool.feeGrowthCurrentEpoch += uint128(cache.feeAmount);
+                pool.amountInDelta += uint128(cache.feeAmount);
                 _transferOut(recipient, token0, cache.input + feeReturn);
             }
             _transferOut(recipient, token1, amountOut);
@@ -353,7 +353,7 @@ contract CoverPool is
                     (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
                 );
                 cache.feeAmount -= feeReturn;
-                pool.feeGrowthCurrentEpoch += uint128(cache.feeAmount);
+                pool.amountInDelta += uint128(cache.feeAmount);
                 _transferOut(recipient, token1, cache.input + feeReturn);
             }
             _transferOut(recipient, token0, amountOut);
@@ -375,7 +375,8 @@ contract CoverPool is
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6)
+            input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
+            amountInDelta: 0
         });
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
