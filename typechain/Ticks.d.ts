@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "quote(bool,uint160,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool),(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -41,6 +41,7 @@ interface TicksInterface extends ethers.utils.Interface {
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       {
         price: BigNumberish;
@@ -120,6 +121,7 @@ export class Ticks extends BaseContract {
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
@@ -174,6 +176,7 @@ export class Ticks extends BaseContract {
       accumEpoch: BigNumberish;
       liquidityGlobal: BigNumberish;
       latestPrice: BigNumberish;
+      inputPool: string;
     },
     cache: {
       price: BigNumberish;
@@ -228,6 +231,7 @@ export class Ticks extends BaseContract {
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
@@ -285,6 +289,7 @@ export class Ticks extends BaseContract {
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
@@ -317,6 +322,7 @@ export class Ticks extends BaseContract {
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;

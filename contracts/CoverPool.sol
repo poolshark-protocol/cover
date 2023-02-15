@@ -8,7 +8,6 @@ import './base/CoverPoolEvents.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Ticks.sol';
-import './libraries/TwapOracle.sol';
 import './libraries/Positions.sol';
 import './libraries/Epochs.sol';
 
@@ -26,10 +25,10 @@ contract CoverPool is
     address internal immutable token0;
     address internal immutable token1;
 
-    IRangePool internal immutable inputPool;
-
     modifier lock() {
-        _ensureInitialized(globalState);
+        if (globalState.unlocked == 0) {
+            globalState = Ticks.initialize(tickNodes, pool0, pool1, globalState);
+        }
         if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
         if (globalState.unlocked == 2) revert Locked();
         globalState.unlocked = 2;
@@ -56,47 +55,26 @@ contract CoverPool is
         factory   = msg.sender;
         token0    = IRangePool(_inputPool).token0();
         token1    = IRangePool(_inputPool).token1();
-        inputPool = IRangePool(_inputPool);
         feeTo     = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
-        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, IRangePool(address(0)));
         state.swapFee       = _swapFee;
         state.tickSpread    = _tickSpread;
         state.twapLength    = _twapLength;
         state.auctionLength = _auctionLength;
         state.genesisBlock  = uint32(block.number);
+        state.inputPool     = IRangePool(_inputPool);
 
         // set initial ticks
-        _ensureInitialized(state);
-    }
-
-    function _ensureInitialized(GlobalState memory state) internal {
-        if (state.unlocked == 0) {
-            (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
-                IRangePool(inputPool),
-                state.twapLength
-            );
-            if (state.unlocked == 1) {
-                _initialize(state);
-            }
-            globalState = state;
-        }
-    }
-
-    function _initialize(GlobalState memory state) internal {
-        state.latestTick = (state.latestTick / int24(state.tickSpread)) * int24(state.tickSpread);
-        state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
-        state.auctionStart = uint32(block.number - state.genesisBlock);
-        state.accumEpoch = 1;
-        Ticks.initialize(
+        state = Ticks.initialize(
             tickNodes,
             pool0,
             pool1,
-            state.latestTick,
-            state.accumEpoch,
-            state.tickSpread
+            state
         );
+
+        globalState = state;
     }
 
     //TODO: create transfer function to transfer ownership
@@ -110,7 +88,7 @@ contract CoverPool is
         uint128 amountDesired,
         bool zeroForOne
     ) external lock {
-        /// @dev - don't allow mints until we have enough observations from inputPool
+        /// @dev - don't allow mints until we have enough observations from state.inputPool
         //TODO: move tick update check here
         if (block.number != globalState.lastBlock) {
             //can save a couple 100 gas if we skip this when no update
@@ -120,8 +98,7 @@ contract CoverPool is
                 tickNodes,
                 pool0,
                 pool1,
-                globalState,
-                TwapOracle.calculateAverageTick(inputPool, globalState.twapLength)
+                globalState
             );
         }
         uint256 liquidityMinted;
@@ -138,7 +115,7 @@ contract CoverPool is
         //TODO: is this dangerous?
         unchecked {
             // recreates position if required
-            (, , , , globalState) = Positions.update(
+            globalState = Positions.update(
                 zeroForOne ? positions0 : positions1,
                 zeroForOne ? ticks0 : ticks1,
                 tickNodes,
@@ -193,8 +170,7 @@ contract CoverPool is
                 tickNodes,
                 pool0,
                 pool1,
-                state,
-                TwapOracle.calculateAverageTick(inputPool, state.twapLength)
+                state
             );
         }
         //TODO: burning liquidity should take liquidity out past the current auction
@@ -204,7 +180,7 @@ contract CoverPool is
 
         if (claim != (zeroForOne ? upper : lower) || claim == state.latestTick) {
             // update position and get new lower and upper
-            (, , , , state) = Positions.update(
+            state = Positions.update(
                 zeroForOne ? positions0 : positions1,
                 zeroForOne ? ticks0 : ticks1,
                 tickNodes,
@@ -235,7 +211,7 @@ contract CoverPool is
         int24 claim,
         int24 upper,
         bool zeroForOne
-    ) public lock returns (uint256 amountIn, uint256 amountOut) {
+    ) public lock {
         GlobalState memory state = globalState;
         if (block.number != state.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
@@ -244,11 +220,10 @@ contract CoverPool is
                 tickNodes,
                 pool0,
                 pool1,
-                state,
-                TwapOracle.calculateAverageTick(inputPool, state.twapLength)
+                state
             );
         }
-        (, , , , state) = Positions.update(
+        state = Positions.update(
             zeroForOne ? positions0 : positions1,
             zeroForOne ? ticks0 : ticks1,
             tickNodes,
@@ -256,28 +231,17 @@ contract CoverPool is
             zeroForOne ? pool0 : pool1,
             UpdateParams(msg.sender, lower, upper, claim, zeroForOne, 0)
         );
-        amountIn = zeroForOne
-            ? positions0[msg.sender][lower][claim].amountIn
-            : positions1[msg.sender][claim][upper].amountIn;
-        amountOut = zeroForOne
-            ? positions0[msg.sender][lower][claim].amountOut
-            : positions1[msg.sender][claim][upper].amountOut;
 
-        /// zero out balances
-        zeroForOne
-            ? positions0[msg.sender][lower][claim].amountIn = 0
-            : positions1[msg.sender][claim][upper].amountIn = 0;
-        zeroForOne
-            ? positions0[msg.sender][lower][upper].amountOut = 0
-            : positions1[msg.sender][lower][upper].amountOut = 0;
-        // if (amountIn > 0) {
-        //             console.log(amountIn);
-        //     console.log(zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-        //     console.log(amountOut);
-        //     console.log(zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
-        //     console.log(zeroForOne ? pool0.amountInDelta : pool1.amountInDelta);
-        //     console.log(zeroForOne ? pool0.liquidity : pool1.liquidity);
-        // }
+        mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = zeroForOne ? positions0 : positions1;
+        zeroForOne ? upper = claim : lower = claim;
+
+        // store amounts for transferOut
+        uint128 amountIn = positions[msg.sender][lower][upper].amountIn;
+        uint128 amountOut = positions[msg.sender][lower][upper].amountOut;
+
+        // zero out balances
+        positions[msg.sender][lower][upper].amountIn = 0;
+        positions[msg.sender][lower][upper].amountOut = 0;
 
         /// transfer out balances
         _transferOut(msg.sender, zeroForOne ? token1 : token0, amountIn);
@@ -312,8 +276,7 @@ contract CoverPool is
                 tickNodes,
                 pool0,
                 pool1,
-                state,
-                TwapOracle.calculateAverageTick(inputPool, state.twapLength) //TODO: move to syncLatest
+                state //TODO: move to syncLatest
             );
         }
 

@@ -136,7 +136,8 @@ export class CoverPoolStorage extends BaseContract {
         number,
         number,
         BigNumber,
-        BigNumber
+        BigNumber,
+        string
       ] & {
         unlocked: number;
         swapFee: number;
@@ -150,6 +151,7 @@ export class CoverPoolStorage extends BaseContract {
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
+        inputPool: string;
       }
     >;
 
@@ -278,7 +280,8 @@ export class CoverPoolStorage extends BaseContract {
       number,
       number,
       BigNumber,
-      BigNumber
+      BigNumber,
+      string
     ] & {
       unlocked: number;
       swapFee: number;
@@ -292,6 +295,7 @@ export class CoverPoolStorage extends BaseContract {
       accumEpoch: number;
       liquidityGlobal: BigNumber;
       latestPrice: BigNumber;
+      inputPool: string;
     }
   >;
 
@@ -420,7 +424,8 @@ export class CoverPoolStorage extends BaseContract {
         number,
         number,
         BigNumber,
-        BigNumber
+        BigNumber,
+        string
       ] & {
         unlocked: number;
         swapFee: number;
@@ -434,6 +439,7 @@ export class CoverPoolStorage extends BaseContract {
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
+        inputPool: string;
       }
     >;
 

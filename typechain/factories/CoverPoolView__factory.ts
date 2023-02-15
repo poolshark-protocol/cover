@@ -159,6 +159,11 @@ const _abi = [
         name: "latestPrice",
         type: "uint160",
       },
+      {
+        internalType: "contract IRangePool",
+        name: "inputPool",
+        type: "address",
+      },
     ],
     stateMutability: "view",
     type: "function",

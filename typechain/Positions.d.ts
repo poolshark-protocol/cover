@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
-    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160)))": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool)))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -46,6 +46,7 @@ interface PositionsInterface extends ethers.utils.Interface {
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
+          inputPool: string;
         };
       }
     ]
@@ -121,6 +122,7 @@ export class Positions extends BaseContract {
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
+          inputPool: string;
         };
       },
       overrides?: CallOverrides
@@ -152,6 +154,7 @@ export class Positions extends BaseContract {
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       };
     },
     overrides?: CallOverrides
@@ -183,6 +186,7 @@ export class Positions extends BaseContract {
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
+          inputPool: string;
         };
       },
       overrides?: CallOverrides
@@ -217,6 +221,7 @@ export class Positions extends BaseContract {
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
+          inputPool: string;
         };
       },
       overrides?: CallOverrides
@@ -245,6 +250,7 @@ export class Positions extends BaseContract {
           accumEpoch: BigNumberish;
           liquidityGlobal: BigNumberish;
           latestPrice: BigNumberish;
+          inputPool: string;
         };
       },
       overrides?: CallOverrides

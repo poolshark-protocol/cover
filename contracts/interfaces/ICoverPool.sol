@@ -9,7 +9,7 @@ interface ICoverPool is ICoverPoolStructs {
         int24 upper,
         int24 claim,
         bool zeroForOne
-    ) external returns (uint256 amountIn, uint256 amountOut);
+    ) external;
 
     function mint(
         int24 lowerOld,

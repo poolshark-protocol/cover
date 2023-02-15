@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
+import "./IRangePool.sol";
+
 interface ICoverPoolStructs {
     struct GlobalState {
         uint8 unlocked;
@@ -17,6 +19,7 @@ interface ICoverPoolStructs {
         uint32 accumEpoch;
         uint128 liquidityGlobal;
         uint160 latestPrice; /// @dev price of latestTick
+        IRangePool inputPool;
     }
 
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
@@ -96,6 +99,7 @@ interface ICoverPoolStructs {
         uint256 price;
         uint256 liquidity;
         uint256 feeAmount;
+        // uint256 amountIn;
         uint256 input;
         uint256 inputBoosted;
         uint256 auctionDepth;

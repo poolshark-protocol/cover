@@ -172,7 +172,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint/burn new LP position', async function () {
+    it('pool0 - Should mint/burn new LP position 11', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {
             await validateMint({

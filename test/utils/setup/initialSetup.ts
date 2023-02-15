@@ -133,6 +133,14 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            TwapOracle__factory,
+            'twapOracleLib',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Epochs__factory,
             'epochsLib',
             [],
@@ -141,6 +149,7 @@ export class InitialSetup {
                 'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
             }
         )
 
@@ -155,15 +164,8 @@ export class InitialSetup {
                 'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
             }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            TwapOracle__factory,
-            'twapOracleLib',
-            []
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -194,7 +196,6 @@ export class InitialSetup {
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
-                'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
             }
         )

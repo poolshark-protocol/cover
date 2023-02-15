@@ -6,7 +6,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
-import "hardhat/console.sol";
+import './TwapOracle.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -35,7 +35,7 @@ library Ticks {
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         if (zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0)
             return (cache, 0);
         uint256 nextTickPrice = state.latestPrice;
@@ -111,30 +111,43 @@ library Ticks {
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         ICoverPoolStructs.PoolState storage pool0,
         ICoverPoolStructs.PoolState storage pool1,
-        int24 latestTick,
-        uint32 accumEpoch,
-        int24 tickSpread
-    ) external {
+        ICoverPoolStructs.GlobalState memory state
+    ) external returns (ICoverPoolStructs.GlobalState memory) {
         /// @dev - assume latestTick is not MIN_TICK or MAX_TICK
         // if (latestTick == TickMath.MIN_TICK || latestTick == TickMath.MAX_TICK) revert InvalidLatestTick();
-        tickNodes[latestTick] = ICoverPoolStructs.TickNode(
-            TickMath.MIN_TICK,
-            TickMath.MAX_TICK,
-            accumEpoch
-        );
-        tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
-            TickMath.MIN_TICK,
-            latestTick,
-            accumEpoch
-        );
-        tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
-            latestTick,
-            TickMath.MAX_TICK,
-            accumEpoch
-        );
-        //TODO: the sqrtPrice cannot move more than 1 tickSpacing away
-        pool0.price = TickMath.getSqrtRatioAtTick(latestTick - tickSpread);
-        pool1.price = TickMath.getSqrtRatioAtTick(latestTick + tickSpread);
+        if (state.unlocked == 0) {
+            (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
+                state.inputPool,
+                state.twapLength
+            );
+            if (state.unlocked == 1) {
+
+                state.latestTick = (state.latestTick / int24(state.tickSpread)) * int24(state.tickSpread);
+                state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
+                state.auctionStart = uint32(block.number - state.genesisBlock);
+                state.accumEpoch = 1;
+
+                tickNodes[state.latestTick] = ICoverPoolStructs.TickNode(
+                    TickMath.MIN_TICK,
+                    TickMath.MAX_TICK,
+                    state.accumEpoch
+                );
+                tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
+                    TickMath.MIN_TICK,
+                    state.latestTick,
+                    state.accumEpoch
+                );
+                tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
+                    state.latestTick,
+                    TickMath.MAX_TICK,
+                    state.accumEpoch
+                );
+
+                pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread);
+                pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
+            }
+        }
+        return state;
     }
 
     //TODO: ALL TICKS NEED TO BE CREATED WITH

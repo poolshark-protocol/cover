@@ -222,10 +222,6 @@ library Positions {
     )
         external
         returns (
-            uint128,
-            uint128,
-            int24,
-            int24,
             ICoverPoolStructs.GlobalState memory
         )
     {
@@ -244,13 +240,7 @@ library Positions {
         /// @dev - claim tick does not matter if there is no position liquidity
         if (cache.position.liquidity == 0) {
             if (params.amount > 0) revert NotEnoughPositionLiquidity();
-            return (
-                cache.position.amountIn,
-                cache.position.amountOut,
-                params.lower,
-                params.upper,
-                state
-            );
+            return state;
         }
 
         // validate claim param
@@ -433,12 +423,6 @@ library Positions {
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;
 
-        return (
-            cache.position.amountIn,
-            cache.position.amountOut,
-            params.zeroForOne ? params.lower : params.claim,
-            params.zeroForOne ? params.claim : params.upper,
-            state
-        );
+        return state;
     }
 }

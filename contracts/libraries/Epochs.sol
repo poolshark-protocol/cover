@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import './TickMath.sol';
 import './DyDxMath.sol';
+import './TwapOracle.sol';
+import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
 library Epochs {
@@ -280,8 +282,7 @@ library Epochs {
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         ICoverPoolStructs.PoolState memory pool0,
         ICoverPoolStructs.PoolState memory pool1,
-        ICoverPoolStructs.GlobalState memory state,
-        int24 nextLatestTick
+        ICoverPoolStructs.GlobalState memory state
     )
         external
         returns (
@@ -291,6 +292,7 @@ library Epochs {
         )
     {
         // update last block checked
+        int24 nextLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         state.lastBlock = uint32(block.number);
         // only accumulate if latestTick needs to move
         if (nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread)) {

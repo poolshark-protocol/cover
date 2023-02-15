@@ -193,9 +193,7 @@ export class ICoverPool extends BaseContract {
       claim: BigNumberish,
       zeroForOne: boolean,
       overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { amountIn: BigNumber; amountOut: BigNumber }
-    >;
+    ): Promise<void>;
 
     mint(
       lowerOld: BigNumberish,

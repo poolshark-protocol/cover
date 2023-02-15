@@ -242,7 +242,8 @@ export class CoverPool extends BaseContract {
         number,
         number,
         BigNumber,
-        BigNumber
+        BigNumber,
+        string
       ] & {
         unlocked: number;
         swapFee: number;
@@ -256,6 +257,7 @@ export class CoverPool extends BaseContract {
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
+        inputPool: string;
       }
     >;
 
@@ -429,7 +431,8 @@ export class CoverPool extends BaseContract {
       number,
       number,
       BigNumber,
-      BigNumber
+      BigNumber,
+      string
     ] & {
       unlocked: number;
       swapFee: number;
@@ -443,6 +446,7 @@ export class CoverPool extends BaseContract {
       accumEpoch: number;
       liquidityGlobal: BigNumber;
       latestPrice: BigNumber;
+      inputPool: string;
     }
   >;
 
@@ -597,9 +601,7 @@ export class CoverPool extends BaseContract {
       upper: BigNumberish,
       zeroForOne: boolean,
       overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { amountIn: BigNumber; amountOut: BigNumber }
-    >;
+    ): Promise<void>;
 
     feeTo(overrides?: CallOverrides): Promise<string>;
 
@@ -618,7 +620,8 @@ export class CoverPool extends BaseContract {
         number,
         number,
         BigNumber,
-        BigNumber
+        BigNumber,
+        string
       ] & {
         unlocked: number;
         swapFee: number;
@@ -632,6 +635,7 @@ export class CoverPool extends BaseContract {
         accumEpoch: number;
         liquidityGlobal: BigNumber;
         latestPrice: BigNumber;
+        inputPool: string;
       }
     >;
 
