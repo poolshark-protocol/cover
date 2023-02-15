@@ -228,8 +228,10 @@ library Positions {
         ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
+            priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            claimPrice: TickMath.getSqrtRatioAtTick(params.claim),
+            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? state.latestTick - state.tickSpread 
+                                                                : state.latestTick + state.tickSpread),
             claimTick: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
@@ -237,7 +239,7 @@ library Positions {
             amountOutDelta: 0
         });
 
-        /// @dev - claim tick does not matter if there is no position liquidity
+        // validate position liquidity
         if (cache.position.liquidity == 0) {
             if (params.amount > 0) revert NotEnoughPositionLiquidity();
             return state;
@@ -247,10 +249,17 @@ library Positions {
         if (
             (
                 params.zeroForOne
-                    ? cache.position.claimPriceLast < cache.claimPrice
-                    : cache.position.claimPriceLast > cache.claimPrice
+                    ? params.claim == params.upper && cache.priceUpper != pool.price
+                    : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
+            ) && params.claim == state.latestTick
+        ) { if (cache.position.claimPriceLast == pool.price) return state; } /// @dev - nothing to update if pool price hasn't moved
+        else if (
+            (
+                params.zeroForOne
+                    ? cache.position.claimPriceLast < cache.priceClaim
+                    : cache.position.claimPriceLast > cache.priceClaim
             ) && params.claim != state.latestTick
-        ) revert InvalidClaimTick();
+        ) revert InvalidClaimTick(); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
         // calculate section 1 of claim
@@ -258,15 +267,15 @@ library Positions {
             uint256 amountInClaimable = params.zeroForOne
                 ? DyDxMath.getDy(
                     cache.position.liquidity,
-                    cache.claimPrice,
+                    cache.priceClaim,
                     cache.position.claimPriceLast
                 )
                 : DyDxMath.getDx(
                     cache.position.liquidity,
                     cache.position.claimPriceLast,
-                    cache.claimPrice
+                    cache.priceClaim
                 );
-            cache.position.amountIn += uint128(amountInClaimable); /// @dev - factor in swap fees at the end * (1e6 + state.swapFee) / 1e6); /// @dev - factor in swap fees
+            cache.position.amountIn += uint128(amountInClaimable);
         }
 
         // check for end of position claim tick
@@ -276,7 +285,8 @@ library Positions {
                 revert WrongTickClaimedAt();
 
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
-            /// @dev - ignore carryover for last tick of position
+            
+            /// @dev - ignore delta carry for last tick of position
             cache.amountInDelta = uint128(
                 uint256(ticks[params.claim].amountInDelta) -
                     (uint256(ticks[params.claim].amountInDeltaCarryPercent) *
@@ -325,27 +335,24 @@ library Positions {
                 // section 2
                 cache.position.amountOut += uint128(
                     params.zeroForOne
-                        ? DyDxMath.getDx(cache.position.liquidity, pool.price, cache.claimPrice)
-                        : DyDxMath.getDy(cache.position.liquidity, cache.claimPrice, pool.price)
+                        ? DyDxMath.getDx(cache.position.liquidity, pool.price, cache.priceClaim)
+                        : DyDxMath.getDy(cache.position.liquidity, cache.priceClaim, pool.price)
                 );
                 // section 3
                 {
-                    uint160 latestSpreadPrice = params.zeroForOne
-                        ? TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread)
-                        : TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
                     // modify claim price for section 4
-                    cache.claimPrice = latestSpreadPrice;
+                    cache.priceClaim = cache.priceSpread;
                     cache.position.amountIn += uint128(
                         params.zeroForOne
                             ? DyDxMath.getDy(
                                 cache.position.liquidity, // multiplied by liquidity later
-                                latestSpreadPrice,
+                                cache.priceSpread,
                                 pool.price
                             )
                             : DyDxMath.getDx(
                                 cache.position.liquidity,
                                 pool.price,
-                                latestSpreadPrice
+                                cache.priceSpread
                             )
                     ); /// @dev - factor in swap fees at end
                 }
@@ -360,8 +367,8 @@ library Positions {
             if (params.amount > 0) {
                 cache.position.amountOut += uint128(
                     params.zeroForOne
-                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.claimPrice)
-                        : DyDxMath.getDy(uint128(params.amount), cache.claimPrice, cache.priceUpper)
+                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.priceClaim)
+                        : DyDxMath.getDy(uint128(params.amount), cache.priceClaim, cache.priceUpper)
                 );
             }
             if (cache.amountOutDelta > 0) {
@@ -386,10 +393,12 @@ library Positions {
         } /// @dev - amountInDelta always lt 0
         // factor in swap fees
         cache.position.amountIn = (cache.position.amountIn * 1e6) / (1e6 - state.swapFee);
-        // mark last claim price
+        /// @dev - mark last claim price
         cache.position.claimPriceLast = (params.claim == state.latestTick)
             ? pool.price
-            : cache.claimPrice;
+            : cache.priceClaim;
+        /// @dev - if tick filled, set CPL to next tick to unlock
+        if (pool.price == cache.priceClaim) cache.position.claimPriceLast = cache.priceSpread;
 
         // if burn or second mint
         //TODO: handle claim of current auction and second mint

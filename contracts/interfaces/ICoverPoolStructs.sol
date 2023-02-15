@@ -9,16 +9,16 @@ interface ICoverPoolStructs {
         //TODO: change swapFee to uint16
         uint16 swapFee; /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
         //TODO: change to uint16
-        int16 tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
-        uint16 twapLength; /// @dev number of blocks used for TWAP sampling
-        uint16 auctionLength; /// @dev number of blocks to improve price by tickSpread
-        int24 latestTick; /// @dev latest updated inputPool price tick
-        uint32 genesisBlock; /// @dev reference block for which auctionStart is an offset of
-        uint32 lastBlock;    /// @dev last block checked
-        uint32 auctionStart; /// @dev last block price reference was updated
-        uint32 accumEpoch;
-        uint128 liquidityGlobal;
-        uint160 latestPrice; /// @dev price of latestTick
+        int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
+        uint16   twapLength; /// @dev number of blocks used for TWAP sampling
+        uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
+        int24    latestTick; /// @dev latest updated inputPool price tick
+        uint32   genesisBlock; /// @dev reference block for which auctionStart is an offset of
+        uint32   lastBlock;    /// @dev last block checked
+        uint32   auctionStart; /// @dev last block price reference was updated
+        uint32   accumEpoch;
+        uint128  liquidityGlobal;
+        uint160  latestPrice; /// @dev price of latestTick
         IRangePool inputPool;
     }
 
@@ -116,8 +116,9 @@ interface ICoverPoolStructs {
     struct UpdatePositionCache {
         Position position;
         uint160 priceLower;
+        uint160 priceClaim;
         uint160 priceUpper;
-        uint160 claimPrice;
+        uint160 priceSpread;
         TickNode claimTick;
         bool removeLower;
         bool removeUpper;
