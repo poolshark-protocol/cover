@@ -31,7 +31,7 @@ interface CoverPoolInterface extends ethers.utils.Interface {
     "positions0(address,int24,int24)": FunctionFragment;
     "positions1(address,int24,int24)": FunctionFragment;
     "quote(bool,uint256,uint160)": FunctionFragment;
-    "swap(address,bool,uint256,uint160)": FunctionFragment;
+    "swap(address,bool,uint128,uint160)": FunctionFragment;
     "tickNodes(int24)": FunctionFragment;
     "ticks0(int24)": FunctionFragment;
     "ticks1(int24)": FunctionFragment;

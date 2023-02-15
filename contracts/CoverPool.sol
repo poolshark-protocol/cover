@@ -270,6 +270,14 @@ contract CoverPool is
         zeroForOne
             ? positions0[msg.sender][lower][upper].amountOut = 0
             : positions1[msg.sender][lower][upper].amountOut = 0;
+        // if (amountIn > 0) {
+        //             console.log(amountIn);
+        //     console.log(zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+        //     console.log(amountOut);
+        //     console.log(zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+        //     console.log(zeroForOne ? pool0.amountInDelta : pool1.amountInDelta);
+        //     console.log(zeroForOne ? pool0.liquidity : pool1.liquidity);
+        // }
 
         /// transfer out balances
         _transferOut(msg.sender, zeroForOne ? token1 : token0, amountIn);
@@ -283,7 +291,7 @@ contract CoverPool is
     function swap(
         address recipient,
         bool zeroForOne,
-        uint256 amountIn,
+        uint128 amountIn,
         uint160 priceLimit
     )
         external
@@ -321,8 +329,10 @@ contract CoverPool is
             liquidity: pool.liquidity,
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            auctionDepth: (block.number - state.genesisBlock - state.auctionStart),
-            input: amountIn,
+            auctionDepth: block.number - state.genesisBlock - state.auctionStart,
+            auctionBoost: 0,
+            input: 0,
+            inputBoosted: 0,
             amountInDelta: 0
         });
 
@@ -335,7 +345,13 @@ contract CoverPool is
 
         // amountOut += output;
 
-        zeroForOne ? pool1.price = uint160(cache.price) : pool0.price = uint160(cache.price);
+        if (zeroForOne) {
+            pool1.price = uint160(cache.price);
+            pool1.amountInDelta += uint128(cache.amountInDelta);
+        } else {
+            pool0.price = uint160(cache.price);
+            pool0.amountInDelta += uint128(cache.amountInDelta);
+        }
 
         if (zeroForOne) {
             if (cache.input > 0) {
@@ -343,7 +359,7 @@ contract CoverPool is
                     (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
                 );
                 cache.feeAmount -= feeReturn;
-                pool.amountInDelta += uint128(cache.feeAmount);
+                //TODO: add this delta across ticks
                 _transferOut(recipient, token0, cache.input + feeReturn);
             }
             _transferOut(recipient, token1, amountOut);
@@ -354,7 +370,7 @@ contract CoverPool is
                     (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
                 );
                 cache.feeAmount -= feeReturn;
-                pool.amountInDelta += uint128(cache.feeAmount);
+                //TODO: add this delta across ticks in syncLatest / Positions.update
                 _transferOut(recipient, token1, cache.input + feeReturn);
             }
             _transferOut(recipient, token0, amountOut);
@@ -376,13 +392,16 @@ contract CoverPool is
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
             feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
             // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
-            input: amountIn - FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
-            auctionDepth: (block.number - state.genesisBlock - state.auctionStart), 
+            auctionDepth: block.number - state.genesisBlock - state.auctionStart,
+            auctionBoost: 0,
+            input: 0,
+            inputBoosted: 0,
             amountInDelta: 0
         });
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
+        cache.input = amountIn - cache.feeAmount;
         (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache);
         if (zeroForOne) {
             if (cache.input > 0) {

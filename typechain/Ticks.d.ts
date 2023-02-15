@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "quote(bool,uint160,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -47,7 +47,9 @@ interface TicksInterface extends ethers.utils.Interface {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
         amountInDelta: BigNumberish;
       }
     ]
@@ -124,18 +126,31 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
           price: BigNumber;
           liquidity: BigNumber;
           feeAmount: BigNumber;
           input: BigNumber;
+          inputBoosted: BigNumber;
           auctionDepth: BigNumber;
+          auctionBoost: BigNumber;
           amountInDelta: BigNumber;
         },
         BigNumber
@@ -165,18 +180,31 @@ export class Ticks extends BaseContract {
       liquidity: BigNumberish;
       feeAmount: BigNumberish;
       input: BigNumberish;
+      inputBoosted: BigNumberish;
       auctionDepth: BigNumberish;
+      auctionBoost: BigNumberish;
       amountInDelta: BigNumberish;
     },
     overrides?: CallOverrides
   ): Promise<
     [
-      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         price: BigNumber;
         liquidity: BigNumber;
         feeAmount: BigNumber;
         input: BigNumber;
+        inputBoosted: BigNumber;
         auctionDepth: BigNumber;
+        auctionBoost: BigNumber;
         amountInDelta: BigNumber;
       },
       BigNumber
@@ -206,18 +234,31 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
           price: BigNumber;
           liquidity: BigNumber;
           feeAmount: BigNumber;
           input: BigNumber;
+          inputBoosted: BigNumber;
           auctionDepth: BigNumber;
+          auctionBoost: BigNumber;
           amountInDelta: BigNumber;
         },
         BigNumber
@@ -250,7 +291,9 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
@@ -280,7 +323,9 @@ export class Ticks extends BaseContract {
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
         amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides

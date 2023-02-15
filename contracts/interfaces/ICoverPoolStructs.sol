@@ -97,7 +97,9 @@ interface ICoverPoolStructs {
         uint256 liquidity;
         uint256 feeAmount;
         uint256 input;
+        uint256 inputBoosted;
         uint256 auctionDepth;
+        uint256 auctionBoost;
         uint256 amountInDelta;
     }
 

@@ -310,8 +310,8 @@ library Epochs {
             stopTick1: (nextLatestTick > state.latestTick)
                 ? nextLatestTick
                 : state.latestTick + state.tickSpread,
-            amountInDelta0: 0,
-            amountInDelta1: 0,
+            amountInDelta0: pool0.amountInDelta, /// @dev - initialize to what was already on the pool
+            amountInDelta1: pool1.amountInDelta, /// @dev - initialize to what was already on the pool
             amountOutDelta0: 0,
             amountOutDelta1: 0
         });
@@ -538,6 +538,9 @@ library Epochs {
         //TODO: nearestTick not necessary - replace with stopPrice to avoid repeated calculation
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
+        pool0.amountInDelta = 0;
+        pool1.amountInDelta = 0;
+
         state.auctionStart = uint32(block.number - state.genesisBlock);
         state.latestTick = nextLatestTick;
         state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);

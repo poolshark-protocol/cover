@@ -135,9 +135,9 @@ const _abi = [
         type: "bool",
       },
       {
-        internalType: "uint256",
+        internalType: "uint128",
         name: "amountIn",
-        type: "uint256",
+        type: "uint128",
       },
       {
         internalType: "uint160",

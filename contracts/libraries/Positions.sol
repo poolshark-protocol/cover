@@ -237,7 +237,7 @@ library Positions {
             claimTick: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
-            amountInDelta: 0,
+            amountInDelta: pool.amountInDelta,
             amountOutDelta: 0
         });
 
@@ -322,11 +322,11 @@ library Positions {
             }
 
             if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                // factor in tick and carry deltas
+                // factor in tick and carry deltas for middle of position
                 cache.amountInDelta += ticks[params.claim].amountInDelta;
                 cache.amountOutDelta += ticks[params.claim].amountOutDelta;
             } else {
-                // factor in carry deltas
+                // factor in carry deltas for start of position
                 cache.amountInDelta += ticks[params.claim].amountInDelta * ticks[params.claim].amountInDeltaCarryPercent / 1e18;
                 cache.amountOutDelta += ticks[params.claim].amountOutDelta * ticks[params.claim].amountOutDeltaCarryPercent / 1e18;
             }
@@ -358,7 +358,6 @@ library Positions {
                                 latestSpreadPrice
                             )
                     ); /// @dev - factor in swap fees at end
-                    ///@dev - 1 of 4e6 is lost due to dust
                 }
                 // modify current liquidity
                 if (params.amount > 0) {

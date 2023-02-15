@@ -32,12 +32,12 @@ interface ICoverPool is ICoverPoolStructs {
     function swap(
         address recipient,
         bool zeroForOne,
-        uint256 amountIn,
+        uint128 amountIn,
         uint160 priceLimit
     )
-        external
-        returns (
-            // bytes calldata data
-            uint256 amountOut
-        );
+    external
+    returns (
+        // bytes calldata data
+        uint256 amountOut
+    );
 }

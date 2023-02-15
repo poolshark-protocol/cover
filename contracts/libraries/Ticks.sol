@@ -6,7 +6,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -35,11 +35,16 @@ library Ticks {
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         if (zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0)
             return (cache, 0);
         uint256 nextTickPrice = state.latestPrice;
         uint256 nextPrice = nextTickPrice;
+
+        // determine input boost from tick auction
+        cache.auctionBoost = ((cache.auctionDepth <= state.auctionLength) ? cache.auctionDepth : state.auctionLength) * 1e14 / state.auctionLength * uint16(state.tickSpread);
+        cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
+
         if (zeroForOne) {
             // Trading token 0 (x) for token 1 (y).
             // price  is decreasing.
@@ -51,14 +56,14 @@ library Ticks {
             // if we can't, subtract amount inputted at the end
             // store amountInDelta in pool either way
             // putting in less either way
-            if (cache.input <= maxDx) {
+            if (cache.inputBoosted <= maxDx) {
                 // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
                 uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(
                     liquidityPadded,
                     cache.price,
-                    liquidityPadded + cache.price * cache.input
+                    liquidityPadded + cache.price * cache.inputBoosted
                 );
                 /// @auditor - check tests to see if we need overflow handle
                 // if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
@@ -66,12 +71,14 @@ library Ticks {
                 //     newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
                 // }
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price);
-                cache.price = newPrice;
+                cache.price = uint160(newPrice);
+                cache.amountInDelta = FullPrecisionMath.mulDiv(maxDx - maxDx * cache.input / cache.inputBoosted, Q96, cache.liquidity);
                 cache.input = 0;
-            } else {
+            } else if (maxDx > 0) {
                 amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price);
                 cache.price = nextPrice;
-                cache.input -= maxDx;
+                cache.amountInDelta = FullPrecisionMath.mulDiv(maxDx - maxDx * cache.input / cache.inputBoosted, Q96, cache.liquidity);
+                cache.input -= maxDx * cache.input / cache.inputBoosted; /// @dev - convert back to input amount
             }
         } else {
             // Price is increasing.
@@ -79,20 +86,22 @@ library Ticks {
                 nextPrice = priceLimit;
             }
             uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice);
-            if (cache.input <= maxDy) {
+            if (cache.inputBoosted <= maxDy) {
                 // We can swap within the current range.
                 // Calculate new price after swap: ΔP = Δy/L.
                 uint256 newPrice = cache.price +
-                    FullPrecisionMath.mulDiv(cache.input, Q96, cache.liquidity);
+                    FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
                 // Calculate output of swap
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice);
                 cache.price = newPrice;
+                cache.amountInDelta = FullPrecisionMath.mulDiv(cache.inputBoosted - cache.input, Q96, cache.liquidity);
                 cache.input = 0;
-            } else {
+            } else if (maxDy > 0) {
                 // Swap & cross the tick.
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice);
                 cache.price = nextPrice;
-                cache.input -= maxDy;
+                cache.amountInDelta = FullPrecisionMath.mulDiv(maxDy - maxDy * cache.input / cache.inputBoosted, Q96, cache.liquidity);
+                cache.input -= maxDy * cache.input / cache.inputBoosted;
             }
         }
         return (cache, amountOut);
