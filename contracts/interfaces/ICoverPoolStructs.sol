@@ -125,7 +125,7 @@ interface ICoverPoolStructs {
         bool removeUpper;
         uint128 amountInDelta;
         uint128 amountOutDelta;
-        uint128 amountInCoverage;
+        uint256 amountInCoverage;
     }
 
     struct AccumulateCache {
