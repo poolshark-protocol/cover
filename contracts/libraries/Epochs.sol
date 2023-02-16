@@ -370,7 +370,6 @@ library Epochs {
             } else {
                 /// @dev - place liquidity at stopTick0 for continuation when TWAP moves back down
                 if (nextLatestTick > state.latestTick) {
-                    //TODO: test this
                     if (cache.nextTickToAccum0 != cache.stopTick0) {
                         tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
                             cache.nextTickToAccum0,
