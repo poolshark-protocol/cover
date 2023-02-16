@@ -64,18 +64,7 @@ const _abi = [
       },
     ],
     name: "collect",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "amountIn",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "amountOut",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -135,9 +124,9 @@ const _abi = [
         type: "bool",
       },
       {
-        internalType: "uint256",
+        internalType: "uint128",
         name: "amountIn",
-        type: "uint256",
+        type: "uint128",
       },
       {
         internalType: "uint160",

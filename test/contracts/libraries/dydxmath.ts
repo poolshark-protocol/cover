@@ -27,14 +27,14 @@ describe('DyDxMath Library Tests', function () {
         const pool0: PoolState = await hre.props.coverPool.pool0()
         const liquidity = pool0.liquidity
         const globalState = await hre.props.coverPool.globalState()
-        const lastBlockNumber = globalState.lastBlockNumber
-        const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch
+        const genesisBlock = globalState.genesisBlock
+        const amountInDelta = pool0.amountInDelta
         const price = pool0.price
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(lastBlockNumber).to.be.equal(currentBlock)
-        expect(feeGrowthCurrentEpoch).to.be.equal(BN_ZERO)
+        expect(genesisBlock).to.be.equal(currentBlock)
+        expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
         // console.log("sqrt price:", await (await hre.props.coverPool.sqrtPrice()).toString());
@@ -65,7 +65,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDx(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
-                BigNumber.from('79625275426524748796330556128')
+                BigNumber.from('79625275426524748796330556128'),
+                false
             )
         ).to.be.equal(BigNumber.from('49527266455736296112'))
     })
@@ -75,7 +76,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
-                BigNumber.from('79625275426524748796330556128')
+                BigNumber.from('79625275426524748796330556128'),
+                false
             )
         ).to.be.equal(BigNumber.from('49975001251999693577'))
     })
@@ -85,7 +87,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79625275426524748796330556128'),
-                BigNumber.from('79704936542881920863903188245')
+                BigNumber.from('79704936542881920863903188245'),
+                false
             )
         ).to.be.equal(BigNumber.from('50024998748000306422'))
     })
@@ -95,7 +98,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
-                BigNumber.from('79704936542881920863903188245')
+                BigNumber.from('79704936542881920863903188245'),
+                false
             )
         ).to.be.equal(BigNumber.from('99999999999999999999'))
     })

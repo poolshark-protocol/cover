@@ -27,14 +27,14 @@ describe('TickMath Library Tests', function () {
         const pool0: PoolState = await hre.props.coverPool.pool0()
         const liquidity = pool0.liquidity
         const globalState = await hre.props.coverPool.globalState()
-        const lastBlockNumber = globalState.lastBlockNumber
-        const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch
+        const genesisBlock = globalState.genesisBlock
+        const amountInDelta = pool0.amountInDelta
         const price = pool0.price
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(lastBlockNumber).to.be.equal(currentBlock)
-        expect(feeGrowthCurrentEpoch).to.be.equal(BN_ZERO)
+        expect(genesisBlock).to.be.equal(currentBlock)
+        expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
         // console.log("sqrt price:", await (await hre.props.coverPool.sqrtPrice()).toString());
@@ -84,6 +84,12 @@ describe('TickMath Library Tests', function () {
         expect(
             await hre.props.tickMathLib.getTickAtSqrtRatio(BigNumber.from('4295128739'))
         ).to.be.equal(BigNumber.from('-887272'))
+    })
+
+    it('getTickAtSqrtRatio - Should get tick at sqrt price', async function () {
+        expect(
+            await hre.props.tickMathLib.getTickAtSqrtRatio(BigNumber.from('83095200000000000000000000000'))
+        ).to.be.equal(BigNumber.from('953'))
     })
 
     it('getTickAtSqrtRatio - Should get tick near max sqrt price', async function () {

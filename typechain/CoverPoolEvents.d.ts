@@ -24,14 +24,12 @@ interface CoverPoolEventsInterface extends ethers.utils.Interface {
     "Burn(address,int24,int24,int24,bool,uint128)": EventFragment;
     "Collect(address,uint256,uint256)": EventFragment;
     "Mint(address,int24,int24,int24,bool,uint128)": EventFragment;
-    "PoolCreated(address,address,address,uint24,int24)": EventFragment;
     "Swap(address,address,address,uint256,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Burn"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Collect"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Mint"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PoolCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Swap"): EventFragment;
 }
 
@@ -62,16 +60,6 @@ export type MintEvent = TypedEvent<
     claim: number;
     zeroForOne: boolean;
     liquidityMinted: BigNumber;
-  }
->;
-
-export type PoolCreatedEvent = TypedEvent<
-  [string, string, string, number, number] & {
-    pool: string;
-    token0: string;
-    token1: string;
-    fee: number;
-    tickSpacing: number;
   }
 >;
 
@@ -224,40 +212,6 @@ export class CoverPoolEvents extends BaseContract {
         claim: number;
         zeroForOne: boolean;
         liquidityMinted: BigNumber;
-      }
-    >;
-
-    "PoolCreated(address,address,address,uint24,int24)"(
-      pool?: null,
-      token0?: null,
-      token1?: null,
-      fee?: null,
-      tickSpacing?: null
-    ): TypedEventFilter<
-      [string, string, string, number, number],
-      {
-        pool: string;
-        token0: string;
-        token1: string;
-        fee: number;
-        tickSpacing: number;
-      }
-    >;
-
-    PoolCreated(
-      pool?: null,
-      token0?: null,
-      token1?: null,
-      fee?: null,
-      tickSpacing?: null
-    ): TypedEventFilter<
-      [string, string, string, number, number],
-      {
-        pool: string;
-        token0: string;
-        token1: string;
-        fee: number;
-        tickSpacing: number;
       }
     >;
 

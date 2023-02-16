@@ -123,13 +123,28 @@ const _abi = [
         type: "uint16",
       },
       {
+        internalType: "uint16",
+        name: "auctionLength",
+        type: "uint16",
+      },
+      {
         internalType: "int24",
         name: "latestTick",
         type: "int24",
       },
       {
         internalType: "uint32",
-        name: "lastBlockNumber",
+        name: "genesisBlock",
+        type: "uint32",
+      },
+      {
+        internalType: "uint32",
+        name: "lastBlock",
+        type: "uint32",
+      },
+      {
+        internalType: "uint32",
+        name: "auctionStart",
         type: "uint32",
       },
       {
@@ -147,6 +162,11 @@ const _abi = [
         name: "latestPrice",
         type: "uint160",
       },
+      {
+        internalType: "contract IRangePool",
+        name: "inputPool",
+        type: "address",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -162,7 +182,7 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "feeGrowthCurrentEpoch",
+        name: "amountInDelta",
         type: "uint128",
       },
       {
@@ -185,7 +205,7 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "feeGrowthCurrentEpoch",
+        name: "amountInDelta",
         type: "uint128",
       },
       {
@@ -218,19 +238,14 @@ const _abi = [
     name: "positions0",
     outputs: [
       {
-        internalType: "uint128",
-        name: "liquidity",
-        type: "uint128",
-      },
-      {
         internalType: "uint32",
         name: "accumEpochLast",
         type: "uint32",
       },
       {
-        internalType: "uint160",
-        name: "claimPriceLast",
-        type: "uint160",
+        internalType: "uint128",
+        name: "liquidity",
+        type: "uint128",
       },
       {
         internalType: "uint128",
@@ -241,6 +256,16 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountInDeltaLast",
+        type: "uint128",
+      },
+      {
+        internalType: "uint160",
+        name: "claimPriceLast",
+        type: "uint160",
       },
     ],
     stateMutability: "view",
@@ -267,19 +292,14 @@ const _abi = [
     name: "positions1",
     outputs: [
       {
-        internalType: "uint128",
-        name: "liquidity",
-        type: "uint128",
-      },
-      {
         internalType: "uint32",
         name: "accumEpochLast",
         type: "uint32",
       },
       {
-        internalType: "uint160",
-        name: "claimPriceLast",
-        type: "uint160",
+        internalType: "uint128",
+        name: "liquidity",
+        type: "uint128",
       },
       {
         internalType: "uint128",
@@ -290,6 +310,16 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountInDeltaLast",
+        type: "uint128",
+      },
+      {
+        internalType: "uint160",
+        name: "claimPriceLast",
+        type: "uint160",
       },
     ],
     stateMutability: "view",

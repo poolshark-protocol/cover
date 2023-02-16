@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import './TickMath.sol';
 import './DyDxMath.sol';
+import './TwapOracle.sol';
+import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
 library Epochs {
@@ -184,12 +186,12 @@ library Epochs {
         uint256 amountOutLeftover;
         if (isPool0) {
             // leftover x provided
-            amountOutLeftover = DyDxMath.getDx(currentLiquidity, currentPrice, crossPrice);
+            amountOutLeftover = DyDxMath.getDx(currentLiquidity, currentPrice, crossPrice, false);
             // unfilled y amount
-            amountInUnfilled = DyDxMath.getDy(currentLiquidity, currentPrice, crossPrice);
+            amountInUnfilled = DyDxMath.getDy(currentLiquidity, currentPrice, crossPrice, false);
         } else {
-            amountOutLeftover = DyDxMath.getDy(currentLiquidity, crossPrice, currentPrice);
-            amountInUnfilled = DyDxMath.getDx(currentLiquidity, crossPrice, currentPrice);
+            amountOutLeftover = DyDxMath.getDy(currentLiquidity, crossPrice, currentPrice, false);
+            amountInUnfilled = DyDxMath.getDx(currentLiquidity, crossPrice, currentPrice, false);
         }
 
         //TODO: ensure this will not overflow with 32 bits
@@ -280,8 +282,7 @@ library Epochs {
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         ICoverPoolStructs.PoolState memory pool0,
         ICoverPoolStructs.PoolState memory pool1,
-        ICoverPoolStructs.GlobalState memory state,
-        int24 nextLatestTick
+        ICoverPoolStructs.GlobalState memory state
     )
         external
         returns (
@@ -290,6 +291,9 @@ library Epochs {
             ICoverPoolStructs.PoolState memory
         )
     {
+        // update last block checked
+        int24 nextLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
+        state.lastBlock = uint32(block.number);
         // only accumulate if latestTick needs to move
         if (nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread)) {
             return (state, pool0, pool1);
@@ -308,8 +312,8 @@ library Epochs {
             stopTick1: (nextLatestTick > state.latestTick)
                 ? nextLatestTick
                 : state.latestTick + state.tickSpread,
-            amountInDelta0: 0,
-            amountInDelta1: 0,
+            amountInDelta0: pool0.amountInDelta, /// @dev - initialize to what was already on the pool
+            amountInDelta1: pool1.amountInDelta, /// @dev - initialize to what was already on the pool
             amountOutDelta0: 0,
             amountOutDelta1: 0
         });
@@ -366,7 +370,6 @@ library Epochs {
             } else {
                 /// @dev - place liquidity at stopTick0 for continuation when TWAP moves back down
                 if (nextLatestTick > state.latestTick) {
-                    //TODO: test this
                     if (cache.nextTickToAccum0 != cache.stopTick0) {
                         tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
                             cache.nextTickToAccum0,
@@ -536,6 +539,10 @@ library Epochs {
         //TODO: nearestTick not necessary - replace with stopPrice to avoid repeated calculation
         pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
+        pool0.amountInDelta = 0;
+        pool1.amountInDelta = 0;
+
+        state.auctionStart = uint32(block.number - state.genesisBlock);
         state.latestTick = nextLatestTick;
         state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
         // console.log("-- END ACCUMULATE LAST BLOCK --");

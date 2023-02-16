@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "quote(bool,uint160,(uint8,uint16,int16,uint16,int24,uint32,uint32,uint128,uint160),(uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool),(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -33,17 +33,25 @@ interface TicksInterface extends ethers.utils.Interface {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
-        lastBlockNumber: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       {
         price: BigNumberish;
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
+        auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
+        amountInDelta: BigNumberish;
       }
     ]
   ): string;
@@ -105,26 +113,47 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
-        lastBlockNumber: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
+        auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
+        amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
           price: BigNumber;
           liquidity: BigNumber;
           feeAmount: BigNumber;
           input: BigNumber;
+          inputBoosted: BigNumber;
+          auctionDepth: BigNumber;
+          auctionBoost: BigNumber;
+          amountInDelta: BigNumber;
         },
         BigNumber
       ] & { amountOut: BigNumber }
@@ -139,26 +168,47 @@ export class Ticks extends BaseContract {
       swapFee: BigNumberish;
       tickSpread: BigNumberish;
       twapLength: BigNumberish;
+      auctionLength: BigNumberish;
       latestTick: BigNumberish;
-      lastBlockNumber: BigNumberish;
+      genesisBlock: BigNumberish;
+      lastBlock: BigNumberish;
+      auctionStart: BigNumberish;
       accumEpoch: BigNumberish;
       liquidityGlobal: BigNumberish;
       latestPrice: BigNumberish;
+      inputPool: string;
     },
     cache: {
       price: BigNumberish;
       liquidity: BigNumberish;
       feeAmount: BigNumberish;
       input: BigNumberish;
+      inputBoosted: BigNumberish;
+      auctionDepth: BigNumberish;
+      auctionBoost: BigNumberish;
+      amountInDelta: BigNumberish;
     },
     overrides?: CallOverrides
   ): Promise<
     [
-      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         price: BigNumber;
         liquidity: BigNumber;
         feeAmount: BigNumber;
         input: BigNumber;
+        inputBoosted: BigNumber;
+        auctionDepth: BigNumber;
+        auctionBoost: BigNumber;
+        amountInDelta: BigNumber;
       },
       BigNumber
     ] & { amountOut: BigNumber }
@@ -173,26 +223,47 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
-        lastBlockNumber: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
+        auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
+        amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<
       [
-        [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        [
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
           price: BigNumber;
           liquidity: BigNumber;
           feeAmount: BigNumber;
           input: BigNumber;
+          inputBoosted: BigNumber;
+          auctionDepth: BigNumber;
+          auctionBoost: BigNumber;
+          amountInDelta: BigNumber;
         },
         BigNumber
       ] & { amountOut: BigNumber }
@@ -210,17 +281,25 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
-        lastBlockNumber: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
+        auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
+        amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -235,17 +314,25 @@ export class Ticks extends BaseContract {
         swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
+        auctionLength: BigNumberish;
         latestTick: BigNumberish;
-        lastBlockNumber: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
         accumEpoch: BigNumberish;
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
+        inputPool: string;
       },
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
         feeAmount: BigNumberish;
         input: BigNumberish;
+        inputBoosted: BigNumberish;
+        auctionDepth: BigNumberish;
+        auctionBoost: BigNumberish;
+        amountInDelta: BigNumberish;
       },
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

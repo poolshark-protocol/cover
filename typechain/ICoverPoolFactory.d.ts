@@ -21,9 +21,9 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
   functions: {
-    "createCoverPool(address,address,uint16,int16,uint16)": FunctionFragment;
+    "createCoverPool(address,address,uint16,int16,uint16,uint16)": FunctionFragment;
     "feeTierTickSpacing(uint256)": FunctionFragment;
-    "getCoverPool(address,address,uint16,int16,uint16)": FunctionFragment;
+    "getCoverPool(address,address,uint16,int16,uint16,uint16)": FunctionFragment;
     "libraries()": FunctionFragment;
     "owner()": FunctionFragment;
     "poolList(uint256)": FunctionFragment;
@@ -33,7 +33,14 @@ interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
 
   encodeFunctionData(
     functionFragment: "createCoverPool",
-    values: [string, string, BigNumberish, BigNumberish, BigNumberish]
+    values: [
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "feeTierTickSpacing",
@@ -41,7 +48,14 @@ interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getCoverPool",
-    values: [string, string, BigNumberish, BigNumberish, BigNumberish]
+    values: [
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ]
   ): string;
   encodeFunctionData(functionFragment: "libraries", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -83,19 +97,20 @@ interface ICoverPoolFactoryInterface extends ethers.utils.Interface {
   ): Result;
 
   events: {
-    "PoolCreated(address,address,uint24,int24,uint16,address)": EventFragment;
+    "PoolCreated(address,address,uint24,int24,uint16,uint16,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "PoolCreated"): EventFragment;
 }
 
 export type PoolCreatedEvent = TypedEvent<
-  [string, string, number, number, number, string] & {
+  [string, string, number, number, number, number, string] & {
     token0: string;
     token1: string;
     fee: number;
     tickSpread: number;
     twapLength: number;
+    auctionLength: number;
     pool: string;
   }
 >;
@@ -150,6 +165,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -164,6 +180,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -184,6 +201,7 @@ export class ICoverPoolFactory extends BaseContract {
     fee: BigNumberish,
     tickSpread: BigNumberish,
     twapLength: BigNumberish,
+    auctionLength: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -198,6 +216,7 @@ export class ICoverPoolFactory extends BaseContract {
     fee: BigNumberish,
     tickSpread: BigNumberish,
     twapLength: BigNumberish,
+    auctionLength: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -218,6 +237,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -232,6 +252,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -247,21 +268,23 @@ export class ICoverPoolFactory extends BaseContract {
   };
 
   filters: {
-    "PoolCreated(address,address,uint24,int24,uint16,address)"(
+    "PoolCreated(address,address,uint24,int24,uint16,uint16,address)"(
       token0?: string | null,
       token1?: string | null,
       fee?: BigNumberish | null,
       tickSpread?: null,
       twapLength?: null,
+      auctionLength?: null,
       pool?: null
     ): TypedEventFilter<
-      [string, string, number, number, number, string],
+      [string, string, number, number, number, number, string],
       {
         token0: string;
         token1: string;
         fee: number;
         tickSpread: number;
         twapLength: number;
+        auctionLength: number;
         pool: string;
       }
     >;
@@ -272,15 +295,17 @@ export class ICoverPoolFactory extends BaseContract {
       fee?: BigNumberish | null,
       tickSpread?: null,
       twapLength?: null,
+      auctionLength?: null,
       pool?: null
     ): TypedEventFilter<
-      [string, string, number, number, number, string],
+      [string, string, number, number, number, number, string],
       {
         token0: string;
         token1: string;
         fee: number;
         tickSpread: number;
         twapLength: number;
+        auctionLength: number;
         pool: string;
       }
     >;
@@ -293,6 +318,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -307,6 +333,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -328,6 +355,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -342,6 +370,7 @@ export class ICoverPoolFactory extends BaseContract {
       fee: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
+      auctionLength: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

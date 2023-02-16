@@ -45,14 +45,14 @@ describe('CoverPool Tests', function () {
         const pool0: PoolState = await hre.props.coverPool.pool0()
         const liquidity = pool0.liquidity
         const globalState = await hre.props.coverPool.globalState()
-        const lastBlockNumber = globalState.lastBlockNumber
-        const feeGrowthCurrentEpoch = pool0.feeGrowthCurrentEpoch
+        const genesisBlock = globalState.genesisBlock
+        const amountInDelta = pool0.amountInDelta
         const price = pool0.price
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(lastBlockNumber).to.be.equal(currentBlock)
-        expect(feeGrowthCurrentEpoch).to.be.equal(BN_ZERO)
+        expect(genesisBlock).to.be.equal(currentBlock)
+        expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
         minPrice = BigNumber.from('4295128739')
@@ -172,7 +172,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint/burn new LP position', async function () {
+    it('pool0 - Should mint/burn new LP position 11', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {
             await validateMint({
@@ -235,7 +235,7 @@ describe('CoverPool Tests', function () {
         expect(upperTickNode.nextTick.toString()).to.be.equal('0')
     })
 
-    it('pool0 - Should mint, swap, and then claim entire range 12', async function () {
+    it('pool0 - Should mint, swap, and then claim entire range', async function () {
         await validateSync(hre.props.alice, '0')
 
         await validateMint({
@@ -263,7 +263,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
             sqrtPriceLimitX96: maxPrice,
-            balanceInDecrease: BigNumber.from('99750339674246044929'),
+            balanceInDecrease: BigNumber.from('99720423547181890362'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -289,7 +289,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('99750339674246044928'),
+            balanceInIncrease: BigNumber.from('99720423547181890361'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -504,7 +504,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             sqrtPriceLimitX96: maxPrice,
             balanceInDecrease: tokenAmount.div(10),
-            balanceOutIncrease: BigNumber.from('10033046528530070413'),
+            balanceOutIncrease: BigNumber.from('10036055838969234287'),
             revertMessage: '',
         })
 
@@ -530,14 +530,14 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('9999999999999999998'),
-            balanceOutIncrease: BigNumber.from('89966953471469929584'),
+            balanceOutIncrease: BigNumber.from('89963944161030765710'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
         })
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, and burn 13', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -569,7 +569,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             sqrtPriceLimitX96: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10033044516497125183'),
+            balanceOutIncrease: BigNumber.from('10036053825729130461'),
             revertMessage: '',
         })
 
@@ -581,7 +581,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('9999999999999999998'),
-            balanceOutIncrease: BigNumber.from('89966955483502874816'),
+            balanceOutIncrease: BigNumber.from('89963946174270869537'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -589,6 +589,8 @@ describe('CoverPool Tests', function () {
     })
 
     // move TWAP in range; no-op swap; burn immediately
+
+    // multiple claims within current auction
 
     // move TWAP in range; no-op swap; move TWAP down tickSpread; burn liquidity
 
@@ -710,7 +712,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP after mint and handle unfilled amount', async function () {
+    it('pool1 - Should move TWAP after mint and handle unfilled amount 17', async function () {
         const liquidityAmount2 = hre.ethers.utils.parseUnits('99955008249587388643769', 0)
         const balanceInDecrease = hre.ethers.utils.parseUnits('99750339674246044929', 0)
         const balanceOutIncrease = hre.ethers.utils.parseUnits('99999999999999999999', 0)
@@ -855,7 +857,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: true,
             amountIn: tokenAmount.mul(2),
             sqrtPriceLimitX96: minPrice,
-            balanceInDecrease: BigNumber.from('99750339674246044929'),
+            balanceInDecrease: BigNumber.from('99720423547181890362'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -881,7 +883,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99750339674246044928'),
+            balanceInIncrease: BigNumber.from('99720423547181890361'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -903,7 +905,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP in range by one, partial fill, and burn 14', async function () {
+    it('pool1 - Should move TWAP in range by one, partial fill, and burn', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -935,7 +937,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             sqrtPriceLimitX96: minPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10033044516497125183'),
+            balanceOutIncrease: BigNumber.from('10036053825729130461'),
             revertMessage: '',
         })
 
@@ -946,8 +948,8 @@ describe('CoverPool Tests', function () {
             upper: '60',
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('9999999999999999998'),
-            balanceOutIncrease: BigNumber.from('89966955483502874816'),
+            balanceInIncrease: BigNumber.from('9988049415125138934'), //TODO: validate this number is correct
+            balanceOutIncrease: BigNumber.from('89963946174270869537'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',

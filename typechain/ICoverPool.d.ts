@@ -24,7 +24,7 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
     "burn(int24,int24,int24,bool,uint128)": FunctionFragment;
     "collect(int24,int24,int24,bool)": FunctionFragment;
     "mint(int24,int24,int24,int24,int24,uint128,bool)": FunctionFragment;
-    "swap(address,bool,uint256,uint160)": FunctionFragment;
+    "swap(address,bool,uint128,uint160)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -193,9 +193,7 @@ export class ICoverPool extends BaseContract {
       claim: BigNumberish,
       zeroForOne: boolean,
       overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { amountIn: BigNumber; amountOut: BigNumber }
-    >;
+    ): Promise<void>;
 
     mint(
       lowerOld: BigNumberish,

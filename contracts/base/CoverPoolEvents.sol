@@ -30,8 +30,5 @@ abstract contract CoverPoolEvents {
         uint256 amountIn,
         uint256 amountOut
     );
-
-    event PoolCreated(address pool, address token0, address token1, uint24 fee, int24 tickSpacing);
-
     //TODO: PoolInitialized event
 }

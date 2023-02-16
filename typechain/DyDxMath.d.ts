@@ -20,18 +20,18 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface DyDxMathInterface extends ethers.utils.Interface {
   functions: {
-    "getDx(uint256,uint256,uint256)": FunctionFragment;
-    "getDy(uint256,uint256,uint256)": FunctionFragment;
+    "getDx(uint256,uint256,uint256,bool)": FunctionFragment;
+    "getDy(uint256,uint256,uint256,bool)": FunctionFragment;
     "getLiquidityForAmounts(uint256,uint256,uint256,uint256,uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "getDx",
-    values: [BigNumberish, BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "getDy",
-    values: [BigNumberish, BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "getLiquidityForAmounts",
@@ -102,6 +102,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { dx: BigNumber }>;
 
@@ -109,6 +110,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { dy: BigNumber }>;
 
@@ -126,6 +128,7 @@ export class DyDxMath extends BaseContract {
     liquidity: BigNumberish,
     priceLower: BigNumberish,
     priceUpper: BigNumberish,
+    roundUp: boolean,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -133,6 +136,7 @@ export class DyDxMath extends BaseContract {
     liquidity: BigNumberish,
     priceLower: BigNumberish,
     priceUpper: BigNumberish,
+    roundUp: boolean,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -150,6 +154,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -157,6 +162,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -177,6 +183,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -184,6 +191,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -202,6 +210,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -209,6 +218,7 @@ export class DyDxMath extends BaseContract {
       liquidity: BigNumberish,
       priceLower: BigNumberish,
       priceUpper: BigNumberish,
+      roundUp: boolean,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
