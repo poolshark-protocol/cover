@@ -86,6 +86,12 @@ describe('TickMath Library Tests', function () {
         ).to.be.equal(BigNumber.from('-887272'))
     })
 
+    it('getTickAtSqrtRatio - Should get tick at sqrt price', async function () {
+        expect(
+            await hre.props.tickMathLib.getTickAtSqrtRatio(BigNumber.from('83095200000000000000000000000'))
+        ).to.be.equal(BigNumber.from('953'))
+    })
+
     it('getTickAtSqrtRatio - Should get tick near max sqrt price', async function () {
         expect(
             await hre.props.tickMathLib.getTickAtSqrtRatio(

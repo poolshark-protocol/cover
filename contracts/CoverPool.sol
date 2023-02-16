@@ -186,7 +186,7 @@ contract CoverPool is
                 tickNodes,
                 state,
                 zeroForOne ? pool0 : pool1,
-                UpdateParams(msg.sender, lower, upper, claim, zeroForOne, int128(amount))
+                UpdateParams(msg.sender, lower, upper, claim, zeroForOne, amount)
             );
         }
         //TODO: add PositionUpdated event

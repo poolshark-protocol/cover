@@ -49,11 +49,12 @@ interface ICoverPoolStructs {
 
     // balance needs to be immediately transferred to the position owner
     struct Position {
-        uint128 liquidity; // expected amount to be used not actual
         uint32 accumEpochLast; // last feeGrowth this position was updated at
-        uint160 claimPriceLast; // highest price claimed at
+        uint128 liquidity; // expected amount to be used not actual
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
+        uint128 amountInDeltaLast; // last recorded amountInDelta within the current auction
+        uint160 claimPriceLast; // highest price claimed at
     }
 
     //TODO: should we have a recipient field here?
@@ -81,7 +82,7 @@ interface ICoverPoolStructs {
         int24 upper;
         int24 claim;
         bool zeroForOne;
-        int128 amount;
+        uint128 amount;
     }
 
     struct ValidateParams {
