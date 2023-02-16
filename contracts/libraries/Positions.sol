@@ -248,7 +248,7 @@ library Positions {
             return state;
         }
 
-        // validate claim param
+        // claim param sanity check
         if (
             (
                 params.zeroForOne
@@ -265,6 +265,34 @@ library Positions {
         ) revert InvalidClaimTick(); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
+        // validate claim tick
+        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
+             if (cache.claimTick.accumEpochLast <= cache.position.accumEpochLast)
+                revert WrongTickClaimedAt();
+            params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
+        } else {
+            // zero fill or partial fill
+            uint32 claimNextTickAccumEpoch = params.zeroForOne
+                ? tickNodes[cache.claimTick.previousTick].accumEpochLast
+                : tickNodes[cache.claimTick.nextTick].accumEpochLast;
+            ///@dev - next accumEpoch should not be greater
+            if (claimNextTickAccumEpoch > cache.position.accumEpochLast)
+                revert WrongTickClaimedAt();
+
+            // check if liquidity removal required
+            if (params.amount > 0) {
+                /// @dev - check if liquidity removal required
+                cache.removeLower = params.zeroForOne
+                    ? true
+                    : tickNodes[cache.claimTick.nextTick].accumEpochLast <=
+                        cache.position.accumEpochLast;
+                cache.removeUpper = params.zeroForOne
+                    ? tickNodes[cache.claimTick.previousTick].accumEpochLast <=
+                        cache.position.accumEpochLast
+                    : true;
+            }
+        }
+        
         // calculate section 1 of claim
         if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
                               : cache.priceClaim > cache.position.claimPriceLast) {
@@ -289,15 +317,72 @@ library Positions {
             /// @dev - second claim within current auction
             cache.priceClaim = pool.price;
             cache.amountInDelta = pool.amountInDelta - cache.position.amountInDeltaLast;
-        }  
+        }
 
-        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-            // position 100% filled
-            if (cache.claimTick.accumEpochLast <= cache.position.accumEpochLast)
-                revert WrongTickClaimedAt();
+        // factor in current liquidity auction
+        if (params.claim == state.latestTick && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+            // section 2
+            if (params.amount > 0) {
+                // remove if burn
+                cache.position.amountOut += uint128(
+                    params.zeroForOne
+                        ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
+                        : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
+                );
+                cache.amountInCoverage +=
+                    params.zeroForOne
+                        ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, true)
+                        : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, true)
+                ;
+                if (pool.liquidity == params.amount) {
+                    pool.amountInDelta = 0;
+                }
+                pool.liquidity -= params.amount;
+            }
+            // section 3
+            {
+                // modify claim price for section 4
+                cache.priceClaim = cache.priceSpread;
+                uint256 amountInSection3 =
+                    params.zeroForOne
+                        ? DyDxMath.getDy(
+                            cache.position.liquidity, // multiplied by liquidity later
+                            cache.position.claimPriceLast < cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
+                            pool.price,
+                            false
+                        )
+                        : DyDxMath.getDx(
+                            cache.position.liquidity,
+                            pool.price,
+                            cache.position.claimPriceLast > cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
+                            false
+                        );
+                cache.position.amountIn += uint128(amountInSection3);
+                cache.amountInCoverage += amountInSection3;
+                cache.position.amountInDeltaLast = pool.amountInDelta;
+            }
+        } else {
+            cache.position.amountInDeltaLast = 0;
+        }
 
-            params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
-            
+        // section 4
+        {
+
+            if (params.amount > 0) {
+                cache.position.amountOut += uint128(
+                    params.zeroForOne
+                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
+                        : DyDxMath.getDy(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
+                );
+                cache.amountInCoverage +=
+                    params.zeroForOne
+                        ? DyDxMath.getDy(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
+                        : DyDxMath.getDx(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
+                ;
+            }
+        }
+
+        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {         
             /// @dev - ignore delta carry for 100% fill
             cache.amountInDelta = uint128(
                 uint256(ticks[params.claim].amountInDelta) -
@@ -312,27 +397,6 @@ library Positions {
                     1e18
             );
         } else {
-            // zero fill or partial fill
-            uint32 claimNextTickAccumEpoch = params.zeroForOne
-                ? tickNodes[cache.claimTick.previousTick].accumEpochLast
-                : tickNodes[cache.claimTick.nextTick].accumEpochLast;
-            ///@dev - next accumEpoch should not be greater
-            if (claimNextTickAccumEpoch > cache.position.accumEpochLast)
-                revert WrongTickClaimedAt();
-
-            // check if liquidity removal required
-            if (params.amount > 0) {
-                /// @dev - check if liquidity removal required
-                cache.removeLower = params.zeroForOne
-                    ? true
-                    : tickNodes[cache.claimTick.nextTick].accumEpochLast <=
-                        cache.position.accumEpochLast;
-                cache.removeUpper = params.zeroForOne
-                    ? tickNodes[cache.claimTick.previousTick].accumEpochLast <=
-                        cache.position.accumEpochLast
-                    : true;
-            }
-
             if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
                 // clear out position amountInDeltaLast
                 cache.position.amountInDeltaLast = 0;
@@ -344,67 +408,7 @@ library Positions {
                 cache.amountInDelta += ticks[params.claim].amountInDelta * ticks[params.claim].amountInDeltaCarryPercent / 1e18;
                 cache.amountOutDelta += ticks[params.claim].amountOutDelta * ticks[params.claim].amountOutDeltaCarryPercent / 1e18;
             }
-            // factor in current liquidity auction
-            if (params.claim == state.latestTick) {
-                // section 2
-                if (params.amount > 0) {
-                    // remove if burn
-                    cache.position.amountOut += uint128(
-                        params.zeroForOne
-                            ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
-                            : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
-                    );
-                    cache.amountInCoverage +=
-                        params.zeroForOne
-                            ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, true)
-                            : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, true)
-                    ;
-                    if (pool.liquidity == params.amount) {
-                        pool.amountInDelta = 0;
-                    }
-                    pool.liquidity -= params.amount;
-                }
-                // section 3
-                {
-                    // modify claim price for section 4
-                    cache.priceClaim = cache.priceSpread;
-                                    console.log('section 3');
-                    uint256 amountInSection3 =
-                        params.zeroForOne
-                            ? DyDxMath.getDy(
-                                cache.position.liquidity, // multiplied by liquidity later
-                                cache.position.claimPriceLast < cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
-                                pool.price,
-                                false
-                            )
-                            : DyDxMath.getDx(
-                                cache.position.liquidity,
-                                pool.price,
-                                cache.position.claimPriceLast > cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
-                                false
-                            );
-                    cache.position.amountIn += uint128(amountInSection3);
-                    cache.amountInCoverage += amountInSection3;
-                    cache.position.amountInDeltaLast = pool.amountInDelta;
-                }
-            } else {
-                cache.position.amountInDeltaLast = 0;
-            }
-        }
-        {
-            //section 4
-            if (params.amount > 0) {
-                cache.position.amountOut += uint128(
-                    params.zeroForOne
-                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
-                        : DyDxMath.getDy(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
-                );
-                cache.amountInCoverage +=
-                    params.zeroForOne
-                        ? DyDxMath.getDy(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
-                        : DyDxMath.getDx(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
-                ;
-            }
+            
         }
         // factor in deltas for section 1
         // console.log('section 1 before deltas');
