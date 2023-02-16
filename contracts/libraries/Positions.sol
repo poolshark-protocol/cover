@@ -248,7 +248,7 @@ library Positions {
             return state;
         }
 
-        // claim param sanity check
+        // early return if no update
         if (
             (
                 params.zeroForOne
@@ -256,6 +256,8 @@ library Positions {
                     : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
             ) && params.claim == state.latestTick
         ) { if (cache.position.claimPriceLast == pool.price) return state; } /// @dev - nothing to update if pool price hasn't moved
+        
+        // claim tick sanity checks
         else if (
             (
                 params.zeroForOne
@@ -292,6 +294,40 @@ library Positions {
                     : true;
             }
         }
+
+        // amount deltas
+        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {         
+            /// @dev - ignore delta carry for 100% fill
+            cache.amountInDelta = uint128(
+                uint256(ticks[params.claim].amountInDelta) -
+                    (uint256(ticks[params.claim].amountInDeltaCarryPercent) *
+                        ticks[params.claim].amountInDelta) /
+                    1e18
+            );
+            cache.amountOutDelta = uint128(
+                uint256(ticks[params.claim].amountOutDelta) -
+                    (uint256(ticks[params.claim].amountOutDeltaCarryPercent) *
+                        ticks[params.claim].amountInDelta) /
+                    1e18
+            );
+        } else {
+            if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+                // clear out position amountInDeltaLast
+                cache.position.amountInDeltaLast = 0;
+                // factor in tick and carry deltas for middle of position
+                cache.amountInDelta += ticks[params.claim].amountInDelta;
+                cache.amountOutDelta += ticks[params.claim].amountOutDelta;
+            } else {
+                // factor in carry deltas for start of position
+                cache.amountInDelta += ticks[params.claim].amountInDelta * ticks[params.claim].amountInDeltaCarryPercent / 1e18;
+                cache.amountOutDelta += ticks[params.claim].amountOutDelta * ticks[params.claim].amountOutDeltaCarryPercent / 1e18;
+            }  
+        }
+
+        // delta check complete - update CPL for new position
+        if(cache.position.claimPriceLast == 0) {
+            cache.position.claimPriceLast = (params.zeroForOne ? cache.priceUpper : cache.priceLower);
+        }
         
         // calculate section 1 of claim
         if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
@@ -316,12 +352,12 @@ library Positions {
                                      : cache.priceClaim < cache.position.claimPriceLast) {
             /// @dev - second claim within current auction
             cache.priceClaim = pool.price;
-            cache.amountInDelta = pool.amountInDelta - cache.position.amountInDeltaLast;
+            // cache.amountInDelta = pool.amountInDelta - cache.position.amountInDeltaLast;
         }
 
-        // factor in current liquidity auction
+        // section 2
         if (params.claim == state.latestTick && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-            // section 2
+            // if auction is live
             if (params.amount > 0) {
                 // remove if burn
                 cache.position.amountOut += uint128(
@@ -364,7 +400,6 @@ library Positions {
         } else {
             cache.position.amountInDeltaLast = 0;
         }
-
         // section 4
         {
 
@@ -382,37 +417,7 @@ library Positions {
             }
         }
 
-        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {         
-            /// @dev - ignore delta carry for 100% fill
-            cache.amountInDelta = uint128(
-                uint256(ticks[params.claim].amountInDelta) -
-                    (uint256(ticks[params.claim].amountInDeltaCarryPercent) *
-                        ticks[params.claim].amountInDelta) /
-                    1e18
-            );
-            cache.amountOutDelta = uint128(
-                uint256(ticks[params.claim].amountOutDelta) -
-                    (uint256(ticks[params.claim].amountOutDeltaCarryPercent) *
-                        ticks[params.claim].amountInDelta) /
-                    1e18
-            );
-        } else {
-            if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                // clear out position amountInDeltaLast
-                cache.position.amountInDeltaLast = 0;
-                // factor in tick and carry deltas for middle of position
-                cache.amountInDelta += ticks[params.claim].amountInDelta;
-                cache.amountOutDelta += ticks[params.claim].amountOutDelta;
-            } else {
-                // factor in carry deltas for start of position
-                cache.amountInDelta += ticks[params.claim].amountInDelta * ticks[params.claim].amountInDeltaCarryPercent / 1e18;
-                cache.amountOutDelta += ticks[params.claim].amountOutDelta * ticks[params.claim].amountOutDeltaCarryPercent / 1e18;
-            }
-            
-        }
-        // factor in deltas for section 1
-        // console.log('section 1 before deltas');
-        // console.log(cache.position.amountIn);
+        // adjust based on deltas
         if (cache.amountInDelta > 0) {
             uint256 amountInCoverageFull =
                     params.zeroForOne
