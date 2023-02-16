@@ -65,7 +65,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDx(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
-                BigNumber.from('79625275426524748796330556128')
+                BigNumber.from('79625275426524748796330556128'),
+                false
             )
         ).to.be.equal(BigNumber.from('49527266455736296112'))
     })
@@ -75,7 +76,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
-                BigNumber.from('79625275426524748796330556128')
+                BigNumber.from('79625275426524748796330556128'),
+                false
             )
         ).to.be.equal(BigNumber.from('49975001251999693577'))
     })
@@ -85,7 +87,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79625275426524748796330556128'),
-                BigNumber.from('79704936542881920863903188245')
+                BigNumber.from('79704936542881920863903188245'),
+                false
             )
         ).to.be.equal(BigNumber.from('50024998748000306422'))
     })
@@ -95,7 +98,8 @@ describe('DyDxMath Library Tests', function () {
             await hre.props.dydxMathLib.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
-                BigNumber.from('79704936542881920863903188245')
+                BigNumber.from('79704936542881920863903188245'),
+                false
             )
         ).to.be.equal(BigNumber.from('99999999999999999999'))
     })

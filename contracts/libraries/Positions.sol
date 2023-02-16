@@ -6,6 +6,7 @@ import './Ticks.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -69,7 +70,7 @@ library Positions {
                 params.upperOld = params.state.latestTick;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
-                    DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper)
+                    DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false)
                 );
                 priceUpper = priceNewUpper;
             }
@@ -79,7 +80,7 @@ library Positions {
                 params.lowerOld = params.state.latestTick;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
-                    DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower)
+                    DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false)
                 );
                 priceLower = priceNewLower;
             }
@@ -199,8 +200,8 @@ library Positions {
 
         cache.position.amountOut += uint128(
             params.zeroForOne
-                ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper)
-                : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper)
+                ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
+                : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
         );
 
         cache.position.liquidity -= uint128(params.amount);
@@ -236,7 +237,8 @@ library Positions {
             removeLower: true,
             removeUpper: true,
             amountInDelta: params.claim == state.latestTick ? pool.amountInDelta : 0,
-            amountOutDelta: 0
+            amountOutDelta: 0,
+            amountInCoverage: 0
         });
 
         // validate position liquidity
@@ -270,14 +272,17 @@ library Positions {
                 ? DyDxMath.getDy(
                     cache.position.liquidity,
                     cache.priceClaim,
-                    cache.position.claimPriceLast
+                    cache.position.claimPriceLast,
+                    false
                 )
                 : DyDxMath.getDx(
                     cache.position.liquidity,
                     cache.position.claimPriceLast,
-                    cache.priceClaim
+                    cache.priceClaim,
+                    false
                 );
             cache.position.amountIn += uint128(amountInClaimable);
+            cache.amountInCoverage = uint128(amountInClaimable);
         } else if (params.zeroForOne ? cache.priceClaim > cache.position.claimPriceLast 
                                      : cache.priceClaim < cache.position.claimPriceLast) {
             /// @dev - second claim within current auction
@@ -345,8 +350,13 @@ library Positions {
                     // remove if burn
                     cache.position.amountOut += uint128(
                         params.zeroForOne
-                            ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim)
-                            : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price)
+                            ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
+                            : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
+                    );
+                    cache.amountInCoverage += uint128(
+                        params.zeroForOne
+                            ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, false)
+                            : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, false)
                     );
                     if (pool.liquidity == params.amount) {
                         pool.amountInDelta = 0;
@@ -357,19 +367,24 @@ library Positions {
                 {
                     // modify claim price for section 4
                     cache.priceClaim = cache.priceSpread;
-                    cache.position.amountIn += uint128(
+                                    console.log('section 3');
+                    uint128 amountInSection3 = uint128(
                         params.zeroForOne
                             ? DyDxMath.getDy(
                                 cache.position.liquidity, // multiplied by liquidity later
                                 cache.position.claimPriceLast < cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
-                                pool.price
+                                pool.price,
+                                false
                             )
                             : DyDxMath.getDx(
                                 cache.position.liquidity,
                                 pool.price,
                                 cache.position.claimPriceLast > cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread
+                                , false
                             )
                     );
+                    cache.position.amountIn += amountInSection3;
+                    cache.amountInCoverage += amountInSection3;
                     cache.position.amountInDeltaLast = pool.amountInDelta;
                 }
             } else {
@@ -379,12 +394,38 @@ library Positions {
         {
             //section 4
             if (params.amount > 0) {
+
                 cache.position.amountOut += uint128(
                     params.zeroForOne
-                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.priceClaim)
-                        : DyDxMath.getDy(uint128(params.amount), cache.priceClaim, cache.priceUpper)
+                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
+                        : DyDxMath.getDy(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
+                );
+                cache.amountInCoverage += uint128(
+                    params.zeroForOne
+                        ? DyDxMath.getDy(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
+                        : DyDxMath.getDx(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
                 );
             }
+        }
+        // factor in deltas for section 1
+        // console.log('section 1 before deltas');
+        // console.log(cache.position.amountIn);
+        if (cache.amountInDelta > 0) {
+            uint128 amountInCoverageFull = uint128(
+                    params.zeroForOne
+                        ? DyDxMath.getDy(cache.position.liquidity, cache.priceLower, cache.priceUpper, false)
+                        : DyDxMath.getDx(cache.position.liquidity, cache.priceLower, cache.priceUpper, false)
+            );
+            //TODO: handle underflow here
+            // cache.amountInDelta = cache.amountInDelta * cache.amountInCoverage / amountInCoverageFull;
+            // cache.amountOutDelta = cache.amountOutDelta * cache.amountInCoverage / amountInCoverageFull;
+            console.log(cache.amountInCoverage);
+            console.log(amountInCoverageFull);
+            console.log(FullPrecisionMath.mulDiv(uint256(cache.amountInDelta) , uint256(cache.amountInCoverage), amountInCoverageFull));
+            console.log(cache.amountInDelta);
+            cache.position.amountIn -= uint128(
+                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96) + 1
+            );
             if (cache.amountOutDelta > 0) {
                 cache.position.amountOut += uint128(
                     FullPrecisionMath.mulDiv(
@@ -394,15 +435,6 @@ library Positions {
                     )
                 );
             }
-        }
-        // factor in deltas for section 1
-        // console.log('section 1 before deltas');
-        // console.log(cache.position.amountIn);
-        if (cache.amountInDelta > 0) {
-            //TODO: handle underflow here
-            cache.position.amountIn -= uint128(
-                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96) + 1
-            ); /// @dev - in case of rounding error
             /// @auditor - how should we handle this for rounding^
         } /// @dev - amountInDelta always lt 0
         // factor in swap fees

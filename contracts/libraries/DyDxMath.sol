@@ -12,38 +12,48 @@ library DyDxMath {
     function getDy(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper
+        uint256 priceUpper,
+        bool roundUp
     ) external pure returns (uint256 dy) {
-        return _getDy(liquidity, priceLower, priceUpper);
+        return _getDy(liquidity, priceLower, priceUpper, roundUp);
     }
 
     function getDx(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper
+        uint256 priceUpper,
+        bool roundUp
     ) external pure returns (uint256 dx) {
-        return _getDx(liquidity, priceLower, priceUpper);
+        return _getDx(liquidity, priceLower, priceUpper, roundUp);
     }
 
     function _getDy(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper
+        uint256 priceUpper,
+        bool roundUp
     ) internal pure returns (uint256 dy) {
         unchecked {
-            dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
+            if (roundUp) {
+                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, 0x1000000000000000000000000);
+            } else {
+                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, 0x1000000000000000000000000);
+            }
         }
     }
 
     function _getDx(
         uint256 liquidity,
         uint256 priceLower,
-        uint256 priceUpper
+        uint256 priceUpper,
+        bool roundUp
     ) internal pure returns (uint256 dx) {
         unchecked {
-            dx =
-                FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) /
-                priceLower;
+            if (roundUp) {
+                dx = FullPrecisionMath.divRoundingUp(FullPrecisionMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
+            } else {
+                dx = FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
+            }
         }
     }
 

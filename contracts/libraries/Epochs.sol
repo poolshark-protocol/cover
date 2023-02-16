@@ -186,12 +186,12 @@ library Epochs {
         uint256 amountOutLeftover;
         if (isPool0) {
             // leftover x provided
-            amountOutLeftover = DyDxMath.getDx(currentLiquidity, currentPrice, crossPrice);
+            amountOutLeftover = DyDxMath.getDx(currentLiquidity, currentPrice, crossPrice, false);
             // unfilled y amount
-            amountInUnfilled = DyDxMath.getDy(currentLiquidity, currentPrice, crossPrice);
+            amountInUnfilled = DyDxMath.getDy(currentLiquidity, currentPrice, crossPrice, false);
         } else {
-            amountOutLeftover = DyDxMath.getDy(currentLiquidity, crossPrice, currentPrice);
-            amountInUnfilled = DyDxMath.getDx(currentLiquidity, crossPrice, currentPrice);
+            amountOutLeftover = DyDxMath.getDy(currentLiquidity, crossPrice, currentPrice, false);
+            amountInUnfilled = DyDxMath.getDx(currentLiquidity, crossPrice, currentPrice, false);
         }
 
         //TODO: ensure this will not overflow with 32 bits
