@@ -432,6 +432,7 @@ library Positions {
             // cache.amountInDelta = cache.amountInDelta * cache.amountInCoverage / amountInCoverageFull;
             // cache.amountOutDelta = cache.amountOutDelta * cache.amountInCoverage / amountInCoverageFull;
             cache.amountInDelta = uint128(FullPrecisionMath.mulDivRoundingUp(uint256(cache.amountInDelta) , cache.amountInCoverage, amountInCoverageFull));
+            cache.amountOutDelta = uint128(FullPrecisionMath.mulDivRoundingUp(uint256(cache.amountOutDelta) , cache.amountInCoverage, amountInCoverageFull));
             cache.position.amountIn -= uint128(
                 FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96) + 1
             );
