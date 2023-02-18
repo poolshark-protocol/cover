@@ -235,7 +235,7 @@ describe('CoverPool Tests', function () {
         expect(upperTickNode.nextTick.toString()).to.be.equal('0')
     })
 
-    it('pool0 - Should mint, swap, and then claim entire range', async function () {
+    it('pool0 - Should mint, swap, and then claim entire range 14', async function () {
         await validateSync(hre.props.alice, '0')
 
         await validateMint({
@@ -537,7 +537,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, and burn 21', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -567,7 +567,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10036053825729130461'),
             revertMessage: '',
@@ -905,7 +905,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP in range by one, partial fill, and burn', async function () {
+    it('pool1 - Should move TWAP in range by one, partial fill, and burn 21', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -935,7 +935,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: minPrice,
+            sqrtPriceLimitX96: BigNumber.from('79307426338960776842885539846'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10036053825729130461'),
             revertMessage: '',

@@ -87,7 +87,7 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
+            uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextPrice, false);
             if (cache.inputBoosted <= maxDy) {
                 // We can swap within the current range.
                 // Calculate new price after swap: ΔP = Δy/L.
