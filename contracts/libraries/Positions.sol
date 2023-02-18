@@ -234,8 +234,7 @@ library Positions {
             removeLower: true,
             removeUpper: true,
             amountInDelta: params.claim == state.latestTick ? pool.amountInDelta : 0,
-            amountOutDelta: 0,
-            amountInCoverage: 0
+            amountOutDelta: 0
         });
 
         // validate position liquidity
@@ -405,11 +404,6 @@ library Positions {
                         ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
                         : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
                 );
-                cache.amountInCoverage +=
-                    params.zeroForOne
-                        ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, true)
-                        : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, true)
-                ;
                 if (pool.liquidity == params.amount) {
                     pool.amountInDelta = 0;
                 }
@@ -454,10 +448,13 @@ library Positions {
 
         // adjust based on deltas
         if (cache.amountInDelta > 0) {
-            //TODO: handle underflow here
             cache.position.amountIn -= uint128(
                 FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96) + 1
             );
+            /// @auditor - this solves rounding issues with amountInDelta
+            if (cache.position.amountIn > 0) {
+                cache.position.amountIn -= 1;
+            }
             if (cache.amountOutDelta > 0) {
                 cache.position.amountOut += uint128(
                     FullPrecisionMath.mulDiv(
@@ -467,8 +464,7 @@ library Positions {
                     )
                 );
             }
-            /// @auditor - how should we handle this for rounding^
-        } /// @dev - amountInDelta always lt 0
+        } /// @auditor - we assume amountInDelta always lt 0
         // factor in swap fees
         cache.position.amountIn = (cache.position.amountIn * 1e6) / (1e6 - state.swapFee);
         /// @dev - mark last claim price
@@ -500,7 +496,6 @@ library Positions {
                 cache.removeUpper
             );
             cache.position.liquidity -= uint128(params.amount);
-            // they should also get params.amountOutDeltaCarry
         }
         if (params.zeroForOne ? params.claim != params.upper : params.claim != params.lower) {
             ///TODO: do tick insert here

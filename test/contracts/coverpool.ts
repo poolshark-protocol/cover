@@ -289,7 +289,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('99720423547181890361'),
+            balanceInIncrease: BigNumber.from('99720423547181890360'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -529,7 +529,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('9999999999999999998'),
+            balanceInIncrease: BigNumber.from('9999999999999999997'),
             balanceOutIncrease: BigNumber.from('89963944161030765710'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -580,7 +580,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('9999999999999999998'),
+            balanceInIncrease: BigNumber.from('9999999999999999997'),
             balanceOutIncrease: BigNumber.from('89963946174270869537'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -883,7 +883,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99720423547181890361'),
+            balanceInIncrease: BigNumber.from('99720423547181890360'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -948,7 +948,7 @@ describe('CoverPool Tests', function () {
             upper: '60',
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('9988049415125138934'), //TODO: validate this number is correct
+            balanceInIncrease: BigNumber.from('9988049415125138933'), //TODO: validate this number is correct
             balanceOutIncrease: BigNumber.from('89963946174270869537'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -1056,7 +1056,7 @@ describe('CoverPool Tests', function () {
     })
 
     //TODO: these revert catches no longer work inside a library
-    it('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness', async function () {
+    it('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness 111', async function () {
         const liquidityAmount2 = BigNumber.from('49753115595468372952776')
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
         await validateSync(hre.props.admin, '60')
@@ -1081,6 +1081,34 @@ describe('CoverPool Tests', function () {
         await validateSync(hre.props.admin, '100')
 
         await validateSync(hre.props.admin, '60')
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '80',
+            claim: '100',
+            upper: '120',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '80',
+            claim: '120',
+            upper: '120',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 
     // TODO: partial mint
