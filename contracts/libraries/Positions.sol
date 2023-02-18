@@ -319,17 +319,30 @@ library Positions {
             ) {
                 // apply carry deltas max once per each tick claimed at
                 ICoverPoolStructs.Tick memory claimTick = ticks[params.claim];
+                uint256 tickLiquidityAfter = uint256(params.claim == state.latestTick ? pool.liquidity : uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus) - uint256(params.amount);
 
                 uint128 amountInDeltaCarry = uint128(uint256(claimTick.amountInDelta) * uint256(claimTick.amountInDeltaCarryPercent) / 1e18);
                 cache.amountInDelta += amountInDeltaCarry;
                 claimTick.amountInDelta -= amountInDeltaCarry;
-                amountInDeltaCarry -= uint128(uint256(amountInDeltaCarry) * uint256(cache.position.liquidity) / uint256(params.claim == state.latestTick ? pool.liquidity : uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus));
+                if (tickLiquidityAfter > 0) {
+                    amountInDeltaCarry -= uint128(uint256(amountInDeltaCarry) * uint256(cache.position.liquidity) / tickLiquidityAfter);
+                    // claimTick.amountOutDeltaCarryPercent = uint64(uint256(amountOutDeltaCarry) * 1e18 / uint256(claimTick.amountOutDelta));
+                } else {
+                    amountInDeltaCarry = 0;
+                    claimTick.amountInDeltaCarryPercent = 0;
+                }
                 claimTick.amountInDelta += amountInDeltaCarry;
 
                 uint128 amountOutDeltaCarry = uint128(uint256(claimTick.amountOutDelta) * uint256(claimTick.amountOutDeltaCarryPercent) / 1e18);
                 cache.amountOutDelta += amountOutDeltaCarry;
                 claimTick.amountOutDelta -= amountOutDeltaCarry;
-                amountOutDeltaCarry -= uint128(uint256(amountOutDeltaCarry) * uint256(cache.position.liquidity) / uint256(params.claim == state.latestTick ? pool.liquidity : uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus));
+                if (tickLiquidityAfter > 0) {
+                    amountOutDeltaCarry -= uint128(uint256(amountOutDeltaCarry) * uint256(cache.position.liquidity) / tickLiquidityAfter);
+                    // claimTick.amountOutDeltaCarryPercent = uint64(uint256(amountOutDeltaCarry) * 1e18 / uint256(claimTick.amountOutDelta));
+                } else {
+                    amountOutDeltaCarry = 0;
+                    claimTick.amountOutDeltaCarryPercent = 0;
+                }
                 claimTick.amountOutDelta += amountOutDeltaCarry;
 
                 ticks[params.claim] = claimTick;
