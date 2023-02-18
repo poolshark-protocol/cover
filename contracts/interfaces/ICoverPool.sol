@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import './ICoverPoolStructs.sol';
 
+//TODO: combine everything into one interface
 interface ICoverPool is ICoverPoolStructs {
     function collect(
         int24 lower,
