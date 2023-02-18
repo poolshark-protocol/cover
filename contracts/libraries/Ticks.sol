@@ -48,7 +48,8 @@ library Ticks {
         if (zeroForOne) {
             // Trading token 0 (x) for token 1 (y).
             // price  is decreasing.
-            if (nextPrice < priceLimit) {
+            if (priceLimit > nextPrice) {
+                // stop at price limit
                 nextPrice = priceLimit;
             }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
@@ -82,7 +83,8 @@ library Ticks {
             }
         } else {
             // Price is increasing.
-            if (nextPrice > priceLimit) {
+            if (priceLimit < nextPrice) {
+                // stop at price limit
                 nextPrice = priceLimit;
             }
             uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextTickPrice, false);
@@ -97,7 +99,6 @@ library Ticks {
                 cache.amountInDelta = FullPrecisionMath.mulDiv(cache.inputBoosted - cache.input, Q96, cache.liquidity);
                 cache.input = 0;
             } else if (maxDy > 0) {
-                // Swap & cross the tick.
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
                 cache.price = nextPrice;
                 cache.amountInDelta = FullPrecisionMath.mulDiv(maxDy - maxDy * cache.input / cache.inputBoosted, Q96, cache.liquidity);
