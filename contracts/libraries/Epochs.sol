@@ -321,34 +321,29 @@ library Epochs {
         //TODO: wipe tick data when tick is deleted
         while (true) {
             //rollover if past latestTick and TWAP moves down
-            if (pool0.liquidity > 0) {
-                cache = _rollover(cache, pool0.price, pool0.liquidity, true);
-                //accumulate to next tick
-                ICoverPoolStructs.AccumulateOutputs memory outputs;
-                outputs = _accumulate(
-                    tickNodes[cache.nextTickToAccum0],
-                    ticks0[cache.nextTickToCross0],
-                    ticks0[cache.nextTickToAccum0],
-                    state.accumEpoch,
-                    pool0.liquidity,
-                    cache.amountInDelta0, /// @dev - amount deltas will be 0 initially
-                    cache.amountOutDelta0,
-                    true,
-                    nextLatestTick > state.latestTick
-                        ? cache.nextTickToAccum0 < cache.stopTick0
-                        : cache.nextTickToAccum0 > cache.stopTick0
-                );
-                cache.amountInDelta0 = outputs.amountInDelta;
-                cache.amountOutDelta0 = outputs.amountOutDelta;
-                tickNodes[cache.nextTickToAccum0] = outputs.accumTickNode;
-                ticks0[cache.nextTickToCross0] = outputs.crossTick;
-                ticks0[cache.nextTickToAccum0] = outputs.accumTick;
-            } else {
-                cache.amountInDelta0 = 0;
-                cache.amountOutDelta0 = 0;
-            }
+            // if (pool0.liquidity > 0) {
+            cache = _rollover(cache, pool0.price, pool0.liquidity, true);
+            //accumulate to next tick
+            ICoverPoolStructs.AccumulateOutputs memory outputs;
+            outputs = _accumulate(
+                tickNodes[cache.nextTickToAccum0],
+                ticks0[cache.nextTickToCross0],
+                ticks0[cache.nextTickToAccum0],
+                state.accumEpoch,
+                pool0.liquidity,
+                cache.amountInDelta0, /// @dev - amount deltas will be 0 initially
+                cache.amountOutDelta0,
+                true,
+                nextLatestTick > state.latestTick
+                    ? cache.nextTickToAccum0 < cache.stopTick0
+                    : cache.nextTickToAccum0 > cache.stopTick0
+            );
+            cache.amountInDelta0 = outputs.amountInDelta;
+            cache.amountOutDelta0 = outputs.amountOutDelta;
+            tickNodes[cache.nextTickToAccum0] = outputs.accumTickNode;
+            ticks0[cache.nextTickToCross0] = outputs.crossTick;
+            ticks0[cache.nextTickToAccum0] = outputs.accumTick;
             //cross otherwise break
-            //
             if (cache.nextTickToAccum0 > cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
                     tickNodes[cache.nextTickToAccum0],

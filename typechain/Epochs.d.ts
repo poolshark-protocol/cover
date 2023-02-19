@@ -11,7 +11,6 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
-  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
@@ -19,32 +18,7 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface EpochsInterface extends ethers.utils.Interface {
-  functions: {
-    "rollover((int24,int24,int24,int24,int24,int24,uint128,uint128,uint128,uint128),uint256,uint256,bool)": FunctionFragment;
-  };
-
-  encodeFunctionData(
-    functionFragment: "rollover",
-    values: [
-      {
-        nextTickToCross0: BigNumberish;
-        nextTickToCross1: BigNumberish;
-        nextTickToAccum0: BigNumberish;
-        nextTickToAccum1: BigNumberish;
-        stopTick0: BigNumberish;
-        stopTick1: BigNumberish;
-        amountInDelta0: BigNumberish;
-        amountInDelta1: BigNumberish;
-        amountOutDelta0: BigNumberish;
-        amountOutDelta1: BigNumberish;
-      },
-      BigNumberish,
-      BigNumberish,
-      boolean
-    ]
-  ): string;
-
-  decodeFunctionResult(functionFragment: "rollover", data: BytesLike): Result;
+  functions: {};
 
   events: {};
 }
@@ -92,182 +66,13 @@ export class Epochs extends BaseContract {
 
   interface: EpochsInterface;
 
-  functions: {
-    rollover(
-      cache: {
-        nextTickToCross0: BigNumberish;
-        nextTickToCross1: BigNumberish;
-        nextTickToAccum0: BigNumberish;
-        nextTickToAccum1: BigNumberish;
-        stopTick0: BigNumberish;
-        stopTick1: BigNumberish;
-        amountInDelta0: BigNumberish;
-        amountInDelta1: BigNumberish;
-        amountOutDelta0: BigNumberish;
-        amountOutDelta1: BigNumberish;
-      },
-      currentPrice: BigNumberish,
-      currentLiquidity: BigNumberish,
-      isPool0: boolean,
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        [
-          number,
-          number,
-          number,
-          number,
-          number,
-          number,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber
-        ] & {
-          nextTickToCross0: number;
-          nextTickToCross1: number;
-          nextTickToAccum0: number;
-          nextTickToAccum1: number;
-          stopTick0: number;
-          stopTick1: number;
-          amountInDelta0: BigNumber;
-          amountInDelta1: BigNumber;
-          amountOutDelta0: BigNumber;
-          amountOutDelta1: BigNumber;
-        }
-      ]
-    >;
-  };
+  functions: {};
 
-  rollover(
-    cache: {
-      nextTickToCross0: BigNumberish;
-      nextTickToCross1: BigNumberish;
-      nextTickToAccum0: BigNumberish;
-      nextTickToAccum1: BigNumberish;
-      stopTick0: BigNumberish;
-      stopTick1: BigNumberish;
-      amountInDelta0: BigNumberish;
-      amountInDelta1: BigNumberish;
-      amountOutDelta0: BigNumberish;
-      amountOutDelta1: BigNumberish;
-    },
-    currentPrice: BigNumberish,
-    currentLiquidity: BigNumberish,
-    isPool0: boolean,
-    overrides?: CallOverrides
-  ): Promise<
-    [
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-      BigNumber,
-      BigNumber,
-      BigNumber,
-      BigNumber
-    ] & {
-      nextTickToCross0: number;
-      nextTickToCross1: number;
-      nextTickToAccum0: number;
-      nextTickToAccum1: number;
-      stopTick0: number;
-      stopTick1: number;
-      amountInDelta0: BigNumber;
-      amountInDelta1: BigNumber;
-      amountOutDelta0: BigNumber;
-      amountOutDelta1: BigNumber;
-    }
-  >;
-
-  callStatic: {
-    rollover(
-      cache: {
-        nextTickToCross0: BigNumberish;
-        nextTickToCross1: BigNumberish;
-        nextTickToAccum0: BigNumberish;
-        nextTickToAccum1: BigNumberish;
-        stopTick0: BigNumberish;
-        stopTick1: BigNumberish;
-        amountInDelta0: BigNumberish;
-        amountInDelta1: BigNumberish;
-        amountOutDelta0: BigNumberish;
-        amountOutDelta1: BigNumberish;
-      },
-      currentPrice: BigNumberish,
-      currentLiquidity: BigNumberish,
-      isPool0: boolean,
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        number,
-        number,
-        number,
-        number,
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        nextTickToCross0: number;
-        nextTickToCross1: number;
-        nextTickToAccum0: number;
-        nextTickToAccum1: number;
-        stopTick0: number;
-        stopTick1: number;
-        amountInDelta0: BigNumber;
-        amountInDelta1: BigNumber;
-        amountOutDelta0: BigNumber;
-        amountOutDelta1: BigNumber;
-      }
-    >;
-  };
+  callStatic: {};
 
   filters: {};
 
-  estimateGas: {
-    rollover(
-      cache: {
-        nextTickToCross0: BigNumberish;
-        nextTickToCross1: BigNumberish;
-        nextTickToAccum0: BigNumberish;
-        nextTickToAccum1: BigNumberish;
-        stopTick0: BigNumberish;
-        stopTick1: BigNumberish;
-        amountInDelta0: BigNumberish;
-        amountInDelta1: BigNumberish;
-        amountOutDelta0: BigNumberish;
-        amountOutDelta1: BigNumberish;
-      },
-      currentPrice: BigNumberish,
-      currentLiquidity: BigNumberish,
-      isPool0: boolean,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-  };
+  estimateGas: {};
 
-  populateTransaction: {
-    rollover(
-      cache: {
-        nextTickToCross0: BigNumberish;
-        nextTickToCross1: BigNumberish;
-        nextTickToAccum0: BigNumberish;
-        nextTickToAccum1: BigNumberish;
-        stopTick0: BigNumberish;
-        stopTick1: BigNumberish;
-        amountInDelta0: BigNumberish;
-        amountInDelta1: BigNumberish;
-        amountOutDelta0: BigNumberish;
-        amountOutDelta1: BigNumberish;
-      },
-      currentPrice: BigNumberish,
-      currentLiquidity: BigNumberish,
-      isPool0: boolean,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-  };
+  populateTransaction: {};
 }
