@@ -141,16 +141,6 @@ library Epochs {
             );
     }
 
-    function rollover(
-        ICoverPoolStructs.AccumulateCache calldata cache,
-        uint256 currentPrice,
-        uint256 currentLiquidity,
-        bool isPool0
-    ) external view returns (ICoverPoolStructs.AccumulateCache memory) {
-        ICoverPoolStructs.AccumulateCache memory accumCache = cache;
-        return _rollover(accumCache, currentPrice, currentLiquidity, isPool0);
-    }
-
     function _rollover(
         ICoverPoolStructs.AccumulateCache memory cache,
         uint256 currentPrice,
