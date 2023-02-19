@@ -108,7 +108,7 @@ contract CoverPool is
         } else {
             _transferIn(token1, amountDesired);
         }
-        // console.log(ERC20(token0).balanceOf(address(this)));
+
         unchecked {
             // recreates position if required
             globalState = Positions.update(
@@ -308,14 +308,6 @@ contract CoverPool is
             pool0.amountInDelta += uint128(cache.amountInDelta);
         }
 
-
-        // console.log(pool0.liquidity);
-        console.log(FullPrecisionMath.mulDiv(uint256(pool0.amountInDelta), uint256(pool0.liquidity), Epochs.Q96));
-        // console.log(DyDxMath.getDy(pool0.liquidity, pool0.price, state.latestPrice, false));
-        // console.log(state.latestPrice);
-        // console.log(DyDxMath.getDy(pool0.liquidity, st, pool0.price, false));
-        
-
         if (zeroForOne) {
             if (cache.input > 0) {
                 _transferOut(recipient, token0, cache.input);
@@ -330,10 +322,6 @@ contract CoverPool is
             _transferOut(recipient, token0, amountOut);
             emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }
-
-        // console.log('amountInDelta:', pool0.amountInDelta);
-        // console.log(cache.input);
-        console.log('end balance:', ERC20(token1).balanceOf(address(this)));
         globalState = state;
     }
 

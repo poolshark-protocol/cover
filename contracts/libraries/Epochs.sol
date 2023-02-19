@@ -178,20 +178,11 @@ library Epochs {
             }
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
         }
-        if (cache.amountInDelta0 > 0) {
-            console.log(currentPrice);
-            console.log(accumPrice);
-        }
 
         if (isPool0){
             if (!(currentPrice > accumPrice && currentPrice < crossPrice)) currentPrice = accumPrice;
         } else{
             if (!(currentPrice < accumPrice && currentPrice > crossPrice)) currentPrice = accumPrice;
-        }
-
-        if (cache.amountInDelta0 > 0) {
-            console.log(currentPrice);
-            console.log(accumPrice);
         }
 
         //handle liquidity rollover
@@ -206,7 +197,6 @@ library Epochs {
             amountOutLeftover = DyDxMath.getDy(currentLiquidity, crossPrice, currentPrice, false);
             amountInUnfilled = DyDxMath.getDx(currentLiquidity, crossPrice, currentPrice, false);
         }
-        console.log('delta found:', FullPrecisionMath.mulDiv(cache.amountInDelta0, currentLiquidity, Q96));
         //TODO: ensure this will not overflow with 32 bits
         //TODO: return this value to limit storage reads and writes
         if (isPool0) {
@@ -413,7 +403,14 @@ library Epochs {
                         );
                     }
                 }
-                ticks0[cache.stopTick0].liquidityDeltaMinusInactive = ticks0[cache.stopTick0]
+                if (ticks0[cache.stopTick0]
+                    .liquidityDeltaMinus > 0) {
+                    console.log('delta minus > 0');
+                    console.logInt(cache.stopTick0);
+                    console.log(ticks0[cache.stopTick0]
+                    .liquidityDeltaMinus);
+                }
+                ticks0[cache.stopTick0].liquidityDeltaMinusInactive += ticks0[cache.stopTick0]
                     .liquidityDeltaMinus;
                 ticks0[cache.stopTick0].liquidityDelta += int128(
                     ticks0[cache.stopTick0].liquidityDeltaMinus
@@ -517,7 +514,7 @@ library Epochs {
                 pool0.liquidity = 0;
                 pool1.liquidity = pool1.liquidity;
             }
-            ticks1[cache.stopTick1].liquidityDeltaMinusInactive = ticks1[cache.stopTick1]
+            ticks1[cache.stopTick1].liquidityDeltaMinusInactive += ticks1[cache.stopTick1]
                 .liquidityDeltaMinus;
             ticks1[cache.stopTick1].liquidityDelta += int128(
                 ticks1[cache.stopTick1].liquidityDeltaMinus

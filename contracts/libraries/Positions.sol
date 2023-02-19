@@ -238,8 +238,8 @@ library Positions {
         });
 
         // validate position liquidity
+        if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
-            if (params.amount > 0) revert NotEnoughPositionLiquidity();
             return state;
         }
         // early return if no update
@@ -293,9 +293,13 @@ library Positions {
             }
         }
 
+        if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+            if (tickNodes[params.claim].accumEpochLast <= cache.position.accumEpochLast)
+                revert WrongTickClaimedAt();
+        }
+
         // amount deltas
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-
                 /// @dev - ignore delta carry for 100% fill
                 cache.amountInDelta = uint128(
                     uint256(ticks[params.claim].amountInDelta) -
@@ -320,11 +324,6 @@ library Positions {
                                (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
                                                   : cache.position.claimPriceLast < cache.priceClaim);
             // check liquidity after for scaling carry deltas
-            console.log(params.claim == state.latestTick);
-            console.log(pool.liquidity);
-            console.logInt(params.claim);
-            console.log(uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus + pool.liquidity);
-            console.log(params.amount);
             uint256 tickLiquidityAfter = uint256(params.claim == state.latestTick ? pool.liquidity : uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus + claimTick.liquidityDeltaMinusInactive) - uint256(params.amount);
 
             // filter amountIn carry delta
@@ -455,10 +454,10 @@ library Positions {
 
         // adjust based on deltas
         if (cache.amountInDelta > 0) {
-            console.log(cache.position.amountIn);
-            console.log(uint128(
-                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96)
-            ));
+            // console.log(cache.position.amountIn);
+            // console.log(uint128(
+            //     FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96)
+            // ));
             cache.position.amountIn -= uint128(
                 FullPrecisionMath.mulDivRoundingUp(cache.amountInDelta, cache.position.liquidity, Q96)
             );

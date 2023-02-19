@@ -106,10 +106,6 @@ library Ticks {
                 cache.input -= maxDy * cache.input / cache.inputBoosted + 1; /// @dev - handles rounding errors with amountInDelta
             }
         }
-        console.logInt(state.latestTick);
-        console.log('expected amount:', DyDxMath.getDy(cache.liquidity, TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread), state.latestPrice, false));
-        console.log('expected unfilled:', DyDxMath.getDy(cache.liquidity, cache.price, state.latestPrice, false));
-        console.log('expected delta:', FullPrecisionMath.mulDiv(uint256(cache.amountInDelta), uint256(cache.liquidity), Q96));
         return (cache, amountOut);
     }
 
@@ -286,6 +282,8 @@ library Ticks {
                             tickLower = _filter(tickLower, false);
                         }
                     }
+                    console.log('lower tick inactive:', tickLower.liquidityDeltaMinusInactive);
+                    console.log(amount);
                     tickLower.liquidityDeltaMinusInactive -= amount;
                 }
             }
