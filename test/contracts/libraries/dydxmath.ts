@@ -66,9 +66,9 @@ describe('DyDxMath Library Tests', function () {
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
                 BigNumber.from('79625275426524748796330556128'),
-                false
+                true
             )
-        ).to.be.equal(BigNumber.from('49527266455736296112'))
+        ).to.be.equal(BigNumber.from('49527266455736296113'))
     })
 
     it('Should get accurate dy value across first tick', async function () {
@@ -77,9 +77,9 @@ describe('DyDxMath Library Tests', function () {
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
                 BigNumber.from('79625275426524748796330556128'),
-                false
+                true
             )
-        ).to.be.equal(BigNumber.from('49975001251999693577'))
+        ).to.be.equal(BigNumber.from('49975001251999693578'))
     })
 
     it('Should get accurate dy value across second tick', async function () {
