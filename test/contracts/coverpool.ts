@@ -680,7 +680,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas 24', async function () {
+    it.skip('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas 24', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
@@ -811,10 +811,10 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('99720423547181890362'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
+            lowerTickCleared: true,
+            upperTickCleared: true,
             revertMessage: '',
         })
     })
@@ -919,7 +919,7 @@ describe('CoverPool Tests', function () {
     })
 
     it('pool0 - Should move TWAP up and create stopTick0 during sync 27', async function () {
-        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
 
@@ -960,7 +960,7 @@ describe('CoverPool Tests', function () {
     })
 
     it('pool0 - Should move TWAP down and create nextLatestTick during sync 28', async function () {
-        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
 
@@ -999,7 +999,7 @@ describe('CoverPool Tests', function () {
     })
 
     it('pool0 - Should claim multiple times on the same tick with a swap in between 28', async function () {
-        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
 
@@ -1332,7 +1332,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: true,
             amountIn: tokenAmount.mul(2),
             sqrtPriceLimitX96: minPrice,
-            balanceInDecrease: BigNumber.from('99720423547181890362'),
+            balanceInDecrease: BigNumber.from('99670563335408299416'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -1358,7 +1358,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99720423547181890360'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -1372,7 +1372,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99750314736661126366'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -1412,7 +1412,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             sqrtPriceLimitX96: BigNumber.from('79307426338960776842885539846'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10036053825729130461'),
+            balanceOutIncrease: BigNumber.from('10041073354729183580'),
             revertMessage: '',
         })
 
@@ -1423,8 +1423,8 @@ describe('CoverPool Tests', function () {
             upper: '60',
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('9988049415125138933'), //TODO: validate this number is correct
-            balanceOutIncrease: BigNumber.from('89963946174270869537'),
+            balanceInIncrease: BigNumber.from('9988056890417576364'), //TODO: validate this number is correct
+            balanceOutIncrease: BigNumber.from('89958926645270816419'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',

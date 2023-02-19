@@ -367,6 +367,7 @@ export async function validateMint(params: ValidateMintParams) {
 }
 
 export async function validateBurn(params: ValidateBurnParams) {
+    //TODO: check liquidityDeltaMinus on lower : upper tick
     const signer = params.signer
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)

@@ -243,6 +243,7 @@ library Epochs {
         // handle amount in delta
         {
             uint128 amountInDelta = isPool0 ? cache.amountInDelta0 : cache.amountInDelta1;
+            // console.log()
             uint128 amountInDeltaCarry = (stashTick.amountInDeltaCarryPercent *
                 stashTick.amountInDelta) / 1e18;
             uint128 amountInDeltaNew = amountInDelta + stashTick.amountInDelta;
