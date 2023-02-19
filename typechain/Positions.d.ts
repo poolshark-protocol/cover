@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
-    "validate((int24,int24,int24,int24,bool,uint128,(uint8,uint16,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool)))": FunctionFragment;
+    "validate((int24,int24,int24,int24,bool,uint128,(uint8,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool)))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -35,7 +35,6 @@ interface PositionsInterface extends ethers.utils.Interface {
         amount: BigNumberish;
         state: {
           unlocked: BigNumberish;
-          swapFee: BigNumberish;
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           auctionLength: BigNumberish;
@@ -111,7 +110,6 @@ export class Positions extends BaseContract {
         amount: BigNumberish;
         state: {
           unlocked: BigNumberish;
-          swapFee: BigNumberish;
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           auctionLength: BigNumberish;
@@ -143,7 +141,6 @@ export class Positions extends BaseContract {
       amount: BigNumberish;
       state: {
         unlocked: BigNumberish;
-        swapFee: BigNumberish;
         tickSpread: BigNumberish;
         twapLength: BigNumberish;
         auctionLength: BigNumberish;
@@ -175,7 +172,6 @@ export class Positions extends BaseContract {
         amount: BigNumberish;
         state: {
           unlocked: BigNumberish;
-          swapFee: BigNumberish;
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           auctionLength: BigNumberish;
@@ -210,7 +206,6 @@ export class Positions extends BaseContract {
         amount: BigNumberish;
         state: {
           unlocked: BigNumberish;
-          swapFee: BigNumberish;
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           auctionLength: BigNumberish;
@@ -239,7 +234,6 @@ export class Positions extends BaseContract {
         amount: BigNumberish;
         state: {
           unlocked: BigNumberish;
-          swapFee: BigNumberish;
           tickSpread: BigNumberish;
           twapLength: BigNumberish;
           auctionLength: BigNumberish;

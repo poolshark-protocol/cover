@@ -21,7 +21,7 @@ contract CoverPoolFactory is ICoverPoolFactory {
     function createCoverPool(
         address fromToken,
         address destToken,
-        uint16 swapFee,
+        uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength,
         uint16 auctionLength
@@ -38,36 +38,36 @@ contract CoverPoolFactory is ICoverPoolFactory {
         if (ERC20(destToken).decimals() == 0) revert InvalidTokenDecimals();
 
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(token0, token1, swapFee, tickSpread, twapLength, auctionLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength, auctionLength));
         if (poolMapping[key] != address(0)) {
             revert PoolAlreadyExists();
         }
 
         // check fee tier exists and get tick spacing
-        int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(uint24(swapFee));
+        int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(uint24(feeTier));
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
         } else if (tickSpread <= tickSpacing) {
             revert InvalidTickSpread();
         }
 
-        address inputPool = getInputPool(token0, token1, swapFee);
+        address inputPool = getInputPool(token0, token1, feeTier);
 
         // launch pool and save address
-        pool = address(new CoverPool(inputPool, uint16(swapFee), int16(tickSpread), twapLength, auctionLength));
+        pool = address(new CoverPool(inputPool, int16(tickSpread), twapLength, auctionLength));
 
         poolMapping[key] = pool;
         poolList.push(pool);
 
         // emit event for indexers
-        emit PoolCreated(token0, token1, uint24(swapFee), int24(tickSpread), twapLength, auctionLength, pool);
+        emit PoolCreated(token0, token1, uint24(feeTier), int24(tickSpread), twapLength, auctionLength, pool);
     }
 
     function getCoverPool(
         address fromToken,
         address destToken,
-        uint16 fee,
-        int16 tickSpread,
+        uint16 feeTier,
+        int16  tickSpread,
         uint16 twapLength,
         uint16 auctionLength
     ) public view override returns (address) {
@@ -76,7 +76,7 @@ contract CoverPoolFactory is ICoverPoolFactory {
         address token1 = fromToken < destToken ? destToken : fromToken;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(token0, token1, fee, tickSpread, twapLength, auctionLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength, auctionLength));
 
         return poolMapping[key];
     }
@@ -84,8 +84,8 @@ contract CoverPoolFactory is ICoverPoolFactory {
     function getInputPool(
         address fromToken,
         address destToken,
-        uint256 swapFee
+        uint256 feeTier
     ) internal view returns (address) {
-        return IRangeFactory(rangePoolFactory).getPool(fromToken, destToken, uint24(swapFee));
+        return IRangeFactory(rangePoolFactory).getPool(fromToken, destToken, uint24(feeTier));
     }
 }

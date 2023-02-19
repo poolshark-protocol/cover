@@ -6,6 +6,7 @@ import './DyDxMath.sol';
 import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -62,7 +63,7 @@ library Epochs {
     ) internal pure returns (ICoverPoolStructs.AccumulateOutputs memory) {
         
         // update tick epoch
-        if (accumTick.liquidityDeltaMinus > 0) {
+        if (accumTick.liquidityDeltaMinus > 0 && updateAccumDeltas) {
             accumTickNode.accumEpochLast = accumEpoch;
         }
 
@@ -145,7 +146,7 @@ library Epochs {
         uint256 currentPrice,
         uint256 currentLiquidity,
         bool isPool0
-    ) external pure returns (ICoverPoolStructs.AccumulateCache memory) {
+    ) external view returns (ICoverPoolStructs.AccumulateCache memory) {
         ICoverPoolStructs.AccumulateCache memory accumCache = cache;
         return _rollover(accumCache, currentPrice, currentLiquidity, isPool0);
     }
@@ -155,7 +156,7 @@ library Epochs {
         uint256 currentPrice,
         uint256 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.AccumulateCache memory) {
+    ) internal view returns (ICoverPoolStructs.AccumulateCache memory) {
         if (currentLiquidity == 0) {
             // zero out deltas
             return (cache);
@@ -177,9 +178,21 @@ library Epochs {
             }
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
         }
+        if (cache.amountInDelta0 > 0) {
+            console.log(currentPrice);
+            console.log(accumPrice);
+        }
 
-        if (isPool0 ? currentPrice > accumPrice : currentPrice < accumPrice)
-            currentPrice = accumPrice;
+        if (isPool0){
+            if (!(currentPrice > accumPrice && currentPrice < crossPrice)) currentPrice = accumPrice;
+        } else{
+            if (!(currentPrice < accumPrice && currentPrice > crossPrice)) currentPrice = accumPrice;
+        }
+
+        if (cache.amountInDelta0 > 0) {
+            console.log(currentPrice);
+            console.log(accumPrice);
+        }
 
         //handle liquidity rollover
         uint256 amountInUnfilled;
@@ -193,7 +206,7 @@ library Epochs {
             amountOutLeftover = DyDxMath.getDy(currentLiquidity, crossPrice, currentPrice, false);
             amountInUnfilled = DyDxMath.getDx(currentLiquidity, crossPrice, currentPrice, false);
         }
-
+        console.log('delta found:', FullPrecisionMath.mulDiv(cache.amountInDelta0, currentLiquidity, Q96));
         //TODO: ensure this will not overflow with 32 bits
         //TODO: return this value to limit storage reads and writes
         if (isPool0) {

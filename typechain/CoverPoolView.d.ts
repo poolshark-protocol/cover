@@ -134,13 +134,11 @@ export class CoverPoolView extends BaseContract {
         number,
         number,
         number,
-        number,
         BigNumber,
         BigNumber,
         string
       ] & {
         unlocked: number;
-        swapFee: number;
         tickSpread: number;
         twapLength: number;
         auctionLength: number;
@@ -184,10 +182,10 @@ export class CoverPoolView extends BaseContract {
       [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         accumEpochLast: number;
         liquidity: BigNumber;
-        amountIn: BigNumber;
-        amountOut: BigNumber;
         amountInDeltaLast: BigNumber;
         claimPriceLast: BigNumber;
+        amountIn: BigNumber;
+        amountOut: BigNumber;
       }
     >;
 
@@ -200,10 +198,10 @@ export class CoverPoolView extends BaseContract {
       [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         accumEpochLast: number;
         liquidity: BigNumber;
-        amountIn: BigNumber;
-        amountOut: BigNumber;
         amountInDeltaLast: BigNumber;
         claimPriceLast: BigNumber;
+        amountIn: BigNumber;
+        amountOut: BigNumber;
       }
     >;
 
@@ -280,13 +278,11 @@ export class CoverPoolView extends BaseContract {
       number,
       number,
       number,
-      number,
       BigNumber,
       BigNumber,
       string
     ] & {
       unlocked: number;
-      swapFee: number;
       tickSpread: number;
       twapLength: number;
       auctionLength: number;
@@ -330,10 +326,10 @@ export class CoverPoolView extends BaseContract {
     [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       accumEpochLast: number;
       liquidity: BigNumber;
-      amountIn: BigNumber;
-      amountOut: BigNumber;
       amountInDeltaLast: BigNumber;
       claimPriceLast: BigNumber;
+      amountIn: BigNumber;
+      amountOut: BigNumber;
     }
   >;
 
@@ -346,10 +342,10 @@ export class CoverPoolView extends BaseContract {
     [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       accumEpochLast: number;
       liquidity: BigNumber;
-      amountIn: BigNumber;
-      amountOut: BigNumber;
       amountInDeltaLast: BigNumber;
       claimPriceLast: BigNumber;
+      amountIn: BigNumber;
+      amountOut: BigNumber;
     }
   >;
 
@@ -426,13 +422,11 @@ export class CoverPoolView extends BaseContract {
         number,
         number,
         number,
-        number,
         BigNumber,
         BigNumber,
         string
       ] & {
         unlocked: number;
-        swapFee: number;
         tickSpread: number;
         twapLength: number;
         auctionLength: number;
@@ -476,10 +470,10 @@ export class CoverPoolView extends BaseContract {
       [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         accumEpochLast: number;
         liquidity: BigNumber;
-        amountIn: BigNumber;
-        amountOut: BigNumber;
         amountInDeltaLast: BigNumber;
         claimPriceLast: BigNumber;
+        amountIn: BigNumber;
+        amountOut: BigNumber;
       }
     >;
 
@@ -492,10 +486,10 @@ export class CoverPoolView extends BaseContract {
       [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
         accumEpochLast: number;
         liquidity: BigNumber;
-        amountIn: BigNumber;
-        amountOut: BigNumber;
         amountInDeltaLast: BigNumber;
         claimPriceLast: BigNumber;
+        amountIn: BigNumber;
+        amountOut: BigNumber;
       }
     >;
 

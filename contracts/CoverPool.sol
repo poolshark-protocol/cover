@@ -38,13 +38,10 @@ contract CoverPool is
 
     constructor(
         address _inputPool,
-        uint16 _swapFee,
         int16 _tickSpread,
         uint16 _twapLength,
         uint16 _auctionLength
     ) {
-        // validate swap fee
-        if (_swapFee > MAX_FEE) revert InvalidSwapFee();
         // validate tick spread
         int24 _tickSpacing = IRangePool(_inputPool).tickSpacing();
         int24 _tickMultiple = _tickSpread / _tickSpacing;
@@ -58,8 +55,7 @@ contract CoverPool is
         feeTo     = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
-        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, IRangePool(address(0)));
-        state.swapFee       = _swapFee;
+        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, IRangePool(address(0)));
         state.tickSpread    = _tickSpread;
         state.twapLength    = _twapLength;
         state.auctionLength = _auctionLength;
@@ -112,7 +108,7 @@ contract CoverPool is
         } else {
             _transferIn(token1, amountDesired);
         }
-        //TODO: is this dangerous?
+        // console.log(ERC20(token0).balanceOf(address(this)));
         unchecked {
             // recreates position if required
             globalState = Positions.update(
@@ -290,16 +286,12 @@ contract CoverPool is
         SwapCache memory cache = SwapCache({
             price: pool.price,
             liquidity: pool.liquidity,
-            feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
-            // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
             auctionDepth: block.number - state.genesisBlock - state.auctionStart,
             auctionBoost: 0,
-            input: 0,
+            input: amountIn,
             inputBoosted: 0,
             amountInDelta: 0
         });
-
-        cache.input = amountIn - cache.feeAmount;
 
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
@@ -316,29 +308,32 @@ contract CoverPool is
             pool0.amountInDelta += uint128(cache.amountInDelta);
         }
 
+
+        // console.log(pool0.liquidity);
+        console.log(FullPrecisionMath.mulDiv(uint256(pool0.amountInDelta), uint256(pool0.liquidity), Epochs.Q96));
+        // console.log(DyDxMath.getDy(pool0.liquidity, pool0.price, state.latestPrice, false));
+        // console.log(state.latestPrice);
+        // console.log(DyDxMath.getDy(pool0.liquidity, st, pool0.price, false));
+        
+
         if (zeroForOne) {
             if (cache.input > 0) {
-                uint128 feeReturn = uint128(
-                    (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
-                );
-                cache.feeAmount -= feeReturn;
-                //TODO: add this delta across ticks
-                _transferOut(recipient, token0, cache.input + feeReturn);
+                _transferOut(recipient, token0, cache.input);
             }
             _transferOut(recipient, token1, amountOut);
-            emit Swap(recipient, token0, token1, amountIn, amountOut);
+            emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
         } else {
             if (cache.input > 0) {
-                uint128 feeReturn = uint128(
-                    (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
-                );
-                cache.feeAmount -= feeReturn;
                 //TODO: add this delta across ticks in syncLatest / Positions.update
-                _transferOut(recipient, token1, cache.input + feeReturn);
+                _transferOut(recipient, token1, cache.input);
             }
             _transferOut(recipient, token0, amountOut);
-            emit Swap(recipient, token1, token0, amountIn, amountOut);
+            emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }
+
+        // console.log('amountInDelta:', pool0.amountInDelta);
+        // console.log(cache.input);
+        console.log('end balance:', ERC20(token1).balanceOf(address(this)));
         globalState = state;
     }
 
@@ -353,34 +348,16 @@ contract CoverPool is
         SwapCache memory cache = SwapCache({
             price: zeroForOne ? pool1.price : pool0.price,
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
-            feeAmount: FullPrecisionMath.mulDivRoundingUp(amountIn, state.swapFee, 1e6),
-            // currentTick: nearestTick, //TODO: price goes to max state.latestTick + tickSpacing
             auctionDepth: block.number - state.genesisBlock - state.auctionStart,
             auctionBoost: 0,
-            input: 0,
+            input: amountIn,
             inputBoosted: 0,
             amountInDelta: 0
         });
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        cache.input = amountIn - cache.feeAmount;
         (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache);
-        if (zeroForOne) {
-            if (cache.input > 0) {
-                uint128 feeReturn = uint128(
-                    (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
-                );
-                cache.input += feeReturn;
-            }
-        } else {
-            if (cache.input > 0) {
-                uint128 feeReturn = uint128(
-                    (((cache.input * 1e18) / (amountIn - cache.feeAmount)) * cache.feeAmount) / 1e18
-                );
-                cache.input += feeReturn;
-            }
-        }
         inAmount = amountIn - cache.input;
 
         return (inAmount, outAmount);
@@ -393,8 +370,6 @@ contract CoverPool is
     //TODO: after accumulation, all liquidity below old latest tick is removed
     //TODO: don't update state.latestTick until TWAP has moved +/- tickSpacing
     //TODO: state.latestTick needs to be a multiple of tickSpacing
-
-    //TODO: factor in swapFee
     //TODO: consider partial fills and how that impacts claims
     //TODO: consider current price...we might have to skip claims/burns from current tick
 }

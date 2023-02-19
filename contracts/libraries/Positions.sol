@@ -242,7 +242,6 @@ library Positions {
             if (params.amount > 0) revert NotEnoughPositionLiquidity();
             return state;
         }
-
         // early return if no update
         if (
             (
@@ -270,11 +269,14 @@ library Positions {
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
             // zero fill or partial fill
-            uint32 claimNextTickAccumEpoch = params.zeroForOne
+            uint32 claimTickNextAccumEpoch = params.zeroForOne
                 ? tickNodes[cache.claimTick.previousTick].accumEpochLast
                 : tickNodes[cache.claimTick.nextTick].accumEpochLast;
+            console.log(claimTickNextAccumEpoch);
+            console.log(cache.position.accumEpochLast);
+            console.logInt(params.claim);
             ///@dev - next accumEpoch should not be greater
-            if (claimNextTickAccumEpoch > cache.position.accumEpochLast)
+            if (claimTickNextAccumEpoch > cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
 
             // check if liquidity removal required
@@ -318,7 +320,12 @@ library Positions {
                                (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
                                                   : cache.position.claimPriceLast < cache.priceClaim);
             // check liquidity after for scaling carry deltas
-            uint256 tickLiquidityAfter = uint256(params.claim == state.latestTick ? pool.liquidity : uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus) - uint256(params.amount);
+            console.log(params.claim == state.latestTick);
+            console.log(pool.liquidity);
+            console.logInt(params.claim);
+            console.log(uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus + pool.liquidity);
+            console.log(params.amount);
+            uint256 tickLiquidityAfter = uint256(params.claim == state.latestTick ? pool.liquidity : uint128(claimTick.liquidityDelta) + claimTick.liquidityDeltaMinus + claimTick.liquidityDeltaMinusInactive) - uint256(params.amount);
 
             // filter amountIn carry delta
             uint128 amountInDeltaCarry = uint128(uint256(claimTick.amountInDelta) * uint256(claimTick.amountInDeltaCarryPercent) / 1e18);
@@ -332,7 +339,7 @@ library Positions {
             if (applyDeltas) {
                 cache.amountInDelta  += amountInDeltaCarry;
                 cache.amountOutDelta += amountOutDeltaCarry;
-                if (params.amount != cache.position.liquidity) {
+                if (params.amount != cache.position.liquidity && tickLiquidityAfter > 0) {
                     // scale down carry deltas
                     amountInDeltaCarry  -= uint128(uint256(amountInDeltaCarry) * uint256(cache.position.liquidity - params.amount) / tickLiquidityAfter);
                     amountOutDeltaCarry -= uint128(uint256(amountOutDeltaCarry) * uint256(cache.position.liquidity - params.amount) / tickLiquidityAfter);
@@ -448,8 +455,12 @@ library Positions {
 
         // adjust based on deltas
         if (cache.amountInDelta > 0) {
+            console.log(cache.position.amountIn);
+            console.log(uint128(
+                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96)
+            ));
             cache.position.amountIn -= uint128(
-                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96) + 1
+                FullPrecisionMath.mulDivRoundingUp(cache.amountInDelta, cache.position.liquidity, Q96)
             );
             /// @auditor - this solves rounding issues with amountInDelta
             if (cache.position.amountIn > 0) {
@@ -465,8 +476,6 @@ library Positions {
                 );
             }
         } /// @auditor - we assume amountInDelta always lt 0
-        // factor in swap fees
-        cache.position.amountIn = (cache.position.amountIn * 1e6) / (1e6 - state.swapFee);
         /// @dev - mark last claim price
         cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
         cache.position.claimPriceLast = (params.claim == state.latestTick)
@@ -497,11 +506,16 @@ library Positions {
             );
             cache.position.liquidity -= uint128(params.amount);
         }
-        if (params.zeroForOne ? params.claim != params.upper : params.claim != params.lower) {
-            ///TODO: do tick insert here
-            // handle double minting of position
+        if (params.zeroForOne ? params.claim != params.upper 
+                              : params.claim != params.lower
+        ) {
+            // clear out position
             delete positions[params.owner][params.lower][params.upper];
-            //TODO: handle liquidity overflow in mint call
+        } 
+        if (cache.position.liquidity == 0) {
+            cache.position.accumEpochLast = 0;
+            cache.position.claimPriceLast = 0;
+            cache.position.amountInDeltaLast = 0;
         }
 
         params.zeroForOne

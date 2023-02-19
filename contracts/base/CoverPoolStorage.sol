@@ -11,7 +11,6 @@ abstract contract CoverPoolStorage is ICoverPoolStructs, CoverPoolErrors {
     PoolState public pool1; /// @dev State for token1 as output
 
     address public feeTo;
-    uint24 internal constant MAX_FEE = 10000; /// @dev Equivalent to 1%.
 
     mapping(int24 => TickNode) public tickNodes; /// @dev Tick nodes in linked list
     mapping(int24 => Tick) public ticks0; /// @dev Ticks containing token0 as output

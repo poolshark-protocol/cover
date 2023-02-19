@@ -108,11 +108,6 @@ const _abi = [
         type: "uint8",
       },
       {
-        internalType: "uint16",
-        name: "swapFee",
-        type: "uint16",
-      },
-      {
         internalType: "int16",
         name: "tickSpread",
         type: "int16",
@@ -249,16 +244,6 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "amountIn",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountOut",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "amountInDeltaLast",
         type: "uint128",
       },
@@ -266,6 +251,16 @@ const _abi = [
         internalType: "uint160",
         name: "claimPriceLast",
         type: "uint160",
+      },
+      {
+        internalType: "uint128",
+        name: "amountIn",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOut",
+        type: "uint128",
       },
     ],
     stateMutability: "view",
@@ -303,16 +298,6 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "amountIn",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountOut",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "amountInDeltaLast",
         type: "uint128",
       },
@@ -320,6 +305,16 @@ const _abi = [
         internalType: "uint160",
         name: "claimPriceLast",
         type: "uint160",
+      },
+      {
+        internalType: "uint128",
+        name: "amountIn",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOut",
+        type: "uint128",
       },
     ],
     stateMutability: "view",

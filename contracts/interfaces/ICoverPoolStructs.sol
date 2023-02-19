@@ -6,9 +6,6 @@ import "./IRangePool.sol";
 interface ICoverPoolStructs {
     struct GlobalState {
         uint8 unlocked;
-        //TODO: change swapFee to uint16
-        uint16 swapFee; /// @dev Fee measured in basis points (.e.g 1000 = 0.1%).
-        //TODO: change to uint16
         int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16   twapLength; /// @dev number of blocks used for TWAP sampling
         uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
@@ -36,7 +33,7 @@ interface ICoverPoolStructs {
     }
 
     struct Tick {
-        int128 liquidityDelta; //TODO: if feeGrowthGlobalIn > position.feeGrowthGlobal don't update liquidity
+        int128 liquidityDelta;
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
         //TODO: change to uint since we know in is negative and out is positive
@@ -49,12 +46,12 @@ interface ICoverPoolStructs {
 
     // balance needs to be immediately transferred to the position owner
     struct Position {
-        uint32 accumEpochLast; // last feeGrowth this position was updated at
+        uint32 accumEpochLast; // last epoch this position was updated at
         uint128 liquidity; // expected amount to be used not actual
-        uint128 amountIn; // token amount already claimed; balance
-        uint128 amountOut; // necessary for non-custodial positions
         uint128 amountInDeltaLast; // last recorded amountInDelta within the current auction
         uint160 claimPriceLast; // highest price claimed at
+        uint128 amountIn; // token amount already claimed; balance
+        uint128 amountOut; // necessary for non-custodial positions
     }
 
     //TODO: should we have a recipient field here?
@@ -99,8 +96,6 @@ interface ICoverPoolStructs {
     struct SwapCache {
         uint256 price;
         uint256 liquidity;
-        uint256 feeAmount;
-        // uint256 amountIn;
         uint256 input;
         uint256 inputBoosted;
         uint256 auctionDepth;

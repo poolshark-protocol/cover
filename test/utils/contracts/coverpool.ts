@@ -424,7 +424,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-
+    console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

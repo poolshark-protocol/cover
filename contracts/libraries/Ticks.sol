@@ -7,6 +7,7 @@ import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
 import './TwapOracle.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -35,8 +36,8 @@ library Ticks {
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
-        if (zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0)
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+        if (zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0 || cache.input == 0)
             return (cache, 0);
         uint256 nextTickPrice = state.latestPrice;
         uint256 nextPrice = nextTickPrice;
@@ -102,9 +103,13 @@ library Ticks {
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
                 cache.price = nextPrice;
                 cache.amountInDelta = FullPrecisionMath.mulDiv(maxDy - maxDy * cache.input / cache.inputBoosted, Q96, cache.liquidity);
-                cache.input -= maxDy * cache.input / cache.inputBoosted;
+                cache.input -= maxDy * cache.input / cache.inputBoosted + 1; /// @dev - handles rounding errors with amountInDelta
             }
         }
+        console.logInt(state.latestTick);
+        console.log('expected amount:', DyDxMath.getDy(cache.liquidity, TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread), state.latestPrice, false));
+        console.log('expected unfilled:', DyDxMath.getDy(cache.liquidity, cache.price, state.latestPrice, false));
+        console.log('expected delta:', FullPrecisionMath.mulDiv(uint256(cache.amountInDelta), uint256(cache.liquidity), Q96));
         return (cache, amountOut);
     }
 
