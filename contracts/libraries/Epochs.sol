@@ -60,7 +60,7 @@ library Epochs {
         uint128 amountOutDelta,
         bool removeLiquidity,
         bool updateAccumDeltas
-    ) internal pure returns (ICoverPoolStructs.AccumulateOutputs memory) {
+    ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
         
         // update tick epoch
         if (accumTick.liquidityDeltaMinus > 0 && updateAccumDeltas) {
@@ -85,6 +85,7 @@ library Epochs {
             // if there was liquidity added
             if (liquidityDeltaPlus > 0 && currentLiquidity > uint256(liquidityDeltaPlus)) {
                 /// @dev - amount deltas get diluted when liquidity is added
+                console.log('dilute deltas');
                 amountInDelta = uint128(
                     FullPrecisionMath.mulDiv(amountInCached, Q96, currentLiquidity + accumTick.liquidityDeltaMinusInactive)
                 );
@@ -363,7 +364,7 @@ library Epochs {
                         tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
                             cache.nextTickToAccum0,
                             cache.nextTickToCross0,
-                            0
+                            0, 0
                         );
                         tickNodes[cache.nextTickToAccum0].nextTick = cache.stopTick0;
                         tickNodes[cache.nextTickToCross0].previousTick = cache.stopTick0;
@@ -401,6 +402,7 @@ library Epochs {
                     ticks0[cache.stopTick0].liquidityDeltaMinus
                 );
                 ticks0[cache.stopTick0].liquidityDeltaMinus = 0;
+                tickNodes[cache.stopTick0].liquidityDeltaPlusStashPercent = 0;
                 tickNodes[cache.stopTick0].accumEpochLast = state.accumEpoch;
                 break;
             }
@@ -458,7 +460,7 @@ library Epochs {
                     tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
-                        0
+                        0, 0
                     );
                     tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
                     tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;
@@ -480,7 +482,8 @@ library Epochs {
                     tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
-                        state.accumEpoch
+                        state.accumEpoch,
+                        0
                     );
                     tickNodes[cache.nextTickToCross1].nextTick = nextLatestTick;
                     tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
@@ -505,6 +508,7 @@ library Epochs {
                 ticks1[cache.stopTick1].liquidityDeltaMinus
             );
             ticks1[cache.stopTick1].liquidityDeltaMinus = 0;
+            tickNodes[cache.stopTick1].liquidityDeltaPlusStashPercent = 0;
             tickNodes[cache.stopTick1].accumEpochLast = state.accumEpoch;
         }
         //TODO: remove liquidity from all ticks crossed
@@ -521,7 +525,8 @@ library Epochs {
                 tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
                     cache.nextTickToAccum0,
                     cache.nextTickToCross0,
-                    state.accumEpoch
+                    state.accumEpoch,
+                    0
                 );
                 tickNodes[cache.nextTickToAccum0].nextTick = nextLatestTick;
                 tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;

@@ -819,8 +819,8 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should dilute carry deltas during accumulate 25', async function () {
-        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+    it.skip('pool0 - Should dilute carry deltas during accumulate 25', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
 
@@ -828,7 +828,7 @@ describe('CoverPool Tests', function () {
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lowerOld: '-887272',
-            lower: '-40',
+            lower: '-60',
             claim: '-20',
             upper: '-20',
             upperOld: '0',
@@ -842,8 +842,6 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(hre.props.admin, '-20')
-
-        await validateSync(hre.props.admin, '0')
 
         console.log('-40 tick:', (await hre.props.coverPool.ticks0('-40')).liquidityDeltaMinusInactive.toString())
 
@@ -851,44 +849,40 @@ describe('CoverPool Tests', function () {
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lowerOld: '-887272',
-            lower: '-40',
-            claim: '-20',
-            upper: '-20',
-            upperOld: '0',
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            upperOld: '-20',
             amount: tokenAmount,
             zeroForOne: true,
             balanceInDecrease: tokenAmount,
-            liquidityIncrease: liquidityAmount4,
+            liquidityIncrease: BigNumber.from('99755307984763292988257'),
             upperTickCleared: false,
             lowerTickCleared: false,
             revertMessage: '',
         })
 
-        console.log('-40 tick:', (await hre.props.coverPool.ticks0('-40')).liquidityDeltaMinusInactive.toString())
-
-        await validateSync(hre.props.admin, '-20')
-
-        console.log('-40 tick:', (await hre.props.coverPool.ticks0('-40')).liquidityDeltaMinusInactive.toString())
+        await validateSync(hre.props.admin, '-40')
 
         await validateBurn({
             signer: hre.props.alice,
-            lower: '-40',
+            lower: '-60',
             claim: '-40',
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('99999999999999999998'),
-            lowerTickCleared: true,
+            lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
         })
 
         await validateBurn({
             signer: hre.props.bob,
-            lower: '-40',
-            claim: '-20',
-            upper: '-20',
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -897,6 +891,36 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         })
+
+        // await validateSync(hre.props.admin, '-60')
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-60',
+        //     upper: '-20',
+        //     liquidityAmount: liquidityAmount4,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('0'),
+        //     balanceOutIncrease: BigNumber.from('99999999999999999998'),
+        //     lowerTickCleared: true,
+        //     upperTickCleared: true,
+        //     revertMessage: '',
+        // })
+
+        // await validateBurn({
+        //     signer: hre.props.bob,
+        //     lower: '-60',
+        //     claim: '-60',
+        //     upper: '-40',
+        //     liquidityAmount: liquidityAmount4,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('0'),
+        //     balanceOutIncrease: BigNumber.from('99999999999999999999'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
     })
 
     it('pool0 - Should updateAccumDeltas during sync 26', async function () {

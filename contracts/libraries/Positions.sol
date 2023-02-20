@@ -14,6 +14,7 @@ library Positions {
     error LiquidityOverflow();
     error WrongTickClaimedAt();
     error PositionNotUpdated();
+    error UpdatePositionFirstAt(int24, int24);
     error InvalidLowerTick();
     error InvalidUpperTick();
     error InvalidPositionAmount();
@@ -190,6 +191,7 @@ library Positions {
             params.lower,
             params.upper,
             uint128(params.amount),
+            cache.position.liquidityStashedPercent,
             params.zeroForOne,
             true,
             true
@@ -292,12 +294,21 @@ library Positions {
                     : true;
             }
         }
-
         if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+            // check accumEpochLast on claim tick
             if (tickNodes[params.claim].accumEpochLast <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
+            // prevent position overwriting at claim tick
+            if (params.zeroForOne) {
+                if (positions[params.owner][params.lower][params.claim].liquidity > 0) {
+                    revert UpdatePositionFirstAt(params.lower, params.claim);
+                }
+            } else {
+                if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
+                    revert UpdatePositionFirstAt(params.claim, params.upper);
+                }
+            }
         }
-
         // amount deltas
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
                 /// @dev - ignore delta carry for 100% fill
@@ -454,10 +465,11 @@ library Positions {
 
         // adjust based on deltas
         if (cache.amountInDelta > 0) {
-            // console.log(cache.position.amountIn);
-            // console.log(uint128(
-            //     FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96)
-            // ));
+            console.log('delta check');
+            console.log(cache.position.amountIn);
+            console.log(uint128(
+                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96)
+            ));
             cache.position.amountIn -= uint128(
                 FullPrecisionMath.mulDivRoundingUp(cache.amountInDelta, cache.position.liquidity, Q96)
             );
@@ -499,6 +511,7 @@ library Positions {
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 uint128(uint128(params.amount)),
+                cache.position.liquidityStashedPercent,
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper

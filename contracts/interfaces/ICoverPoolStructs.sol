@@ -5,7 +5,7 @@ import "./IRangePool.sol";
 
 interface ICoverPoolStructs {
     struct GlobalState {
-        uint8 unlocked;
+        uint8    unlocked;
         int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16   twapLength; /// @dev number of blocks used for TWAP sampling
         uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
@@ -30,28 +30,30 @@ interface ICoverPoolStructs {
         int24 previousTick;
         int24 nextTick;
         uint32 accumEpochLast; // Used to check for claim updates
+        uint64 liquidityDeltaPlusStashPercent; /// @dev - percent of L delta plus stashed; used to scale down deltas on tick cross; should never be occupied by pool0 and pool1 at the same time
     }
 
     struct Tick {
-        int128 liquidityDelta;
+        int128  liquidityDelta;
         uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
         //TODO: change to uint since we know in is negative and out is positive
         uint128 amountInDelta; //TODO: amount deltas are Q24x64 ; should always be negative?
         uint128 amountOutDelta; //TODO: make sure this won't overflow if amount is unfilled; should always be positive
-        uint64 amountInDeltaCarryPercent;
-        uint64 amountOutDeltaCarryPercent;
+        uint64  amountInDeltaCarryPercent;
+        uint64  amountOutDeltaCarryPercent;
         //TODO: wrap amountDeltas in a single struct
     }
 
     // balance needs to be immediately transferred to the position owner
     struct Position {
-        uint32 accumEpochLast; // last epoch this position was updated at
+        uint32  accumEpochLast; // last epoch this position was updated at
+        uint64  liquidityStashedPercent; // what percent of this position is stashed liquidity
         uint128 liquidity; // expected amount to be used not actual
         uint128 amountInDeltaLast; // last recorded amountInDelta within the current auction
-        uint160 claimPriceLast; // highest price claimed at
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
+        uint160 claimPriceLast; // highest price claimed at
     }
 
     //TODO: should we have a recipient field here?

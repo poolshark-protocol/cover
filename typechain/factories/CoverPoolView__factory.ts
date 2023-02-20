@@ -235,6 +235,11 @@ const _abi = [
         type: "uint32",
       },
       {
+        internalType: "uint64",
+        name: "liquidityStashedPercent",
+        type: "uint64",
+      },
+      {
         internalType: "uint128",
         name: "liquidity",
         type: "uint128",
@@ -245,11 +250,6 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint160",
-        name: "claimPriceLast",
-        type: "uint160",
-      },
-      {
         internalType: "uint128",
         name: "amountIn",
         type: "uint128",
@@ -258,6 +258,11 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
+      },
+      {
+        internalType: "uint160",
+        name: "claimPriceLast",
+        type: "uint160",
       },
     ],
     stateMutability: "view",
@@ -289,6 +294,11 @@ const _abi = [
         type: "uint32",
       },
       {
+        internalType: "uint64",
+        name: "liquidityStashedPercent",
+        type: "uint64",
+      },
+      {
         internalType: "uint128",
         name: "liquidity",
         type: "uint128",
@@ -299,11 +309,6 @@ const _abi = [
         type: "uint128",
       },
       {
-        internalType: "uint160",
-        name: "claimPriceLast",
-        type: "uint160",
-      },
-      {
         internalType: "uint128",
         name: "amountIn",
         type: "uint128",
@@ -312,6 +317,11 @@ const _abi = [
         internalType: "uint128",
         name: "amountOut",
         type: "uint128",
+      },
+      {
+        internalType: "uint160",
+        name: "claimPriceLast",
+        type: "uint160",
       },
     ],
     stateMutability: "view",
@@ -341,6 +351,11 @@ const _abi = [
         internalType: "uint32",
         name: "accumEpochLast",
         type: "uint32",
+      },
+      {
+        internalType: "uint64",
+        name: "liquidityDeltaPlusStashPercent",
+        type: "uint64",
       },
     ],
     stateMutability: "view",

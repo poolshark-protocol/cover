@@ -296,13 +296,22 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         accumEpochLast: number;
+        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
         amountInDeltaLast: BigNumber;
-        claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
+        claimPriceLast: BigNumber;
       }
     >;
 
@@ -312,13 +321,22 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         accumEpochLast: number;
+        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
         amountInDeltaLast: BigNumber;
-        claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
+        claimPriceLast: BigNumber;
       }
     >;
 
@@ -343,10 +361,11 @@ export class CoverPool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number] & {
+      [number, number, number, BigNumber] & {
         previousTick: number;
         nextTick: number;
         accumEpochLast: number;
+        liquidityDeltaPlusStashPercent: BigNumber;
       }
     >;
 
@@ -485,13 +504,22 @@ export class CoverPool extends BaseContract {
     arg2: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      number,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       accumEpochLast: number;
+      liquidityStashedPercent: BigNumber;
       liquidity: BigNumber;
       amountInDeltaLast: BigNumber;
-      claimPriceLast: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
+      claimPriceLast: BigNumber;
     }
   >;
 
@@ -501,13 +529,22 @@ export class CoverPool extends BaseContract {
     arg2: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      number,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       accumEpochLast: number;
+      liquidityStashedPercent: BigNumber;
       liquidity: BigNumber;
       amountInDeltaLast: BigNumber;
-      claimPriceLast: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
+      claimPriceLast: BigNumber;
     }
   >;
 
@@ -532,10 +569,11 @@ export class CoverPool extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, number, number] & {
+    [number, number, number, BigNumber] & {
       previousTick: number;
       nextTick: number;
       accumEpochLast: number;
+      liquidityDeltaPlusStashPercent: BigNumber;
     }
   >;
 
@@ -674,13 +712,22 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         accumEpochLast: number;
+        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
         amountInDeltaLast: BigNumber;
-        claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
+        claimPriceLast: BigNumber;
       }
     >;
 
@@ -690,13 +737,22 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         accumEpochLast: number;
+        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
         amountInDeltaLast: BigNumber;
-        claimPriceLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
+        claimPriceLast: BigNumber;
       }
     >;
 
@@ -721,10 +777,11 @@ export class CoverPool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number] & {
+      [number, number, number, BigNumber] & {
         previousTick: number;
         nextTick: number;
         accumEpochLast: number;
+        liquidityDeltaPlusStashPercent: BigNumber;
       }
     >;
 

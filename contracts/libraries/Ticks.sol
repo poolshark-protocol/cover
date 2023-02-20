@@ -132,17 +132,20 @@ library Ticks {
                 tickNodes[state.latestTick] = ICoverPoolStructs.TickNode(
                     TickMath.MIN_TICK,
                     TickMath.MAX_TICK,
-                    state.accumEpoch
+                    state.accumEpoch,
+                    0
                 );
                 tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
                     TickMath.MIN_TICK,
                     state.latestTick,
-                    state.accumEpoch
+                    state.accumEpoch,
+                    0
                 );
                 tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
                     state.latestTick,
                     TickMath.MAX_TICK,
-                    state.accumEpoch
+                    state.accumEpoch,
+                    0
                 );
 
                 pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread);
@@ -180,7 +183,9 @@ library Ticks {
                 tickLower.liquidityDelta -= int128(amount);
                 tickLower.liquidityDeltaMinus += amount;
             } else {
-                tickLower = _dilute(tickLower, amount);
+                if (tickNodes[lower].liquidityDeltaPlusStashPercent > 0) {
+                    tickNodes[lower] = _diluteStash(tickLower, tickNodes[lower], amount);
+                }
                 tickLower.liquidityDelta += int128(amount);
             }
         } else {
@@ -203,13 +208,13 @@ library Ticks {
             if (lowerOld >= lower || lower >= oldNextTick) {
                 revert WrongTickLowerOld();
             }
-            tickNodes[lower] = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0);
+            tickNodes[lower] = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0, 0);
             tickNodes[lowerOld].nextTick = lower;
         }
         /// @auditor -> is it safe to add to liquidityDelta w/o Tick struct initialization
         if (tickNodes[upper].nextTick != tickNodes[upper].previousTick) {
             if (isPool0) {
-                tickUpper = _dilute(tickUpper, amount);
+                tickNodes[upper] = _diluteStash(tickUpper, tickNodes[upper], amount);
                 tickUpper.liquidityDelta += int128(amount);
             } else {
                 tickUpper.liquidityDelta -= int128(amount);
@@ -232,7 +237,7 @@ library Ticks {
             ) {
                 revert WrongTickUpperOld();
             }
-            tickNodes[upper] = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0);
+            tickNodes[upper] = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0, 0);
             tickNodes[oldPrevTick].nextTick = upper;
             tickNodes[upperOld].previousTick = upper;
         }
@@ -248,6 +253,7 @@ library Ticks {
         int24 lower,
         int24 upper,
         uint128 amount,
+        uint64 percentStashed,
         bool isPool0,
         bool removeLower,
         bool removeUpper
@@ -269,10 +275,11 @@ library Ticks {
                 } else {
                     // if amount is 100% of liquidity added filter out carry deltas
                     if (
-                        amount == uint128(tickLower.liquidityDelta) + tickLower.liquidityDeltaMinus
+                        int128(amount) == tickLower.liquidityDelta + int128(tickLower.liquidityDeltaMinus)
                     ) {
                         _filter(tickLower, true);
                     }
+                    tickNodes[lower] = _condenseStash(tickLower, tickNodes[lower], amount, percentStashed);
                     tickLower.liquidityDelta -= int128(amount);
                 }
             } else {
@@ -316,6 +323,7 @@ library Ticks {
                     ) {
                         _filter(tickUpper, true);
                     }
+                    tickNodes[upper] = _condenseStash(tickUpper, tickNodes[upper], amount, percentStashed);
                     tickUpper.liquidityDelta -= int128(amount);
                 } else {
                     if (amount == tickUpper.liquidityDeltaMinus) {
@@ -378,16 +386,71 @@ library Ticks {
         /// @dev - we can never delete ticks due to amount deltas
     }
 
-    function _dilute(ICoverPoolStructs.Tick memory tick, uint128 amount)
-        internal
-        pure
-        returns (ICoverPoolStructs.Tick memory)
+    function _diluteStash(
+        ICoverPoolStructs.Tick memory tick,
+        ICoverPoolStructs.TickNode memory tickNode,
+        uint128 amount
+    )
+    internal view returns (
+        ICoverPoolStructs.TickNode memory
+    )
+    {
+        if (tickNode.liquidityDeltaPlusStashPercent > 0) {
+            uint256 liquidityDeltaPlus = uint128(
+                tick.liquidityDelta + int128(tick.liquidityDeltaMinus)
+            );
+            // subtract out liquidity not being stashed
+            tickNode.liquidityDeltaPlusStashPercent = uint64(uint256(tickNode.liquidityDeltaPlusStashPercent) 
+                                                       * liquidityDeltaPlus / (liquidityDeltaPlus + amount));
+        }
+        return tickNode;
+    }
+
+    function _condenseStash(
+        ICoverPoolStructs.Tick memory tick,
+        ICoverPoolStructs.TickNode memory tickNode,
+        uint128 amount,
+        uint64 percentStashed
+    )
+    internal pure returns (
+        ICoverPoolStructs.TickNode memory
+    )
+    {
+        if (tickNode.liquidityDeltaPlusStashPercent > 0) {
+            uint256 liquidityDeltaPlus = uint128(
+                tick.liquidityDelta + int128(tick.liquidityDeltaMinus)
+            );
+
+            if (amount < liquidityDeltaPlus) {
+                //removed liquidity was stashed
+                uint256 amountStashed = uint256(percentStashed) * uint256(amount) / 1e18;
+                tickNode.liquidityDeltaPlusStashPercent = uint64((uint256(tickNode.liquidityDeltaPlusStashPercent) 
+                                                * liquidityDeltaPlus / 1e18 - amountStashed) 
+                                                * 1e18 / (liquidityDeltaPlus - amount));
+            } else {
+                tickNode.liquidityDeltaPlusStashPercent = 0;
+            }
+        }
+        return tickNode;
+    }
+
+    function diluteCarry(
+        ICoverPoolStructs.Tick memory tick,
+        ICoverPoolStructs.TickNode memory tickNode
+    )
+    external pure returns (
+        ICoverPoolStructs.Tick memory,
+        ICoverPoolStructs.TickNode memory
+    )
     {
         if (tick.amountInDeltaCarryPercent > 0) {
             //adjust deltas for liquidity being added
             uint256 liquidityDeltaPlus = uint128(
                 tick.liquidityDelta + int128(tick.liquidityDeltaMinus)
             );
+            uint256 liquidityDeltaPlusAdded = tickNode.liquidityDeltaPlusStashPercent * liquidityDeltaPlus / 1e18;
+            // subtract out liquidity not being stashed
+            liquidityDeltaPlus -= tickNode.liquidityDeltaPlusStashPercent * liquidityDeltaPlus / 1e18;
             {
                 // adjust amountIn delta values
                 uint256 amountInDeltaCarry = (uint256(tick.amountInDelta) *
@@ -397,7 +460,7 @@ library Ticks {
                     FullPrecisionMath.mulDiv(
                         FullPrecisionMath.mulDiv(amountInDeltaCarry, liquidityDeltaPlus, Q96),
                         Q96,
-                        liquidityDeltaPlus + amount
+                        liquidityDeltaPlus + liquidityDeltaPlusAdded
                     )
                 );
                 tick.amountInDeltaCarryPercent = uint64(
@@ -414,7 +477,7 @@ library Ticks {
                     FullPrecisionMath.mulDiv(
                         FullPrecisionMath.mulDiv(amountOutDeltaCarry, liquidityDeltaPlus, Q96),
                         Q96,
-                        liquidityDeltaPlus + amount
+                        liquidityDeltaPlus + liquidityDeltaPlusAdded
                     )
                 );
                 tick.amountOutDeltaCarryPercent = uint64(
@@ -423,7 +486,7 @@ library Ticks {
                 tick.amountOutDelta += uint128(amountOutCarryNew);
             }
         }
-        return tick;
+        return (tick, tickNode);
     }
 
     function _filter(ICoverPoolStructs.Tick memory tick, bool filterCarry)
