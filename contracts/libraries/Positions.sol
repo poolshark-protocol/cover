@@ -146,7 +146,9 @@ library Positions {
             uint128(params.amount),
             params.zeroForOne
         );
-
+        if (cache.position.liquidityStashedPercent > 0) {
+            cache.position.liquidityStashedPercent = uint64((cache.position.liquidityStashedPercent * cache.position.liquidity) / (cache.position.liquidity + params.amount));
+        }
         cache.position.liquidity += uint128(params.amount);
 
         positions[params.owner][params.lower][params.upper] = cache.position;
@@ -268,6 +270,7 @@ library Positions {
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
              if (cache.claimTick.accumEpochLast <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
+            cache.position.liquidityStashedPercent = 0;
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
             // zero fill or partial fill
@@ -294,7 +297,7 @@ library Positions {
                     : true;
             }
         }
-        if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
+        if (params.claim != params.upper && params.claim != params.lower) {
             // check accumEpochLast on claim tick
             if (tickNodes[params.claim].accumEpochLast <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
@@ -308,6 +311,9 @@ library Positions {
                     revert UpdatePositionFirstAt(params.claim, params.upper);
                 }
             }
+            // 100% of liquidity is stashed
+            cache.position.liquidityStashedPercent = 1e18;
+            /// @auditor - is this necessary
         }
         // amount deltas
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -467,11 +473,12 @@ library Positions {
         if (cache.amountInDelta > 0) {
             console.log('delta check');
             console.log(cache.position.amountIn);
+            console.log(tickNodes[-40].liquidityDeltaPlusStashPercent);
             console.log(uint128(
-                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96)
+                FullPrecisionMath.mulDivRoundingUp(uint256(cache.amountInDelta), uint256(cache.position.liquidity), Q96)
             ));
             cache.position.amountIn -= uint128(
-                FullPrecisionMath.mulDivRoundingUp(cache.amountInDelta, cache.position.liquidity, Q96)
+                FullPrecisionMath.mulDivRoundingUp(uint256(cache.amountInDelta), uint256(cache.position.liquidity), Q96)
             );
             /// @auditor - this solves rounding issues with amountInDelta
             if (cache.position.amountIn > 0) {

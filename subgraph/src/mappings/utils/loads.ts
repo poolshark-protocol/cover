@@ -1,5 +1,5 @@
 import { Address, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { CoverPool, Position, Token } from '../../../generated/schema'
+import { CoverPool, Position, Tick, Token } from '../../../generated/schema'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -30,6 +30,33 @@ export function safeLoadToken(address: string): LoadTokenRet {
 
     return {
         entity: tokenEntity,
+        exists: exists,
+    }
+}
+
+class LoadTickRet {
+    entity: Tick
+    exists: boolean
+}
+export function safeLoadTick(address: string, index: BigInt, zeroForOne: boolean): LoadTickRet {
+    let exists = true
+
+    let tickId = address
+    .concat(index.toString())
+    .concat(zeroForOne.toString())
+
+    let tickEntity = Tick.load(tickId)
+
+    if (!tickEntity) {
+        tickEntity = new Tick(tickId)
+        tickEntity.index = index
+        tickEntity.previousTick = index.equals(BigInt.fromString("20")) ? BigInt.fromI32(-887272) : BigInt.fromI32(20)
+        tickEntity.nextTick = index.equals(BigInt.fromString("20")) ? BigInt.fromI32(30) : BigInt.fromI32(887272)
+        exists = false
+    }
+
+    return {
+        entity: tickEntity,
         exists: exists,
     }
 }

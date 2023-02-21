@@ -391,7 +391,7 @@ library Ticks {
         ICoverPoolStructs.TickNode memory tickNode,
         uint128 amount
     )
-    internal view returns (
+    internal pure returns (
         ICoverPoolStructs.TickNode memory
     )
     {
