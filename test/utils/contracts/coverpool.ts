@@ -23,6 +23,7 @@ export interface TickNode {
     previousTick: number
     nextTick: number
     accumEpochLast: number
+    liquidityDeltaPlusStashed: BigNumber
 }
 
 export interface Tick {
@@ -30,8 +31,8 @@ export interface Tick {
     liquidityDeltaMinus: BigNumber
     amountInDelta: BigNumber
     amountOutDelta: BigNumber
-    amountInDeltaCarryPercent: BigNumber
-    amountOutDeltaCarryPercent: BigNumber
+    amountInDeltaCarry: BigNumber
+    amountOutDeltaCarry: BigNumber
 }
 
 export interface ValidateMintParams {

@@ -20,30 +20,9 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "diluteCarry((int128,uint128,uint128,uint128,uint128,uint64,uint64),(int24,int24,uint32,uint64))": FunctionFragment;
     "quote(bool,uint160,(uint8,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool),(uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "diluteCarry",
-    values: [
-      {
-        liquidityDelta: BigNumberish;
-        liquidityDeltaMinus: BigNumberish;
-        liquidityDeltaMinusInactive: BigNumberish;
-        amountInDelta: BigNumberish;
-        amountOutDelta: BigNumberish;
-        amountInDeltaCarryPercent: BigNumberish;
-        amountOutDeltaCarryPercent: BigNumberish;
-      },
-      {
-        previousTick: BigNumberish;
-        nextTick: BigNumberish;
-        accumEpochLast: BigNumberish;
-        liquidityDeltaPlusStashPercent: BigNumberish;
-      }
-    ]
-  ): string;
   encodeFunctionData(
     functionFragment: "quote",
     values: [
@@ -75,10 +54,6 @@ interface TicksInterface extends ethers.utils.Interface {
     ]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "diluteCarry",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
 
   events: {};
@@ -128,51 +103,6 @@ export class Ticks extends BaseContract {
   interface: TicksInterface;
 
   functions: {
-    diluteCarry(
-      tick: {
-        liquidityDelta: BigNumberish;
-        liquidityDeltaMinus: BigNumberish;
-        liquidityDeltaMinusInactive: BigNumberish;
-        amountInDelta: BigNumberish;
-        amountOutDelta: BigNumberish;
-        amountInDeltaCarryPercent: BigNumberish;
-        amountOutDeltaCarryPercent: BigNumberish;
-      },
-      tickNode: {
-        previousTick: BigNumberish;
-        nextTick: BigNumberish;
-        accumEpochLast: BigNumberish;
-        liquidityDeltaPlusStashPercent: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        [
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber
-        ] & {
-          liquidityDelta: BigNumber;
-          liquidityDeltaMinus: BigNumber;
-          liquidityDeltaMinusInactive: BigNumber;
-          amountInDelta: BigNumber;
-          amountOutDelta: BigNumber;
-          amountInDeltaCarryPercent: BigNumber;
-          amountOutDeltaCarryPercent: BigNumber;
-        },
-        [number, number, number, BigNumber] & {
-          previousTick: number;
-          nextTick: number;
-          accumEpochLast: number;
-          liquidityDeltaPlusStashPercent: BigNumber;
-        }
-      ]
-    >;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,
@@ -223,51 +153,6 @@ export class Ticks extends BaseContract {
       ] & { amountOut: BigNumber }
     >;
   };
-
-  diluteCarry(
-    tick: {
-      liquidityDelta: BigNumberish;
-      liquidityDeltaMinus: BigNumberish;
-      liquidityDeltaMinusInactive: BigNumberish;
-      amountInDelta: BigNumberish;
-      amountOutDelta: BigNumberish;
-      amountInDeltaCarryPercent: BigNumberish;
-      amountOutDeltaCarryPercent: BigNumberish;
-    },
-    tickNode: {
-      previousTick: BigNumberish;
-      nextTick: BigNumberish;
-      accumEpochLast: BigNumberish;
-      liquidityDeltaPlusStashPercent: BigNumberish;
-    },
-    overrides?: CallOverrides
-  ): Promise<
-    [
-      [
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber,
-        BigNumber
-      ] & {
-        liquidityDelta: BigNumber;
-        liquidityDeltaMinus: BigNumber;
-        liquidityDeltaMinusInactive: BigNumber;
-        amountInDelta: BigNumber;
-        amountOutDelta: BigNumber;
-        amountInDeltaCarryPercent: BigNumber;
-        amountOutDeltaCarryPercent: BigNumber;
-      },
-      [number, number, number, BigNumber] & {
-        previousTick: number;
-        nextTick: number;
-        accumEpochLast: number;
-        liquidityDeltaPlusStashPercent: BigNumber;
-      }
-    ]
-  >;
 
   quote(
     zeroForOne: boolean,
@@ -320,51 +205,6 @@ export class Ticks extends BaseContract {
   >;
 
   callStatic: {
-    diluteCarry(
-      tick: {
-        liquidityDelta: BigNumberish;
-        liquidityDeltaMinus: BigNumberish;
-        liquidityDeltaMinusInactive: BigNumberish;
-        amountInDelta: BigNumberish;
-        amountOutDelta: BigNumberish;
-        amountInDeltaCarryPercent: BigNumberish;
-        amountOutDeltaCarryPercent: BigNumberish;
-      },
-      tickNode: {
-        previousTick: BigNumberish;
-        nextTick: BigNumberish;
-        accumEpochLast: BigNumberish;
-        liquidityDeltaPlusStashPercent: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        [
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber,
-          BigNumber
-        ] & {
-          liquidityDelta: BigNumber;
-          liquidityDeltaMinus: BigNumber;
-          liquidityDeltaMinusInactive: BigNumber;
-          amountInDelta: BigNumber;
-          amountOutDelta: BigNumber;
-          amountInDeltaCarryPercent: BigNumber;
-          amountOutDeltaCarryPercent: BigNumber;
-        },
-        [number, number, number, BigNumber] & {
-          previousTick: number;
-          nextTick: number;
-          accumEpochLast: number;
-          liquidityDeltaPlusStashPercent: BigNumber;
-        }
-      ]
-    >;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,
@@ -419,25 +259,6 @@ export class Ticks extends BaseContract {
   filters: {};
 
   estimateGas: {
-    diluteCarry(
-      tick: {
-        liquidityDelta: BigNumberish;
-        liquidityDeltaMinus: BigNumberish;
-        liquidityDeltaMinusInactive: BigNumberish;
-        amountInDelta: BigNumberish;
-        amountOutDelta: BigNumberish;
-        amountInDeltaCarryPercent: BigNumberish;
-        amountOutDeltaCarryPercent: BigNumberish;
-      },
-      tickNode: {
-        previousTick: BigNumberish;
-        nextTick: BigNumberish;
-        accumEpochLast: BigNumberish;
-        liquidityDeltaPlusStashPercent: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,
@@ -469,25 +290,6 @@ export class Ticks extends BaseContract {
   };
 
   populateTransaction: {
-    diluteCarry(
-      tick: {
-        liquidityDelta: BigNumberish;
-        liquidityDeltaMinus: BigNumberish;
-        liquidityDeltaMinusInactive: BigNumberish;
-        amountInDelta: BigNumberish;
-        amountOutDelta: BigNumberish;
-        amountInDeltaCarryPercent: BigNumberish;
-        amountOutDeltaCarryPercent: BigNumberish;
-      },
-      tickNode: {
-        previousTick: BigNumberish;
-        nextTick: BigNumberish;
-        accumEpochLast: BigNumberish;
-        liquidityDeltaPlusStashPercent: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     quote(
       zeroForOne: boolean,
       priceLimit: BigNumberish,

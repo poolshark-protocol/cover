@@ -189,8 +189,8 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber
       ] & {
         accumEpochLast: number;
-        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
+        liquidityStashed: BigNumber;
         amountInDeltaLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
@@ -214,8 +214,8 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber
       ] & {
         accumEpochLast: number;
-        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
+        liquidityStashed: BigNumber;
         amountInDeltaLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
@@ -231,7 +231,7 @@ export class CoverPoolStorage extends BaseContract {
         previousTick: number;
         nextTick: number;
         accumEpochLast: number;
-        liquidityDeltaPlusStashPercent: BigNumber;
+        liquidityDeltaPlusStashed: BigNumber;
       }
     >;
 
@@ -253,8 +253,8 @@ export class CoverPoolStorage extends BaseContract {
         liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
-        amountInDeltaCarryPercent: BigNumber;
-        amountOutDeltaCarryPercent: BigNumber;
+        amountInDeltaCarry: BigNumber;
+        amountOutDeltaCarry: BigNumber;
       }
     >;
 
@@ -276,8 +276,8 @@ export class CoverPoolStorage extends BaseContract {
         liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
-        amountInDeltaCarryPercent: BigNumber;
-        amountOutDeltaCarryPercent: BigNumber;
+        amountInDeltaCarry: BigNumber;
+        amountOutDeltaCarry: BigNumber;
       }
     >;
   };
@@ -352,8 +352,8 @@ export class CoverPoolStorage extends BaseContract {
       BigNumber
     ] & {
       accumEpochLast: number;
-      liquidityStashedPercent: BigNumber;
       liquidity: BigNumber;
+      liquidityStashed: BigNumber;
       amountInDeltaLast: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
@@ -377,8 +377,8 @@ export class CoverPoolStorage extends BaseContract {
       BigNumber
     ] & {
       accumEpochLast: number;
-      liquidityStashedPercent: BigNumber;
       liquidity: BigNumber;
+      liquidityStashed: BigNumber;
       amountInDeltaLast: BigNumber;
       amountIn: BigNumber;
       amountOut: BigNumber;
@@ -394,7 +394,7 @@ export class CoverPoolStorage extends BaseContract {
       previousTick: number;
       nextTick: number;
       accumEpochLast: number;
-      liquidityDeltaPlusStashPercent: BigNumber;
+      liquidityDeltaPlusStashed: BigNumber;
     }
   >;
 
@@ -416,8 +416,8 @@ export class CoverPoolStorage extends BaseContract {
       liquidityDeltaMinusInactive: BigNumber;
       amountInDelta: BigNumber;
       amountOutDelta: BigNumber;
-      amountInDeltaCarryPercent: BigNumber;
-      amountOutDeltaCarryPercent: BigNumber;
+      amountInDeltaCarry: BigNumber;
+      amountOutDeltaCarry: BigNumber;
     }
   >;
 
@@ -439,8 +439,8 @@ export class CoverPoolStorage extends BaseContract {
       liquidityDeltaMinusInactive: BigNumber;
       amountInDelta: BigNumber;
       amountOutDelta: BigNumber;
-      amountInDeltaCarryPercent: BigNumber;
-      amountOutDeltaCarryPercent: BigNumber;
+      amountInDeltaCarry: BigNumber;
+      amountOutDeltaCarry: BigNumber;
     }
   >;
 
@@ -515,8 +515,8 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber
       ] & {
         accumEpochLast: number;
-        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
+        liquidityStashed: BigNumber;
         amountInDeltaLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
@@ -540,8 +540,8 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber
       ] & {
         accumEpochLast: number;
-        liquidityStashedPercent: BigNumber;
         liquidity: BigNumber;
+        liquidityStashed: BigNumber;
         amountInDeltaLast: BigNumber;
         amountIn: BigNumber;
         amountOut: BigNumber;
@@ -557,7 +557,7 @@ export class CoverPoolStorage extends BaseContract {
         previousTick: number;
         nextTick: number;
         accumEpochLast: number;
-        liquidityDeltaPlusStashPercent: BigNumber;
+        liquidityDeltaPlusStashed: BigNumber;
       }
     >;
 
@@ -579,8 +579,8 @@ export class CoverPoolStorage extends BaseContract {
         liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
-        amountInDeltaCarryPercent: BigNumber;
-        amountOutDeltaCarryPercent: BigNumber;
+        amountInDeltaCarry: BigNumber;
+        amountOutDeltaCarry: BigNumber;
       }
     >;
 
@@ -602,8 +602,8 @@ export class CoverPoolStorage extends BaseContract {
         liquidityDeltaMinusInactive: BigNumber;
         amountInDelta: BigNumber;
         amountOutDelta: BigNumber;
-        amountInDeltaCarryPercent: BigNumber;
-        amountOutDeltaCarryPercent: BigNumber;
+        amountInDeltaCarry: BigNumber;
+        amountOutDeltaCarry: BigNumber;
       }
     >;
   };

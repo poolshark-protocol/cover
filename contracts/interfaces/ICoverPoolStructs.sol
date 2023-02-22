@@ -30,7 +30,7 @@ interface ICoverPoolStructs {
         int24 previousTick;
         int24 nextTick;
         uint32 accumEpochLast; // Used to check for claim updates
-        uint64 liquidityDeltaPlusStashPercent; /// @dev - percent of L delta plus stashed; used to scale down deltas on tick cross; should never be occupied by pool0 and pool1 at the same time
+        uint128 liquidityDeltaPlusStashed; /// @dev - percent of L delta plus stashed; used to scale down deltas on tick cross; should never be occupied by pool0 and pool1 at the same time
     }
 
     struct Tick {
@@ -40,16 +40,16 @@ interface ICoverPoolStructs {
         //TODO: change to uint since we know in is negative and out is positive
         uint128 amountInDelta; //TODO: amount deltas are Q24x64 ; should always be negative?
         uint128 amountOutDelta; //TODO: make sure this won't overflow if amount is unfilled; should always be positive
-        uint64  amountInDeltaCarryPercent;
-        uint64  amountOutDeltaCarryPercent;
+        uint128 amountInDeltaCarry;
+        uint128 amountOutDeltaCarry;
         //TODO: wrap amountDeltas in a single struct
     }
 
     // balance needs to be immediately transferred to the position owner
     struct Position {
         uint32  accumEpochLast; // last epoch this position was updated at
-        uint64  liquidityStashedPercent; // what percent of this position is stashed liquidity
         uint128 liquidity; // expected amount to be used not actual
+        uint128 liquidityStashed; // what percent of this position is stashed liquidity
         uint128 amountInDeltaLast; // last recorded amountInDelta within the current auction
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
