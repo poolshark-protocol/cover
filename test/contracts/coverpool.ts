@@ -589,7 +589,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 22', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 31', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
@@ -688,8 +688,8 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('9999999999999999999'),
-            balanceOutIncrease: BigNumber.from('89958926645270816418'),
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('89958926645270816419'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -827,14 +827,12 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('99700464504408921906'),
+            balanceInIncrease: BigNumber.from('99670563335408299416'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
         })
-
-        
     })
 
     it('pool0 - Should dilute carry deltas during accumulate 25', async function () {
@@ -1311,7 +1309,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: tokenAmount.sub(2),
+            balanceOutIncrease: tokenAmount.sub(1),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1621,7 +1619,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',

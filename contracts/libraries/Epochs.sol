@@ -246,14 +246,18 @@ library Epochs {
             uint128 amountInDelta = isPool0 ? cache.amountInDelta0 : cache.amountInDelta1;
             /// @dev - amountInDelta should never be greater than 0
             if (amountInDelta != 0) {
-                stashTick.amountInDeltaCarry += amountInDelta;
+                uint128 amountInDeltaCarry = uint128(uint256(amountInDelta) * uint256(currentLiquidity - stashTick.liquidityDeltaMinus) / (uint256(currentLiquidity) + uint256(stashTick.liquidityDeltaMinusInactive) + uint256(stashTickNode.liquidityDeltaPlusStashed)));
+                stashTick.amountInDeltaCarry += amountInDeltaCarry;
+                stashTick.amountInDelta += amountInDelta - amountInDeltaCarry;
             }
         }
         // handle amount out delta
         {
             uint128 amountOutDelta = isPool0 ? cache.amountOutDelta0 : cache.amountOutDelta1;
             if (amountOutDelta != 0) {
-                stashTick.amountOutDeltaCarry += amountOutDelta;
+                uint128 amountOutDeltaCarry = uint128(uint256(amountOutDelta) * uint256(currentLiquidity - stashTick.liquidityDeltaMinus) / (uint256(currentLiquidity) + uint256(stashTick.liquidityDeltaMinusInactive) + uint256(stashTickNode.liquidityDeltaPlusStashed)));
+                stashTick.amountOutDeltaCarry += amountOutDeltaCarry;
+                stashTick.amountOutDelta += amountOutDelta - amountOutDeltaCarry;
             }
         }
         stashTickNode.liquidityDeltaPlusStashed += currentLiquidity - stashTick.liquidityDeltaMinus;

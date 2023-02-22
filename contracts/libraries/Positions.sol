@@ -317,14 +317,21 @@ library Positions {
         }
         // amount deltas
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
+            console.log('applying upper deltas');
                 ICoverPoolStructs.Tick memory claimTick = ticks[params.claim];
+                console.log(cache.position.liquidity);
+                console.log(claimTick.liquidityDeltaMinus);
+                console.log(claimTick.liquidityDeltaMinusInactive);
+                console.log(claimTick.amountInDelta);
+                console.log(claimTick.amountOutDelta);
+                console.log(claimTick.amountInDeltaCarry);
                 {
-                    uint128 amountInDeltaChange = claimTick.amountInDelta * cache.position.liquidity / (claimTick.liquidityDeltaMinus + claimTick.liquidityDeltaMinusInactive);
+                    uint128 amountInDeltaChange = uint128(uint256(claimTick.amountInDelta) * uint256(cache.position.liquidity) / uint256(claimTick.liquidityDeltaMinus + claimTick.liquidityDeltaMinusInactive));
                     cache.amountInDelta  += amountInDeltaChange;
                     claimTick.amountInDelta -= amountInDeltaChange;
                 }
                 {
-                    uint128 amountOutDeltaChange = claimTick.amountOutDelta * cache.position.liquidity / (claimTick.liquidityDeltaMinus + claimTick.liquidityDeltaMinusInactive);
+                    uint128 amountOutDeltaChange = uint128(uint256(claimTick.amountOutDelta) * uint256(cache.position.liquidity) / uint256(claimTick.liquidityDeltaMinus + claimTick.liquidityDeltaMinusInactive));
                     cache.amountOutDelta  += amountOutDeltaChange;
                     claimTick.amountOutDelta -= amountOutDeltaChange;
                 }
@@ -451,14 +458,12 @@ library Positions {
 
         // adjust based on deltas
         if (cache.amountInDelta > 0) {
-            console.log('apply deltas');
-            console.log(cache.amountInDelta);
-            console.log(cache.amountOutDelta);
-            console.log(cache.position.amountIn);
-            console.log(cache.position.liquidity);
             cache.position.amountIn -= cache.amountInDelta;
             if (cache.amountOutDelta > 0) {
                 cache.position.amountOut += cache.amountOutDelta;
+            }
+            if (cache.position.amountIn == 1) {
+                cache.position.amountIn = 0;
             }
         } /// @auditor - we assume amountInDelta always lt 0
         
