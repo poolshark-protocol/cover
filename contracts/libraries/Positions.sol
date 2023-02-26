@@ -238,7 +238,8 @@ library Positions {
             claimTickNode: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0)
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            deltasRemoved: ICoverPoolStructs.Deltas(0,0,0,0)
         });
 
         // validate position liquidity
@@ -358,8 +359,10 @@ library Positions {
                     params.zeroForOne
                 );
                 //TODO: modify delta max on claim tick and lower : upper tick
-                cache.amountInFilledMax += amountInFilledMax;
+                cache.amountInFilledMax    += amountInFilledMax;
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
+                cache.deltasRemoved.amountInDeltaMax  += amountInFilledMax;
+                cache.deltasRemoved.amountOutDeltaMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
             cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
@@ -486,22 +489,41 @@ library Positions {
             }
         }
         // adjust based on deltas
-        // if (cache.deltas.amountOutUnfilledPercent > 0) {
-        //     // apply amountInDelta based on liquidity %
-        //     console.log('delta check');
-        //     console.log(cache.position.amountIn);
-        //     console.log(cache.position.amountOut);
-        //     // based on amountOutUnfilled we take a percent of that
-        //     // subtract from the tick's amountOutUnfilled
-        //     // 1e38 - amountOutUnfilled percent is filled percent
-        //     // apply the same cut as amountOutUnfilled to amountInDelta
-        //     // update these amounts on the claimTick
-        //     cache.position.amountIn -= cache.deltas.amountInDelta; //TODO: apply based on portion of unfilled amount taken
-        //     cache.claimTick.deltas.amountInDelta = 0;
-        //     if (cache.position.amountIn == 1) {
-        //         cache.position.amountIn = 0;
-        //     }
-        // } /// @auditor - we assume amountInDelta always lt 0
+        if (cache.deltas.amountInDeltaMax > 0) {
+            // calculate deltas applied
+            ICoverPoolStructs.Deltas memory finalDeltas;
+            uint256 percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
+            uint256 percentOutDelta;
+            if (cache.deltas.amountOutDeltaMax > 0) {
+                percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
+            }
+            (cache.deltas, finalDeltas) = Deltas.transfer(cache.deltas, finalDeltas, percentInDelta, percentOutDelta);
+            // apply deltas and add to position
+            cache.position.amountIn  += uint128(cache.amountInFilledMax) - finalDeltas.amountInDelta;
+            cache.position.amountOut += uint128(cache.amountOutUnfilledMax) - finalDeltas.amountOutDelta;
+            
+            // add remaining deltas cached back to claim tick
+            // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
+            if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+                // burn deltas on final tick of position
+                ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
+                (updateTick.deltas) = Deltas.burn(updateTick.deltas, finalDeltas, true);
+            }
+            // apply amountInDelta based on liquidity %
+            console.log('delta check');
+            console.log(cache.position.amountIn);
+            console.log(cache.position.amountOut);
+            // based on amountOutUnfilled we take a percent of that
+            // subtract from the tick's amountOutUnfilled
+            // 1e38 - amountOutUnfilled percent is filled percent
+            // apply the same cut as amountOutUnfilled to amountInDelta
+            // update these amounts on the claimTick
+            cache.position.amountIn -= cache.deltas.amountInDelta; //TODO: apply based on portion of unfilled amount taken
+            cache.claimTick.deltas.amountInDelta = 0;
+            if (cache.position.amountIn == 1) {
+                cache.position.amountIn = 0;
+            }
+        } /// @auditor - we assume amountInDelta always lt 0
         
         /// @dev - mark last claim price
         cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
@@ -511,7 +533,12 @@ library Positions {
         /// @dev - if tick 0% filled, set CPL to latestTick
         if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
         /// @dev - if tick 100% filled, set CPL to next tick to unlock
-        if (pool.price == cache.priceClaim && params.claim == state.latestTick) cache.position.claimPriceLast = cache.priceClaim; 
+        if (pool.price == cache.priceClaim && params.claim == state.latestTick) cache.position.claimPriceLast = cache.priceClaim;
+
+        // save claim tick and tick node
+        ticks[params.claim] = cache.claimTick;
+        tickNodes[params.claim] = cache.claimTickNode;
+        /// @dev - prior to Ticks.remove() so we don't overwrite liquidity delta changes
 
         // if burn or second mint
         //TODO: handle claim of current auction and second mint
@@ -546,8 +573,7 @@ library Positions {
         // }
 
         // save claim tick and tick node
-        ticks[params.claim] = cache.claimTick;
-        tickNodes[params.claim] = cache.claimTickNode;
+
 
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
