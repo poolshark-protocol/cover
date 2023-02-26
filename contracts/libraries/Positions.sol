@@ -373,7 +373,7 @@ library Positions {
         }
 
         console.log('amountIn check:');
-        console.log(cache.position.amountIn);
+        console.log(cache.amountInFilledMax);
         console.log(cache.position.amountOut);
         console.log(cache.position.claimPriceLast);
         // section 2 - position start up to claim tick
@@ -395,7 +395,7 @@ library Positions {
         } else if (params.zeroForOne ? cache.priceClaim > cache.position.claimPriceLast 
                                      : cache.priceClaim < cache.position.claimPriceLast) {
             /// @dev - second claim within current auction
-            cache.priceClaim = cache.position.claimPriceLast;
+            cache.priceClaim = pool.price;
         }
         // section 3 - current auction unfilled section
         if (params.claim == state.latestTick 
@@ -428,47 +428,62 @@ library Positions {
             }
             // section 4 - current auction filled section
             {
-                {
-                    console.log('section 4 check');
-                    // amounts claimed on this update
-                    uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
+                console.log('section 4 check');
+                // amounts claimed on this update
+                uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
+                (
+                    amountInFilledMax,
+                    amountOutUnfilledMax
+                ) = Deltas.maxAuction(
+                    cache.position.liquidity,
+                    (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                                       : cache.position.claimPriceLast > cache.priceClaim) 
+                                            ? cache.position.claimPriceLast 
+                                            : cache.priceSpread,
+                    pool.price,
+                    params.zeroForOne
+                );
+                cache.amountInFilledMax += amountInFilledMax;
+                cache.deltas.amountInDelta += pool.amountInDelta;
+                cache.deltas.amountInDeltaMax += amountInFilledMax;
+                console.log('new claim');
+                console.log(cache.amountInFilledMax);
+                console.log(cache.deltas.amountInDelta);
+                console.log(cache.amountInFilledMax - cache.deltas.amountInDelta);
+                /// @dev - record how much delta max was claimed
+                if (params.amount < cache.position.liquidity) {
                     (
                         amountInFilledMax,
                         amountOutUnfilledMax
                     ) = Deltas.maxAuction(
-                        cache.position.liquidity,
+                        cache.position.liquidity - params.amount,
                         (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
-                                           : cache.position.claimPriceLast > cache.priceClaim) 
+                                        : cache.position.claimPriceLast > cache.priceClaim) 
                                                 ? cache.position.claimPriceLast 
                                                 : cache.priceSpread,
                         pool.price,
                         params.zeroForOne
                     );
-                    cache.amountInFilledMax += amountInFilledMax;
-                    cache.deltas.amountInDelta += pool.amountInDelta;
-                    cache.deltas.amountInDeltaMax += amountInFilledMax;
-                    console.log(cache.amountInFilledMax);
-                    console.log(pool.amountInDelta);
-                    console.log(cache.amountInFilledMax - pool.amountInDelta);
-                    /// @dev - record how much delta max was claimed
                     pool.amountInDeltaMaxClaimed  += amountInFilledMax;
                     pool.amountOutDeltaMaxClaimed += amountOutUnfilledMax;
                 }
-                if (params.amount > 0) {
-                        // reduce delta max claimed based on liquidity removed
-                        uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
-                        (
-                            amountInMaxClaimedBefore,
-                            amountOutMaxClaimedBefore
-                        ) = Deltas.maxAuction(
-                            params.amount,
-                            cache.priceSpread,
-                            cache.priceClaim,
-                            params.zeroForOne
-                        );
-                        pool.amountInDeltaMaxClaimed  -= amountInMaxClaimedBefore;
-                        pool.amountOutDeltaMaxClaimed -= amountOutMaxClaimedBefore;
-                }
+            }
+            if (params.amount > 0 /// @ dev - if removing L and second claim on same tick
+                && (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                                        : cache.position.claimPriceLast > cache.priceClaim)) {
+                    // reduce delta max claimed based on liquidity removed
+                    uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
+                    (
+                        amountInMaxClaimedBefore,
+                        amountOutMaxClaimedBefore
+                    ) = Deltas.maxAuction(
+                        params.amount,
+                        cache.priceSpread,
+                        cache.position.claimPriceLast,
+                        params.zeroForOne
+                    );
+                    pool.amountInDeltaMaxClaimed  -= amountInMaxClaimedBefore;
+                    pool.amountOutDeltaMaxClaimed -= amountOutMaxClaimedBefore;
             }
             console.log('pool claims');
             console.log(pool.amountInDeltaMaxClaimed);
@@ -499,7 +514,9 @@ library Positions {
         }
         // adjust based on deltas
         console.log('final deltas');
-        console.log(cache.deltas.amountInDeltaMax);
+        console.log(cache.deltas.amountOutDelta);
+        console.log(cache.amountInFilledMax);
+        console.log(cache.amountOutUnfilledMax);
         if (cache.deltas.amountInDeltaMax > 0) {
             // calculate deltas applied
             ICoverPoolStructs.Deltas memory finalDeltas = ICoverPoolStructs.Deltas(0,0,0,0);
@@ -514,7 +531,7 @@ library Positions {
             console.log('final deltas');
             console.log(finalDeltas.amountInDelta);
             cache.position.amountIn  += uint128(cache.amountInFilledMax) - finalDeltas.amountInDelta;
-            cache.position.amountOut += uint128(cache.amountOutUnfilledMax) - finalDeltas.amountOutDelta;
+            cache.position.amountOut += finalDeltas.amountOutDelta;
             
             // add remaining deltas cached back to claim tick
             // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
@@ -526,17 +543,6 @@ library Positions {
             } else {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
             }
-            // apply amountInDelta based on liquidity %
-            console.log('delta check');
-            console.log(cache.position.amountIn);
-            console.log(cache.position.amountOut);
-            // based on amountOutUnfilled we take a percent of that
-            // subtract from the tick's amountOutUnfilled
-            // 1e38 - amountOutUnfilled percent is filled percent
-            // apply the same cut as amountOutUnfilled to amountInDelta
-            // update these amounts on the claimTick
-            cache.position.amountIn -= cache.deltas.amountInDelta; //TODO: apply based on portion of unfilled amount taken
-            cache.claimTick.deltas.amountInDelta = 0;
             if (cache.position.amountIn == 1) {
                 cache.position.amountIn = 0;
             }

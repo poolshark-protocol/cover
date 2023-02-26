@@ -267,7 +267,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -320,6 +320,9 @@ library Epochs {
             cache.deltas0.amountInDeltaMax += amountInDeltaMax;
             cache.deltas0.amountOutDelta += amountOutDelta;
             cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
+            console.log('rollover deltas check');
+            console.log(cache.deltas0.amountInDelta);
+            console.log(cache.deltas0.amountOutDelta);
         } else {
             // amountIn pool did not receive
             uint128 amountInDelta = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, currentPrice, false));
@@ -454,7 +457,8 @@ library Epochs {
         console.log('stashing');
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         ICoverPoolStructs.Deltas memory stashDeltas = stashTick.deltas;
-        if (stashDeltas.amountInDeltaMax > 0) {
+        if (deltas.amountInDeltaMax > 0) {
+            console.log(cache.deltas0.amountInDelta);
             (deltas, stashDeltas) = Deltas.transfer(deltas, stashDeltas, 1e38, 1e38);
             stashTick.deltas = stashDeltas;
         }
