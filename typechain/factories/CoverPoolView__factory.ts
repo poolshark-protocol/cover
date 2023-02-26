@@ -178,6 +178,16 @@ const _abi = [
         type: "uint128",
       },
       {
+        internalType: "uint128",
+        name: "amountInDeltaMaxClaimed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOutDeltaMaxClaimed",
+        type: "uint128",
+      },
+      {
         internalType: "uint160",
         name: "price",
         type: "uint160",
@@ -198,6 +208,16 @@ const _abi = [
       {
         internalType: "uint128",
         name: "amountInDelta",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountInDeltaMaxClaimed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOutDeltaMaxClaimed",
         type: "uint128",
       },
       {
@@ -242,11 +262,6 @@ const _abi = [
       {
         internalType: "uint128",
         name: "liquidityStashed",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountInDeltaLast",
         type: "uint128",
       },
       {
@@ -305,11 +320,6 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "amountInDeltaLast",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "amountIn",
         type: "uint128",
       },
@@ -354,7 +364,7 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidityDeltaPlusStashed",
+        name: "liquidityDeltaMinus",
         type: "uint128",
       },
     ],
@@ -378,33 +388,45 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidityDeltaMinus",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "liquidityDeltaMinusInactive",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amountInDelta",
+        name: "amountInDeltaMaxStashed",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amountOutDelta",
+        name: "amountOutDeltaMaxStashed",
         type: "uint128",
       },
       {
-        internalType: "uint128",
-        name: "amountInDeltaCarry",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountOutDeltaCarry",
-        type: "uint128",
+        components: [
+          {
+            internalType: "uint128",
+            name: "amountInDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountInDeltaMax",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDeltaMax",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct ICoverPoolStructs.Deltas",
+        name: "deltas",
+        type: "tuple",
       },
     ],
     stateMutability: "view",
@@ -427,33 +449,45 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidityDeltaMinus",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "liquidityDeltaMinusInactive",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amountInDelta",
+        name: "amountInDeltaMaxStashed",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amountOutDelta",
+        name: "amountOutDeltaMaxStashed",
         type: "uint128",
       },
       {
-        internalType: "uint128",
-        name: "amountInDeltaCarry",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountOutDeltaCarry",
-        type: "uint128",
+        components: [
+          {
+            internalType: "uint128",
+            name: "amountInDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountInDeltaMax",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDeltaMax",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct ICoverPoolStructs.Deltas",
+        name: "deltas",
+        type: "tuple",
       },
     ],
     stateMutability: "view",

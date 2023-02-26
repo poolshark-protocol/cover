@@ -73,6 +73,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IRangePool__factory>;
     getContractFactory(
+      name: "Deltas",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Deltas__factory>;
+    getContractFactory(
       name: "DyDxMath",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DyDxMath__factory>;
@@ -216,6 +220,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IRangePool>;
+    getContractAt(
+      name: "Deltas",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Deltas>;
     getContractAt(
       name: "DyDxMath",
       address: string,

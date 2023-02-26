@@ -23,26 +23,31 @@ interface ICoverPoolStructs {
     struct PoolState {
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 amountInDelta; /// @dev Delta for the current tick auction
+        uint128 amountInDeltaMaxClaimed;  /// @dev - needed when users claim and don't burn; should be cleared when users burn liquidity
+        uint128 amountOutDeltaMaxClaimed; /// @dev - needed when users claim and don't burn; should be cleared when users burn liquidity
         uint160 price; /// @dev Starting price current
     }
 
     struct TickNode {
-        int24 previousTick;
-        int24 nextTick;
-        uint32 accumEpochLast; // Used to check for claim updates
-        uint128 liquidityDeltaPlusStashed; /// @dev - percent of L delta plus stashed; used to scale down deltas on tick cross; should never be occupied by pool0 and pool1 at the same time
+        int24   previousTick;
+        int24   nextTick;
+        uint32  accumEpochLast; // Used to check for claim updates
+        uint128 liquidityDeltaMinus;
     }
 
     struct Tick {
         int128  liquidityDelta;
-        uint128 liquidityDeltaMinus; // represent LPs for token0 -> token1
         uint128 liquidityDeltaMinusInactive;
-        //TODO: change to uint since we know in is negative and out is positive
-        uint128 amountInDelta; //TODO: amount deltas are Q24x64 ; should always be negative?
-        uint128 amountOutDelta; //TODO: make sure this won't overflow if amount is unfilled; should always be positive
-        uint128 amountInDeltaCarry;
-        uint128 amountOutDeltaCarry;
-        //TODO: wrap amountDeltas in a single struct
+        uint128 amountInDeltaMaxStashed;
+        uint128 amountOutDeltaMaxStashed;
+        Deltas deltas;
+    }
+
+    struct Deltas {
+        uint128 amountInDelta;     // amt unfilled
+        uint128 amountInDeltaMax;  // max unfilled
+        uint128 amountOutDelta;    // amt unfilled
+        uint128 amountOutDeltaMax; // max unfilled
     }
 
     // balance needs to be immediately transferred to the position owner
@@ -50,7 +55,6 @@ interface ICoverPoolStructs {
         uint32  accumEpochLast; // last epoch this position was updated at
         uint128 liquidity; // expected amount to be used not actual
         uint128 liquidityStashed; // what percent of this position is stashed liquidity
-        uint128 amountInDeltaLast; // last recorded amountInDelta within the current auction
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
         uint160 claimPriceLast; // highest price claimed at
@@ -106,22 +110,24 @@ interface ICoverPoolStructs {
     }
 
     struct PositionCache {
-        Position position;
         uint160 priceLower;
         uint160 priceUpper;
+        Position position;
     }
 
     struct UpdatePositionCache {
-        Position position;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;
         uint160 priceSpread;
-        TickNode claimTick;
         bool removeLower;
         bool removeUpper;
-        uint128 amountInDelta;
-        uint128 amountOutDelta;
+        uint256 amountInFilledMax;    // considers the range covered by each update
+        uint256 amountOutUnfilledMax; // considers the range covered by each update
+        Tick claimTick;
+        TickNode claimTickNode;
+        Position position;
+        Deltas deltas;
     }
 
     struct AccumulateCache {
@@ -131,16 +137,14 @@ interface ICoverPoolStructs {
         int24 nextTickToAccum1;
         int24 stopTick0;
         int24 stopTick1;
-        uint128 amountInDelta0;
-        uint128 amountInDelta1;
-        uint128 amountOutDelta0;
-        uint128 amountOutDelta1;
+        Deltas deltas0;
+        Deltas deltas1;
     }
 
     struct AccumulateOutputs {
-        uint128 amountInDelta;
-        uint128 amountOutDelta;
+        Deltas deltas;
         TickNode accumTickNode;
+        TickNode crossTickNode;
         Tick crossTick;
         Tick accumTick;
     }

@@ -15,6 +15,7 @@ export type { ICoverPoolFactory } from "./ICoverPoolFactory";
 export type { IPositionManager } from "./IPositionManager";
 export type { IRangeFactory } from "./IRangeFactory";
 export type { IRangePool } from "./IRangePool";
+export type { Deltas } from "./Deltas";
 export type { DyDxMath } from "./DyDxMath";
 export type { Epochs } from "./Epochs";
 export type { FullPrecisionMath } from "./FullPrecisionMath";
@@ -47,6 +48,7 @@ export { ICoverPoolFactory__factory } from "./factories/ICoverPoolFactory__facto
 export { IPositionManager__factory } from "./factories/IPositionManager__factory";
 export { IRangeFactory__factory } from "./factories/IRangeFactory__factory";
 export { IRangePool__factory } from "./factories/IRangePool__factory";
+export { Deltas__factory } from "./factories/Deltas__factory";
 export { DyDxMath__factory } from "./factories/DyDxMath__factory";
 export { Epochs__factory } from "./factories/Epochs__factory";
 export { FullPrecisionMath__factory } from "./factories/FullPrecisionMath__factory";
