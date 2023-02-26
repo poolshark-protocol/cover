@@ -179,7 +179,7 @@ library Ticks {
         /// @auditor lower or upper = latestTick -> should not be possible
         /// @auditor - should we check overflow/underflow of lower and upper ticks?
         /// @auditor - we need to be able to deprecate pools if necessary; so not much reason to do overflow/underflow check
-        if (tickNodes[lower].nextTick != tickNodes[lower].previousTick) {
+        if (tickNodeLower.nextTick != tickNodeLower.previousTick) {
             // tick exists
             if (isPool0) {
                 tickLower.liquidityDelta -= int128(amount);
@@ -190,7 +190,7 @@ library Ticks {
         } else {
             // tick does not exist
             if (isPool0) {
-                tickLower = ICoverPoolStructs.Tick(-int128(amount), amount, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickLower = ICoverPoolStructs.Tick(-int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             } else {
                 tickLower = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             }
@@ -207,11 +207,11 @@ library Ticks {
             if (lowerOld >= lower || lower >= oldNextTick) {
                 revert WrongTickLowerOld();
             }
-            tickNodes[lower] = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0, 0);
+            tickNodeLower = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0, amount);
             tickNodes[lowerOld].nextTick = lower;
         }
         /// @auditor -> is it safe to add to liquidityDelta w/o Tick struct initialization
-        if (tickNodes[upper].nextTick != tickNodes[upper].previousTick) {
+        if (tickNodeUpper.nextTick != tickNodeUpper.previousTick) {
             if (isPool0) {
                 tickUpper.liquidityDelta += int128(amount);
             } else {
@@ -235,12 +235,14 @@ library Ticks {
             ) {
                 revert WrongTickUpperOld();
             }
-            tickNodes[upper] = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0, 0);
+            tickNodeUpper = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0, 0);
             tickNodes[oldPrevTick].nextTick = upper;
             tickNodes[upperOld].previousTick = upper;
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
+        tickNodes[lower] = tickNodeLower;
+        tickNodes[upper] = tickNodeUpper;
         return state;
     }
 

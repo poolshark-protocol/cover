@@ -300,7 +300,16 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        claimCheckpoint: number;
         accumEpochLast: number;
         liquidity: BigNumber;
         liquidityStashed: BigNumber;
@@ -316,7 +325,16 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        claimCheckpoint: number;
         accumEpochLast: number;
         liquidity: BigNumber;
         liquidityStashed: BigNumber;
@@ -506,7 +524,8 @@ export class CoverPool extends BaseContract {
     arg2: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      claimCheckpoint: number;
       accumEpochLast: number;
       liquidity: BigNumber;
       liquidityStashed: BigNumber;
@@ -522,7 +541,8 @@ export class CoverPool extends BaseContract {
     arg2: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [number, number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      claimCheckpoint: number;
       accumEpochLast: number;
       liquidity: BigNumber;
       liquidityStashed: BigNumber;
@@ -712,7 +732,16 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        claimCheckpoint: number;
         accumEpochLast: number;
         liquidity: BigNumber;
         liquidityStashed: BigNumber;
@@ -728,7 +757,16 @@ export class CoverPool extends BaseContract {
       arg2: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        number,
+        number,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
+        claimCheckpoint: number;
         accumEpochLast: number;
         liquidity: BigNumber;
         liquidityStashed: BigNumber;

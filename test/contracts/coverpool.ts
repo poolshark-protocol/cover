@@ -172,7 +172,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint/burn new LP position', async function () {
+    it('pool0 - Should mint/burn new LP position 99', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {
             await validateMint({
@@ -350,7 +350,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should swap with zero output', async function () {
+    it('pool0 - Should swap with zero output 22', async function () {
         // move TWAP to tick 0
         await validateSync(hre.props.admin, '0')
 
@@ -397,7 +397,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should handle partial mint', async function () {
+    it('pool0 - Should handle partial mint 13', async function () {
         const liquidityAmount3 = BigNumber.from('49952516624167694475096')
         const tokenAmount3 = BigNumber.from('50024998748000306423')
         // move TWAP to tick 0

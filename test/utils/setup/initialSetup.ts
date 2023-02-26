@@ -15,6 +15,7 @@ import {
     Positions__factory,
     TwapOracle__factory,
     Epochs__factory,
+    Deltas__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -141,6 +142,17 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            Deltas__factory,
+            'deltasLib',
+            [],
+            {
+                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address
+            }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Epochs__factory,
             'epochsLib',
             [],
@@ -150,6 +162,7 @@ export class InitialSetup {
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address
             }
         )
 
@@ -180,6 +193,7 @@ export class InitialSetup {
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address
             }
         )
 

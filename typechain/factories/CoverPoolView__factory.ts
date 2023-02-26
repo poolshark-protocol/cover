@@ -250,6 +250,11 @@ const _abi = [
     name: "positions0",
     outputs: [
       {
+        internalType: "uint8",
+        name: "claimCheckpoint",
+        type: "uint8",
+      },
+      {
         internalType: "uint32",
         name: "accumEpochLast",
         type: "uint32",
@@ -303,6 +308,11 @@ const _abi = [
     ],
     name: "positions1",
     outputs: [
+      {
+        internalType: "uint8",
+        name: "claimCheckpoint",
+        type: "uint8",
+      },
       {
         internalType: "uint32",
         name: "accumEpochLast",
