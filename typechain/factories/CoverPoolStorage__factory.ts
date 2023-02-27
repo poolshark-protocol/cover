@@ -401,11 +401,6 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidityDeltaMinusInactive",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
         name: "amountInDeltaMaxStashed",
         type: "uint128",
       },
@@ -459,11 +454,6 @@ const _abi = [
         internalType: "int128",
         name: "liquidityDelta",
         type: "int128",
-      },
-      {
-        internalType: "uint128",
-        name: "liquidityDeltaMinusInactive",
-        type: "uint128",
       },
       {
         internalType: "uint128",

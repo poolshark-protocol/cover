@@ -190,9 +190,9 @@ library Ticks {
         } else {
             // tick does not exist
             if (isPool0) {
-                tickLower = ICoverPoolStructs.Tick(-int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickLower = ICoverPoolStructs.Tick(-int128(amount), 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             } else {
-                tickLower = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickLower = ICoverPoolStructs.Tick(int128(amount), 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             }
             /// @auditor new latestTick being in between lowerOld and lower handled by Positions.validate()
             int24 oldNextTick = tickNodes[lowerOld].nextTick;
@@ -220,9 +220,9 @@ library Ticks {
             }
         } else {
             if (isPool0) {
-                tickUpper = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickUpper = ICoverPoolStructs.Tick(int128(amount), 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             } else {
-                tickUpper = ICoverPoolStructs.Tick(-int128(amount), amount, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickUpper = ICoverPoolStructs.Tick(-int128(amount), amount, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             }
             int24 oldPrevTick = tickNodes[upperOld].previousTick;
             if (lower > oldPrevTick) oldPrevTick = lower;
@@ -272,22 +272,8 @@ library Ticks {
                 } else {
                     tickLower.liquidityDelta -= int128(amount);
                 }
-            } else {
-                if (isPool0) {
-                    tickLower.liquidityDeltaMinusInactive -= amount;
-                }
             }
-            /// @dev - do not remove amountDeltas being carried over
-            // if tick is empty clear deltas
-            // if (tickLower.liquidityDelta == 0 && tickLower.liquidityDeltaMinus == 0 && tickLower.liquidityDeltaMinusInactive == 0) {
-            //     tickLower.amountInDelta = 0;
-            //     tickLower.amountOutDelta = 0;
-            //     tickLower.amountInDeltaCarryPercent = 0;
-            //     tickLower.amountOutDeltaCarryPercent = 0;
-            //     if (lower != state.latestTick) {
-            //         deleteLowerTick = true;
-            //     }
-            // }
+            /// @dev - not deleting ticks just yet
             ticks[lower] = tickLower;
             tickNodes[lower] = tickNodeLower;
         }
@@ -307,22 +293,7 @@ library Ticks {
                     tickUpper.liquidityDelta += int128(amount);
                     tickNodeUpper.liquidityDeltaMinus -= amount;
                 }
-            } else {
-                if (!isPool0) {
-                    tickUpper.liquidityDeltaMinusInactive -= amount;
-                }
             }
-            /// @dev - do not remove amountDeltas being carried over
-            // if tick is empty clear deltas
-            // if (tickUpper.liquidityDelta == 0 && tickUpper.liquidityDeltaMinus == 0 && tickUpper.liquidityDeltaMinusInactive == 0) {
-            //     tickUpper.amountInDelta = 0;
-            //     tickUpper.amountOutDelta = 0;
-            //     tickUpper.amountInDeltaCarryPercent = 0;
-            //     tickUpper.amountOutDeltaCarryPercent = 0;
-            //     if (upper != state.latestTick) {
-            //         deleteUpperTick = true;
-            //     }
-            // }
             ticks[upper] = tickUpper;
             tickNodes[upper] = tickNodeUpper;
         }

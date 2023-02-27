@@ -140,8 +140,6 @@ library Epochs {
                     tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;
                 }
             }
-            stopTick0.liquidityDeltaMinusInactive += stopTickNode0
-                .liquidityDeltaMinus;
             stopTick0.liquidityDelta += int128(
                 stopTickNode0.liquidityDeltaMinus
             );
@@ -242,8 +240,6 @@ library Epochs {
             } else {
                 pool1.liquidity = 0;
             }
-            stopTick1.liquidityDeltaMinusInactive += stopTickNode1
-                .liquidityDeltaMinus;
             stopTick1.liquidityDelta += int128(
                 stopTickNode1.liquidityDeltaMinus
             );
@@ -359,7 +355,7 @@ library Epochs {
         uint32 accumEpoch,
         bool removeLiquidity,
         bool updateAccumDeltas
-    ) internal pure returns (ICoverPoolStructs.AccumulateOutputs memory) {
+    ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
         
         // update tick epoch
         if (accumTickNode.liquidityDeltaMinus > 0 && updateAccumDeltas) {
@@ -368,34 +364,29 @@ library Epochs {
 
         if (crossTick.amountInDeltaMaxStashed > 0) {
             /// @dev - else we migrate carry deltas onto cache
-            uint256 percentInCarry = uint256(crossTick.amountInDeltaMaxStashed) * 1e38 / (crossTick.deltas.amountInDeltaMax 
-                                                                                 + crossTick.amountInDeltaMaxStashed);
-            uint256 percentOutCarry;
-            if (crossTick.amountOutDeltaMaxStashed > 0) {
-                percentOutCarry = uint256(crossTick.amountOutDeltaMaxStashed) * 1e38 / (crossTick.deltas.amountOutDeltaMax 
-                                                                                 + crossTick.amountOutDeltaMaxStashed);
-            }
             // add carry amounts to cache
-            (crossTick.deltas, deltas) = Deltas.transfer(crossTick.deltas, deltas, percentInCarry, percentOutCarry);
+            (crossTick, deltas) = Deltas.unstash(crossTick, deltas);
         }
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
+            console.log('update accum deltas');
             ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
             if (accumTick.deltas.amountInDeltaMax > 0) {
                 uint256 percentInOnTick = accumDeltas.amountInDeltaMax * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
                 uint256 percentOutOnTick = accumDeltas.amountOutDeltaMax * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
+                console.log(percentInOnTick);
+                console.log(percentOutOnTick);
                 (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
                 accumTick.deltas = accumDeltas;
                 // update delta maxes
-                deltas.amountInDeltaMax = uint128(uint256(deltas.amountInDeltaMax) * (1e38 - percentInOnTick) / 1e38);
+                deltas.amountInDeltaMax -= uint128(uint256(deltas.amountInDeltaMax) * (1e38 - percentInOnTick) / 1e38);
                 deltas.amountOutDeltaMax -= uint128(uint256(deltas.amountOutDeltaMax) * (1e38 - percentOutOnTick) / 1e38);
             }
         }
 
         //remove all liquidity from cross tick
         if (removeLiquidity) {
-            crossTick.liquidityDeltaMinusInactive += crossTickNode.liquidityDeltaMinus;
-            crossTick.liquidityDelta = 0;
+            crossTick.liquidityDelta += int128(crossTickNode.liquidityDeltaMinus);
             crossTickNode.liquidityDeltaMinus = 0;
         }
         // clear out stash
@@ -455,15 +446,13 @@ library Epochs {
         // handle amount in delta
         console.log('stashing');
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
-        ICoverPoolStructs.Deltas memory stashDeltas = stashTick.deltas;
         if (deltas.amountInDeltaMax > 0) {
-            console.log(cache.deltas0.amountInDelta);
-            (deltas, stashDeltas) = Deltas.transfer(deltas, stashDeltas, 1e38, 1e38);
-            stashTick.deltas = stashDeltas;
+            console.log(cache.deltas0.amountInDeltaMax);
+            console.log(stashTick.deltas.amountInDeltaMax);
+            (deltas, stashTick.deltas) = Deltas.transfer(deltas, stashTick.deltas, 1e38, 1e38);
+            (deltas, stashTick) = Deltas.onto(deltas, stashTick);
+            (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
-        // save to max deltas stashed
-        stashTick.amountInDeltaMaxStashed  += deltas.amountInDeltaMax;
-        stashTick.amountOutDeltaMaxStashed += deltas.amountOutDeltaMax;
         
         return (stashTick);
     }

@@ -598,7 +598,7 @@ describe('CoverPool Tests', function () {
 
     it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 31', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-
+        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
         await validateSync(hre.props.admin, '0')
 
         await validateMint({
@@ -631,7 +631,11 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        console.log('-20 tick before:', (await hre.props.coverPool.ticks0("-20")).toString())
+
         await validateSync(hre.props.admin, '-40')
+
+        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
 
         // await validateBurn({
         //     signer: hre.props.alice,
@@ -640,10 +644,10 @@ describe('CoverPool Tests', function () {
         //     upper: '-20',
         //     liquidityAmount: liquidityAmount4,
         //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('9999999999999999999'),
-        //     balanceOutIncrease: BigNumber.from('89958926645270816418'),
+        //     balanceInIncrease: BigNumber.from('10000000000000000000'),
+        //     balanceOutIncrease: BigNumber.from('89958926645270816419'),
         //     lowerTickCleared: false,
-        //     upperTickCleared: false,
+        //     upperTickCleared: true,
         //     revertMessage: '',
         // })
 
@@ -661,18 +665,13 @@ describe('CoverPool Tests', function () {
             revertMessage: 'WrongTickClaimedAt()',
         })
 
-        // await validateSwap({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     zeroForOne: false,
-        //     amountIn: tokenAmount.div(10),
-        //     sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
-        //     balanceInDecrease: BigNumber.from('10000000000000000000'),
-        //     balanceOutIncrease: BigNumber.from('10057148104747227162'),
-        //     revertMessage: '',
-        // })
+        
 
         await validateSync(hre.props.admin, '-60')
+
+        console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+
+        
 
         // await validateBurn({
         //     signer: hre.props.alice,

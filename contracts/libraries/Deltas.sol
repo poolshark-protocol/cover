@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import './DyDxMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-
+import 'hardhat/console.sol';
 //TODO: stash and unstash
 //TODO: transfer delta maxes as well in Positions.update()
 library Deltas {
@@ -12,14 +12,19 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
         {
+
             uint128 amountInDeltaChange = uint128(uint256(fromDeltas.amountInDelta) * percentInTransfer / 1e38);
             fromDeltas.amountInDelta -= amountInDeltaChange;
             toDeltas.amountInDelta += amountInDeltaChange;
+            if (toDeltas.amountInDeltaMax == 49775510468905145992) {
+                console.log('hi');
+                console.log(amountInDeltaChange);
+            }
         }
         {
             uint128 amountOutDeltaChange = uint128(uint256(fromDeltas.amountOutDelta) * percentOutTransfer / 1e38);
@@ -87,6 +92,18 @@ library Deltas {
             toDeltas.amountOutDelta += amountOutDeltaChange;
         }
         return (fromTick, toDeltas);
+    }
+
+    function onto(
+        ICoverPoolStructs.Deltas memory fromDeltas,
+        ICoverPoolStructs.Tick memory toTick
+    ) external view returns (
+        ICoverPoolStructs.Deltas memory,
+        ICoverPoolStructs.Tick memory
+    ) {
+        fromDeltas.amountInDeltaMax -= toTick.deltas.amountInDeltaMax;
+        fromDeltas.amountOutDeltaMax -= toTick.deltas.amountOutDeltaMax;
+        return (fromDeltas, toTick);
     }
 
     function to(

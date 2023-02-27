@@ -372,14 +372,14 @@ library Positions {
                                                                : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
 
-        console.log('amountIn check:');
-        console.log(cache.amountInFilledMax);
-        console.log(cache.position.amountOut);
-        console.log(cache.position.claimPriceLast);
+        // console.log('amountIn check:');
+        // console.log(cache.amountInFilledMax);
+        // console.log(cache.position.amountOut);
+        // console.log(cache.position.claimPriceLast);
         // section 2 - position start up to claim tick
         if (cache.position.claimPriceLast != cache.priceClaim) {
             // calculate if we at least cover one full tick
-            console.log('section 2 check');
+            // console.log('section 2 check');
             uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
             (
                 amountInFilledMax,
@@ -400,7 +400,7 @@ library Positions {
         // section 3 - current auction unfilled section
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                console.log('section 3 check');
+                // console.log('section 3 check');
             // if auction is live
             if (params.amount > 0) {
                 // remove if burn
@@ -427,7 +427,7 @@ library Positions {
             }
             // section 4 - current auction filled section
             {
-                console.log('section 4 check');
+                // console.log('section 4 check');
                 // amounts claimed on this update
                 uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
                 (
@@ -480,9 +480,9 @@ library Positions {
                     pool.amountInDeltaMaxClaimed  -= amountInMaxClaimedBefore;
                     pool.amountOutDeltaMaxClaimed -= amountOutMaxClaimedBefore;
             }
-            console.log('pool claims');
-            console.log(pool.amountInDeltaMaxClaimed);
-            console.log(pool.amountOutDeltaMaxClaimed);
+            // console.log('pool claims');
+            // console.log(pool.amountInDeltaMaxClaimed);
+            // console.log(pool.amountOutDeltaMaxClaimed);
             // modify claim price for section 5
             cache.priceClaim = cache.priceSpread;
         }
@@ -509,10 +509,10 @@ library Positions {
             }
         }
         // adjust based on deltas
-        console.log('final deltas');
-        console.log(cache.deltas.amountOutDelta);
-        console.log(cache.amountInFilledMax);
-        console.log(cache.amountOutUnfilledMax);
+        // console.log('final deltas');
+        // console.log(cache.deltas.amountOutDelta);
+        // console.log(cache.amountInFilledMax);
+        // console.log(cache.amountOutUnfilledMax);
         if (cache.amountInFilledMax > 0) {
             // calculate deltas applied
             uint256 percentInDelta; uint256 percentOutDelta;
@@ -566,9 +566,9 @@ library Positions {
         ticks[params.claim] = cache.claimTick;
         tickNodes[params.claim] = cache.claimTickNode;
         // update pool liquidity
-        console.log('check pool liquidity');
-        console.log(pool.liquidity);
-        console.log(params.amount);
+        // console.log('check pool liquidity');
+        // console.log(pool.liquidity);
+        // console.log(params.amount);
         if (state.latestTick == params.claim
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) 
             pool.liquidity -= params.amount;

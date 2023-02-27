@@ -28,7 +28,6 @@ export interface TickNode {
 
 export interface Tick {
     liquidityDelta: BigNumber
-    liquidityDeltaMinusInactive: BigNumber
     amountInDeltaMaxStashed: BigNumber
     amountOutDeltaMaxStashed: BigNumber
     deltas: Deltas

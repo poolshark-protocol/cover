@@ -37,7 +37,6 @@ interface ICoverPoolStructs {
 
     struct Tick {
         int128  liquidityDelta;
-        uint128 liquidityDeltaMinusInactive;
         uint128 amountInDeltaMaxStashed;
         uint128 amountOutDeltaMaxStashed;
         Deltas deltas;

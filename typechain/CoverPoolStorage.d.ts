@@ -247,7 +247,6 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
         [BigNumber, BigNumber, BigNumber, BigNumber] & {
           amountInDelta: BigNumber;
           amountInDeltaMax: BigNumber;
@@ -256,7 +255,6 @@ export class CoverPoolStorage extends BaseContract {
         }
       ] & {
         liquidityDelta: BigNumber;
-        liquidityDeltaMinusInactive: BigNumber;
         amountInDeltaMaxStashed: BigNumber;
         amountOutDeltaMaxStashed: BigNumber;
         deltas: [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -276,7 +274,6 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
         [BigNumber, BigNumber, BigNumber, BigNumber] & {
           amountInDelta: BigNumber;
           amountInDeltaMax: BigNumber;
@@ -285,7 +282,6 @@ export class CoverPoolStorage extends BaseContract {
         }
       ] & {
         liquidityDelta: BigNumber;
-        liquidityDeltaMinusInactive: BigNumber;
         amountInDeltaMaxStashed: BigNumber;
         amountOutDeltaMaxStashed: BigNumber;
         deltas: [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -410,7 +406,6 @@ export class CoverPoolStorage extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      BigNumber,
       [BigNumber, BigNumber, BigNumber, BigNumber] & {
         amountInDelta: BigNumber;
         amountInDeltaMax: BigNumber;
@@ -419,7 +414,6 @@ export class CoverPoolStorage extends BaseContract {
       }
     ] & {
       liquidityDelta: BigNumber;
-      liquidityDeltaMinusInactive: BigNumber;
       amountInDeltaMaxStashed: BigNumber;
       amountOutDeltaMaxStashed: BigNumber;
       deltas: [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -439,7 +433,6 @@ export class CoverPoolStorage extends BaseContract {
       BigNumber,
       BigNumber,
       BigNumber,
-      BigNumber,
       [BigNumber, BigNumber, BigNumber, BigNumber] & {
         amountInDelta: BigNumber;
         amountInDeltaMax: BigNumber;
@@ -448,7 +441,6 @@ export class CoverPoolStorage extends BaseContract {
       }
     ] & {
       liquidityDelta: BigNumber;
-      liquidityDeltaMinusInactive: BigNumber;
       amountInDeltaMaxStashed: BigNumber;
       amountOutDeltaMaxStashed: BigNumber;
       deltas: [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -589,7 +581,6 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
         [BigNumber, BigNumber, BigNumber, BigNumber] & {
           amountInDelta: BigNumber;
           amountInDeltaMax: BigNumber;
@@ -598,7 +589,6 @@ export class CoverPoolStorage extends BaseContract {
         }
       ] & {
         liquidityDelta: BigNumber;
-        liquidityDeltaMinusInactive: BigNumber;
         amountInDeltaMaxStashed: BigNumber;
         amountOutDeltaMaxStashed: BigNumber;
         deltas: [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -618,7 +608,6 @@ export class CoverPoolStorage extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
         [BigNumber, BigNumber, BigNumber, BigNumber] & {
           amountInDelta: BigNumber;
           amountInDeltaMax: BigNumber;
@@ -627,7 +616,6 @@ export class CoverPoolStorage extends BaseContract {
         }
       ] & {
         liquidityDelta: BigNumber;
-        liquidityDeltaMinusInactive: BigNumber;
         amountInDeltaMaxStashed: BigNumber;
         amountOutDeltaMaxStashed: BigNumber;
         deltas: [BigNumber, BigNumber, BigNumber, BigNumber] & {
