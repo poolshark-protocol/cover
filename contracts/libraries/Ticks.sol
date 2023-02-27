@@ -132,20 +132,17 @@ library Ticks {
                 tickNodes[state.latestTick] = ICoverPoolStructs.TickNode(
                     TickMath.MIN_TICK,
                     TickMath.MAX_TICK,
-                    state.accumEpoch,
-                    0
+                    state.accumEpoch
                 );
                 tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
                     TickMath.MIN_TICK,
                     state.latestTick,
-                    state.accumEpoch,
-                    0
+                    state.accumEpoch
                 );
                 tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
                     state.latestTick,
                     TickMath.MAX_TICK,
-                    state.accumEpoch,
-                    0
+                    state.accumEpoch
                 );
 
                 pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread);
@@ -183,16 +180,16 @@ library Ticks {
             // tick exists
             if (isPool0) {
                 tickLower.liquidityDelta -= int128(amount);
-                tickNodeLower.liquidityDeltaMinus += amount;
+                tickLower.liquidityDeltaMinus += amount;
             } else {
                 tickLower.liquidityDelta += int128(amount);
             }
         } else {
             // tick does not exist
             if (isPool0) {
-                tickLower = ICoverPoolStructs.Tick(-int128(amount), 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickLower = ICoverPoolStructs.Tick(-int128(amount), amount, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             } else {
-                tickLower = ICoverPoolStructs.Tick(int128(amount), 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickLower = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             }
             /// @auditor new latestTick being in between lowerOld and lower handled by Positions.validate()
             int24 oldNextTick = tickNodes[lowerOld].nextTick;
@@ -207,22 +204,23 @@ library Ticks {
             if (lowerOld >= lower || lower >= oldNextTick) {
                 revert WrongTickLowerOld();
             }
-            tickNodeLower = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0, amount);
+            tickNodeLower = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0);
             tickNodes[lowerOld].nextTick = lower;
         }
+
         /// @auditor -> is it safe to add to liquidityDelta w/o Tick struct initialization
         if (tickNodeUpper.nextTick != tickNodeUpper.previousTick) {
             if (isPool0) {
                 tickUpper.liquidityDelta += int128(amount);
             } else {
                 tickUpper.liquidityDelta -= int128(amount);
-                tickNodeUpper.liquidityDeltaMinus += amount;
+                tickUpper.liquidityDeltaMinus += amount;
             }
         } else {
             if (isPool0) {
-                tickUpper = ICoverPoolStructs.Tick(int128(amount), 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickUpper = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             } else {
-                tickUpper = ICoverPoolStructs.Tick(-int128(amount), amount, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
+                tickUpper = ICoverPoolStructs.Tick(-int128(amount), amount, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
             }
             int24 oldPrevTick = tickNodes[upperOld].previousTick;
             if (lower > oldPrevTick) oldPrevTick = lower;
@@ -235,7 +233,7 @@ library Ticks {
             ) {
                 revert WrongTickUpperOld();
             }
-            tickNodeUpper = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0, 0);
+            tickNodeUpper = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0);
             tickNodes[oldPrevTick].nextTick = upper;
             tickNodes[upperOld].previousTick = upper;
         }
@@ -243,6 +241,7 @@ library Ticks {
         ticks[upper] = tickUpper;
         tickNodes[lower] = tickNodeLower;
         tickNodes[upper] = tickNodeUpper;
+
         return state;
     }
 
@@ -253,6 +252,7 @@ library Ticks {
         int24 lower,
         int24 upper,
         uint128 amount,
+        uint128 amountStashed,
         bool isPool0,
         bool removeLower,
         bool removeUpper
@@ -264,18 +264,16 @@ library Ticks {
         //TODO: can be handled by using inactiveLiquidity == 0 and activeLiquidity == 0
         {
             ICoverPoolStructs.Tick memory tickLower = ticks[lower];
-            ICoverPoolStructs.TickNode memory tickNodeLower = tickNodes[lower];
             if (removeLower) {
                 if (isPool0) {
                     tickLower.liquidityDelta += int128(amount);
-                    tickNodeLower.liquidityDeltaMinus -= amount;
+                    tickLower.liquidityDeltaMinus -= amount;
                 } else {
                     tickLower.liquidityDelta -= int128(amount);
                 }
             }
             /// @dev - not deleting ticks just yet
             ticks[lower] = tickLower;
-            tickNodes[lower] = tickNodeLower;
         }
 
         //TODO: can be handled using inactiveLiquidity and activeLiquidity == 0
@@ -284,18 +282,17 @@ library Ticks {
         //TODO: that is the tick that should have liquidity values modified
         //TODO: keep unchecked block?
         {
+            console.log('amount stashed', amountStashed);
             ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
-            ICoverPoolStructs.TickNode memory tickNodeUpper = tickNodes[upper];
             if (removeUpper) {
                 if (isPool0) {
                     tickUpper.liquidityDelta -= int128(amount);
                 } else {
                     tickUpper.liquidityDelta += int128(amount);
-                    tickNodeUpper.liquidityDeltaMinus -= amount;
+                    tickUpper.liquidityDeltaMinus -= amount;
                 }
             }
             ticks[upper] = tickUpper;
-            tickNodes[upper] = tickNodeUpper;
         }
 
         // if (deleteLowerTick) {

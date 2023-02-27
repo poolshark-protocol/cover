@@ -207,6 +207,47 @@ library Deltas {
         );
     }
 
+    function maxTest(
+        uint128 liquidity,
+        uint160 priceStart,
+        uint160 priceEnd,
+        bool   isPool0
+    ) public pure returns (
+        uint128 amountInDeltaMax,
+        uint128 amountOutDeltaMax
+    ) {
+        amountInDeltaMax = uint128(
+            isPool0
+                ? DyDxMath.getDy(
+                    liquidity,
+                    priceEnd,
+                    priceStart,
+                    true
+                )
+                : DyDxMath.getDx(
+                    liquidity,
+                    priceStart,
+                    priceEnd,
+                    true
+                )
+        );
+        amountOutDeltaMax = uint128(
+            isPool0
+                ? DyDxMath.getDx(
+                    liquidity,
+                    priceEnd,
+                    priceStart,
+                    false
+                )
+                : DyDxMath.getDy(
+                    liquidity,
+                    priceStart,
+                    priceEnd,
+                    false
+                )
+        );
+    }
+
     function maxAuction(
         uint128 liquidity,
         uint160 priceStart,
@@ -248,7 +289,7 @@ library Deltas {
         );
     }
 
-    function update (
+    function update(
         ICoverPoolStructs.Deltas memory deltas,
         uint128 amount,
         uint160 priceLower,

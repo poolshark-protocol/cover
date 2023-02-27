@@ -375,11 +375,6 @@ const _abi = [
         name: "accumEpochLast",
         type: "uint32",
       },
-      {
-        internalType: "uint128",
-        name: "liquidityDeltaMinus",
-        type: "uint128",
-      },
     ],
     stateMutability: "view",
     type: "function",
@@ -398,6 +393,11 @@ const _abi = [
         internalType: "int128",
         name: "liquidityDelta",
         type: "int128",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidityDeltaMinus",
+        type: "uint128",
       },
       {
         internalType: "uint128",
@@ -454,6 +454,11 @@ const _abi = [
         internalType: "int128",
         name: "liquidityDelta",
         type: "int128",
+      },
+      {
+        internalType: "uint128",
+        name: "liquidityDeltaMinus",
+        type: "uint128",
       },
       {
         internalType: "uint128",

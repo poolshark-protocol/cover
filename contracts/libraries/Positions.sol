@@ -198,6 +198,7 @@ library Positions {
             params.lower,
             params.upper,
             params.amount,
+            0,
             params.zeroForOne,
             true,
             true
@@ -378,6 +379,8 @@ library Positions {
         // console.log(cache.position.amountOut);
         // console.log(cache.position.claimPriceLast);
         // section 2 - position start up to claim tick
+        console.log('amountIn check 1');
+        console.log(cache.position.amountIn);
         if (cache.position.claimPriceLast != cache.priceClaim) {
             // calculate if we at least cover one full tick
             // console.log('section 2 check');
@@ -444,8 +447,13 @@ library Positions {
                     params.zeroForOne
                 );
                 uint256 poolAmountInDeltaChange = uint256(cache.position.liquidity) * 1e38 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
+                
                 cache.position.amountIn += amountInFilledMax - uint128(poolAmountInDeltaChange);
+                console.log('amountIn check 2');
+        console.log(cache.position.amountIn);
                 pool.amountInDelta -= uint128(poolAmountInDeltaChange);
+                cache.finalDeltas.amountInDeltaMax += amountInFilledMax;
+                cache.finalDeltas.amountOutDeltaMax += amountOutUnfilledMax;
                 /// @dev - record how much delta max was claimed
                 if (params.amount < cache.position.liquidity) {
                     (
@@ -488,6 +496,8 @@ library Positions {
             cache.priceClaim = cache.priceSpread;
         }
         // section 5 - burned liquidity past claim tick
+        console.log('amountIn check 2');
+        console.log(cache.position.amountIn);
         {
             if (params.amount > 0) {
                 // update max deltas based on liquidity removed
@@ -495,7 +505,7 @@ library Positions {
                 (
                     amountInOmitted,
                     amountOutRemoved
-                ) = Deltas.max(
+                ) = Deltas.maxTest(
                     params.amount,
                     cache.priceClaim,
                     params.zeroForOne ? cache.priceLower
@@ -503,66 +513,80 @@ library Positions {
                     params.zeroForOne
                 );
                 cache.position.amountOut += amountOutRemoved;
-                params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
-                                  : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
-                params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
-                                  : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;   
+                if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+                    params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
+                                      : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
+                    params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
+                                      : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
+                }      
             }
         }
+                console.log('amountIn check 3');
+        console.log(cache.position.amountIn);
+        console.log('delta max last tick', ticks[-60].deltas.amountInDeltaMax);
         // adjust based on deltas
         // console.log('final deltas');
         // console.log(cache.deltas.amountOutDelta);
-        // console.log(cache.amountInFilledMax);
+        console.log(cache.amountInFilledMax);
         // console.log(cache.amountOutUnfilledMax);
-        if (cache.amountInFilledMax > 0) {
-            // calculate deltas applied
-            uint256 percentInDelta; uint256 percentOutDelta;
-            if(cache.deltas.amountInDeltaMax > 0) {
-                percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
-                if (cache.deltas.amountOutDeltaMax > 0) {
-                    percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
-                }
-                console.log(cache.amountOutUnfilledMax);
-                console.log(cache.deltas.amountOutDeltaMax);
+        // calculate deltas applied
+        uint256 percentInDelta; uint256 percentOutDelta;
+        if(cache.deltas.amountInDeltaMax > 0) {
+            percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
+            if (cache.deltas.amountOutDeltaMax > 0) {
+                percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
             }
-            // console.log('delta percents:', percentInDelta);
-            // console.log(percentOutDelta);
-            // console.log(cache.deltas.amountInDelta);
-            // console.log('final deltas');
-            // console.log(cache.finalDeltas.amountInDelta);
-            (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
-            (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
-            // apply deltas and add to position
-            // console.log('final deltas');
-            // console.log(cache.finalDeltas.amountInDelta);
-            // console.log(cache.amountInFilledMax);
+            console.log(cache.amountOutUnfilledMax);
+            console.log(cache.deltas.amountOutDeltaMax);
+        }
+        // console.log('delta percents:', percentInDelta);
+        // console.log(percentOutDelta);
+        // console.log(cache.deltas.amountInDelta);
+        // console.log('final deltas');
+        // console.log(cache.finalDeltas.amountInDelta);
+        (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+        (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+        // apply deltas and add to position
+        // console.log('final deltas');
+        // console.log(cache.finalDeltas.amountInDelta);
+        // console.log(cache.amountInFilledMax);
+        if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
             cache.position.amountIn  += uint128(cache.amountInFilledMax) - cache.finalDeltas.amountInDelta;
-            cache.position.amountOut += cache.finalDeltas.amountOutDelta;
-            
-            // add remaining deltas cached back to claim tick
-            // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
-            if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                // burn deltas on final tick of position
-                // console.log('tick deltas check');
-                // console.log(cache.deltas.amountInDelta);
-                ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
-                (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
-                // console.log(cache.deltas.amountInDelta);
-                ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
-                // console.log(cache.deltas.amountInDeltaMax);
-                //TODO: handle partial stashed and partial on tick
-                if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
-                    (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
-                } else {
-                    (cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick);
-                }
-                // console.log(cache.deltas.amountInDelta);
-            } else {
+        cache.position.amountOut += cache.finalDeltas.amountOutDelta;
+        console.log('amountIn check');
+        console.log(cache.position.amountIn);
+        // add remaining deltas cached back to claim tick
+        // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
+        if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+            // burn deltas on final tick of position
+            // console.log('tick deltas check');
+            // console.log(cache.deltas.amountInDelta);
+            ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            console.log('burn deltas');
+            console.log(cache.finalDeltas.amountInDeltaMax);
+            console.log(cache.finalDeltas.amountInDelta);
+            console.log(cache.position.amountIn);
+            (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
+            // console.log(cache.deltas.amountInDelta);
+            ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
+            // console.log(cache.deltas.amountInDeltaMax);
+            //TODO: handle partial stashed and partial on tick
+            if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+            } else {
+                (cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick);
             }
-            if (cache.position.amountIn == 1) {
-                cache.position.amountIn = 0;
-            }
+            // console.log(cache.deltas.amountInDelta);
+        } else {
+            console.log('amountIn check 4');
+            console.log(cache.position.amountIn);
+            console.log('remaining deltas');
+            console.log(cache.deltas.amountInDeltaMax);
+            console.log(cache.deltas.amountInDelta);
+            (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+        }
+        if (cache.position.amountIn > 0) {
+            cache.position.amountIn -= 1;
         }
 
         // save claim tick and tick node
@@ -600,6 +624,7 @@ library Positions {
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 uint128(uint128(params.amount)),
+                cache.position.liquidityStashed,
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper

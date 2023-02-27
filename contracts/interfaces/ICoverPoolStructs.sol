@@ -32,11 +32,11 @@ interface ICoverPoolStructs {
         int24   previousTick;
         int24   nextTick;
         uint32  accumEpochLast; // Used to check for claim updates
-        uint128 liquidityDeltaMinus;
     }
 
     struct Tick {
         int128  liquidityDelta;
+        uint128 liquidityDeltaMinus;
         uint128 amountInDeltaMaxStashed;
         uint128 amountOutDeltaMaxStashed;
         Deltas deltas;

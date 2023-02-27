@@ -28,6 +28,7 @@ export interface TickNode {
 
 export interface Tick {
     liquidityDelta: BigNumber
+    liquidityDeltaMinus: BigNumber
     amountInDeltaMaxStashed: BigNumber
     amountOutDeltaMaxStashed: BigNumber
     deltas: Deltas
@@ -241,14 +242,10 @@ export async function validateMint(params: ValidateMintParams) {
 
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
-    let lowerTickNodeBefore: TickNode
-    let upperTickNodeBefore: TickNode
     let positionBefore: Position
     if (zeroForOne) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-        lowerTickNodeBefore = await hre.props.coverPool.tickNodes(lower)
-        upperTickNodeBefore = await hre.props.coverPool.tickNodes(expectedUpper ? expectedUpper : upper)
         positionBefore = await hre.props.coverPool.positions0(
             recipient,
             lower,
@@ -257,8 +254,6 @@ export async function validateMint(params: ValidateMintParams) {
     } else {
         lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
-        lowerTickNodeBefore = await hre.props.coverPool.tickNodes(expectedLower ? expectedLower : lower)
-        upperTickNodeBefore = await hre.props.coverPool.tickNodes(upper)
         positionBefore = await hre.props.coverPool.positions1(
             recipient,
             expectedLower ? expectedLower : lower,
@@ -294,14 +289,10 @@ export async function validateMint(params: ValidateMintParams) {
 
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
-    let lowerTickNodeAfter: TickNode
-    let upperTickNodeAfter: TickNode
     let positionAfter: Position
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-        lowerTickNodeAfter = await hre.props.coverPool.tickNodes(lower)
-        upperTickNodeAfter = await hre.props.coverPool.tickNodes(expectedUpper ? expectedUpper : upper)
         positionAfter = await hre.props.coverPool.positions0(
             recipient,
             lower,
@@ -310,8 +301,6 @@ export async function validateMint(params: ValidateMintParams) {
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        lowerTickNodeAfter = await hre.props.coverPool.tickNodes(expectedLower ? expectedLower : lower)
-        upperTickNodeAfter = await hre.props.coverPool.tickNodes(upper)
         positionAfter = await hre.props.coverPool.positions1(
             recipient,
             expectedLower ? expectedLower : lower,
@@ -328,22 +317,22 @@ export async function validateMint(params: ValidateMintParams) {
                 liquidityIncrease
             )
             expect(
-                upperTickNodeAfter.liquidityDeltaMinus.sub(upperTickNodeBefore.liquidityDeltaMinus)
+                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         } else {
             expect(upperTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
-            expect(upperTickNodeAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO)
+            expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO)
         }
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
             expect(
-                lowerTickNodeAfter.liquidityDeltaMinus.sub(lowerTickNodeBefore.liquidityDeltaMinus)
+                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
             ).to.be.equal(liquidityIncrease)
         } else {
             expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
-            expect(lowerTickNodeAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
+            expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
         }
     } else {
         if (!lowerTickCleared) {
@@ -351,22 +340,22 @@ export async function validateMint(params: ValidateMintParams) {
                 liquidityIncrease
             )
             expect(
-                lowerTickNodeAfter.liquidityDeltaMinus.sub(lowerTickNodeBefore.liquidityDeltaMinus)
+                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         } else {
             expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
-            expect(lowerTickNodeAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO)
+            expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO)
         }
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
             expect(
-                upperTickNodeAfter.liquidityDeltaMinus.sub(upperTickNodeBefore.liquidityDeltaMinus)
+                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
             ).to.be.equal(liquidityIncrease)
         } else {
             expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
-            expect(upperTickNodeAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
+            expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
         }
     }
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease)
@@ -402,20 +391,14 @@ export async function validateBurn(params: ValidateBurnParams) {
 
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
-    let lowerTickNodeBefore: TickNode
-    let upperTickNodeBefore: TickNode
     let positionBefore: Position
     if (zeroForOne) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(upper)
-        lowerTickNodeBefore = await hre.props.coverPool.tickNodes(lower)
-        upperTickNodeBefore = await hre.props.coverPool.tickNodes(upper)
         positionBefore = await hre.props.coverPool.positions0(signer.address, lower, upper)
     } else {
         lowerTickBefore = await hre.props.coverPool.ticks1(lower)
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
-        lowerTickNodeBefore = await hre.props.coverPool.tickNodes(lower)
-        upperTickNodeBefore = await hre.props.coverPool.tickNodes(upper)
         positionBefore = await hre.props.coverPool.positions1(signer.address, lower, upper)
     }
 
@@ -456,12 +439,8 @@ export async function validateBurn(params: ValidateBurnParams) {
 
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
-    let lowerTickNodeAfter: TickNode
-    let upperTickNodeAfter: TickNode
     let positionAfter: Position
     //TODO: implement expected lower/upper?
-    lowerTickNodeAfter = await hre.props.coverPool.tickNodes(lower)
-    upperTickNodeAfter = await hre.props.coverPool.tickNodes(upper)
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
@@ -478,14 +457,14 @@ export async function validateBurn(params: ValidateBurnParams) {
                 BN_ZERO.sub(liquidityAmount)
             )
             expect(
-                upperTickNodeAfter.liquidityDeltaMinus.sub(upperTickNodeBefore.liquidityDeltaMinus)
+                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
             expect(
-                upperTickNodeAfter.liquidityDeltaMinus.sub(upperTickNodeBefore.liquidityDeltaMinus)
+                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         }
         if (!lowerTickCleared) {
@@ -493,14 +472,14 @@ export async function validateBurn(params: ValidateBurnParams) {
                 liquidityAmount
             )
             expect(
-                lowerTickNodeAfter.liquidityDeltaMinus.sub(lowerTickNodeBefore.liquidityDeltaMinus)
+                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO.sub(liquidityAmount))
         } else {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
             expect(
-                lowerTickNodeAfter.liquidityDeltaMinus.sub(lowerTickNodeBefore.liquidityDeltaMinus)
+                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         }
     } else {
@@ -510,14 +489,14 @@ export async function validateBurn(params: ValidateBurnParams) {
                 BN_ZERO.sub(liquidityAmount)
             )
             expect(
-                lowerTickNodeAfter.liquidityDeltaMinus.sub(lowerTickNodeBefore.liquidityDeltaMinus)
+                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         } else {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
             expect(
-                lowerTickNodeAfter.liquidityDeltaMinus.sub(lowerTickNodeBefore.liquidityDeltaMinus)
+                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         }
         if (!upperTickCleared) {
@@ -525,14 +504,14 @@ export async function validateBurn(params: ValidateBurnParams) {
                 liquidityAmount
             )
             expect(
-                upperTickNodeAfter.liquidityDeltaMinus.sub(upperTickNodeBefore.liquidityDeltaMinus)
+                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO.sub(liquidityAmount))
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
             expect(
-                upperTickNodeAfter.liquidityDeltaMinus.sub(upperTickNodeBefore.liquidityDeltaMinus)
+                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
             ).to.be.equal(BN_ZERO)
         }
     }

@@ -325,6 +325,9 @@ contract CoverPool is
                 //TODO: add this delta across ticks in syncLatest / Positions.update
                 _transferOut(recipient, token1, cache.input);
             }
+            console.log(amountOut);
+            console.log(cache.liquidity);
+            console.log(ERC20(token0).balanceOf(address(this)));
             _transferOut(recipient, token0, amountOut);
             emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }
