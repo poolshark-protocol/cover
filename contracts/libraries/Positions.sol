@@ -250,7 +250,8 @@ library Positions {
             claimTickNode: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0)
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
         });
 
         // validate position liquidity
@@ -348,7 +349,6 @@ library Positions {
         } else if (cache.position.claimPriceLast != (params.zeroForOne ? cache.priceUpper 
                                                                        : cache.priceLower)
                    && cache.priceClaim > cache.priceSpread ) {
-                    console.log('section 1 check');
             // section 1 - complete previous auction claim
             {
                 // amounts claimed on this update
@@ -423,7 +423,6 @@ library Positions {
                                   : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
                 //TODO: update amountInDelta on pool at end
                 //TODO: update amounIn/OutDeltaMax on lower : upper tick for section 3
-                pool.liquidity -= params.amount;
                 console.log(pool.liquidity);
             }
             // section 4 - current auction filled section
@@ -444,11 +443,13 @@ library Positions {
                     params.zeroForOne
                 );
                 cache.amountInFilledMax += amountInFilledMax;
-                cache.deltas.amountInDelta += pool.amountInDelta;
-                cache.deltas.amountInDeltaMax += amountInFilledMax;
+                console.log(pool.liquidity);
+                uint256 poolAmountInDeltaChange = uint256(cache.position.liquidity) * 1e38 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
+                cache.finalDeltas.amountInDelta += uint128(poolAmountInDeltaChange);
+                pool.amountInDelta -= uint128(poolAmountInDeltaChange);
                 console.log('new claim');
                 console.log(cache.amountInFilledMax);
-                console.log(cache.deltas.amountInDelta);
+                console.log(cache.finalDeltas.amountInDelta);
                 console.log(cache.amountInFilledMax - cache.deltas.amountInDelta);
                 /// @dev - record how much delta max was claimed
                 if (params.amount < cache.position.liquidity) {
@@ -517,29 +518,46 @@ library Positions {
         console.log(cache.deltas.amountOutDelta);
         console.log(cache.amountInFilledMax);
         console.log(cache.amountOutUnfilledMax);
-        if (cache.deltas.amountInDeltaMax > 0) {
+        if (cache.amountInFilledMax > 0) {
             // calculate deltas applied
-            ICoverPoolStructs.Deltas memory finalDeltas = ICoverPoolStructs.Deltas(0,0,0,0);
-            uint256 percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
-            uint256 percentOutDelta;
-            if (cache.deltas.amountOutDeltaMax > 0) {
-                percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
+            uint256 percentInDelta; uint256 percentOutDelta;
+            if(cache.deltas.amountInDeltaMax > 0) {
+                percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
+                if (cache.deltas.amountOutDeltaMax > 0) {
+                    percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
+                }
             }
+            console.log(cache.deltas.amountInDelta);
             //TODO: also need to transfer maxes
-            (cache.deltas, finalDeltas) = Deltas.transfer(cache.deltas, finalDeltas, percentInDelta, percentOutDelta);
+            console.log('final deltas');
+            console.log(cache.finalDeltas.amountInDelta);
+            (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+            (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
             // apply deltas and add to position
             console.log('final deltas');
-            console.log(finalDeltas.amountInDelta);
-            cache.position.amountIn  += uint128(cache.amountInFilledMax) - finalDeltas.amountInDelta;
-            cache.position.amountOut += finalDeltas.amountOutDelta;
+            console.log(cache.finalDeltas.amountInDelta);
+            console.log(cache.amountInFilledMax);
+            cache.position.amountIn  += uint128(cache.amountInFilledMax) - cache.finalDeltas.amountInDelta;
+            cache.position.amountOut += cache.finalDeltas.amountOutDelta;
             
             // add remaining deltas cached back to claim tick
             // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
             if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
                 // burn deltas on final tick of position
+                console.log('tick deltas check');
+                console.log(cache.deltas.amountInDelta);
                 ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
-                (updateTick.deltas) = Deltas.burn(updateTick.deltas, finalDeltas, true);
-                (cache.deltas, cache.claimTick) = Deltas.stash(finalDeltas, cache.claimTick);
+                (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
+                console.log(cache.deltas.amountInDelta);
+                ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
+                console.log(cache.deltas.amountInDeltaMax);
+                //TODO: handle partial stashed and partial on tick
+                if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
+                    (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+                } else {
+                    (cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick);
+                }
+                console.log(cache.deltas.amountInDelta);
             } else {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
             }
@@ -547,6 +565,12 @@ library Positions {
                 cache.position.amountIn = 0;
             }
         }
+
+        // save claim tick and tick node
+        ticks[params.claim] = cache.claimTick;
+        tickNodes[params.claim] = cache.claimTickNode;
+        // update pool liquidity
+        pool.liquidity -= params.amount;
         
         /// @dev - mark last claim price
         cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
@@ -557,12 +581,7 @@ library Positions {
         if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
         /// @dev - if tick 100% filled, set CPL to next tick to unlock
         if (pool.price == cache.priceClaim && params.claim == state.latestTick) cache.position.claimPriceLast = cache.priceClaim;
-
-        // save claim tick and tick node
-        ticks[params.claim] = cache.claimTick;
-        tickNodes[params.claim] = cache.claimTickNode;
         /// @dev - prior to Ticks.remove() so we don't overwrite liquidity delta changes
-
         // if burn or second mint
         //TODO: handle claim of current auction and second mint
         if ((params.amount > 0)) {
@@ -593,7 +612,6 @@ library Positions {
             cache.position.claimPriceLast = 0;
             cache.position.claimCheckpoint = 0;
         }
-
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;

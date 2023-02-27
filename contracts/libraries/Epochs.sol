@@ -111,9 +111,8 @@ library Epochs {
             /// @dev - update amount deltas on stopTick
             ICoverPoolStructs.Tick memory stopTick0 = ticks0[cache.stopTick0];
             ICoverPoolStructs.TickNode memory stopTickNode0 = tickNodes[cache.stopTick0];
-            (stopTick0, stopTickNode0) = _stash(
+            (stopTick0) = _stash(
                 stopTick0,
-                stopTickNode0,
                 cache,
                 pool0.liquidity,
                 true
@@ -131,7 +130,7 @@ library Epochs {
                     );
                 }
                 if (cache.nextTickToCross0 != nextLatestTick) {
-                    tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
+                    stopTickNode0 = ICoverPoolStructs.TickNode(
                         cache.nextTickToAccum0,
                         cache.nextTickToCross0,
                         state.accumEpoch,
@@ -207,9 +206,8 @@ library Epochs {
             /// @dev - update amount deltas on stopTick
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
             ICoverPoolStructs.TickNode memory stopTickNode1 = tickNodes[cache.stopTick1];
-            (stopTick1, stopTickNode1) = _stash(
+            (stopTick1) = _stash(
                 stopTick1,
-                stopTickNode1,
                 cache,
                 pool1.liquidity,
                 false
@@ -217,7 +215,10 @@ library Epochs {
             if (nextLatestTick > state.latestTick) {
                 // if this is true we need to insert new latestTick
                 if (cache.nextTickToAccum1 != nextLatestTick) {
-                    tickNodes[nextLatestTick] = ICoverPoolStructs.TickNode(
+                    console.log('nextlatesttick check');
+                    console.logInt(cache.nextTickToCross1);
+                    console.logInt(cache.nextTickToAccum1);
+                    stopTickNode1 = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
                         state.accumEpoch,
@@ -259,7 +260,6 @@ library Epochs {
         state.latestTick = nextLatestTick;
         state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
         // console.log("-- END ACCUMULATE LAST BLOCK --");
-
         return (state, pool0, pool1);
     }
 
@@ -446,13 +446,12 @@ library Epochs {
 
     function _stash(
         ICoverPoolStructs.Tick memory stashTick,
-        ICoverPoolStructs.TickNode memory stashTickNode,
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory, ICoverPoolStructs.TickNode memory) {
+    ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
-        if (currentLiquidity == 0) return (stashTick, stashTickNode);
+        if (currentLiquidity == 0) return (stashTick);
         // handle amount in delta
         console.log('stashing');
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
@@ -466,6 +465,6 @@ library Epochs {
         stashTick.amountInDeltaMaxStashed  += deltas.amountInDeltaMax;
         stashTick.amountOutDeltaMaxStashed += deltas.amountOutDeltaMax;
         
-        return (stashTick, stashTickNode);
+        return (stashTick);
     }
 }

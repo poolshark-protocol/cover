@@ -235,7 +235,7 @@ describe('CoverPool Tests', function () {
         expect(upperTickNode.nextTick.toString()).to.be.equal('0')
     })
 
-    it('pool0 - Should mint, swap, and then claim entire range 14', async function () {
+    it('pool0 - Should mint, swap, and then claim entire range 76', async function () {
         await validateSync(hre.props.alice, '0')
 
         await validateMint({
@@ -256,6 +256,8 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(hre.props.alice, '-20')
+
+        console.log((await hre.props.coverPool.pool0()).toString())
 
         await validateSwap({
             signer: hre.props.alice,
@@ -298,10 +300,10 @@ describe('CoverPool Tests', function () {
 
         await validateBurn({
             signer: hre.props.alice,
-            lower: '20',
-            claim: '20',
-            upper: '40',
-            liquidityAmount: liquidityAmount,
+            lower: '-40',
+            claim: '-20',
+            upper: '-20',
+            liquidityAmount: BigNumber.from('1'),
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
@@ -309,6 +311,8 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'NotEnoughPositionLiquidity()',
         })
+
+        console.log((await (hre.props.coverPool.ticks0("-20"))).toString())
     })
 
     it('pool0 - Should revert if tick not divisible by tickSpread', async function () {
@@ -350,7 +354,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should swap with zero output 22', async function () {
+    it('pool0 - Should swap with zero output', async function () {
         // move TWAP to tick 0
         await validateSync(hre.props.admin, '0')
 
@@ -397,7 +401,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should handle partial mint 13', async function () {
+    it('pool0 - Should handle partial mint 20', async function () {
         const liquidityAmount3 = BigNumber.from('49952516624167694475096')
         const tokenAmount3 = BigNumber.from('50024998748000306423')
         // move TWAP to tick 0
@@ -461,12 +465,12 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should handle partial range cross w/ unfilled amount 76', async function () {
+    it('pool0 - Should handle partial range cross w/ unfilled amount 77', async function () {
         const liquidityAmount4 = BigNumber.from('49952516624167694475096')
         //TODO: 124905049859212811 leftover from precision loss
-
+        console.log((await hre.props.coverPool.tickNodes("20")).toString())
         await validateSync(hre.props.admin, '20')
-
+        console.log((await hre.props.coverPool.tickNodes("0")).toString())
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -495,9 +499,10 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        console.log((await hre.props.coverPool.tickNodes("20")).toString())
         await validateSync(hre.props.admin, '-20')
 
-        console.log((await hre.props.coverPool.ticks0("-20")).toString())
+        // console.log((await hre.props.coverPool.ticks0("-20")).toString())
 
         await validateSwap({
             signer: hre.props.alice,

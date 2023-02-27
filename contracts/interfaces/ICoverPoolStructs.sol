@@ -129,6 +129,7 @@ interface ICoverPoolStructs {
         TickNode claimTickNode;
         Position position;
         Deltas deltas;
+        Deltas finalDeltas;
     }
 
     struct AccumulateCache {

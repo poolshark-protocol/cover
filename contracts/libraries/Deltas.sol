@@ -29,6 +29,28 @@ library Deltas {
         return (fromDeltas, toDeltas);
     }
 
+    function transferMax(
+        ICoverPoolStructs.Deltas memory fromDeltas,
+        ICoverPoolStructs.Deltas memory toDeltas,
+        uint256 percentInTransfer,
+        uint256 percentOutTransfer
+    ) external pure returns (
+        ICoverPoolStructs.Deltas memory,
+        ICoverPoolStructs.Deltas memory
+    ) {
+        {
+            uint128 amountInDeltaMaxChange = uint128(uint256(fromDeltas.amountInDeltaMax) * percentInTransfer / 1e38);
+            fromDeltas.amountInDeltaMax -= amountInDeltaMaxChange;
+            toDeltas.amountInDeltaMax += amountInDeltaMaxChange;
+        }
+        {
+            uint128 amountOutDeltaMaxChange = uint128(uint256(fromDeltas.amountOutDeltaMax) * percentOutTransfer / 1e38);
+            fromDeltas.amountOutDeltaMax -= amountOutDeltaMaxChange;
+            toDeltas.amountOutDeltaMax += amountOutDeltaMaxChange;
+        }
+        return (fromDeltas, toDeltas);
+    }
+
     function burn(
         ICoverPoolStructs.Deltas memory fromDeltas,
         ICoverPoolStructs.Deltas memory burnDeltas,
