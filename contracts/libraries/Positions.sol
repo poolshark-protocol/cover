@@ -329,6 +329,7 @@ library Positions {
         // transfer deltas into cache
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
             (cache.claimTick, cache.deltas) = Deltas.from(cache.claimTick, cache.deltas);
+            // console.log()
         } else {
             /// @dev - deltas are applied once per each tick claimed at
             /// @dev - deltas should never be applied if position is not crossed into
@@ -521,6 +522,8 @@ library Positions {
                 if (cache.deltas.amountOutDeltaMax > 0) {
                     percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
                 }
+                console.log(cache.amountOutUnfilledMax);
+                console.log(cache.deltas.amountOutDeltaMax);
             }
             // console.log('delta percents:', percentInDelta);
             // console.log(percentOutDelta);

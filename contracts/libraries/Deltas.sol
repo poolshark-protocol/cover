@@ -84,12 +84,16 @@ library Deltas {
             uint128 amountInDeltaChange = uint128(uint256(fromTick.deltas.amountInDelta) * percentOnTick / 1e38);
             fromTick.deltas.amountInDelta -= amountInDeltaChange;
             toDeltas.amountInDelta += amountInDeltaChange;
+            toDeltas.amountInDeltaMax += fromTick.deltas.amountInDeltaMax;
+            fromTick.deltas.amountInDeltaMax = 0;
         }
         percentOnTick = uint256(fromTick.deltas.amountOutDeltaMax) * 1e38 / (uint256(fromTick.deltas.amountOutDeltaMax) + uint256(fromTick.amountOutDeltaMaxStashed));
         {
             uint128 amountOutDeltaChange = uint128(uint256(fromTick.deltas.amountOutDelta) * percentOnTick / 1e38);
             fromTick.deltas.amountOutDelta -= amountOutDeltaChange;
             toDeltas.amountOutDelta += amountOutDeltaChange;
+            toDeltas.amountOutDeltaMax += fromTick.deltas.amountOutDeltaMax;
+            fromTick.deltas.amountOutDeltaMax = 0;
         }
         return (fromTick, toDeltas);
     }
