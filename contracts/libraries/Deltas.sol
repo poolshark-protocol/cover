@@ -17,14 +17,9 @@ library Deltas {
         ICoverPoolStructs.Deltas memory
     ) {
         {
-
             uint128 amountInDeltaChange = uint128(uint256(fromDeltas.amountInDelta) * percentInTransfer / 1e38);
             fromDeltas.amountInDelta -= amountInDeltaChange;
             toDeltas.amountInDelta += amountInDeltaChange;
-            if (toDeltas.amountInDeltaMax == 49775510468905145992) {
-                console.log('hi');
-                console.log(amountInDeltaChange);
-            }
         }
         {
             uint128 amountOutDeltaChange = uint128(uint256(fromDeltas.amountOutDelta) * percentOutTransfer / 1e38);
@@ -45,13 +40,23 @@ library Deltas {
     ) {
         {
             uint128 amountInDeltaMaxChange = uint128(uint256(fromDeltas.amountInDeltaMax) * percentInTransfer / 1e38);
-            fromDeltas.amountInDeltaMax -= amountInDeltaMaxChange;
-            toDeltas.amountInDeltaMax += amountInDeltaMaxChange;
+            if (fromDeltas.amountInDeltaMax > amountInDeltaMaxChange) {
+                fromDeltas.amountInDeltaMax -= amountInDeltaMaxChange;
+                toDeltas.amountInDeltaMax += amountInDeltaMaxChange;
+            } else {
+                toDeltas.amountInDeltaMax += fromDeltas.amountInDeltaMax;
+                fromDeltas.amountOutDeltaMax = 0;
+            }
         }
         {
             uint128 amountOutDeltaMaxChange = uint128(uint256(fromDeltas.amountOutDeltaMax) * percentOutTransfer / 1e38);
-            fromDeltas.amountOutDeltaMax -= amountOutDeltaMaxChange;
-            toDeltas.amountOutDeltaMax += amountOutDeltaMaxChange;
+            if (fromDeltas.amountOutDeltaMax > amountOutDeltaMaxChange) {
+                fromDeltas.amountOutDeltaMax -= amountOutDeltaMaxChange;
+                toDeltas.amountOutDeltaMax   += amountOutDeltaMaxChange;
+            } else {
+                toDeltas.amountOutDeltaMax += fromDeltas.amountOutDeltaMax;
+                fromDeltas.amountOutDeltaMax = 0;
+            }
         }
         return (fromDeltas, toDeltas);
     }
@@ -105,8 +110,17 @@ library Deltas {
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Tick memory
     ) {
-        fromDeltas.amountInDeltaMax -= toTick.deltas.amountInDeltaMax;
-        fromDeltas.amountOutDeltaMax -= toTick.deltas.amountOutDeltaMax;
+        if (fromDeltas.amountInDeltaMax > toTick.deltas.amountInDeltaMax) {
+            fromDeltas.amountInDeltaMax -= toTick.deltas.amountInDeltaMax;
+        } else {
+            fromDeltas.amountInDeltaMax = 0;
+        }
+        if (fromDeltas.amountOutDeltaMax > toTick.deltas.amountOutDeltaMax) {
+            fromDeltas.amountOutDeltaMax -= toTick.deltas.amountOutDeltaMax;
+        } else {
+            fromDeltas.amountOutDeltaMax = 0;
+        }
+        
         return (fromDeltas, toTick);
     }
 
@@ -149,18 +163,25 @@ library Deltas {
     ) {
         toDeltas.amountInDeltaMax  += fromTick.amountInDeltaMaxStashed;
         toDeltas.amountOutDeltaMax += fromTick.amountOutDeltaMaxStashed;
-        uint256 percentStashed = uint256(fromTick.amountInDeltaMaxStashed) * 1e38 / uint256(fromTick.amountInDeltaMaxStashed + fromTick.deltas.amountInDeltaMax);
-        {
+        
+        uint256 totalDeltaMax = uint256(fromTick.amountInDeltaMaxStashed) + uint256(fromTick.deltas.amountInDeltaMax);
+        
+        if (totalDeltaMax > 0) {
+            uint256 percentStashed = uint256(fromTick.amountInDeltaMaxStashed) * 1e38 / totalDeltaMax;
             uint128 amountInDeltaChange = uint128(uint256(fromTick.deltas.amountInDelta) * percentStashed / 1e38);
             fromTick.deltas.amountInDelta -= amountInDeltaChange;
             toDeltas.amountInDelta += amountInDeltaChange;
         }
-        percentStashed = uint256(fromTick.amountOutDeltaMaxStashed) * 1e38 / uint256(fromTick.amountOutDeltaMaxStashed + fromTick.deltas.amountOutDeltaMax);
-        {
+        
+        totalDeltaMax = uint256(fromTick.amountOutDeltaMaxStashed) + uint256(fromTick.deltas.amountOutDeltaMax);
+        
+        if (totalDeltaMax > 0) {
+            uint256 percentStashed = uint256(fromTick.amountOutDeltaMaxStashed) * 1e38 / totalDeltaMax;
             uint128 amountOutDeltaChange = uint128(uint256(fromTick.deltas.amountOutDelta) * percentStashed / 1e38);
             fromTick.deltas.amountOutDelta -= amountOutDeltaChange;
             toDeltas.amountOutDelta += amountOutDeltaChange;
         }
+
         fromTick.amountInDeltaMaxStashed = 0;
         fromTick.amountOutDeltaMaxStashed = 0;
         return (fromTick, toDeltas);

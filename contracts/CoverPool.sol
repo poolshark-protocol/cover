@@ -236,9 +236,9 @@ contract CoverPool is
         uint128 amountOut = positions[msg.sender][lower][upper].amountOut;
 
         console.log('amountIn:', amountIn);
-        console.log(ERC20(token1).balanceOf(address(this)));
+        console.log(zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
         console.log('amountOut:', amountOut);
-        console.log(ERC20(token0).balanceOf(address(this)));
+        console.log(zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
 
         // zero out balances
         positions[msg.sender][lower][upper].amountIn = 0;
@@ -312,7 +312,6 @@ contract CoverPool is
             pool0.price = uint160(cache.price);
             pool0.amountInDelta += uint128(cache.amountInDelta);
         }
-        console.log('pool0 delta:', pool0.amountInDelta);
 
         if (zeroForOne) {
             if (cache.input > 0) {
@@ -325,9 +324,6 @@ contract CoverPool is
                 //TODO: add this delta across ticks in syncLatest / Positions.update
                 _transferOut(recipient, token1, cache.input);
             }
-            console.log(amountOut);
-            console.log(cache.liquidity);
-            console.log(ERC20(token0).balanceOf(address(this)));
             _transferOut(recipient, token0, amountOut);
             emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }

@@ -282,7 +282,6 @@ library Ticks {
         //TODO: that is the tick that should have liquidity values modified
         //TODO: keep unchecked block?
         {
-            console.log('amount stashed', amountStashed);
             ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
             if (removeUpper) {
                 if (isPool0) {

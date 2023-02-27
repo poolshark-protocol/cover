@@ -212,9 +212,6 @@ library Epochs {
             if (nextLatestTick > state.latestTick) {
                 // if this is true we need to insert new latestTick
                 if (cache.nextTickToAccum1 != nextLatestTick) {
-                    console.log('nextlatesttick check');
-                    console.logInt(cache.nextTickToCross1);
-                    console.logInt(cache.nextTickToAccum1);
                     stopTickNode1 = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
@@ -314,9 +311,6 @@ library Epochs {
             cache.deltas0.amountInDeltaMax += amountInDeltaMax;
             cache.deltas0.amountOutDelta += amountOutDelta;
             cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
-            console.log('rollover deltas check');
-            console.log(cache.deltas0.amountInDelta);
-            console.log(cache.deltas0.amountOutDelta);
         } else {
             // amountIn pool did not receive
             uint128 amountInDelta = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, currentPrice, false));
@@ -367,13 +361,10 @@ library Epochs {
         }
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
-            console.log('update accum deltas');
             ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
             if (accumTick.deltas.amountInDeltaMax > 0) {
                 uint256 percentInOnTick = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
                 uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
-                console.log(percentInOnTick);
-                console.log(percentOutOnTick);
                 (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
                 accumTick.deltas = accumDeltas;
                 // update delta maxes
@@ -442,11 +433,8 @@ library Epochs {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle amount in delta
-        console.log('stashing');
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         if (deltas.amountInDeltaMax > 0) {
-            console.log(cache.deltas0.amountInDeltaMax);
-            console.log(stashTick.deltas.amountInDeltaMax);
             (deltas, stashTick.deltas) = Deltas.transfer(deltas, stashTick.deltas, 1e38, 1e38);
             (deltas, stashTick) = Deltas.onto(deltas, stashTick);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
