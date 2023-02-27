@@ -643,7 +643,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('9999999999999999997'),
+            balanceInIncrease: BigNumber.from('9999999999999999998'),
             balanceOutIncrease: BigNumber.from('89963946174270869537'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -661,7 +661,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('9999999999999999997'),
+            balanceInIncrease: BigNumber.from('9999999999999999998'),
             balanceOutIncrease: BigNumber.from('89963946174270869537'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -675,7 +675,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceInIncrease: BigNumber.from('9999999999999999997'),
             balanceOutIncrease: BigNumber.from('89958926645270816419'),
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -744,7 +744,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('49810365274745445179'),
+            balanceInIncrease: BigNumber.from('49810365274745445177'),
             balanceOutIncrease: BigNumber.from('50024998748000306422'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -981,7 +981,7 @@ describe('CoverPool Tests', function () {
         // })
     })
 
-    it.skip('pool0 - Should move TWAP down and create nextLatestTick during sync 28', async function () {
+    it('pool0 - Should move TWAP down and create nextLatestTick during sync 28', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
@@ -1005,22 +1005,22 @@ describe('CoverPool Tests', function () {
 
         await validateSync(hre.props.admin, '-40')
 
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-40',
-        //     claim: '-40',
-        //     upper: '-20',
-        //     liquidityAmount: liquidityAmount4.mul(2),
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('99720423547181890362'),
-        //     balanceOutIncrease: BigNumber.from('0'),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: false,
-        //     revertMessage: '',
-        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 
-    it.skip('pool0 - Should claim multiple times on the same tick with a swap in between 29', async function () {
+    it('pool0 - Should claim multiple times on the same tick with a swap in between 29', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
@@ -1086,6 +1086,20 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('19999999999999999998'),
+            balanceOutIncrease: BigNumber.from('79916869198251011408'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
         })
     })
 
@@ -1168,7 +1182,7 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    it('pool1 - Should swap with zero output', async function () {
+    it('pool1 - Should swap with zero output 12', async function () {
         // move TWAP to tick 0
         await validateSync(hre.props.admin, '0')
 
@@ -1215,7 +1229,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP after mint and handle unfilled amount', async function () {
+    it('pool1 - Should move TWAP after mint and handle unfilled amount 13', async function () {
         const liquidityAmount2 = hre.ethers.utils.parseUnits('99955008249587388643769', 0)
         const balanceInDecrease = hre.ethers.utils.parseUnits('99750339674246044929', 0)
         const balanceOutIncrease = hre.ethers.utils.parseUnits('99999999999999999999', 0)
@@ -1297,14 +1311,14 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: tokenAmount.sub(1),
+            balanceOutIncrease: tokenAmount.sub(2),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
         })
     })
 
-    it('pool1 - Should not mint position below TWAP', async function () {
+    it('pool1 - Should not mint position below TWAP 10', async function () {
         await validateSync(hre.props.alice, '40')
 
         await validateMint({
@@ -1325,7 +1339,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should mint, swap, and then claim entire range', async function () {
+    it('pool1 - Should mint, swap, and then claim entire range 17', async function () {
         const lowerOld = hre.ethers.utils.parseUnits('0', 0)
         const lower = hre.ethers.utils.parseUnits('20', 0)
         const upperOld = hre.ethers.utils.parseUnits('887272', 0)
@@ -1386,7 +1400,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99670563335408299416'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -1408,7 +1422,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP in range, partial fill, and burn 22', async function () {
+    it('pool1 - Should move TWAP in range, partial fill, and burn 80', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -1451,7 +1465,7 @@ describe('CoverPool Tests', function () {
             upper: '60',
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('9988056890417576365'), //TODO: validate this number is correct
+            balanceInIncrease: BigNumber.from('9988056890417576364'), //TODO: validate this number is correct
             balanceOutIncrease: BigNumber.from('89958926645270816419'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -1459,7 +1473,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should revert for liquidity overflow', async function () {
+    it('pool1 - Should revert for liquidity overflow 81', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 

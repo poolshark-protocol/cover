@@ -587,6 +587,7 @@ library Positions {
         }
         if (cache.position.amountIn > 0) {
             cache.position.amountIn -= 1;
+            //TODO: maybe take one off delta applied?
         }
 
         // save claim tick and tick node
