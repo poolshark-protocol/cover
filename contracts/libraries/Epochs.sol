@@ -368,11 +368,11 @@ library Epochs {
 
         if (crossTick.amountInDeltaMaxStashed > 0) {
             /// @dev - else we migrate carry deltas onto cache
-            uint256 percentInCarry = crossTick.amountInDeltaMaxStashed * 1e38 / (crossTick.deltas.amountInDeltaMax 
+            uint256 percentInCarry = uint256(crossTick.amountInDeltaMaxStashed) * 1e38 / (crossTick.deltas.amountInDeltaMax 
                                                                                  + crossTick.amountInDeltaMaxStashed);
             uint256 percentOutCarry;
             if (crossTick.amountOutDeltaMaxStashed > 0) {
-                percentOutCarry = crossTick.amountOutDeltaMaxStashed * 1e38 / (crossTick.deltas.amountOutDeltaMax 
+                percentOutCarry = uint256(crossTick.amountOutDeltaMaxStashed) * 1e38 / (crossTick.deltas.amountOutDeltaMax 
                                                                                  + crossTick.amountOutDeltaMaxStashed);
             }
             // add carry amounts to cache

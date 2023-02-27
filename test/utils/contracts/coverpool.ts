@@ -461,11 +461,11 @@ export async function validateBurn(params: ValidateBurnParams) {
     let upperTickNodeAfter: TickNode
     let positionAfter: Position
     //TODO: implement expected lower/upper?
+    lowerTickNodeAfter = await hre.props.coverPool.tickNodes(lower)
+    upperTickNodeAfter = await hre.props.coverPool.tickNodes(upper)
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        lowerTickNodeAfter = await hre.props.coverPool.tickNodes(lower)
-        upperTickNodeAfter = await hre.props.coverPool.tickNodes(upper)
         positionAfter = await hre.props.coverPool.positions0(signer.address, lower, upper)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(lower)

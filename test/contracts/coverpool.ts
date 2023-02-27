@@ -579,6 +579,8 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        console.log('-20 tick before:', (await hre.props.coverPool.ticks0("-20")).toString())
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
@@ -645,19 +647,19 @@ describe('CoverPool Tests', function () {
         //     revertMessage: '',
         // })
 
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-60',
-        //     claim: '-20',
-        //     upper: '-20',
-        //     liquidityAmount: liquidityAmount4,
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('9999999999999999997'),
-        //     balanceOutIncrease: BigNumber.from('89963946174270869537'),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: false,
-        //     revertMessage: 'WrongTickClaimedAt()',
-        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('9999999999999999997'),
+            balanceOutIncrease: BigNumber.from('89963946174270869537'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
 
         // await validateSwap({
         //     signer: hre.props.alice,
@@ -1425,7 +1427,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP in range by one, partial fill, and burn 21', async function () {
+    it('pool1 - Should move TWAP in range, partial fill, and burn 22', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
