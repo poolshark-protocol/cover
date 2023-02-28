@@ -13,6 +13,7 @@ import {
     Token20,
     TwapOracle,
     Epochs,
+    Deltas,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 
@@ -23,6 +24,7 @@ export interface BeforeEachProps {
     rangePoolMock: RangePoolMock
     tickMathLib: TickMath
     dydxMathLib: DyDxMath
+    deltasLib: Deltas
     epochsLib: Epochs
     fullPrecisionMathLib: FullPrecisionMath
     ticksLib: Ticks
@@ -67,6 +69,7 @@ export class GetBeforeEach {
         let rangePoolMock: RangePoolMock
         let tickMathLib: TickMath
         let dydxMathLib: DyDxMath
+        let deltasLib: Deltas
         let epochsLib: Epochs
         let fullPrecisionMathLib: FullPrecisionMath
         let ticksLib: Ticks
@@ -89,6 +92,7 @@ export class GetBeforeEach {
             rangePoolMock,
             tickMathLib,
             dydxMathLib,
+            deltasLib,
             epochsLib,
             fullPrecisionMathLib,
             ticksLib,

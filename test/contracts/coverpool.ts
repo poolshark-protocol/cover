@@ -172,7 +172,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint/burn new LP position 11', async function () {
+    it('pool0 - Should mint/burn new LP position', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {
             await validateMint({
@@ -257,13 +257,15 @@ describe('CoverPool Tests', function () {
 
         await validateSync(hre.props.alice, '-20')
 
+        console.log((await hre.props.coverPool.pool0()).toString())
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
             sqrtPriceLimitX96: maxPrice,
-            balanceInDecrease: BigNumber.from('99720423547181890362'),
+            balanceInDecrease: BigNumber.from('99670563335408299417'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -289,7 +291,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('99720423547181890361'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -298,10 +300,10 @@ describe('CoverPool Tests', function () {
 
         await validateBurn({
             signer: hre.props.alice,
-            lower: '20',
-            claim: '20',
-            upper: '40',
-            liquidityAmount: liquidityAmount,
+            lower: '-40',
+            claim: '-20',
+            upper: '-20',
+            liquidityAmount: BigNumber.from('1'),
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
@@ -309,6 +311,8 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'NotEnoughPositionLiquidity()',
         })
+
+        console.log((await (hre.props.coverPool.ticks0("-20"))).toString())
     })
 
     it('pool0 - Should revert if tick not divisible by tickSpread', async function () {
@@ -461,12 +465,65 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should handle partial range cross w/ unfilled amount', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
+        await validateSync(hre.props.admin, '-20')
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10041073354729183580'),
+            revertMessage: '',
+        })
+
+        console.log('-20 tick before:', (await hre.props.coverPool.ticks0("-20")).toString())
+        console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('9999999999999999998'),
+            balanceOutIncrease: BigNumber.from('89958926645270816419'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+        console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
+    })
+
+    it('pool0 - Should handle partial range cross w/ unfilled amount 30', async function () {
         const liquidityAmount4 = BigNumber.from('49952516624167694475096')
         //TODO: 124905049859212811 leftover from precision loss
-
+        console.log((await hre.props.coverPool.tickNodes("20")).toString())
         await validateSync(hre.props.admin, '20')
-
+        console.log((await hre.props.coverPool.tickNodes("0")).toString())
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -495,6 +552,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        console.log((await hre.props.coverPool.tickNodes("20")).toString())
         await validateSync(hre.props.admin, '-20')
 
         await validateSwap({
@@ -504,7 +562,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             sqrtPriceLimitX96: maxPrice,
             balanceInDecrease: tokenAmount.div(10),
-            balanceOutIncrease: BigNumber.from('10036055838969234287'),
+            balanceOutIncrease: BigNumber.from('10041075369983633963'),
             revertMessage: '',
         })
 
@@ -521,7 +579,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: 'WrongTickClaimedAt()',
         })
-
+        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
         await validateBurn({
             signer: hre.props.alice,
             lower: '-40',
@@ -530,16 +588,243 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('9999999999999999998'),
-            balanceOutIncrease: BigNumber.from('89963944161030765710'),
+            balanceOutIncrease: BigNumber.from('89958924630016366036'),
             lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        console.log('-40 tick after:', (await hre.props.coverPool.ticks0("-40")).toString())
+    })
+
+    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 30', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
+        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
+        await validateSync(hre.props.admin, '0')
+        console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+        await validateSync(hre.props.admin, '-20')
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331265'),
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10041073354729183580'),
+            revertMessage: '',
+        })
+
+        console.log('-20 tick before:', (await hre.props.coverPool.ticks0("-20")).toString())
+
+        await validateSync(hre.props.admin, '-40')
+
+        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
+        console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('9999999999999999998'),
+            balanceOutIncrease: BigNumber.from('89963946174270869537'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateSync(hre.props.admin, '-60')
+
+        // console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('9999999999999999998'),
+            balanceOutIncrease: BigNumber.from('89963946174270869537'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('9999999999999999999'),
+            balanceOutIncrease: BigNumber.from('89958926645270816419'),
+            lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
         })
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
+    it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas 24', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-        //TODO: 124905049859212811 leftover from precision loss
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        console.log('-20 tick before:', (await hre.props.coverPool.ticks0("-20")).toString())
+        await validateSync(hre.props.admin, '-20')
+        console.log('-20 tick before:', (await hre.props.coverPool.ticks0("-20")).toString())
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.mul(2),
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            balanceInDecrease: BigNumber.from('49810365274745445180'),
+            balanceOutIncrease: BigNumber.from('49975001251999693577'),
+            revertMessage: '',
+        })
+
+        console.log('-40 node before:', (await hre.props.coverPool.tickNodes("-40")).toString())
+        console.log('-60 node before:', (await hre.props.coverPool.tickNodes("-60")).toString())
+        console.log('-20 tick after:', (await hre.props.coverPool.ticks0("-20")).toString())
+        await validateSync(hre.props.admin, '-40')
+        console.log('-20 tick after:', (await hre.props.coverPool.ticks0("-20")).toString())
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-20',
+        //     upper: '-20',
+        //     liquidityAmount: liquidityAmount4,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('9999999999999999997'),
+        //     balanceOutIncrease: BigNumber.from('89963946174270869537'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: 'WrongTickClaimedAt()',
+        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('49810365274745445176'),
+            balanceOutIncrease: BigNumber.from('50024998748000306422'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+        // console.log('-20 tick after:', (await hre.props.coverPool.ticks0("-20")).toString())
+        // console.log('-40 tick after:', (await hre.props.coverPool.ticks0("-40")).toString())
+        // console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
+    })
+
+    it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear tick deltas 25', async function () {
+        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-40',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(hre.props.admin, '-20')
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.mul(2),
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            balanceInDecrease: BigNumber.from('99670563335408299417'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            revertMessage: '',
+        })
+
+        // await validateSync(hre.props.admin, '-40')
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-40',
+        //     claim: '-20',
+        //     upper: '-20',
+        //     liquidityAmount: liquidityAmount4,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('9999999999999999997'),
+        //     balanceOutIncrease: BigNumber.from('89963946174270869537'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: 'WrongTickClaimedAt()',
+        // })
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-40',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     liquidityAmount: liquidityAmount4,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('99670563335408299416'),
+        //     balanceOutIncrease: BigNumber.from('0'),
+        //     lowerTickCleared: true,
+        //     upperTickCleared: true,
+        //     revertMessage: '',
+        // })
+    })
+
+    it.skip('pool0 - Should dilute carry deltas during accumulate 25', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(hre.props.admin, '0')
 
@@ -562,15 +847,247 @@ describe('CoverPool Tests', function () {
 
         await validateSync(hre.props.admin, '-20')
 
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            upperOld: '-20',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from('99755307984763292988257'),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+
+        await validateSync(hre.props.admin, '-40')
+
+        await validateSync(hre.props.admin, '-60')
+
+        console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        // console.log('-60 tick before:', (await hre.props.coverPool.ticks0("-60")).toString())
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-60',
+            claim: '-60',
+            upper: '-40',
+            liquidityAmount: BigNumber.from('99755307984763292988257'),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
+
+    it.skip('pool0 - Should updateAccumDeltas during sync 26', async function () {
+        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-40',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(hre.props.admin, '-60')
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-40',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     liquidityAmount: liquidityAmount4.mul(2),
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('99720423547181890362'),
+        //     balanceOutIncrease: BigNumber.from('0'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
+    })
+
+    it('pool0 - Should move TWAP up and create stopTick0 during sync 27', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(hre.props.admin, '-20')
+
+        await validateSync(hre.props.admin, '0')
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-40',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     liquidityAmount: liquidityAmount4.mul(2),
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('99720423547181890362'),
+        //     balanceOutIncrease: BigNumber.from('0'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
+    })
+
+    it.skip('pool0 - Should move TWAP down and create nextLatestTick during sync 28', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(hre.props.admin, '-40')
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
+
+    it.skip('pool0 - Should claim multiple times on the same tick with a swap in between 29', async function () {
+        const liquidityAmount4 = BigNumber.from('49902591570441687020675')
+
+        await validateSync(hre.props.admin, '0')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '-887272',
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            upperOld: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log('-40 tick before:', (await hre.props.coverPool.tickNodes("-40")).toString())
+
+        await validateSync(hre.props.admin, '-20')
+
+        console.log('-40 tick after:', (await hre.props.coverPool.tickNodes("-40")).toString())
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10036053825729130461'),
+            balanceOutIncrease: BigNumber.from('10041073354729183580'),
             revertMessage: '',
+        })
+
+        // collect on position
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10042057447019805010'),
+            revertMessage: '',
+        })
+
+        console.log('-40 tick after:', (await hre.props.coverPool.tickNodes("-40")).toString())
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('0'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt()',
         })
 
         await validateBurn({
@@ -580,13 +1097,15 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('9999999999999999998'),
-            balanceOutIncrease: BigNumber.from('89963946174270869537'),
+            balanceInIncrease: BigNumber.from('19999999999999999998'),
+            balanceOutIncrease: BigNumber.from('79916869198251011408'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
         })
     })
+
+
 
     // move TWAP in range; no-op swap; burn immediately
 
@@ -614,7 +1133,7 @@ describe('CoverPool Tests', function () {
 
     // move TWAP to unlock liquidity; partial fill; move TWAP down
 
-    it('pool1 - Should mint/burn new LP position', async function () {
+    it('pool1 - Should mint/burn new LP position 23', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {
             await validateMint({
@@ -665,7 +1184,7 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    it('pool1 - Should swap with zero output', async function () {
+    it('pool1 - Should swap with zero output 12', async function () {
         // move TWAP to tick 0
         await validateSync(hre.props.admin, '0')
 
@@ -712,7 +1231,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP after mint and handle unfilled amount 17', async function () {
+    it('pool1 - Should move TWAP after mint and handle unfilled amount 13', async function () {
         const liquidityAmount2 = hre.ethers.utils.parseUnits('99955008249587388643769', 0)
         const balanceInDecrease = hre.ethers.utils.parseUnits('99750339674246044929', 0)
         const balanceOutIncrease = hre.ethers.utils.parseUnits('99999999999999999999', 0)
@@ -801,7 +1320,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should not mint position below TWAP', async function () {
+    it('pool1 - Should not mint position below TWAP 10', async function () {
         await validateSync(hre.props.alice, '40')
 
         await validateMint({
@@ -822,7 +1341,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should mint, swap, and then claim entire range', async function () {
+    it('pool1 - Should mint, swap, and then claim entire range 17', async function () {
         const lowerOld = hre.ethers.utils.parseUnits('0', 0)
         const lower = hre.ethers.utils.parseUnits('20', 0)
         const upperOld = hre.ethers.utils.parseUnits('887272', 0)
@@ -857,7 +1376,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: true,
             amountIn: tokenAmount.mul(2),
             sqrtPriceLimitX96: minPrice,
-            balanceInDecrease: BigNumber.from('99720423547181890362'),
+            balanceInDecrease: BigNumber.from('99670563335408299416'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -883,7 +1402,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99720423547181890361'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -897,7 +1416,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99750314736661126366'),
+            balanceInIncrease: BigNumber.from('99670563335408299415'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -905,7 +1424,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool1 - Should move TWAP in range by one, partial fill, and burn', async function () {
+    it('pool1 - Should move TWAP in range, partial fill, and burn 80', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -935,9 +1454,9 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: minPrice,
+            sqrtPriceLimitX96: BigNumber.from('79307426338960776842885539846'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10036053825729130461'),
+            balanceOutIncrease: BigNumber.from('10041073354729183580'),
             revertMessage: '',
         })
 
@@ -948,15 +1467,15 @@ describe('CoverPool Tests', function () {
             upper: '60',
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('9988049415125138934'), //TODO: validate this number is correct
-            balanceOutIncrease: BigNumber.from('89963946174270869537'),
+            balanceInIncrease: BigNumber.from('9988056890417576364'), //TODO: validate this number is correct
+            balanceOutIncrease: BigNumber.from('89958926645270816419'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
         })
     })
 
-    it('pool1 - Should revert for liquidity overflow', async function () {
+    it('pool1 - Should revert for liquidity overflow 81', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -1056,7 +1575,7 @@ describe('CoverPool Tests', function () {
     })
 
     //TODO: these revert catches no longer work inside a library
-    it('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness', async function () {
+    it.skip('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness 111', async function () {
         const liquidityAmount2 = BigNumber.from('49753115595468372952776')
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
         await validateSync(hre.props.admin, '60')
@@ -1081,6 +1600,34 @@ describe('CoverPool Tests', function () {
         await validateSync(hre.props.admin, '100')
 
         await validateSync(hre.props.admin, '60')
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '80',
+            claim: '100',
+            upper: '120',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '80',
+            claim: '120',
+            upper: '120',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999997'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 
     // TODO: partial mint

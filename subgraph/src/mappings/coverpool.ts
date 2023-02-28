@@ -10,6 +10,7 @@ import {
 import {
     safeLoadCoverPool,
     safeLoadPosition,
+    safeLoadTick,
     safeLoadToken,
 } from './utils/loads'
 import { Position } from '../../generated/schema'
@@ -17,7 +18,7 @@ import { Position } from '../../generated/schema'
 export function handleMint(event: Mint): void {
     let ownerParam = event.params.owner.toHex()
     let lowerParam = event.params.lower
-    let upperParam = event.params.upper
+    let upperParam = event.params.upper 
     let zeroForOneParam = event.params.zeroForOne
     let liquidityMintedParam = event.params.liquidityMinted
     let poolAddress = event.address.toHex()
@@ -26,6 +27,16 @@ export function handleMint(event: Mint): void {
     let lower = BigInt.fromI32(lowerParam)
     let upper = BigInt.fromI32(upperParam)
 
+    let loadLowerTick = safeLoadTick(
+        poolAddress,
+        lower,
+        zeroForOneParam
+    )
+    let loadUpperTick = safeLoadTick(
+        poolAddress,
+        upper,
+        zeroForOneParam
+    )
     let loadPosition = safeLoadPosition(
         poolAddress,
         ownerParam,
@@ -37,6 +48,8 @@ export function handleMint(event: Mint): void {
 
     let position = loadPosition.entity
     let pool = loadCoverPool.entity
+    let lowerTick = loadLowerTick.entity
+    let upperTick = loadUpperTick.entity
 
     if (!loadPosition.exists) {
         if (zeroForOneParam) {
@@ -56,6 +69,8 @@ export function handleMint(event: Mint): void {
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.save()
+    lowerTick.save()
+    upperTick.save()
 }
 
 export function handleBurn(event: Burn): void {

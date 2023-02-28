@@ -3,10 +3,12 @@ pragma solidity ^0.8.13;
 
 import './TickMath.sol';
 import './Ticks.sol';
+import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
 import 'hardhat/console.sol';
+
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -14,6 +16,7 @@ library Positions {
     error LiquidityOverflow();
     error WrongTickClaimedAt();
     error PositionNotUpdated();
+    error UpdatePositionFirstAt(int24, int24);
     error InvalidLowerTick();
     error InvalidUpperTick();
     error InvalidPositionAmount();
@@ -39,11 +42,10 @@ library Positions {
             uint256 liquidityMinted
         )
     {
-        if (params.lower % int24(params.state.tickSpread) != 0) revert InvalidLowerTick();
-        //TODO: latestTick should never be MAX_TICK or MIN_TICK
         if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
-        if (params.upper % int24(params.state.tickSpread) != 0) revert InvalidUpperTick();
         if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
+        if (params.lower % int24(params.state.tickSpread) != 0) revert InvalidLowerTick();
+        if (params.upper % int24(params.state.tickSpread) != 0) revert InvalidUpperTick();
         if (params.amount == 0) revert InvalidPositionAmount();
         if (params.lower >= params.upper || params.lowerOld >= params.upperOld)
             revert InvalidPositionBoundsOrder();
@@ -118,7 +120,6 @@ library Positions {
         if (params.amount == 0) return (0, state);
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
-            /// @dev - CPL is left zero so only first claim we apply deltas
         } else {
             /// safety check...might be unnecessary given the user is forced to update()
             if (
@@ -131,10 +132,9 @@ library Positions {
                 revert WrongTickClaimedAt();
             }
         }
-
-        // /// validate mint amount is not over max tick liquidity
-        // if (amount > 0 && uint128(amount) + cache.position.liquidity > MAX_TICK_LIQUIDITY) revert MaxTickLiquidity();
-
+        //TODO: if cPL is > 0, revert
+        
+        // add liquidity to ticks
         state = Ticks.insert(
             ticks,
             tickNodes,
@@ -146,6 +146,13 @@ library Positions {
             uint128(params.amount),
             params.zeroForOne
         );
+
+        {
+            // update max deltas
+            ICoverPoolStructs.Deltas memory tickDeltas = ticks[params.zeroForOne ? params.lower : params.upper].deltas;
+            tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
+        }
 
         cache.position.liquidity += uint128(params.amount);
 
@@ -190,11 +197,19 @@ library Positions {
             state,
             params.lower,
             params.upper,
-            uint128(params.amount),
+            params.amount,
+            0,
             params.zeroForOne,
             true,
             true
         );
+
+        {
+            // update max deltas
+            ICoverPoolStructs.Deltas memory tickDeltas = ticks[params.zeroForOne ? params.lower : params.upper].deltas;
+            tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
+            ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
+        }
 
         cache.position.amountOut += uint128(
             params.zeroForOne
@@ -208,7 +223,6 @@ library Positions {
         return (params.amount, state);
     }
 
-    //TODO: factor in deltas in current auction after implementing GDA
     //TODO: pass pool as memory and save pool changes using return value
     function update(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
@@ -230,21 +244,22 @@ library Positions {
             priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
             priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? state.latestTick - state.tickSpread 
-                                                                : state.latestTick + state.tickSpread),
-            claimTick: tickNodes[params.claim],
+                                                                       : state.latestTick + state.tickSpread),
+            amountInFilledMax: 0,
+            amountOutUnfilledMax: 0,
+            claimTick: ticks[params.claim],
+            claimTickNode: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
-            amountInDelta: params.claim == state.latestTick ? pool.amountInDelta : 0,
-            amountOutDelta: 0,
-            amountInCoverage: 0
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
         });
 
         // validate position liquidity
+        if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
-            if (params.amount > 0) revert NotEnoughPositionLiquidity();
             return state;
         }
-
         // early return if no update
         if (
             (
@@ -267,16 +282,17 @@ library Positions {
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-             if (cache.claimTick.accumEpochLast <= cache.position.accumEpochLast)
+             if (cache.claimTickNode.accumEpochLast <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
+            cache.position.liquidityStashed = 0;
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
             // zero fill or partial fill
-            uint32 claimNextTickAccumEpoch = params.zeroForOne
-                ? tickNodes[cache.claimTick.previousTick].accumEpochLast
-                : tickNodes[cache.claimTick.nextTick].accumEpochLast;
+            uint32 claimTickNextAccumEpoch = params.zeroForOne
+                ? tickNodes[cache.claimTickNode.previousTick].accumEpochLast
+                : tickNodes[cache.claimTickNode.nextTick].accumEpochLast;
             ///@dev - next accumEpoch should not be greater
-            if (claimNextTickAccumEpoch > cache.position.accumEpochLast)
+            if (claimTickNextAccumEpoch > cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
 
             // check if liquidity removal required
@@ -284,170 +300,263 @@ library Positions {
                 /// @dev - check if liquidity removal required
                 cache.removeLower = params.zeroForOne
                     ? true
-                    : tickNodes[cache.claimTick.nextTick].accumEpochLast <=
+                    : tickNodes[cache.claimTickNode.nextTick].accumEpochLast <=
                         cache.position.accumEpochLast;
                 cache.removeUpper = params.zeroForOne
-                    ? tickNodes[cache.claimTick.previousTick].accumEpochLast <=
+                    ? tickNodes[cache.claimTickNode.previousTick].accumEpochLast <=
                         cache.position.accumEpochLast
                     : true;
             }
         }
-
-        // amount deltas
-        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-            if (cache.position.claimPriceLast == 0 ||
-                (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
-                                  : cache.position.claimPriceLast < cache.priceClaim )
-            ) {
-                /// @dev - ignore delta carry for 100% fill
-                cache.amountInDelta = uint128(
-                    uint256(ticks[params.claim].amountInDelta) -
-                        (uint256(ticks[params.claim].amountInDeltaCarryPercent) *
-                            ticks[params.claim].amountInDelta) /
-                        1e18
-                );
-                cache.amountOutDelta = uint128(
-                    uint256(ticks[params.claim].amountOutDelta) -
-                        (uint256(ticks[params.claim].amountOutDeltaCarryPercent) *
-                            ticks[params.claim].amountInDelta) /
-                        1e18
-                );
-            }
-        } else {
-            if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                // clear out position amountInDeltaLast
-                cache.position.amountInDeltaLast = 0;
-                // factor in tick and carry deltas for middle of position
-                cache.amountInDelta += ticks[params.claim].amountInDelta;
-                cache.amountOutDelta += ticks[params.claim].amountOutDelta;
+        if (params.claim != params.upper && params.claim != params.lower) {
+            // check accumEpochLast on claim tick
+            if (tickNodes[params.claim].accumEpochLast <= cache.position.accumEpochLast)
+                revert WrongTickClaimedAt();
+            // prevent position overwriting at claim tick
+            if (params.zeroForOne) {
+                if (positions[params.owner][params.lower][params.claim].liquidity > 0) {
+                    revert UpdatePositionFirstAt(params.lower, params.claim);
+                }
             } else {
-                // factor in carry deltas for start of position
-                cache.amountInDelta += ticks[params.claim].amountInDelta * ticks[params.claim].amountInDeltaCarryPercent / 1e18;
-                cache.amountOutDelta += ticks[params.claim].amountOutDelta * ticks[params.claim].amountOutDeltaCarryPercent / 1e18;
-            }  
+                if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
+                    revert UpdatePositionFirstAt(params.claim, params.upper);
+                }
+            }
+            // 100% of liquidity is stashed
+            //TODO: work through cases with this
+            cache.position.liquidityStashed = cache.position.liquidity;
+            /// @auditor - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
+        // transfer deltas into cache
+        if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
+            (cache.claimTick, cache.deltas) = Deltas.from(cache.claimTick, cache.deltas);
+        } else {
+            /// @dev - deltas are applied once per each tick claimed at
+            /// @dev - deltas should never be applied if position is not crossed into
+            // check if tick already claimed at
+            bool applyDeltas = (cache.position.claimPriceLast == 0
+                               && (params.claim != (params.zeroForOne ? params.upper : params.lower)))
+                               || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
+                                                     : cache.position.claimPriceLast < cache.priceClaim && cache.position.claimPriceLast != 0);
+            if (applyDeltas) {
+                (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
+            }
+        } /// @dev - deltas transfer from claim tick are replaced after applying changes
 
         // delta check complete - update CPL for new position
         if(cache.position.claimPriceLast == 0) {
             cache.position.claimPriceLast = (params.zeroForOne ? cache.priceUpper 
                                                                : cache.priceLower);
-        }
-        
-        // section 1
-        if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
-                              : cache.priceClaim > cache.position.claimPriceLast) {
-            /// @dev - only calculate if we at least cover one full tick
-            uint256 amountInClaimable = params.zeroForOne
-                ? DyDxMath.getDy(
-                    cache.position.liquidity,
-                    cache.priceClaim,
-                    cache.position.claimPriceLast,
-                    false
-                )
-                : DyDxMath.getDx(
+        } else if (cache.position.claimPriceLast != (params.zeroForOne ? cache.priceUpper 
+                                                                       : cache.priceLower)
+                   && cache.priceClaim > cache.priceSpread ) {
+            // section 1 - complete previous auction claim
+            {
+                // amounts claimed on this update
+                uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
+                (
+                    amountInFilledMax,
+                    amountOutUnfilledMax
+                ) = Deltas.maxAuction(
                     cache.position.liquidity,
                     cache.position.claimPriceLast,
-                    cache.priceClaim,
-                    false
+                    params.zeroForOne ? cache.priceUpper
+                                      : cache.priceLower,
+                    params.zeroForOne
                 );
-            cache.position.amountIn += uint128(amountInClaimable);
-            cache.amountInCoverage = amountInClaimable;
+                //TODO: modify delta max on claim tick and lower : upper tick
+                cache.amountInFilledMax    += amountInFilledMax;
+                cache.amountOutUnfilledMax += amountOutUnfilledMax;
+            }
+            // move price to next tick in sequence for section 2
+            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
+                                                               : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
+        }
+        // section 2 - position start up to claim tick
+        if (cache.position.claimPriceLast != cache.priceClaim) {
+            // calculate if we at least cover one full tick
+            uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
+            (
+                amountInFilledMax,
+                amountOutUnfilledMax
+            ) = Deltas.max(
+                cache.position.liquidity,
+                cache.position.claimPriceLast,
+                cache.priceClaim,
+                params.zeroForOne
+            );
+            cache.amountInFilledMax += amountInFilledMax;
+            cache.amountOutUnfilledMax += amountOutUnfilledMax;
+            params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
+                              : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
         } else if (params.zeroForOne ? cache.priceClaim > cache.position.claimPriceLast 
                                      : cache.priceClaim < cache.position.claimPriceLast) {
             /// @dev - second claim within current auction
             cache.priceClaim = pool.price;
-            // cache.amountInDelta = pool.amountInDelta - cache.position.amountInDeltaLast;
         }
-
-        // section 2
-        if (params.claim == state.latestTick && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+        // section 3 - current auction unfilled section
+        if (params.claim == state.latestTick 
+            && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // if auction is live
             if (params.amount > 0) {
                 // remove if burn
-                cache.position.amountOut += uint128(
+                uint128 amountOutRemoved = uint128(
                     params.zeroForOne
                         ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
                         : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
                 );
-                cache.amountInCoverage +=
+                cache.position.amountOut += amountOutRemoved;
+                // modify max deltas
+                params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
+                                  : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
+                uint128 amountInOmitted = uint128(
                     params.zeroForOne
-                        ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, true)
-                        : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, true)
-                ;
-                if (pool.liquidity == params.amount) {
-                    pool.amountInDelta = 0;
-                }
-                pool.liquidity -= params.amount;
+                        ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, false)
+                        : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, false)
+                );
+                params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
+                                  : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
+                //TODO: update amountInDelta on pool at end
+                //TODO: update amounIn/OutDeltaMax on lower : upper tick for section 3
             }
-            // section 3
+            // section 4 - current auction filled section
             {
-                // modify claim price for section 4
-                cache.priceClaim = cache.priceSpread;
-                uint256 amountInSection3 =
+                // amounts claimed on this update
+                uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
+                (
+                    amountInFilledMax,
+                    amountOutUnfilledMax
+                ) = Deltas.maxAuction(
+                    cache.position.liquidity,
+                    (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                                       : cache.position.claimPriceLast > cache.priceClaim) 
+                                            ? cache.position.claimPriceLast 
+                                            : cache.priceSpread,
+                    pool.price,
                     params.zeroForOne
-                        ? DyDxMath.getDy(
-                            cache.position.liquidity, // multiplied by liquidity later
-                            cache.position.claimPriceLast < cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
-                            pool.price,
-                            false
-                        )
-                        : DyDxMath.getDx(
-                            cache.position.liquidity,
-                            pool.price,
-                            cache.position.claimPriceLast > cache.priceClaim ? cache.position.claimPriceLast : cache.priceSpread,
-                            false
-                        );
-                cache.position.amountIn += uint128(amountInSection3);
-                cache.amountInCoverage += amountInSection3;
-                cache.position.amountInDeltaLast = pool.amountInDelta;
+                );
+                uint256 poolAmountInDeltaChange = uint256(cache.position.liquidity) * 1e38 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
+                
+                cache.position.amountIn += amountInFilledMax - uint128(poolAmountInDeltaChange);
+                pool.amountInDelta -= uint128(poolAmountInDeltaChange);
+                cache.finalDeltas.amountInDeltaMax += amountInFilledMax;
+                cache.finalDeltas.amountOutDeltaMax += amountOutUnfilledMax;
+                /// @dev - record how much delta max was claimed
+                if (params.amount < cache.position.liquidity) {
+                    (
+                        amountInFilledMax,
+                        amountOutUnfilledMax
+                    ) = Deltas.maxAuction(
+                        cache.position.liquidity - params.amount,
+                        (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                                        : cache.position.claimPriceLast > cache.priceClaim) 
+                                                ? cache.position.claimPriceLast 
+                                                : cache.priceSpread,
+                        pool.price,
+                        params.zeroForOne
+                    );
+                    pool.amountInDeltaMaxClaimed  += amountInFilledMax;
+                    pool.amountOutDeltaMaxClaimed += amountOutUnfilledMax;
+                }
             }
-        } else {
-            cache.position.amountInDeltaLast = 0;
+            if (params.amount > 0 /// @ dev - if removing L and second claim on same tick
+                && (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
+                                        : cache.position.claimPriceLast > cache.priceClaim)) {
+                    // reduce delta max claimed based on liquidity removed
+                    uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
+                    (
+                        amountInMaxClaimedBefore,
+                        amountOutMaxClaimedBefore
+                    ) = Deltas.maxAuction(
+                        params.amount,
+                        cache.priceSpread,
+                        cache.position.claimPriceLast,
+                        params.zeroForOne
+                    );
+                    pool.amountInDeltaMaxClaimed  -= amountInMaxClaimedBefore;
+                    pool.amountOutDeltaMaxClaimed -= amountOutMaxClaimedBefore;
+            }
+            // modify claim price for section 5
+            cache.priceClaim = cache.priceSpread;
         }
-        // section 4
+        // section 5 - burned liquidity past claim tick
         {
-
             if (params.amount > 0) {
-                cache.position.amountOut += uint128(
+                // update max deltas based on liquidity removed
+                uint128 amountInOmitted; uint128 amountOutRemoved;
+                (
+                    amountInOmitted,
+                    amountOutRemoved
+                ) = Deltas.maxTest(
+                    params.amount,
+                    cache.priceClaim,
+                    params.zeroForOne ? cache.priceLower
+                                      : cache.priceUpper,
                     params.zeroForOne
-                        ? DyDxMath.getDx(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
-                        : DyDxMath.getDy(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
                 );
-                cache.amountInCoverage +=
-                    params.zeroForOne
-                        ? DyDxMath.getDy(uint128(params.amount), cache.priceLower, cache.priceClaim, false)
-                        : DyDxMath.getDx(uint128(params.amount), cache.priceClaim, cache.priceUpper, false)
-                ;
+                cache.position.amountOut += amountOutRemoved;
+                if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+                    params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
+                                      : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
+                    params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
+                                      : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
+                }      
             }
         }
-
         // adjust based on deltas
-        if (cache.amountInDelta > 0) {
-            uint256 amountInCoverageFull =
-                    params.zeroForOne
-                        ? DyDxMath.getDy(cache.position.liquidity, cache.priceLower, cache.priceUpper, false)
-                        : DyDxMath.getDx(cache.position.liquidity, cache.priceLower, cache.priceUpper, false)
-            ;
-            //TODO: handle underflow here
-            // cache.amountInDelta = cache.amountInDelta * cache.amountInCoverage / amountInCoverageFull;
-            // cache.amountOutDelta = cache.amountOutDelta * cache.amountInCoverage / amountInCoverageFull;
-            cache.amountInDelta = uint128(FullPrecisionMath.mulDivRoundingUp(uint256(cache.amountInDelta) , cache.amountInCoverage, amountInCoverageFull));
-            cache.position.amountIn -= uint128(
-                FullPrecisionMath.mulDiv(cache.amountInDelta, cache.position.liquidity, Q96) + 1
-            );
-            if (cache.amountOutDelta > 0) {
-                cache.position.amountOut += uint128(
-                    FullPrecisionMath.mulDiv(
-                        uint128(cache.amountOutDelta),
-                        cache.position.liquidity,
-                        Q96
-                    )
-                );
+        // calculate deltas applied
+        uint256 percentInDelta; uint256 percentOutDelta;
+        if(cache.deltas.amountInDeltaMax > 0) {
+            percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
+            if (cache.deltas.amountOutDeltaMax > 0) {
+                percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
             }
-            /// @auditor - how should we handle this for rounding^
-        } /// @dev - amountInDelta always lt 0
-        // factor in swap fees
-        cache.position.amountIn = (cache.position.amountIn * 1e6) / (1e6 - state.swapFee);
+        }
+        (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+        (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+        console.log('delta max check 1');
+        console.log(ticks[-40].deltas.amountInDeltaMax);
+        // apply deltas and add to position
+        if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
+            cache.position.amountIn  += uint128(cache.amountInFilledMax) - cache.finalDeltas.amountInDelta;
+        cache.position.amountOut += cache.finalDeltas.amountOutDelta;
+        // add remaining deltas cached back to claim tick
+        // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
+        if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+            // burn deltas on final tick of position
+            ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            console.log('delta max check 2');
+        console.log(ticks[-40].deltas.amountInDeltaMax);
+            (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
+            console.log('delta max check 3');
+        console.log(ticks[-40].deltas.amountInDeltaMax);
+            ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
+            console.log('delta max check 4');
+            console.log(cache.deltas.amountOutDeltaMax);
+        console.log(ticks[-40].deltas.amountInDeltaMax);
+            //TODO: handle partial stashed and partial on tick
+            if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
+                (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+            } else {
+                (cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick);
+            }
+            
+        } else {
+            (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+        }
+        if (cache.position.amountIn > 0) {
+            cache.position.amountIn -= 1;
+            //TODO: maybe take one off delta applied?
+        }
+
+        // save claim tick and tick node
+        ticks[params.claim] = cache.claimTick;
+        tickNodes[params.claim] = cache.claimTickNode;
+        // update pool liquidity
+        if (state.latestTick == params.claim
+            && params.claim != (params.zeroForOne ? params.lower : params.upper)) 
+            pool.liquidity -= params.amount;
+        
         /// @dev - mark last claim price
         cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
         cache.position.claimPriceLast = (params.claim == state.latestTick)
@@ -456,10 +565,8 @@ library Positions {
         /// @dev - if tick 0% filled, set CPL to latestTick
         if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
         /// @dev - if tick 100% filled, set CPL to next tick to unlock
-        if (pool.price == cache.priceClaim && params.claim == state.latestTick) {
-            cache.position.claimPriceLast = cache.priceClaim;
-        } 
-
+        if (pool.price == cache.priceClaim && params.claim == state.latestTick) cache.position.claimPriceLast = cache.priceClaim;
+        /// @dev - prior to Ticks.remove() so we don't overwrite liquidity delta changes
         // if burn or second mint
         //TODO: handle claim of current auction and second mint
         if ((params.amount > 0)) {
@@ -474,20 +581,23 @@ library Positions {
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 uint128(uint128(params.amount)),
+                cache.position.liquidityStashed,
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper
             );
             cache.position.liquidity -= uint128(params.amount);
-            // they should also get params.amountOutDeltaCarry
         }
-        if (params.zeroForOne ? params.claim != params.upper : params.claim != params.lower) {
-            ///TODO: do tick insert here
-            // handle double minting of position
+        if (params.zeroForOne ? params.claim != params.upper 
+                              : params.claim != params.lower) {
+            // clear out position
             delete positions[params.owner][params.lower][params.upper];
-            //TODO: handle liquidity overflow in mint call
+        } 
+        if (cache.position.liquidity == 0) {
+            cache.position.accumEpochLast = 0;
+            cache.position.claimPriceLast = 0;
+            cache.position.claimCheckpoint = 0;
         }
-
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;

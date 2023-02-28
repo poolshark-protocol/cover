@@ -162,7 +162,7 @@ export class CoverPoolFactory extends BaseContract {
     createCoverPool(
       fromToken: string,
       destToken: string,
-      swapFee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -177,7 +177,7 @@ export class CoverPoolFactory extends BaseContract {
     getCoverPool(
       fromToken: string,
       destToken: string,
-      fee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -198,7 +198,7 @@ export class CoverPoolFactory extends BaseContract {
   createCoverPool(
     fromToken: string,
     destToken: string,
-    swapFee: BigNumberish,
+    feeTier: BigNumberish,
     tickSpread: BigNumberish,
     twapLength: BigNumberish,
     auctionLength: BigNumberish,
@@ -213,7 +213,7 @@ export class CoverPoolFactory extends BaseContract {
   getCoverPool(
     fromToken: string,
     destToken: string,
-    fee: BigNumberish,
+    feeTier: BigNumberish,
     tickSpread: BigNumberish,
     twapLength: BigNumberish,
     auctionLength: BigNumberish,
@@ -234,7 +234,7 @@ export class CoverPoolFactory extends BaseContract {
     createCoverPool(
       fromToken: string,
       destToken: string,
-      swapFee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -249,7 +249,7 @@ export class CoverPoolFactory extends BaseContract {
     getCoverPool(
       fromToken: string,
       destToken: string,
-      fee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -315,7 +315,7 @@ export class CoverPoolFactory extends BaseContract {
     createCoverPool(
       fromToken: string,
       destToken: string,
-      swapFee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -330,7 +330,7 @@ export class CoverPoolFactory extends BaseContract {
     getCoverPool(
       fromToken: string,
       destToken: string,
-      fee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -352,7 +352,7 @@ export class CoverPoolFactory extends BaseContract {
     createCoverPool(
       fromToken: string,
       destToken: string,
-      swapFee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,
@@ -367,7 +367,7 @@ export class CoverPoolFactory extends BaseContract {
     getCoverPool(
       fromToken: string,
       destToken: string,
-      fee: BigNumberish,
+      feeTier: BigNumberish,
       tickSpread: BigNumberish,
       twapLength: BigNumberish,
       auctionLength: BigNumberish,

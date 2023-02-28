@@ -35,9 +35,9 @@ library DyDxMath {
     ) internal pure returns (uint256 dy) {
         unchecked {
             if (roundUp) {
-                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, 0x1000000000000000000000000);
+                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
             } else {
-                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, 0x1000000000000000000000000);
+                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
             }
         }
     }

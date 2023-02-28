@@ -32,3 +32,11 @@ type Position @entity {
     inAmount: BigInt!
     outAmount: BigInt!
 }
+
+type Tick @entity {
+    # poolAddress + index + zeroForOne
+    id: ID!
+    index: BigInt!
+    previousTick: BigInt!
+    nextTick: BigInt!
+}

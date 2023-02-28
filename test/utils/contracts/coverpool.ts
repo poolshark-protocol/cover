@@ -23,15 +23,22 @@ export interface TickNode {
     previousTick: number
     nextTick: number
     accumEpochLast: number
+    liquidityDeltaMinus: BigNumber
 }
 
 export interface Tick {
     liquidityDelta: BigNumber
     liquidityDeltaMinus: BigNumber
+    amountInDeltaMaxStashed: BigNumber
+    amountOutDeltaMaxStashed: BigNumber
+    deltas: Deltas
+}
+
+export interface Deltas {
     amountInDelta: BigNumber
+    amountInDeltaMax: BigNumber
     amountOutDelta: BigNumber
-    amountInDeltaCarryPercent: BigNumber
-    amountOutDeltaCarryPercent: BigNumber
+    amountOutDeltaMax: BigNumber
 }
 
 export interface ValidateMintParams {
@@ -233,15 +240,11 @@ export async function validateMint(params: ValidateMintParams) {
             .approve(hre.props.coverPool.address, amountDesired)
     }
 
-    let lowerOldTickBefore: Tick
     let lowerTickBefore: Tick
-    let upperOldTickBefore: Tick
     let upperTickBefore: Tick
     let positionBefore: Position
     if (zeroForOne) {
-        lowerOldTickBefore = await hre.props.coverPool.ticks0(lowerOld)
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
-        upperOldTickBefore = await hre.props.coverPool.ticks0(upperOld)
         upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
         positionBefore = await hre.props.coverPool.positions0(
             recipient,
@@ -249,9 +252,7 @@ export async function validateMint(params: ValidateMintParams) {
             expectedUpper ? expectedUpper : upper
         )
     } else {
-        lowerOldTickBefore = await hre.props.coverPool.ticks1(lowerOld)
         lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-        upperOldTickBefore = await hre.props.coverPool.ticks1(upperOld)
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
         positionBefore = await hre.props.coverPool.positions1(
             recipient,
@@ -286,15 +287,11 @@ export async function validateMint(params: ValidateMintParams) {
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
     expect(balanceOutBefore).to.be.equal(balanceOutAfter)
 
-    let lowerOldTickAfter: Tick
     let lowerTickAfter: Tick
-    let upperOldTickAfter: Tick
     let upperTickAfter: Tick
     let positionAfter: Position
     if (zeroForOne) {
-        lowerOldTickAfter = await hre.props.coverPool.ticks0(lowerOld)
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
-        upperOldTickAfter = await hre.props.coverPool.ticks0(upperOld)
         upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
         positionAfter = await hre.props.coverPool.positions0(
             recipient,
@@ -302,9 +299,7 @@ export async function validateMint(params: ValidateMintParams) {
             expectedUpper ? expectedUpper : upper
         )
     } else {
-        lowerOldTickAfter = await hre.props.coverPool.ticks1(lowerOld)
         lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-        upperOldTickAfter = await hre.props.coverPool.ticks1(upperOld)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
         positionAfter = await hre.props.coverPool.positions1(
             recipient,
@@ -367,6 +362,7 @@ export async function validateMint(params: ValidateMintParams) {
 }
 
 export async function validateBurn(params: ValidateBurnParams) {
+    //TODO: check liquidityDeltaMinus on lower : upper tick
     const signer = params.signer
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
@@ -424,7 +420,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-
+    // console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -444,6 +440,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
     let positionAfter: Position
+    //TODO: implement expected lower/upper?
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)

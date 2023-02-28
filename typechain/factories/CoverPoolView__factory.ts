@@ -105,11 +105,6 @@ const _abi = [
         type: "uint8",
       },
       {
-        internalType: "uint16",
-        name: "swapFee",
-        type: "uint16",
-      },
-      {
         internalType: "int16",
         name: "tickSpread",
         type: "int16",
@@ -183,6 +178,16 @@ const _abi = [
         type: "uint128",
       },
       {
+        internalType: "uint128",
+        name: "amountInDeltaMaxClaimed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOutDeltaMaxClaimed",
+        type: "uint128",
+      },
+      {
         internalType: "uint160",
         name: "price",
         type: "uint160",
@@ -203,6 +208,16 @@ const _abi = [
       {
         internalType: "uint128",
         name: "amountInDelta",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountInDeltaMaxClaimed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "amountOutDeltaMaxClaimed",
         type: "uint128",
       },
       {
@@ -235,6 +250,11 @@ const _abi = [
     name: "positions0",
     outputs: [
       {
+        internalType: "uint8",
+        name: "claimCheckpoint",
+        type: "uint8",
+      },
+      {
         internalType: "uint32",
         name: "accumEpochLast",
         type: "uint32",
@@ -246,17 +266,17 @@ const _abi = [
       },
       {
         internalType: "uint128",
+        name: "liquidityStashed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
         name: "amountIn",
         type: "uint128",
       },
       {
         internalType: "uint128",
         name: "amountOut",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountInDeltaLast",
         type: "uint128",
       },
       {
@@ -289,6 +309,11 @@ const _abi = [
     name: "positions1",
     outputs: [
       {
+        internalType: "uint8",
+        name: "claimCheckpoint",
+        type: "uint8",
+      },
+      {
         internalType: "uint32",
         name: "accumEpochLast",
         type: "uint32",
@@ -300,17 +325,17 @@ const _abi = [
       },
       {
         internalType: "uint128",
+        name: "liquidityStashed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
         name: "amountIn",
         type: "uint128",
       },
       {
         internalType: "uint128",
         name: "amountOut",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "amountInDeltaLast",
         type: "uint128",
       },
       {
@@ -373,28 +398,40 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidityDeltaMinusInactive",
+        name: "amountInDeltaMaxStashed",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amountInDelta",
+        name: "amountOutDeltaMaxStashed",
         type: "uint128",
       },
       {
-        internalType: "uint128",
-        name: "amountOutDelta",
-        type: "uint128",
-      },
-      {
-        internalType: "uint64",
-        name: "amountInDeltaCarryPercent",
-        type: "uint64",
-      },
-      {
-        internalType: "uint64",
-        name: "amountOutDeltaCarryPercent",
-        type: "uint64",
+        components: [
+          {
+            internalType: "uint128",
+            name: "amountInDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountInDeltaMax",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDeltaMax",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct ICoverPoolStructs.Deltas",
+        name: "deltas",
+        type: "tuple",
       },
     ],
     stateMutability: "view",
@@ -422,28 +459,40 @@ const _abi = [
       },
       {
         internalType: "uint128",
-        name: "liquidityDeltaMinusInactive",
+        name: "amountInDeltaMaxStashed",
         type: "uint128",
       },
       {
         internalType: "uint128",
-        name: "amountInDelta",
+        name: "amountOutDeltaMaxStashed",
         type: "uint128",
       },
       {
-        internalType: "uint128",
-        name: "amountOutDelta",
-        type: "uint128",
-      },
-      {
-        internalType: "uint64",
-        name: "amountInDeltaCarryPercent",
-        type: "uint64",
-      },
-      {
-        internalType: "uint64",
-        name: "amountOutDeltaCarryPercent",
-        type: "uint64",
+        components: [
+          {
+            internalType: "uint128",
+            name: "amountInDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountInDeltaMax",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDelta",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "amountOutDeltaMax",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct ICoverPoolStructs.Deltas",
+        name: "deltas",
+        type: "tuple",
       },
     ],
     stateMutability: "view",
