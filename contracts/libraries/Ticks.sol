@@ -67,6 +67,11 @@ library Ticks {
                     cache.price,
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
+                console.log('newPrice', newPrice);
+                console.log('old price', cache.price);
+                console.log(cache.liquidity);
+                console.log(cache.price);
+                console.log(cache.input);
                 /// @auditor - check tests to see if we need overflow handle
                 // if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
                 //     console.log('overflow check');
@@ -94,6 +99,7 @@ library Ticks {
                 // Calculate new price after swap: ΔP = Δy/L.
                 uint256 newPrice = cache.price +
                     FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
+                console.log('newPrice', newPrice);
                 // Calculate output of swap
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;

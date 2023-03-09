@@ -758,7 +758,7 @@ describe('CoverPool Tests', function () {
     })
 
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear tick deltas 25', async function () {
-        const liquidityAmount4 = BigNumber.from('99855108194609381495771')
+        const liquidityAmount4 = BigNumber.from('99805183140883374041350')
 
         await validateSync(hre.props.admin, '0')
 
@@ -766,19 +766,18 @@ describe('CoverPool Tests', function () {
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lowerOld: '-887272',
-            lower: '-40',
+            lower: '-60',
             claim: '-20',
             upper: '-20',
             upperOld: '0',
-            amount: tokenAmount,
+            amount: tokenAmount.mul(2),
             zeroForOne: true,
-            balanceInDecrease: tokenAmount,
+            balanceInDecrease: tokenAmount.mul(2),
             liquidityIncrease: liquidityAmount4,
             upperTickCleared: false,
             lowerTickCleared: false,
             revertMessage: '',
         })
-
         await validateSync(hre.props.admin, '-20')
 
         await validateSwap({
@@ -787,12 +786,12 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
             sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
-            balanceInDecrease: BigNumber.from('99670563335408299417'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            balanceInDecrease: BigNumber.from('99620730549490890359'),
+            balanceOutIncrease: BigNumber.from('99950002503999387155'),
             revertMessage: '',
         })
 
-        // await validateSync(hre.props.admin, '-40')
+        await validateSync(hre.props.admin, '-60')
 
         // await validateBurn({
         //     signer: hre.props.alice,
@@ -801,31 +800,31 @@ describe('CoverPool Tests', function () {
         //     upper: '-20',
         //     liquidityAmount: liquidityAmount4,
         //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('9999999999999999997'),
-        //     balanceOutIncrease: BigNumber.from('89963946174270869537'),
+        //     balanceInIncrease: BigNumber.from('99670563335408299415'),
+        //     balanceOutIncrease: BigNumber.from('0'),
         //     lowerTickCleared: false,
         //     upperTickCleared: false,
-        //     revertMessage: 'WrongTickClaimedAt()',
-        // })
-
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-40',
-        //     claim: '-40',
-        //     upper: '-20',
-        //     liquidityAmount: liquidityAmount4,
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('99670563335408299416'),
-        //     balanceOutIncrease: BigNumber.from('0'),
-        //     lowerTickCleared: true,
-        //     upperTickCleared: true,
         //     revertMessage: '',
         // })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('99620730549490890356'),
+            balanceOutIncrease: BigNumber.from('100049997496000612844'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 
-    it.skip('pool0 - Should dilute carry deltas during accumulate 25', async function () {
+    it('pool0 - Should dilute carry deltas during accumulate', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-
+        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
         await validateSync(hre.props.admin, '0')
 
         await validateMint({
@@ -879,8 +878,8 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceInIncrease: BigNumber.from('24925109895447308076'),
+            balanceOutIncrease: BigNumber.from('75012499374000153211'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -895,7 +894,7 @@ describe('CoverPool Tests', function () {
             upper: '-40',
             liquidityAmount: BigNumber.from('99755307984763292988257'),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
+            balanceInIncrease: BigNumber.from('24900198488880560734'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: true,
             upperTickCleared: true,

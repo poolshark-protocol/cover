@@ -7,7 +7,7 @@ export const COVERAGE_TEST_ARG = 'coverage'
 export const VERIFY_CONTRACTS = 'verify-contracts'
 
 /* Deploy */
-export const DEPLOY_HEDGEPOOLS = 'deploy-hedgepools'
+export const DEPLOY_COVERPOOLS = 'deploy-coverpools'
 
 /* Utils */
 export const MINT_TOKENS = 'mint-tokens'

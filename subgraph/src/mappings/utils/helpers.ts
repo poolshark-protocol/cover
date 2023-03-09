@@ -2,6 +2,7 @@ import { log, BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { ERC20 } from '../../../generated/CoverPoolFactory/ERC20'
 import { ERC20SymbolBytes } from '../../../generated/CoverPoolFactory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../../../generated/CoverPoolFactory/ERC20NameBytes'
+import { ONE_BD, ONE_BI, ZERO_BD, ZERO_BI } from './constants'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 export let BIGINT_ZERO = BigInt.fromI32(0)

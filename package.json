@@ -8,6 +8,7 @@
         "compile": "npx hardhat compile",
         "test": "npx hardhat test",
         "deploy": "npx hardhat deploy-coverpools",
+        "verify": "npx hardhat verify-contracts",
         "all": "yarn clean; yarn compile; yarn test; yarn deploy;"
     },
     "devDependencies": {
