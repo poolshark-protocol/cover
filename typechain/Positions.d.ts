@@ -27,7 +27,7 @@ interface PositionsInterface extends ethers.utils.Interface {
     functionFragment: "validate",
     values: [
       {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -104,7 +104,7 @@ export class Positions extends BaseContract {
   functions: {
     validate(
       params: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -131,7 +131,7 @@ export class Positions extends BaseContract {
     ): Promise<
       [
         [string, number, number, number, number, number, BigNumber, boolean] & {
-          recipient: string;
+          to: string;
           lowerOld: number;
           lower: number;
           claim: number;
@@ -147,7 +147,7 @@ export class Positions extends BaseContract {
 
   validate(
     params: {
-      recipient: string;
+      to: string;
       lowerOld: BigNumberish;
       lower: BigNumberish;
       claim: BigNumberish;
@@ -174,7 +174,7 @@ export class Positions extends BaseContract {
   ): Promise<
     [
       [string, number, number, number, number, number, BigNumber, boolean] & {
-        recipient: string;
+        to: string;
         lowerOld: number;
         lower: number;
         claim: number;
@@ -190,7 +190,7 @@ export class Positions extends BaseContract {
   callStatic: {
     validate(
       params: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -217,7 +217,7 @@ export class Positions extends BaseContract {
     ): Promise<
       [
         [string, number, number, number, number, number, BigNumber, boolean] & {
-          recipient: string;
+          to: string;
           lowerOld: number;
           lower: number;
           claim: number;
@@ -236,7 +236,7 @@ export class Positions extends BaseContract {
   estimateGas: {
     validate(
       params: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -266,7 +266,7 @@ export class Positions extends BaseContract {
   populateTransaction: {
     validate(
       params: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;

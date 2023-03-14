@@ -61,7 +61,7 @@ interface ICoverPoolStructs {
     }
 
     struct MintParams {
-        address recipient;
+        address to;
         int24 lowerOld;
         int24 lower;
         int24 claim;
@@ -69,6 +69,16 @@ interface ICoverPoolStructs {
         int24 upperOld;
         uint128 amount;
         bool zeroForOne;
+    }
+
+    struct BurnParams {
+        address to;
+        int24 lower;
+        int24 claim;
+        int24 upper;
+        bool zeroForOne;
+        uint128 amount;
+        bool collect;
     }
 
     //TODO: should we have a recipient field here?

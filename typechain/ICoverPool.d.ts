@@ -21,7 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface ICoverPoolInterface extends ethers.utils.Interface {
   functions: {
-    "burn(int24,int24,int24,bool,uint128)": FunctionFragment;
+    "burn((address,int24,int24,int24,bool,uint128,bool))": FunctionFragment;
     "collect(int24,int24,int24,bool)": FunctionFragment;
     "mint((address,int24,int24,int24,int24,int24,uint128,bool))": FunctionFragment;
     "swap(address,bool,uint128,uint160)": FunctionFragment;
@@ -29,7 +29,17 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
 
   encodeFunctionData(
     functionFragment: "burn",
-    values: [BigNumberish, BigNumberish, BigNumberish, boolean, BigNumberish]
+    values: [
+      {
+        to: string;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        collect: boolean;
+      }
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "collect",
@@ -39,7 +49,7 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
     functionFragment: "mint",
     values: [
       {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -108,11 +118,15 @@ export class ICoverPool extends BaseContract {
 
   functions: {
     burn(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
-      amount: BigNumberish,
+      burnParams: {
+        to: string;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        collect: boolean;
+      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -126,7 +140,7 @@ export class ICoverPool extends BaseContract {
 
     mint(
       mintParams: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -148,11 +162,15 @@ export class ICoverPool extends BaseContract {
   };
 
   burn(
-    lower: BigNumberish,
-    upper: BigNumberish,
-    claim: BigNumberish,
-    zeroForOne: boolean,
-    amount: BigNumberish,
+    burnParams: {
+      to: string;
+      lower: BigNumberish;
+      claim: BigNumberish;
+      upper: BigNumberish;
+      zeroForOne: boolean;
+      amount: BigNumberish;
+      collect: boolean;
+    },
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -166,7 +184,7 @@ export class ICoverPool extends BaseContract {
 
   mint(
     mintParams: {
-      recipient: string;
+      to: string;
       lowerOld: BigNumberish;
       lower: BigNumberish;
       claim: BigNumberish;
@@ -188,11 +206,15 @@ export class ICoverPool extends BaseContract {
 
   callStatic: {
     burn(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
-      amount: BigNumberish,
+      burnParams: {
+        to: string;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        collect: boolean;
+      },
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -206,7 +228,7 @@ export class ICoverPool extends BaseContract {
 
     mint(
       mintParams: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -231,11 +253,15 @@ export class ICoverPool extends BaseContract {
 
   estimateGas: {
     burn(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
-      amount: BigNumberish,
+      burnParams: {
+        to: string;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        collect: boolean;
+      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -249,7 +275,7 @@ export class ICoverPool extends BaseContract {
 
     mint(
       mintParams: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;
@@ -272,11 +298,15 @@ export class ICoverPool extends BaseContract {
 
   populateTransaction: {
     burn(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
-      amount: BigNumberish,
+      burnParams: {
+        to: string;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        zeroForOne: boolean;
+        amount: BigNumberish;
+        collect: boolean;
+      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -290,7 +320,7 @@ export class ICoverPool extends BaseContract {
 
     mint(
       mintParams: {
-        recipient: string;
+        to: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
         claim: BigNumberish;

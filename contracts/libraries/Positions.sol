@@ -7,8 +7,6 @@ import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
-import 'hardhat/console.sol';
-
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -27,8 +25,6 @@ library Positions {
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
-
-    using Positions for mapping(int24 => ICoverPoolStructs.Tick);
 
     function validate(
         ICoverPoolStructs.MintParams memory params,
@@ -174,7 +170,7 @@ library Positions {
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
         } else {
-            /// @dev - validate user can remove from position using this function
+            /// @dev - validate needed in case user passes in wrong tick
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
@@ -509,8 +505,6 @@ library Positions {
         }
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
-        console.log('delta max check 1');
-        console.log(ticks[-40].deltas.amountInDeltaMax);
         // apply deltas and add to position
         if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
             cache.position.amountIn  += uint128(cache.amountInFilledMax) - cache.finalDeltas.amountInDelta;
@@ -520,15 +514,8 @@ library Positions {
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            console.log('delta max check 2');
-        console.log(ticks[-40].deltas.amountInDeltaMax);
             (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
-            console.log('delta max check 3');
-        console.log(ticks[-40].deltas.amountInDeltaMax);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
-            console.log('delta max check 4');
-            console.log(cache.deltas.amountOutDeltaMax);
-        console.log(ticks[-40].deltas.amountInDeltaMax);
             //TODO: handle partial stashed and partial on tick
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);

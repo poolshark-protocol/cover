@@ -264,7 +264,7 @@ export async function validateMint(params: ValidateMintParams) {
         const txn = await hre.props.coverPool
             .connect(params.signer)
             .mint({
-                recipient: params.signer.address,
+                to: params.signer.address,
                 lowerOld: lowerOld, 
                 lower: lower,
                 claim: claim,
@@ -279,7 +279,7 @@ export async function validateMint(params: ValidateMintParams) {
             hre.props.coverPool
                 .connect(params.signer)
                 .mint({
-                    recipient: params.signer.address,
+                    to: params.signer.address,
                     lowerOld: lowerOld, 
                     lower: lower,
                     claim: claim,
@@ -423,7 +423,15 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (revertMessage == '') {
         const burnTxn = await hre.props.coverPool
             .connect(signer)
-            .burn(lower, claim, upper, zeroForOne, liquidityAmount)
+            .burn({
+                to: signer.address,
+                lower: lower,
+                claim: claim,
+                upper: upper,
+                zeroForOne: zeroForOne,
+                amount: liquidityAmount,
+                collect: true
+            })
         await burnTxn.wait()
         //TODO: expect balances to remain unchanged until collect
         const collectTxn = await hre.props.coverPool
@@ -434,7 +442,15 @@ export async function validateBurn(params: ValidateBurnParams) {
         await expect(
             hre.props.coverPool
                 .connect(signer)
-                .burn(lower, claim, upper, zeroForOne, liquidityAmount)
+                .burn({
+                    to: signer.address,
+                    lower: lower,
+                    claim: claim,
+                    upper: upper,
+                    zeroForOne: zeroForOne,
+                    amount: liquidityAmount,
+                    collect: true
+                })
         ).to.be.revertedWith(revertMessage)
         return
     }

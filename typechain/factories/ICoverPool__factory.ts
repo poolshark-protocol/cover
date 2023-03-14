@@ -10,29 +10,46 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "int24",
-        name: "lower",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "upper",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "claim",
-        type: "int24",
-      },
-      {
-        internalType: "bool",
-        name: "zeroForOne",
-        type: "bool",
-      },
-      {
-        internalType: "uint128",
-        name: "amount",
-        type: "uint128",
+        components: [
+          {
+            internalType: "address",
+            name: "to",
+            type: "address",
+          },
+          {
+            internalType: "int24",
+            name: "lower",
+            type: "int24",
+          },
+          {
+            internalType: "int24",
+            name: "claim",
+            type: "int24",
+          },
+          {
+            internalType: "int24",
+            name: "upper",
+            type: "int24",
+          },
+          {
+            internalType: "bool",
+            name: "zeroForOne",
+            type: "bool",
+          },
+          {
+            internalType: "uint128",
+            name: "amount",
+            type: "uint128",
+          },
+          {
+            internalType: "bool",
+            name: "collect",
+            type: "bool",
+          },
+        ],
+        internalType: "struct ICoverPoolStructs.BurnParams",
+        name: "burnParams",
+        type: "tuple",
       },
     ],
     name: "burn",
@@ -74,7 +91,7 @@ const _abi = [
         components: [
           {
             internalType: "address",
-            name: "recipient",
+            name: "to",
             type: "address",
           },
           {

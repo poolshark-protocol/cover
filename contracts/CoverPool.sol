@@ -81,7 +81,6 @@ contract CoverPool is
         MintParams memory params = mintParams;
         GlobalState memory state = globalState;
         if (block.number != globalState.lastBlock) {
-            //can save a couple 100 gas if we skip this when no update
             (state, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
@@ -99,43 +98,42 @@ contract CoverPool is
         } else {
             _transferIn(token1, params.amount);
         }
-
-        unchecked {
-            // recreates position if required
-            state = Positions.update(
-                params.zeroForOne ? positions0 : positions1,
-                params.zeroForOne ? ticks0 : ticks1,
-                tickNodes,
-                state,
-                params.zeroForOne ? pool0 : pool1,
-                UpdateParams(params.recipient, params.lower, params.upper, params.claim, params.zeroForOne, 0)
-            );
-            //TODO: check amount consumed from return value
-            //TODO: would be nice to reject invalid claim ticks on mint
-            //      don't think we can because of the 'double mint' scenario
-            // creates new position
-            (, state) = Positions.add(
-                params.zeroForOne ? positions0 : positions1,
-                params.zeroForOne ? ticks0 : ticks1,
-                tickNodes,
-                state,
-                AddParams(
-                    params.recipient,
-                    params.lowerOld,
-                    params.lower,
-                    params.upper,
-                    params.upperOld,
-                    params.zeroForOne,
-                    uint128(liquidityMinted)
-                )
-            );
-            /// @dev - pool current liquidity should never be increased on mint
-        }
+        // recreates position if required
+        state = Positions.update(
+            params.zeroForOne ? positions0 : positions1,
+            params.zeroForOne ? ticks0 : ticks1,
+            tickNodes,
+            state,
+            params.zeroForOne ? pool0 : pool1,
+            UpdateParams(
+                params.to,
+                params.lower,
+                params.upper,
+                params.claim,
+                params.zeroForOne,
+                0
+            )
+        );
+        (, state) = Positions.add(
+            params.zeroForOne ? positions0 : positions1,
+            params.zeroForOne ? ticks0 : ticks1,
+            tickNodes,
+            state,
+            AddParams(
+                params.to,
+                params.lowerOld,
+                params.lower,
+                params.upper,
+                params.upperOld,
+                params.zeroForOne,
+                uint128(liquidityMinted)
+            )
+        );
         emit Mint(
-            params.recipient,
+            params.to,
             params.lower,
             params.upper,
-            params.claim, //TODO: not sure if needed for subgraph
+            params.claim,
             params.zeroForOne,
             uint128(liquidityMinted)
         );
@@ -143,12 +141,9 @@ contract CoverPool is
     }
 
     function burn(
-        int24 lower,
-        int24 claim,
-        int24 upper,
-        bool zeroForOne,
-        uint128 amount
+        BurnParams calldata burnParams
     ) external lock {
+        BurnParams memory params = burnParams;
         GlobalState memory state = globalState;
         if (block.number != state.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
@@ -160,36 +155,34 @@ contract CoverPool is
                 state
             );
         }
-        //TODO: burning liquidity should take liquidity out past the current auction
-
-        // Ensure no overflow happens when we cast from uint128 to int128.
-        if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
-
-        if (claim != (zeroForOne ? upper : lower) || claim == state.latestTick) {
-            // update position and get new lower and upper
+        if (params.claim != (params.zeroForOne ? params.upper : params.lower) || params.claim == state.latestTick) {
+            // if position has been crossed into
             state = Positions.update(
-                zeroForOne ? positions0 : positions1,
-                zeroForOne ? ticks0 : ticks1,
+                params.zeroForOne ? positions0 : positions1,
+                params.zeroForOne ? ticks0 : ticks1,
                 tickNodes,
                 state,
-                zeroForOne ? pool0 : pool1,
-                UpdateParams(msg.sender, lower, upper, claim, zeroForOne, amount)
+                params.zeroForOne ? pool0 : pool1,
+                UpdateParams(
+                    msg.sender,
+                    params.lower,
+                    params.upper,
+                    params.claim,
+                    params.zeroForOne,
+                    params.amount
+                )
             );
-        }
-        //TODO: add PositionUpdated event
-        // if position hasn't changed remove liquidity
-        else {
+        } else {
+            // if position hasn't been crossed into
             (, state) = Positions.remove(
-                zeroForOne ? positions0 : positions1,
-                zeroForOne ? ticks0 : ticks1,
+                params.zeroForOne ? positions0 : positions1,
+                params.zeroForOne ? ticks0 : ticks1,
                 tickNodes,
                 state,
-                RemoveParams(msg.sender, lower, upper, zeroForOne, amount)
+                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
             );
         }
-        //TODO: get token amounts from _updatePosition return values
-        //TODO: need to know old ticks and new ticks
-        emit Burn(msg.sender, lower, upper, claim, zeroForOne, amount);
+        emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
         globalState = state;
     }
 

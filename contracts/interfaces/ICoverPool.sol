@@ -17,11 +17,7 @@ interface ICoverPool is ICoverPoolStructs {
     ) external;
 
     function burn(
-        int24 lower,
-        int24 upper,
-        int24 claim,
-        bool zeroForOne,
-        uint128 amount
+        BurnParams calldata burnParams
     ) external;
 
     function swap(
