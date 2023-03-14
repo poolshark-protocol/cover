@@ -155,7 +155,9 @@ contract CoverPool is
                 state
             );
         }
-        if (params.claim != (params.zeroForOne ? params.upper : params.lower) || params.claim == state.latestTick) {
+        if (params.claim != (params.zeroForOne ? params.upper : params.lower) 
+                         || params.claim == state.latestTick)
+        {
             // if position has been crossed into
             state = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
@@ -183,60 +185,32 @@ contract CoverPool is
             );
         }
         emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
-        globalState = state;
-    }
+        if (params.collect) {
+             mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = params.zeroForOne ? positions0 : positions1;
+            params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
 
-    function collect(
-        int24 lower,
-        int24 claim,
-        int24 upper,
-        bool zeroForOne
-    ) public lock {
-        GlobalState memory state = globalState;
-        if (block.number != state.lastBlock) {
-            (state, pool0, pool1) = Epochs.syncLatest(
-                ticks0,
-                ticks1,
-                tickNodes,
-                pool0,
-                pool1,
-                state
-            );
+            // store amounts for transferOut
+            uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
+            uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
+
+            console.log('amountIn:', amountIn);
+            console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+            console.log('amountOut:', amountOut);
+            console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+
+            // zero out balances
+            positions[msg.sender][params.lower][params.upper].amountIn = 0;
+            positions[msg.sender][params.lower][params.upper].amountOut = 0;
+
+            /// transfer out balances
+            _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
+            _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
+
+            emit Collect(msg.sender, amountIn, amountOut);
         }
-        state = Positions.update(
-            zeroForOne ? positions0 : positions1,
-            zeroForOne ? ticks0 : ticks1,
-            tickNodes,
-            state,
-            zeroForOne ? pool0 : pool1,
-            UpdateParams(msg.sender, lower, upper, claim, zeroForOne, 0)
-        );
-
-        mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = zeroForOne ? positions0 : positions1;
-        zeroForOne ? upper = claim : lower = claim;
-
-        // store amounts for transferOut
-        uint128 amountIn = positions[msg.sender][lower][upper].amountIn;
-        uint128 amountOut = positions[msg.sender][lower][upper].amountOut;
-
-        console.log('amountIn:', amountIn);
-        console.log(zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-        console.log('amountOut:', amountOut);
-        console.log(zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
-
-        // zero out balances
-        positions[msg.sender][lower][upper].amountIn = 0;
-        positions[msg.sender][lower][upper].amountOut = 0;
-
-        /// transfer out balances
-        _transferOut(msg.sender, zeroForOne ? token1 : token0, amountIn);
-        _transferOut(msg.sender, zeroForOne ? token0 : token1, amountOut);
-
-        emit Collect(msg.sender, amountIn, amountOut);
         globalState = state;
     }
 
-    /// @dev Swaps one token for another. The router must prefund this contract and ensure there isn't too much slippage.
     function swap(
         address recipient,
         bool zeroForOne,
@@ -245,12 +219,9 @@ contract CoverPool is
     )
         external
         override
-        // bytes calldata data
         lock
         returns (uint256 amountOut)
     {
-        //TODO: is this needed?
-        //TODO: implement stopPrice for pool/1
         GlobalState memory state = globalState;
         PoolState memory pool = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
@@ -261,10 +232,9 @@ contract CoverPool is
                 tickNodes,
                 pool0,
                 pool1,
-                state //TODO: move to syncLatest
+                state
             );
         }
-
         if (amountIn == 0) {
             globalState = state;
             return 0;
@@ -275,19 +245,15 @@ contract CoverPool is
         SwapCache memory cache = SwapCache({
             price: pool.price,
             liquidity: pool.liquidity,
+            amountIn: amountIn,
             auctionDepth: block.number - state.genesisBlock - state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
             inputBoosted: 0,
             amountInDelta: 0
         });
-
-        /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
-        /// @dev not sure whether to handle greater than tickSpacing range
-        /// @dev everything will always be cleared out except for the closest tick to state.latestTick
+        /// @dev - liquidity range is limited to one tick
         (cache, amountOut) = Ticks.quote(zeroForOne, priceLimit, state, cache);
-
-        // amountOut += output;
 
         if (zeroForOne) {
             pool1.price = uint160(cache.price);
@@ -305,7 +271,6 @@ contract CoverPool is
             emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
         } else {
             if (cache.input > 0) {
-                //TODO: add this delta across ticks in syncLatest / Positions.update
                 _transferOut(recipient, token1, cache.input);
             }
             _transferOut(recipient, token0, amountOut);
@@ -325,6 +290,7 @@ contract CoverPool is
         SwapCache memory cache = SwapCache({
             price: zeroForOne ? pool1.price : pool0.price,
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
+            amountIn: amountIn,
             auctionDepth: block.number - state.genesisBlock - state.auctionStart,
             auctionBoost: 0,
             input: amountIn,

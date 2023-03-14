@@ -29,13 +29,10 @@ library Positions {
     function validate(
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state
+    ) external pure returns (
+        ICoverPoolStructs.MintParams memory,
+        uint256 liquidityMinted
     )
-        external
-        pure
-        returns (
-            ICoverPoolStructs.MintParams memory,
-            uint256 liquidityMinted
-        )
     {
         if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
         if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();

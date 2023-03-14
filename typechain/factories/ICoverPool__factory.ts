@@ -60,34 +60,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "int24",
-        name: "lower",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "upper",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "claim",
-        type: "int24",
-      },
-      {
-        internalType: "bool",
-        name: "zeroForOne",
-        type: "bool",
-      },
-    ],
-    name: "collect",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         components: [
           {
             internalType: "address",

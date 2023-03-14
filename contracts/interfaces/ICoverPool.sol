@@ -5,13 +5,6 @@ import './ICoverPoolStructs.sol';
 
 //TODO: combine everything into one interface
 interface ICoverPool is ICoverPoolStructs {
-    function collect(
-        int24 lower,
-        int24 upper,
-        int24 claim,
-        bool zeroForOne
-    ) external;
-
     function mint(
         MintParams calldata mintParams
     ) external;

@@ -22,7 +22,6 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface CoverPoolInterface extends ethers.utils.Interface {
   functions: {
     "burn((address,int24,int24,int24,bool,uint128,bool))": FunctionFragment;
-    "collect(int24,int24,int24,bool)": FunctionFragment;
     "feeTo()": FunctionFragment;
     "globalState()": FunctionFragment;
     "mint((address,int24,int24,int24,int24,int24,uint128,bool))": FunctionFragment;
@@ -50,10 +49,6 @@ interface CoverPoolInterface extends ethers.utils.Interface {
         collect: boolean;
       }
     ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "collect",
-    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
   ): string;
   encodeFunctionData(functionFragment: "feeTo", values?: undefined): string;
   encodeFunctionData(
@@ -107,7 +102,6 @@ interface CoverPoolInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "collect", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "feeTo", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "globalState",
@@ -231,14 +225,6 @@ export class CoverPool extends BaseContract {
         amount: BigNumberish;
         collect: boolean;
       },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    collect(
-      lower: BigNumberish,
-      claim: BigNumberish,
-      upper: BigNumberish,
-      zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -464,14 +450,6 @@ export class CoverPool extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  collect(
-    lower: BigNumberish,
-    claim: BigNumberish,
-    upper: BigNumberish,
-    zeroForOne: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   feeTo(overrides?: CallOverrides): Promise<string>;
 
   globalState(
@@ -675,14 +653,6 @@ export class CoverPool extends BaseContract {
         amount: BigNumberish;
         collect: boolean;
       },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    collect(
-      lower: BigNumberish,
-      claim: BigNumberish,
-      upper: BigNumberish,
-      zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1039,14 +1009,6 @@ export class CoverPool extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    collect(
-      lower: BigNumberish,
-      claim: BigNumberish,
-      upper: BigNumberish,
-      zeroForOne: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     feeTo(overrides?: CallOverrides): Promise<BigNumber>;
 
     globalState(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1119,14 +1081,6 @@ export class CoverPool extends BaseContract {
         amount: BigNumberish;
         collect: boolean;
       },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    collect(
-      lower: BigNumberish,
-      claim: BigNumberish,
-      upper: BigNumberish,
-      zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

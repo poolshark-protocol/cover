@@ -214,16 +214,16 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
 
     //collect first to recreate positions if necessary
-    if (!collectRevertMessage) {
-        const txn = await hre.props.coverPool
-            .connect(params.signer)
-            .collect(lower, claim, upper, zeroForOne)
-        await txn.wait()
-    } else {
-        await expect(
-            hre.props.coverPool.connect(params.signer).collect(lower, claim, upper, zeroForOne)
-        ).to.be.revertedWith(collectRevertMessage)
-    }
+    // if (!collectRevertMessage) {
+    //     const txn = await hre.props.coverPool
+    //         .connect(params.signer)
+    //         .collect(lower, claim, upper, zeroForOne)
+    //     await txn.wait()
+    // } else {
+    //     await expect(
+    //         hre.props.coverPool.connect(params.signer).collect(lower, claim, upper, zeroForOne)
+    //     ).to.be.revertedWith(collectRevertMessage)
+    // }
     let balanceInBefore
     let balanceOutBefore
     if (zeroForOne) {
@@ -433,11 +433,6 @@ export async function validateBurn(params: ValidateBurnParams) {
                 collect: true
             })
         await burnTxn.wait()
-        //TODO: expect balances to remain unchanged until collect
-        const collectTxn = await hre.props.coverPool
-            .connect(signer)
-            .collect(lower, claim, upper, zeroForOne)
-        await collectTxn.wait()
     } else {
         await expect(
             hre.props.coverPool

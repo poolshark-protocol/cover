@@ -20,7 +20,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface TicksInterface extends ethers.utils.Interface {
   functions: {
-    "quote(bool,uint160,(uint8,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool),(uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
+    "quote(bool,uint160,(uint8,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool),(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -45,6 +45,7 @@ interface TicksInterface extends ethers.utils.Interface {
       {
         price: BigNumberish;
         liquidity: BigNumberish;
+        amountIn: BigNumberish;
         input: BigNumberish;
         inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
@@ -123,6 +124,7 @@ export class Ticks extends BaseContract {
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
+        amountIn: BigNumberish;
         input: BigNumberish;
         inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
@@ -139,10 +141,12 @@ export class Ticks extends BaseContract {
           BigNumber,
           BigNumber,
           BigNumber,
+          BigNumber,
           BigNumber
         ] & {
           price: BigNumber;
           liquidity: BigNumber;
+          amountIn: BigNumber;
           input: BigNumber;
           inputBoosted: BigNumber;
           auctionDepth: BigNumber;
@@ -174,6 +178,7 @@ export class Ticks extends BaseContract {
     cache: {
       price: BigNumberish;
       liquidity: BigNumberish;
+      amountIn: BigNumberish;
       input: BigNumberish;
       inputBoosted: BigNumberish;
       auctionDepth: BigNumberish;
@@ -190,10 +195,12 @@ export class Ticks extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
+        BigNumber,
         BigNumber
       ] & {
         price: BigNumber;
         liquidity: BigNumber;
+        amountIn: BigNumber;
         input: BigNumber;
         inputBoosted: BigNumber;
         auctionDepth: BigNumber;
@@ -225,6 +232,7 @@ export class Ticks extends BaseContract {
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
+        amountIn: BigNumberish;
         input: BigNumberish;
         inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
@@ -241,10 +249,12 @@ export class Ticks extends BaseContract {
           BigNumber,
           BigNumber,
           BigNumber,
+          BigNumber,
           BigNumber
         ] & {
           price: BigNumber;
           liquidity: BigNumber;
+          amountIn: BigNumber;
           input: BigNumber;
           inputBoosted: BigNumber;
           auctionDepth: BigNumber;
@@ -279,6 +289,7 @@ export class Ticks extends BaseContract {
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
+        amountIn: BigNumberish;
         input: BigNumberish;
         inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;
@@ -310,6 +321,7 @@ export class Ticks extends BaseContract {
       cache: {
         price: BigNumberish;
         liquidity: BigNumberish;
+        amountIn: BigNumberish;
         input: BigNumberish;
         inputBoosted: BigNumberish;
         auctionDepth: BigNumberish;

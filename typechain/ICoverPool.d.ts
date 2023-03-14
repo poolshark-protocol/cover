@@ -22,7 +22,6 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface ICoverPoolInterface extends ethers.utils.Interface {
   functions: {
     "burn((address,int24,int24,int24,bool,uint128,bool))": FunctionFragment;
-    "collect(int24,int24,int24,bool)": FunctionFragment;
     "mint((address,int24,int24,int24,int24,int24,uint128,bool))": FunctionFragment;
     "swap(address,bool,uint128,uint160)": FunctionFragment;
   };
@@ -40,10 +39,6 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
         collect: boolean;
       }
     ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "collect",
-    values: [BigNumberish, BigNumberish, BigNumberish, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "mint",
@@ -66,7 +61,6 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "collect", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "swap", data: BytesLike): Result;
 
@@ -130,14 +124,6 @@ export class ICoverPool extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    collect(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     mint(
       mintParams: {
         to: string;
@@ -174,14 +160,6 @@ export class ICoverPool extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  collect(
-    lower: BigNumberish,
-    upper: BigNumberish,
-    claim: BigNumberish,
-    zeroForOne: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   mint(
     mintParams: {
       to: string;
@@ -215,14 +193,6 @@ export class ICoverPool extends BaseContract {
         amount: BigNumberish;
         collect: boolean;
       },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    collect(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -265,14 +235,6 @@ export class ICoverPool extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    collect(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     mint(
       mintParams: {
         to: string;
@@ -307,14 +269,6 @@ export class ICoverPool extends BaseContract {
         amount: BigNumberish;
         collect: boolean;
       },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    collect(
-      lower: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      zeroForOne: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

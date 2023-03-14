@@ -439,7 +439,6 @@ library Epochs {
             (deltas, stashTick) = Deltas.onto(deltas, stashTick);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
-        
         return (stashTick);
     }
 }

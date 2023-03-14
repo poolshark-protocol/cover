@@ -123,6 +123,7 @@ interface ICoverPoolStructs {
     struct SwapCache {
         uint256 price;
         uint256 liquidity;
+        uint256 amountIn;
         uint256 input;
         uint256 inputBoosted;
         uint256 auctionDepth;
