@@ -71,39 +71,51 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "int24",
-        name: "lowerOld",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "lower",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "upperOld",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "upper",
-        type: "int24",
-      },
-      {
-        internalType: "int24",
-        name: "claim",
-        type: "int24",
-      },
-      {
-        internalType: "uint128",
-        name: "amountDesired",
-        type: "uint128",
-      },
-      {
-        internalType: "bool",
-        name: "zeroForOne",
-        type: "bool",
+        components: [
+          {
+            internalType: "address",
+            name: "recipient",
+            type: "address",
+          },
+          {
+            internalType: "int24",
+            name: "lowerOld",
+            type: "int24",
+          },
+          {
+            internalType: "int24",
+            name: "lower",
+            type: "int24",
+          },
+          {
+            internalType: "int24",
+            name: "claim",
+            type: "int24",
+          },
+          {
+            internalType: "int24",
+            name: "upper",
+            type: "int24",
+          },
+          {
+            internalType: "int24",
+            name: "upperOld",
+            type: "int24",
+          },
+          {
+            internalType: "uint128",
+            name: "amount",
+            type: "uint128",
+          },
+          {
+            internalType: "bool",
+            name: "zeroForOne",
+            type: "bool",
+          },
+        ],
+        internalType: "struct ICoverPoolStructs.MintParams",
+        name: "mintParams",
+        type: "tuple",
       },
     ],
     name: "mint",

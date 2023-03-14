@@ -60,6 +60,17 @@ interface ICoverPoolStructs {
         uint160 claimPriceLast; // highest price claimed at
     }
 
+    struct MintParams {
+        address recipient;
+        int24 lowerOld;
+        int24 lower;
+        int24 claim;
+        int24 upper;
+        int24 upperOld;
+        uint128 amount;
+        bool zeroForOne;
+    }
+
     //TODO: should we have a recipient field here?
     struct AddParams {
         address owner;

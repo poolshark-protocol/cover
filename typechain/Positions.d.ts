@@ -20,33 +20,35 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface PositionsInterface extends ethers.utils.Interface {
   functions: {
-    "validate((int24,int24,int24,int24,bool,uint128,(uint8,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool)))": FunctionFragment;
+    "validate((address,int24,int24,int24,int24,int24,uint128,bool),(uint8,int16,uint16,uint16,int24,uint32,uint32,uint32,uint32,uint128,uint160,IRangePool))": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "validate",
     values: [
       {
+        recipient: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
+        claim: BigNumberish;
         upper: BigNumberish;
         upperOld: BigNumberish;
-        zeroForOne: boolean;
         amount: BigNumberish;
-        state: {
-          unlocked: BigNumberish;
-          tickSpread: BigNumberish;
-          twapLength: BigNumberish;
-          auctionLength: BigNumberish;
-          latestTick: BigNumberish;
-          genesisBlock: BigNumberish;
-          lastBlock: BigNumberish;
-          auctionStart: BigNumberish;
-          accumEpoch: BigNumberish;
-          liquidityGlobal: BigNumberish;
-          latestPrice: BigNumberish;
-          inputPool: string;
-        };
+        zeroForOne: boolean;
+      },
+      {
+        unlocked: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        auctionLength: BigNumberish;
+        latestTick: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
+        accumEpoch: BigNumberish;
+        liquidityGlobal: BigNumberish;
+        latestPrice: BigNumberish;
+        inputPool: string;
       }
     ]
   ): string;
@@ -102,43 +104,15 @@ export class Positions extends BaseContract {
   functions: {
     validate(
       params: {
+        recipient: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
+        claim: BigNumberish;
         upper: BigNumberish;
         upperOld: BigNumberish;
-        zeroForOne: boolean;
         amount: BigNumberish;
-        state: {
-          unlocked: BigNumberish;
-          tickSpread: BigNumberish;
-          twapLength: BigNumberish;
-          auctionLength: BigNumberish;
-          latestTick: BigNumberish;
-          genesisBlock: BigNumberish;
-          lastBlock: BigNumberish;
-          auctionStart: BigNumberish;
-          accumEpoch: BigNumberish;
-          liquidityGlobal: BigNumberish;
-          latestPrice: BigNumberish;
-          inputPool: string;
-        };
+        zeroForOne: boolean;
       },
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number, number, number, BigNumber, BigNumber] & {
-        liquidityMinted: BigNumber;
-      }
-    >;
-  };
-
-  validate(
-    params: {
-      lowerOld: BigNumberish;
-      lower: BigNumberish;
-      upper: BigNumberish;
-      upperOld: BigNumberish;
-      zeroForOne: boolean;
-      amount: BigNumberish;
       state: {
         unlocked: BigNumberish;
         tickSpread: BigNumberish;
@@ -152,44 +126,108 @@ export class Positions extends BaseContract {
         liquidityGlobal: BigNumberish;
         latestPrice: BigNumberish;
         inputPool: string;
-      };
+      },
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        [string, number, number, number, number, number, BigNumber, boolean] & {
+          recipient: string;
+          lowerOld: number;
+          lower: number;
+          claim: number;
+          upper: number;
+          upperOld: number;
+          amount: BigNumber;
+          zeroForOne: boolean;
+        },
+        BigNumber
+      ] & { liquidityMinted: BigNumber }
+    >;
+  };
+
+  validate(
+    params: {
+      recipient: string;
+      lowerOld: BigNumberish;
+      lower: BigNumberish;
+      claim: BigNumberish;
+      upper: BigNumberish;
+      upperOld: BigNumberish;
+      amount: BigNumberish;
+      zeroForOne: boolean;
+    },
+    state: {
+      unlocked: BigNumberish;
+      tickSpread: BigNumberish;
+      twapLength: BigNumberish;
+      auctionLength: BigNumberish;
+      latestTick: BigNumberish;
+      genesisBlock: BigNumberish;
+      lastBlock: BigNumberish;
+      auctionStart: BigNumberish;
+      accumEpoch: BigNumberish;
+      liquidityGlobal: BigNumberish;
+      latestPrice: BigNumberish;
+      inputPool: string;
     },
     overrides?: CallOverrides
   ): Promise<
-    [number, number, number, number, BigNumber, BigNumber] & {
-      liquidityMinted: BigNumber;
-    }
+    [
+      [string, number, number, number, number, number, BigNumber, boolean] & {
+        recipient: string;
+        lowerOld: number;
+        lower: number;
+        claim: number;
+        upper: number;
+        upperOld: number;
+        amount: BigNumber;
+        zeroForOne: boolean;
+      },
+      BigNumber
+    ] & { liquidityMinted: BigNumber }
   >;
 
   callStatic: {
     validate(
       params: {
+        recipient: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
+        claim: BigNumberish;
         upper: BigNumberish;
         upperOld: BigNumberish;
-        zeroForOne: boolean;
         amount: BigNumberish;
-        state: {
-          unlocked: BigNumberish;
-          tickSpread: BigNumberish;
-          twapLength: BigNumberish;
-          auctionLength: BigNumberish;
-          latestTick: BigNumberish;
-          genesisBlock: BigNumberish;
-          lastBlock: BigNumberish;
-          auctionStart: BigNumberish;
-          accumEpoch: BigNumberish;
-          liquidityGlobal: BigNumberish;
-          latestPrice: BigNumberish;
-          inputPool: string;
-        };
+        zeroForOne: boolean;
+      },
+      state: {
+        unlocked: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        auctionLength: BigNumberish;
+        latestTick: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
+        accumEpoch: BigNumberish;
+        liquidityGlobal: BigNumberish;
+        latestPrice: BigNumberish;
+        inputPool: string;
       },
       overrides?: CallOverrides
     ): Promise<
-      [number, number, number, number, BigNumber, BigNumber] & {
-        liquidityMinted: BigNumber;
-      }
+      [
+        [string, number, number, number, number, number, BigNumber, boolean] & {
+          recipient: string;
+          lowerOld: number;
+          lower: number;
+          claim: number;
+          upper: number;
+          upperOld: number;
+          amount: BigNumber;
+          zeroForOne: boolean;
+        },
+        BigNumber
+      ] & { liquidityMinted: BigNumber }
     >;
   };
 
@@ -198,26 +236,28 @@ export class Positions extends BaseContract {
   estimateGas: {
     validate(
       params: {
+        recipient: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
+        claim: BigNumberish;
         upper: BigNumberish;
         upperOld: BigNumberish;
-        zeroForOne: boolean;
         amount: BigNumberish;
-        state: {
-          unlocked: BigNumberish;
-          tickSpread: BigNumberish;
-          twapLength: BigNumberish;
-          auctionLength: BigNumberish;
-          latestTick: BigNumberish;
-          genesisBlock: BigNumberish;
-          lastBlock: BigNumberish;
-          auctionStart: BigNumberish;
-          accumEpoch: BigNumberish;
-          liquidityGlobal: BigNumberish;
-          latestPrice: BigNumberish;
-          inputPool: string;
-        };
+        zeroForOne: boolean;
+      },
+      state: {
+        unlocked: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        auctionLength: BigNumberish;
+        latestTick: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
+        accumEpoch: BigNumberish;
+        liquidityGlobal: BigNumberish;
+        latestPrice: BigNumberish;
+        inputPool: string;
       },
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -226,26 +266,28 @@ export class Positions extends BaseContract {
   populateTransaction: {
     validate(
       params: {
+        recipient: string;
         lowerOld: BigNumberish;
         lower: BigNumberish;
+        claim: BigNumberish;
         upper: BigNumberish;
         upperOld: BigNumberish;
-        zeroForOne: boolean;
         amount: BigNumberish;
-        state: {
-          unlocked: BigNumberish;
-          tickSpread: BigNumberish;
-          twapLength: BigNumberish;
-          auctionLength: BigNumberish;
-          latestTick: BigNumberish;
-          genesisBlock: BigNumberish;
-          lastBlock: BigNumberish;
-          auctionStart: BigNumberish;
-          accumEpoch: BigNumberish;
-          liquidityGlobal: BigNumberish;
-          latestPrice: BigNumberish;
-          inputPool: string;
-        };
+        zeroForOne: boolean;
+      },
+      state: {
+        unlocked: BigNumberish;
+        tickSpread: BigNumberish;
+        twapLength: BigNumberish;
+        auctionLength: BigNumberish;
+        latestTick: BigNumberish;
+        genesisBlock: BigNumberish;
+        lastBlock: BigNumberish;
+        auctionStart: BigNumberish;
+        accumEpoch: BigNumberish;
+        liquidityGlobal: BigNumberish;
+        latestPrice: BigNumberish;
+        inputPool: string;
       },
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

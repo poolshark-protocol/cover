@@ -13,13 +13,7 @@ interface ICoverPool is ICoverPoolStructs {
     ) external;
 
     function mint(
-        int24 lowerOld,
-        int24 lower,
-        int24 upperOld,
-        int24 upper,
-        int24 claim,
-        uint128 amountDesired,
-        bool zeroForOne
+        MintParams calldata mintParams
     ) external;
 
     function burn(

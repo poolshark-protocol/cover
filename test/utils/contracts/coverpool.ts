@@ -263,13 +263,31 @@ export async function validateMint(params: ValidateMintParams) {
     if (revertMessage == '') {
         const txn = await hre.props.coverPool
             .connect(params.signer)
-            .mint(lowerOld, lower, claim, upper, upperOld, amountDesired, zeroForOne)
+            .mint({
+                recipient: params.signer.address,
+                lowerOld: lowerOld, 
+                lower: lower,
+                claim: claim,
+                upper: upper,
+                upperOld: upperOld,
+                amount: amountDesired,
+                zeroForOne: zeroForOne
+              })
         await txn.wait()
     } else {
         await expect(
             hre.props.coverPool
                 .connect(params.signer)
-                .mint(lowerOld, lower, claim, upper, upperOld, amountDesired, zeroForOne)
+                .mint({
+                    recipient: params.signer.address,
+                    lowerOld: lowerOld, 
+                    lower: lower,
+                    claim: claim,
+                    upper: upper,
+                    upperOld: upperOld,
+                    amount: amountDesired,
+                    zeroForOne: zeroForOne
+                })
         ).to.be.revertedWith(revertMessage)
         return
     }

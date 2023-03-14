@@ -23,7 +23,7 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
   functions: {
     "burn(int24,int24,int24,bool,uint128)": FunctionFragment;
     "collect(int24,int24,int24,bool)": FunctionFragment;
-    "mint(int24,int24,int24,int24,int24,uint128,bool)": FunctionFragment;
+    "mint((address,int24,int24,int24,int24,int24,uint128,bool))": FunctionFragment;
     "swap(address,bool,uint128,uint160)": FunctionFragment;
   };
 
@@ -38,13 +38,16 @@ interface ICoverPoolInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "mint",
     values: [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      boolean
+      {
+        recipient: string;
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        amount: BigNumberish;
+        zeroForOne: boolean;
+      }
     ]
   ): string;
   encodeFunctionData(
@@ -122,13 +125,16 @@ export class ICoverPool extends BaseContract {
     ): Promise<ContractTransaction>;
 
     mint(
-      lowerOld: BigNumberish,
-      lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      amountDesired: BigNumberish,
-      zeroForOne: boolean,
+      mintParams: {
+        recipient: string;
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        amount: BigNumberish;
+        zeroForOne: boolean;
+      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -159,13 +165,16 @@ export class ICoverPool extends BaseContract {
   ): Promise<ContractTransaction>;
 
   mint(
-    lowerOld: BigNumberish,
-    lower: BigNumberish,
-    upperOld: BigNumberish,
-    upper: BigNumberish,
-    claim: BigNumberish,
-    amountDesired: BigNumberish,
-    zeroForOne: boolean,
+    mintParams: {
+      recipient: string;
+      lowerOld: BigNumberish;
+      lower: BigNumberish;
+      claim: BigNumberish;
+      upper: BigNumberish;
+      upperOld: BigNumberish;
+      amount: BigNumberish;
+      zeroForOne: boolean;
+    },
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -196,13 +205,16 @@ export class ICoverPool extends BaseContract {
     ): Promise<void>;
 
     mint(
-      lowerOld: BigNumberish,
-      lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      amountDesired: BigNumberish,
-      zeroForOne: boolean,
+      mintParams: {
+        recipient: string;
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        amount: BigNumberish;
+        zeroForOne: boolean;
+      },
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -236,13 +248,16 @@ export class ICoverPool extends BaseContract {
     ): Promise<BigNumber>;
 
     mint(
-      lowerOld: BigNumberish,
-      lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      amountDesired: BigNumberish,
-      zeroForOne: boolean,
+      mintParams: {
+        recipient: string;
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        amount: BigNumberish;
+        zeroForOne: boolean;
+      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -274,13 +289,16 @@ export class ICoverPool extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     mint(
-      lowerOld: BigNumberish,
-      lower: BigNumberish,
-      upperOld: BigNumberish,
-      upper: BigNumberish,
-      claim: BigNumberish,
-      amountDesired: BigNumberish,
-      zeroForOne: boolean,
+      mintParams: {
+        recipient: string;
+        lowerOld: BigNumberish;
+        lower: BigNumberish;
+        claim: BigNumberish;
+        upper: BigNumberish;
+        upperOld: BigNumberish;
+        amount: BigNumberish;
+        zeroForOne: boolean;
+      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

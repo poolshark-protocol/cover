@@ -67,16 +67,6 @@ library Ticks {
                     cache.price,
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
-                console.log('newPrice', newPrice);
-                console.log('old price', cache.price);
-                console.log(cache.liquidity);
-                console.log(cache.price);
-                console.log(cache.input);
-                /// @auditor - check tests to see if we need overflow handle
-                // if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
-                //     console.log('overflow check');
-                //     newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
-                // }
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = uint160(newPrice);
                 cache.amountInDelta = maxDx - maxDx * cache.input / cache.inputBoosted;

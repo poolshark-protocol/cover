@@ -30,29 +30,28 @@ library Positions {
 
     using Positions for mapping(int24 => ICoverPoolStructs.Tick);
 
-    function validate(ICoverPoolStructs.ValidateParams memory params)
+    function validate(
+        ICoverPoolStructs.MintParams memory params,
+        ICoverPoolStructs.GlobalState memory state
+    )
         external
         pure
         returns (
-            int24,
-            int24,
-            int24,
-            int24,
-            uint128,
+            ICoverPoolStructs.MintParams memory,
             uint256 liquidityMinted
         )
     {
         if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
         if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
-        if (params.lower % int24(params.state.tickSpread) != 0) revert InvalidLowerTick();
-        if (params.upper % int24(params.state.tickSpread) != 0) revert InvalidUpperTick();
+        if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
+        if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
         if (params.amount == 0) revert InvalidPositionAmount();
         if (params.lower >= params.upper || params.lowerOld >= params.upperOld)
             revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {
-            if (params.lower >= params.state.latestTick) revert InvalidPositionBoundsTwap();
+            if (params.lower >= state.latestTick) revert InvalidPositionBoundsTwap();
         } else {
-            if (params.upper <= params.state.latestTick) revert InvalidPositionBoundsTwap();
+            if (params.upper <= state.latestTick) revert InvalidPositionBoundsTwap();
         }
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(params.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(params.upper));
@@ -67,9 +66,9 @@ library Positions {
 
         // handle partial mints
         if (params.zeroForOne) {
-            if (params.upper >= params.state.latestTick) {
-                params.upper = params.state.latestTick - int24(params.state.tickSpread);
-                params.upperOld = params.state.latestTick;
+            if (params.upper >= state.latestTick) {
+                params.upper = state.latestTick - int24(state.tickSpread);
+                params.upperOld = state.latestTick;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
                     DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false)
@@ -77,9 +76,9 @@ library Positions {
                 priceUpper = priceNewUpper;
             }
         } else {
-            if (params.lower <= params.state.latestTick) {
-                params.lower = params.state.latestTick + int24(params.state.tickSpread);
-                params.lowerOld = params.state.latestTick;
+            if (params.lower <= state.latestTick) {
+                params.lower = state.latestTick + int24(state.tickSpread);
+                params.lowerOld = state.latestTick;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
                     DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false)
@@ -92,11 +91,7 @@ library Positions {
         if (params.lower == params.upper) revert InvalidPositionBoundsTwap();
 
         return (
-            params.lowerOld,
-            params.lower,
-            params.upper,
-            params.upperOld,
-            params.amount,
+            params,
             liquidityMinted
         );
     }

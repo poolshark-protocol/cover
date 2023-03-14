@@ -76,79 +76,70 @@ contract CoverPool is
     //TODO: create transfer function to transfer ownership
     /// @dev Mints LP tokens - should be called via the CL pool manager contract.
     function mint(
-        int24 lowerOld,
-        int24 lower,
-        int24 claim,
-        int24 upper,
-        int24 upperOld,
-        uint128 amountDesired,
-        bool zeroForOne
+        MintParams calldata mintParams
     ) external lock {
-        /// @dev - don't allow mints until we have enough observations from state.inputPool
-        //TODO: move tick update check here
+        MintParams memory params = mintParams;
+        GlobalState memory state = globalState;
         if (block.number != globalState.lastBlock) {
             //can save a couple 100 gas if we skip this when no update
-            (globalState, pool0, pool1) = Epochs.syncLatest(
+            (state, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickNodes,
                 pool0,
                 pool1,
-                globalState
+                state
             );
         }
         uint256 liquidityMinted;
-        (lowerOld, lower, upper, upperOld, amountDesired, liquidityMinted) = Positions.validate(
-            ValidateParams(lowerOld, lower, upper, upperOld, zeroForOne, amountDesired, globalState)
-        );
-        //TODO: handle upperOld and lowerOld being invalid
+        (params, liquidityMinted) = Positions.validate(params, state);
 
-        if (zeroForOne) {
-            _transferIn(token0, amountDesired);
+        if (params.zeroForOne) {
+            _transferIn(token0, params.amount);
         } else {
-            _transferIn(token1, amountDesired);
+            _transferIn(token1, params.amount);
         }
 
         unchecked {
             // recreates position if required
-            globalState = Positions.update(
-                zeroForOne ? positions0 : positions1,
-                zeroForOne ? ticks0 : ticks1,
+            state = Positions.update(
+                params.zeroForOne ? positions0 : positions1,
+                params.zeroForOne ? ticks0 : ticks1,
                 tickNodes,
-                globalState,
-                zeroForOne ? pool0 : pool1,
-                UpdateParams(msg.sender, lower, upper, claim, zeroForOne, 0)
+                state,
+                params.zeroForOne ? pool0 : pool1,
+                UpdateParams(params.recipient, params.lower, params.upper, params.claim, params.zeroForOne, 0)
             );
             //TODO: check amount consumed from return value
             //TODO: would be nice to reject invalid claim ticks on mint
             //      don't think we can because of the 'double mint' scenario
             // creates new position
-            (, globalState) = Positions.add(
-                zeroForOne ? positions0 : positions1,
-                zeroForOne ? ticks0 : ticks1,
+            (, state) = Positions.add(
+                params.zeroForOne ? positions0 : positions1,
+                params.zeroForOne ? ticks0 : ticks1,
                 tickNodes,
-                globalState,
+                state,
                 AddParams(
-                    msg.sender,
-                    lowerOld,
-                    lower,
-                    upper,
-                    upperOld,
-                    zeroForOne,
+                    params.recipient,
+                    params.lowerOld,
+                    params.lower,
+                    params.upper,
+                    params.upperOld,
+                    params.zeroForOne,
                     uint128(liquidityMinted)
                 )
             );
             /// @dev - pool current liquidity should never be increased on mint
         }
         emit Mint(
-            msg.sender,
-            lower,
-            upper,
-            claim, //TODO: not sure if needed for subgraph
-            zeroForOne,
+            params.recipient,
+            params.lower,
+            params.upper,
+            params.claim, //TODO: not sure if needed for subgraph
+            params.zeroForOne,
             uint128(liquidityMinted)
         );
-        // globalState = state;
+        globalState = state;
     }
 
     function burn(
