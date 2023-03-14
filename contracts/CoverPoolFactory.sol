@@ -12,6 +12,8 @@ contract CoverPoolFactory is ICoverPoolFactory {
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     error InvalidTickSpread();
+    error TickSpreadNotMultipleOfTickSpacing();
+    error TickSpreadNotAtLeastDoubleTickSpread();
 
     constructor(address _rangePoolFactory) {
         owner = msg.sender;
@@ -47,8 +49,12 @@ contract CoverPoolFactory is ICoverPoolFactory {
         int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(uint24(feeTier));
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
-        } else if (tickSpread <= tickSpacing) {
-            revert InvalidTickSpread();
+        }
+        int24 tickMultiple = tickSpread / tickSpacing;
+        if (tickMultiple * tickSpacing != tickSpread) {
+            revert TickSpreadNotMultipleOfTickSpacing();
+        } else if (tickMultiple < 2) {
+            revert TickSpreadNotAtLeastDoubleTickSpread();
         }
 
         address inputPool = getInputPool(token0, token1, feeTier);

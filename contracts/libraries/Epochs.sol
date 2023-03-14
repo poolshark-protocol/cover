@@ -7,7 +7,6 @@ import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
-import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -293,9 +292,9 @@ library Epochs {
         //handle liquidity rollover
         if (isPool0) {
             // amountIn pool did not receive
-            uint128 amountInDelta     = uint128(DyDxMath.getDy(pool.liquidity, currentPrice, crossPrice, true));
+            uint128 amountInDelta;
             uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
-            amountInDelta      += pool.amountInDelta;
+            amountInDelta      = pool.amountInDelta;
             amountInDeltaMax   -= pool.amountInDeltaMaxClaimed;
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;

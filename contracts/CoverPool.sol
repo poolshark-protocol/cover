@@ -42,12 +42,6 @@ contract CoverPool is
         uint16 _twapLength,
         uint16 _auctionLength
     ) {
-        // validate tick spread
-        int24 _tickSpacing = IRangePool(_inputPool).tickSpacing();
-        int24 _tickMultiple = _tickSpread / _tickSpacing;
-        if ((_tickMultiple < 2) || _tickMultiple * _tickSpacing != _tickSpread)
-            revert InvalidTickSpread();
-
         // set addresses
         factory   = msg.sender;
         token0    = IRangePool(_inputPool).token0();
@@ -193,10 +187,10 @@ contract CoverPool is
             uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
             uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
-            console.log('amountIn:', amountIn);
-            console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-            console.log('amountOut:', amountOut);
-            console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+            // console.log('amountIn:', amountIn);
+            // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+            // console.log('amountOut:', amountOut);
+            // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
 
             // zero out balances
             positions[msg.sender][params.lower][params.upper].amountIn = 0;

@@ -44,6 +44,36 @@ describe('CoverPoolFactory Tests', function () {
         ).to.be.revertedWith('IdenticalTokenAddresses()')
     })
 
+    it('Should not create pool tick spread greater than tick spacing', async function () {
+        await expect(
+            hre.props.coverPoolFactory
+                .connect(hre.props.admin)
+                .createCoverPool(
+                    hre.props.token1.address,
+                    hre.props.token0.address,
+                    '500',
+                    '10',
+                    '5',
+                    '20'
+                )
+        ).to.be.revertedWith('TickSpreadNotAtLeastDoubleTickSpread()')
+    })
+
+    it('Should not create pool without clean multiple of tick spacing', async function () {
+        await expect(
+            hre.props.coverPoolFactory
+                .connect(hre.props.admin)
+                .createCoverPool(
+                    hre.props.token1.address,
+                    hre.props.token0.address,
+                    '500',
+                    '25',
+                    '5',
+                    '20'
+                )
+        ).to.be.revertedWith('TickSpreadNotMultipleOfTickSpacing()')
+    })
+
     it('Should not create pool if the pair already exists', async function () {
         await expect(
             hre.props.coverPoolFactory

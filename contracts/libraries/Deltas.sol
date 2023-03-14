@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import './DyDxMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 //TODO: stash and unstash
 //TODO: transfer delta maxes as well in Positions.update()
 library Deltas {
@@ -18,13 +18,23 @@ library Deltas {
     ) {
         {
             uint128 amountInDeltaChange = uint128(uint256(fromDeltas.amountInDelta) * percentInTransfer / 1e38);
-            fromDeltas.amountInDelta -= amountInDeltaChange;
-            toDeltas.amountInDelta += amountInDeltaChange;
+            if (amountInDeltaChange < fromDeltas.amountInDelta ) {
+                fromDeltas.amountInDelta -= amountInDeltaChange;
+                toDeltas.amountInDelta += amountInDeltaChange;
+            } else {
+                toDeltas.amountInDelta += fromDeltas.amountInDelta;
+                fromDeltas.amountInDelta = 0;
+            }
         }
         {
             uint128 amountOutDeltaChange = uint128(uint256(fromDeltas.amountOutDelta) * percentOutTransfer / 1e38);
-            fromDeltas.amountOutDelta -= amountOutDeltaChange;
-            toDeltas.amountOutDelta += amountOutDeltaChange;
+            if (amountOutDeltaChange < fromDeltas.amountOutDelta ) {
+                fromDeltas.amountOutDelta -= amountOutDeltaChange;
+                toDeltas.amountOutDelta += amountOutDeltaChange;
+            } else {
+                toDeltas.amountOutDelta += fromDeltas.amountOutDelta;
+                fromDeltas.amountOutDelta = 0;
+            }
         }
         return (fromDeltas, toDeltas);
     }

@@ -166,6 +166,8 @@ export async function validateSwap(params: ValidateSwapParams) {
         return
     }
 
+    console.log('amountInDelta after', (await hre.props.coverPool.pool0()).amountInDelta.toString())
+
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

@@ -423,9 +423,10 @@ library Positions {
                     pool.price,
                     params.zeroForOne
                 );
-                uint256 poolAmountInDeltaChange = uint256(cache.position.liquidity) * 1e38 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
+                uint256 poolAmountInDeltaChange = uint256(cache.position.liquidity) * 1e38 
+                                                  / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
                 
-                cache.position.amountIn += amountInFilledMax - uint128(poolAmountInDeltaChange);
+                cache.position.amountIn += uint128(poolAmountInDeltaChange);
                 pool.amountInDelta -= uint128(poolAmountInDeltaChange);
                 cache.finalDeltas.amountInDeltaMax += amountInFilledMax;
                 cache.finalDeltas.amountOutDeltaMax += amountOutUnfilledMax;
@@ -504,7 +505,7 @@ library Positions {
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         // apply deltas and add to position
         if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
-            cache.position.amountIn  += uint128(cache.amountInFilledMax) - cache.finalDeltas.amountInDelta;
+            cache.position.amountIn  += cache.finalDeltas.amountInDelta;
         cache.position.amountOut += cache.finalDeltas.amountOutDelta;
         // add remaining deltas cached back to claim tick
         // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
