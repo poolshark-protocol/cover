@@ -14,6 +14,7 @@ import {
     TwapOracle,
     Epochs,
     Deltas,
+    Claims,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 
@@ -29,6 +30,7 @@ export interface BeforeEachProps {
     fullPrecisionMathLib: FullPrecisionMath
     ticksLib: Ticks
     twapOracleLib: TwapOracle
+    claimsLib: Claims
     positionsLib: Positions
     tokenA: Token20
     tokenB: Token20
@@ -74,6 +76,7 @@ export class GetBeforeEach {
         let fullPrecisionMathLib: FullPrecisionMath
         let ticksLib: Ticks
         let twapOracleLib: TwapOracle
+        let claimsLib: Claims
         let positionsLib: Positions
         let tokenA: Token20
         let tokenB: Token20
@@ -97,6 +100,7 @@ export class GetBeforeEach {
             fullPrecisionMathLib,
             ticksLib,
             twapOracleLib,
+            claimsLib,
             positionsLib,
             tokenA,
             tokenB,
