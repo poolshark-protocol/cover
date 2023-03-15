@@ -7,6 +7,7 @@ import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
 import './TwapOracle.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -181,6 +182,9 @@ library Ticks {
             } else {
                 tickLower.liquidityDelta += int128(amount);
             }
+            if (upper == tickNodes[upperOld].previousTick) {
+                tickNodeLower.nextTick = upper;
+            }
         } else {
             // tick does not exist
             if (isPool0) {
@@ -212,6 +216,13 @@ library Ticks {
             } else {
                 tickUpper.liquidityDelta -= int128(amount);
                 tickUpper.liquidityDeltaMinus += amount;
+            }
+            console.log('tick check');
+            console.logInt(upper);
+            console.logInt(lower);
+            console.logInt(tickNodes[lowerOld].nextTick);
+            if (lower == tickNodes[lowerOld].nextTick) {
+                tickNodeUpper.previousTick = lower;
             }
         } else {
             if (isPool0) {

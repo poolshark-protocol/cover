@@ -49,7 +49,7 @@ contract CoverPool is
         feeTo     = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
-        GlobalState memory state = GlobalState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, IRangePool(address(0)));
+        GlobalState memory state;
         state.tickSpread    = _tickSpread;
         state.twapLength    = _twapLength;
         state.auctionLength = _auctionLength;
@@ -67,8 +67,6 @@ contract CoverPool is
         globalState = state;
     }
 
-    //TODO: create transfer function to transfer ownership
-    /// @dev Mints LP tokens - should be called via the CL pool manager contract.
     function mint(
         MintParams calldata mintParams
     ) external lock {
@@ -187,10 +185,10 @@ contract CoverPool is
             uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
             uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
-            // console.log('amountIn:', amountIn);
-            // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-            // console.log('amountOut:', amountOut);
-            // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+            console.log('amountIn:', amountIn);
+            console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+            console.log('amountOut:', amountOut);
+            console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
 
             // zero out balances
             positions[msg.sender][params.lower][params.upper].amountIn = 0;

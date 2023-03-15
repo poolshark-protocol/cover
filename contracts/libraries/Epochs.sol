@@ -7,6 +7,7 @@ import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
+import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -347,9 +348,10 @@ library Epochs {
         bool removeLiquidity,
         bool updateAccumDeltas
     ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
-        
+        console.log('accumulate and update epoch');
+
         // update tick epoch
-        if (accumTick.liquidityDeltaMinus > 0 && updateAccumDeltas) {
+        if (accumTick.liquidityDeltaMinus > 0) {
             accumTickNode.accumEpochLast = accumEpoch;
         }
 

@@ -60,13 +60,13 @@ contract CoverPoolFactory is ICoverPoolFactory {
         address inputPool = getInputPool(token0, token1, feeTier);
 
         // launch pool and save address
-        pool = address(new CoverPool(inputPool, int16(tickSpread), twapLength, auctionLength));
+        pool = address(new CoverPool(inputPool, tickSpread, twapLength, auctionLength));
 
         poolMapping[key] = pool;
         poolList.push(pool);
 
         // emit event for indexers
-        emit PoolCreated(token0, token1, uint24(feeTier), int24(tickSpread), twapLength, auctionLength, pool);
+        emit PoolCreated(token0, token1, feeTier, tickSpread, twapLength, auctionLength, pool);
     }
 
     function getCoverPool(

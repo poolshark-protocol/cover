@@ -730,6 +730,7 @@ describe('CoverPool Tests', function () {
 
     it.skip('pool0 - Should move TWAP in range, fill, sync lower tick, and clear tick deltas 25', async function () {
         const liquidityAmount4 = BigNumber.from('99805183140883374041350')
+        const liquidityAmount5 = BigNumber.from('199710216389218762991542')
 
         await validateSync(hre.props.admin, '0')
 
@@ -749,21 +750,27 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-
-        await validateBurn({
+        console.log('-20 tick', (await hre.props.coverPool.tickNodes('-20')).toString())
+        await validateMint({
             signer: hre.props.alice,
-            lower: '-60',
+            recipient: hre.props.alice.address,
+            lowerOld: '-60',
+            lower: '-40',
             claim: '-20',
             upper: '-20',
-            liquidityAmount: liquidityAmount4,
+            upperOld: '0',
+            amount: tokenAmount.mul(2),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: tokenAmount.mul(2).sub(1),
-            lowerTickCleared: false,
+            balanceInDecrease: tokenAmount.mul(2),
+            liquidityIncrease: liquidityAmount5,
             upperTickCleared: false,
+            lowerTickCleared: false,
             revertMessage: '',
         })
-        // await validateSync(hre.props.admin, '-20')
+
+        console.log('-20 tick', (await hre.props.coverPool.tickNodes('-20')).toString())
+        console.log('-40 tick', (await hre.props.coverPool.tickNodes('-40')).toString())
+        await validateSync(hre.props.admin, '-20')
 
         // await validateSwap({
         //     signer: hre.props.alice,
@@ -771,40 +778,43 @@ describe('CoverPool Tests', function () {
         //     zeroForOne: false,
         //     amountIn: tokenAmount.mul(2),
         //     sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
-        //     balanceInDecrease: BigNumber.from('99620730549490890359'),
-        //     balanceOutIncrease: BigNumber.from('99950002503999387155'),
+        //     balanceInDecrease: BigNumber.from('200000000000000000000'),
+        //     balanceOutIncrease: BigNumber.from('200727459013899578577'),
         //     revertMessage: '',
         // })
-
+        console.log('-40 tick', (await hre.props.coverPool.tickNodes('-40')).toString())
+        await validateSync(hre.props.admin, '-60')
         // await validateSync(hre.props.admin, '-60')
+        console.log('-40 tick', (await hre.props.coverPool.tickNodes('-40')).toString())
+        console.log('-60 tick', (await hre.props.coverPool.tickNodes('-60')).toString())
 
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-40',
-        //     claim: '-20',
-        //     upper: '-20',
-        //     liquidityAmount: liquidityAmount4,
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('99670563335408299415'),
-        //     balanceOutIncrease: BigNumber.from('0'),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: false,
-        //     revertMessage: '',
-        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-40',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount5,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('119991999600640031937'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
 
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-60',
-        //     claim: '-60',
-        //     upper: '-20',
-        //     liquidityAmount: liquidityAmount4,
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('99620730549490890356'),
-        //     balanceOutIncrease: BigNumber.from('100049997496000612844'),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: true,
-        //     revertMessage: '',
-        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('254504143839762320698'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 
     it.skip('pool0 - Should dilute carry deltas during accumulate', async function () {
