@@ -123,7 +123,6 @@ library Positions {
             }
         }
         // Positions.update() called first before additional mints
-        console.log('claim price last', cache.position.claimPriceLast);
         if (cache.position.claimPriceLast > 0) { revert ClaimPriceLastNonZero(); }
         
         // add liquidity to ticks
