@@ -106,7 +106,7 @@ contract CoverPool is
                 0
             )
         );
-        (, state) = Positions.add(
+        Positions.add(
             params.zeroForOne ? positions0 : positions1,
             params.zeroForOne ? ticks0 : ticks1,
             tickNodes,

@@ -98,7 +98,7 @@ library Positions {
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params
-    ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
+    ) external {
         //TODO: dilute amountDeltas when adding liquidity
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
@@ -107,7 +107,7 @@ library Positions {
         });
         /// call if claim != lower and liquidity being added
         /// initialize new position
-        if (params.amount == 0) return (0, state);
+        if (params.amount == 0) return;
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
         } else {
@@ -148,8 +148,6 @@ library Positions {
         cache.position.liquidity += uint128(params.amount);
 
         positions[params.owner][params.lower][params.upper] = cache.position;
-
-        return (params.amount, state);
     }
 
     function remove(
