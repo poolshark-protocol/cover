@@ -6,7 +6,7 @@ import './ICoverPoolStructs.sol';
 //TODO: combine everything into one interface
 interface ICoverPool is ICoverPoolStructs {
     function mint(
-        MintParams calldata mintParams
+        MintParams memory mintParams
     ) external;
 
     function burn(
@@ -23,5 +23,10 @@ interface ICoverPool is ICoverPoolStructs {
     returns (
         // bytes calldata data
         uint256 amountOut
+    );
+
+    function collectFees() external returns (
+        uint128 token0Fees,
+        uint128 token1Fees
     );
 }

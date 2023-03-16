@@ -17,6 +17,8 @@ import {
     Epochs__factory,
     Deltas__factory,
     Claims__factory,
+    CoverPoolRouter__factory,
+    CoverPoolManager__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -215,9 +217,20 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            CoverPoolManager__factory,
+            'coverPoolManager',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             CoverPoolFactory__factory,
             'coverPoolFactory',
-            [hre.props.rangeFactoryMock.address],
+            [   
+                hre.props.coverPoolManager.address,
+                hre.props.rangeFactoryMock.address
+            ],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
@@ -227,6 +240,21 @@ export class InitialSetup {
                 'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
             }
+        )
+
+        const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
+            hre.props.coverPoolFactory.address
+        )
+        await setFactoryTxn.wait()
+
+        hre.nonce += 1
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            CoverPoolRouter__factory,
+            'coverPoolRouter',
+            []
         )
         // // hre.nonce += 1;
 

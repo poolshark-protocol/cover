@@ -1,25 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
+import '../base/storage/CoverPoolFactoryStorage.sol';
 
-abstract contract ICoverPoolFactory {
-    mapping(uint256 => uint256) public feeTierTickSpacing;
-
-    address public owner;
-    address public rangePoolFactory;
-    address public libraries;
-
-    mapping(bytes32 => address) public poolMapping;
-    address[] public poolList;
-
-    event PoolCreated(
-        address indexed token0,
-        address indexed token1,
-        uint24 indexed fee,
-        int24 tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength,
-        address pool
-    );
+abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
 
     function createCoverPool(
         address fromToken,
@@ -38,4 +21,8 @@ abstract contract ICoverPoolFactory {
         uint16 twapLength,
         uint16 auctionLength
     ) external view virtual returns (address);
+
+    function collectProtocolFees(
+        address collectPool
+    ) external virtual;
 }

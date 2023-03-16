@@ -3,8 +3,9 @@ pragma solidity ^0.8.13;
 
 import './interfaces/ICoverPool.sol';
 import './interfaces/IRangePool.sol';
-import './base/CoverPoolStorage.sol';
-import './base/CoverPoolEvents.sol';
+import './interfaces/ICoverPoolManager.sol';
+import './base/storage/CoverPoolStorage.sol';
+import './base/events/CoverPoolEvents.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Ticks.sol';
@@ -16,12 +17,9 @@ contract CoverPool is
     ICoverPool,
     CoverPoolStorage,
     CoverPoolEvents,
-    CoverTicksErrors,
-    CoverMiscErrors,
-    CoverPositionErrors,
     SafeTransfers
 {
-    address internal immutable factory;
+    address public immutable factory;
     address internal immutable token0;
     address internal immutable token1;
 
@@ -36,6 +34,11 @@ contract CoverPool is
         globalState.unlocked = 1;
     }
 
+    modifier onlyFactory() {
+        if (factory != msg.sender) revert FactoryOnly();
+        _;
+    }
+
     constructor(
         address _inputPool,
         int16 _tickSpread,
@@ -46,7 +49,6 @@ contract CoverPool is
         factory   = msg.sender;
         token0    = IRangePool(_inputPool).token0();
         token1    = IRangePool(_inputPool).token1();
-        feeTo     = ICoverPoolFactory(msg.sender).owner();
 
         // set global state
         GlobalState memory state;
@@ -55,6 +57,7 @@ contract CoverPool is
         state.auctionLength = _auctionLength;
         state.genesisBlock  = uint32(block.number);
         state.inputPool     = IRangePool(_inputPool);
+        state.protocolFees  = ProtocolFees(0,0);
 
         // set initial ticks
         state = Ticks.initialize(
@@ -68,9 +71,8 @@ contract CoverPool is
     }
 
     function mint(
-        MintParams calldata mintParams
+        MintParams memory params
     ) external lock {
-        MintParams memory params = mintParams;
         GlobalState memory state = globalState;
         if (block.number != globalState.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
@@ -121,21 +123,20 @@ contract CoverPool is
                 uint128(liquidityMinted)
             )
         );
-        emit Mint(
-            params.to,
-            params.lower,
-            params.upper,
-            params.claim,
-            params.zeroForOne,
-            uint128(liquidityMinted)
-        );
+        // emit Mint(
+        //     params.to,
+        //     params.lower,
+        //     params.upper,
+        //     params.claim,
+        //     params.zeroForOne,
+        //     uint128(liquidityMinted)
+        // );
         globalState = state;
     }
 
     function burn(
-        BurnParams calldata burnParams
+        BurnParams memory params
     ) external lock {
-        BurnParams memory params = burnParams;
         GlobalState memory state = globalState;
         if (block.number != state.lastBlock) {
             (state, pool0, pool1) = Epochs.syncLatest(
@@ -176,7 +177,7 @@ contract CoverPool is
                 RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
             );
         }
-        emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
+        // emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
         if (params.collect) {
              mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = params.zeroForOne ? positions0 : positions1;
             params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
@@ -185,10 +186,10 @@ contract CoverPool is
             uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
             uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
-            console.log('amountIn:', amountIn);
-            console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-            console.log('amountOut:', amountOut);
-            console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+            // console.log('amountIn:', amountIn);
+            // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+            // console.log('amountOut:', amountOut);
+            // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
 
             // zero out balances
             positions[msg.sender][params.lower][params.upper].amountIn = 0;
@@ -198,7 +199,7 @@ contract CoverPool is
             _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
             _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
 
-            emit Collect(msg.sender, amountIn, amountOut);
+            // emit Collect(msg.sender, amountIn, amountOut);
         }
         globalState = state;
     }
@@ -260,13 +261,13 @@ contract CoverPool is
                 _transferOut(recipient, token0, cache.input);
             }
             _transferOut(recipient, token1, amountOut);
-            emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
+            // emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
         } else {
             if (cache.input > 0) {
                 _transferOut(recipient, token1, cache.input);
             }
             _transferOut(recipient, token0, amountOut);
-            emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
+            // emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }
         globalState = state;
     }
@@ -296,6 +297,16 @@ contract CoverPool is
         inAmount = amountIn - cache.input;
 
         return (inAmount, outAmount);
+    }
+
+    function collectFees() public onlyFactory returns (uint128 token0Fees, uint128 token1Fees) {
+        token0Fees = globalState.protocolFees.token0;
+        token1Fees = globalState.protocolFees.token1;
+        address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
+        _transferOut(feeTo, token0, token0Fees);
+        _transferOut(feeTo, token1, token1Fees);
+        globalState.protocolFees.token0 = 0;
+        globalState.protocolFees.token1 = 0;
     }
 
     //TODO: zap into LP position

@@ -17,6 +17,7 @@ interface ICoverPoolStructs {
         uint128  liquidityGlobal;
         uint160  latestPrice; /// @dev price of latestTick
         IRangePool inputPool;
+        ProtocolFees protocolFees;
     }
 
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
@@ -58,6 +59,11 @@ interface ICoverPoolStructs {
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
         uint160 claimPriceLast; // highest price claimed at
+    }
+
+    struct ProtocolFees {
+        uint128 token0;
+        uint128 token1;
     }
 
     struct MintParams {

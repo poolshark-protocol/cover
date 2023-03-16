@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import '../interfaces/ICoverPoolStructs.sol';
-import '../interfaces/ICoverPoolFactory.sol';
-import '../utils/CoverPoolErrors.sol';
+import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/ICoverPoolFactory.sol';
+import '../../utils/CoverPoolErrors.sol';
 
 abstract contract CoverPoolStorage is ICoverPoolStructs, CoverPoolErrors {
     GlobalState public globalState;

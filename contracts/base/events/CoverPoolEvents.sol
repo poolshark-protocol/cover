@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
 abstract contract CoverPoolEvents {
@@ -20,8 +20,11 @@ abstract contract CoverPoolEvents {
         uint128 liquidityBurned
     );
 
-    //TODO: implement Collect event for subgraph
-    event Collect(address indexed sender, uint256 amount0, uint256 amount1);
+    event Collect(
+        address indexed sender,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     event Swap(
         address indexed recipient,
@@ -30,5 +33,4 @@ abstract contract CoverPoolEvents {
         uint256 amountIn,
         uint256 amountOut
     );
-    //TODO: PoolInitialized event
 }

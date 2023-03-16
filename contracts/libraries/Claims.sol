@@ -119,11 +119,11 @@ library Claims {
             /// @dev - deltas are applied once per each tick claimed at
             /// @dev - deltas should never be applied if position is not crossed into
             // check if tick already claimed at
-            bool applyDeltas = (cache.position.claimPriceLast == 0
+            bool transferDeltas = (cache.position.claimPriceLast == 0
                                && (params.claim != (params.zeroForOne ? params.upper : params.lower)))
                                || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
                                                      : cache.position.claimPriceLast < cache.priceClaim && cache.position.claimPriceLast != 0);
-            if (applyDeltas) {
+            if (transferDeltas) {
                 (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
             }
         } /// @dev - deltas transfer from claim tick are replaced after applying changes
@@ -148,6 +148,7 @@ library Claims {
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         // apply deltas and add to position
         if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
+            //TODO: take a portion based on the protocol fee
             cache.position.amountIn  += cache.finalDeltas.amountInDelta;
         cache.position.amountOut += cache.finalDeltas.amountOutDelta;
         // add remaining deltas cached back to claim tick
