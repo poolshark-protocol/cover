@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import './interfaces/ICoverPool.sol';
 import './interfaces/IRangePool.sol';
 import './interfaces/ICoverPoolManager.sol';
-import './base/storage/CoverPoolStorage.sol';
+import './base/modifiers/CoverPoolModifiers.sol';
 import './base/events/CoverPoolEvents.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
@@ -15,29 +15,13 @@ import './libraries/Epochs.sol';
 /// @notice Poolshark Cover Pool Implementation
 contract CoverPool is
     ICoverPool,
-    CoverPoolStorage,
     CoverPoolEvents,
+    CoverPoolModifiers,
     SafeTransfers
 {
     address public immutable factory;
     address internal immutable token0;
     address internal immutable token1;
-
-    modifier lock() {
-        if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickNodes, pool0, pool1, globalState);
-        }
-        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
-        if (globalState.unlocked == 2) revert Locked();
-        globalState.unlocked = 2;
-        _;
-        globalState.unlocked = 1;
-    }
-
-    modifier onlyFactory() {
-        if (factory != msg.sender) revert FactoryOnly();
-        _;
-    }
 
     constructor(
         address _inputPool,
@@ -299,7 +283,7 @@ contract CoverPool is
         return (inAmount, outAmount);
     }
 
-    function collectFees() public onlyFactory returns (uint128 token0Fees, uint128 token1Fees) {
+    function collectFees() public onlyFactory(factory) returns (uint128 token0Fees, uint128 token1Fees) {
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
