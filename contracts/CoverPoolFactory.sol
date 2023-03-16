@@ -65,8 +65,15 @@ contract CoverPoolFactory is ICoverPoolFactory {
         poolMapping[key] = pool;
         poolList.push(pool);
 
-        // emit event for indexers
-        emit PoolCreated(token0, token1, feeTier, tickSpread, twapLength, auctionLength, pool);
+        emit PoolCreated(
+            token0,
+            token1,
+            feeTier,
+            tickSpread,
+            twapLength,
+            auctionLength,
+            pool
+        );
     }
 
     function getCoverPool(

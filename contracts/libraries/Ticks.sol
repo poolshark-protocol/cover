@@ -150,7 +150,6 @@ library Ticks {
         return state;
     }
 
-    //TODO: ALL TICKS NEED TO BE CREATED WITH
     function insert(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
@@ -161,7 +160,7 @@ library Ticks {
         int24 upper,
         uint128 amount,
         bool isPool0
-    ) public returns (ICoverPoolStructs.GlobalState memory) {
+    ) external {
         /// @auditor - validation of ticks is in Positions.validate
         // load into memory to reduce storage reads/writes
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
@@ -249,8 +248,6 @@ library Ticks {
         ticks[upper] = tickUpper;
         tickNodes[lower] = tickNodeLower;
         tickNodes[upper] = tickNodeUpper;
-
-        return state;
     }
 
     function remove(

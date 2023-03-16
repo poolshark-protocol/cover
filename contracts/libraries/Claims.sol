@@ -29,6 +29,10 @@ library Claims {
         if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
             return (cache, true);
+        } else if (params.zeroForOne ? params.claim == params.upper && tickNodes[params.upper].accumEpochLast <= cache.position.accumEpochLast
+                                     : params.claim == params.lower && tickNodes[params.lower].accumEpochLast <= cache.position.accumEpochLast
+        ) {
+            return (cache, true);
         }
         // early return if no update
         if (

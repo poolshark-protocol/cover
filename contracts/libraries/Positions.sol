@@ -15,6 +15,7 @@ library Positions {
     error LiquidityOverflow();
     error WrongTickClaimedAt();
     error PositionNotUpdated();
+    error ClaimPriceLastNonZero();
     error UpdatePositionFirstAt(int24, int24);
     error InvalidLowerTick();
     error InvalidUpperTick();
@@ -121,10 +122,12 @@ library Positions {
                 revert WrongTickClaimedAt();
             }
         }
-        //TODO: if cPL is > 0, revert
+        // Positions.update() called first before additional mints
+        console.log('claim price last', cache.position.claimPriceLast);
+        if (cache.position.claimPriceLast > 0) { revert ClaimPriceLastNonZero(); }
         
         // add liquidity to ticks
-        state = Ticks.insert(
+        Ticks.insert(
             ticks,
             tickNodes,
             state,
@@ -256,6 +259,8 @@ library Positions {
                 cache
             );
             if (earlyReturn) {
+                console.log('early return');
+                console.log(cache.position.claimPriceLast);
                 return state;
             }
         }
