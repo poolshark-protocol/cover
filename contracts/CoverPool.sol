@@ -58,16 +58,14 @@ contract CoverPool is
         MintParams memory params
     ) external lock {
         GlobalState memory state = globalState;
-        if (block.number != globalState.lastBlock) {
-            (state, pool0, pool1) = Epochs.syncLatest(
-                ticks0,
-                ticks1,
-                tickNodes,
-                pool0,
-                pool1,
-                state
-            );
-        }
+        (state, pool0, pool1) = Epochs.syncLatest(
+            ticks0,
+            ticks1,
+            tickNodes,
+            pool0,
+            pool1,
+            state
+        );
         uint256 liquidityMinted;
         (params, liquidityMinted) = Positions.validate(params, state);
 
@@ -122,16 +120,14 @@ contract CoverPool is
         BurnParams memory params
     ) external lock {
         GlobalState memory state = globalState;
-        if (block.number != state.lastBlock) {
-            (state, pool0, pool1) = Epochs.syncLatest(
-                ticks0,
-                ticks1,
-                tickNodes,
-                pool0,
-                pool1,
-                state
-            );
-        }
+        (state, pool0, pool1) = Epochs.syncLatest(
+            ticks0,
+            ticks1,
+            tickNodes,
+            pool0,
+            pool1,
+            state
+        );
         if (params.claim != (params.zeroForOne ? params.upper : params.lower) 
                          || params.claim == state.latestTick)
         {
@@ -202,16 +198,14 @@ contract CoverPool is
         GlobalState memory state = globalState;
         PoolState memory pool = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
-        if (block.number != state.lastBlock) {
-            (state, pool0, pool1) = Epochs.syncLatest(
-                ticks0,
-                ticks1,
-                tickNodes,
-                pool0,
-                pool1,
-                state
-            );
-        }
+        (state, pool0, pool1) = Epochs.syncLatest(
+            ticks0,
+            ticks1,
+            tickNodes,
+            pool0,
+            pool1,
+            state
+        );
         if (amountIn == 0) {
             globalState = state;
             return 0;

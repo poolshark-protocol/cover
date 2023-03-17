@@ -254,8 +254,6 @@ library Positions {
                 cache
             );
             if (earlyReturn) {
-                console.log('early return');
-                console.log(cache.position.claimPriceLast);
                 return state;
             }
         }

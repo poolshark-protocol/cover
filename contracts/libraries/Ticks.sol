@@ -7,7 +7,6 @@ import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
 import './TwapOracle.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -36,7 +35,7 @@ library Ticks {
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         if (zeroForOne ? priceLimit >= cache.price 
                        : priceLimit <= cache.price 
             || cache.price == 0 
@@ -51,7 +50,6 @@ library Ticks {
                                                                           : state.auctionLength
                              ) * 1e14 / state.auctionLength * uint16(state.tickSpread);
         cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
-
         if (zeroForOne) {
             // trade token 0 (x) for token 1 (y)
             // price decreases
@@ -79,7 +77,7 @@ library Ticks {
             } else if (maxDx > 0) {
                 amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
                 cache.price = nextPrice;
-                cache.input -= maxDx * cache.input / cache.inputBoosted; /// @dev - convert back to input amount
+                cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
                 cache.amountInDelta = cache.amountIn - cache.input;
             }
         } else {
@@ -98,9 +96,9 @@ library Ticks {
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDy > 0) {
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
+                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
                 cache.price = nextPrice;
-                cache.input -= maxDy * cache.input / cache.inputBoosted + 1; /// @dev - handles rounding errors with amountInDelta
+                cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
                 cache.amountInDelta = cache.amountIn - cache.input;
             }
         }
@@ -216,10 +214,6 @@ library Ticks {
                 tickUpper.liquidityDelta -= int128(amount);
                 tickUpper.liquidityDeltaMinus += amount;
             }
-            console.log('tick check');
-            console.logInt(upper);
-            console.logInt(lower);
-            console.logInt(tickNodes[lowerOld].nextTick);
             if (lower == tickNodes[lowerOld].nextTick) {
                 tickNodeUpper.previousTick = lower;
             }

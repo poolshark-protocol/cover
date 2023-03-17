@@ -7,7 +7,6 @@ import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
-import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -32,10 +31,16 @@ library Epochs {
         )
     {
         // update last block checked
+        
+        if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
+            return (state, pool0, pool1);
+        }
+        state.lastBlock = uint32(block.number) - state.genesisBlock;
         int24 nextLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
-        state.lastBlock = uint32(block.number);
         // only accumulate if latestTick needs to move
-        if (nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread)) {
+        if (state.lastBlock - state.auctionStart <= state.auctionLength                     // auction has ended
+            || nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // latestTick unchanged
+        ) {
             return (state, pool0, pool1);
         }
         // console.log("-- START ACCUMULATE LAST BLOCK --");
@@ -348,8 +353,6 @@ library Epochs {
         bool removeLiquidity,
         bool updateAccumDeltas
     ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
-        console.log('accumulate and update epoch');
-
         // update tick epoch
         if (accumTick.liquidityDeltaMinus > 0) {
             accumTickNode.accumEpochLast = accumEpoch;
