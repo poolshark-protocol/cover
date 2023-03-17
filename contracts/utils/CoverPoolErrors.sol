@@ -42,6 +42,7 @@ abstract contract CoverPoolFactoryErrors {
     error OwnerOnly();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
+    error SpreadTierNotSupported();
     error InvalidTickSpread();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();

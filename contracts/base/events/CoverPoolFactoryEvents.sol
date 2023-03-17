@@ -6,8 +6,8 @@ abstract contract CoverPoolFactoryEvents {
         address pool,
         address indexed token0,
         address indexed token1,
-        uint24 indexed fee,
-        int24 tickSpread,
+        uint16 indexed fee,
+        int16 tickSpread,
         uint16 twapLength,
         uint16 auctionLength
     );

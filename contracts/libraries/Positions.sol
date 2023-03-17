@@ -182,12 +182,10 @@ library Positions {
 
         Ticks.remove(
             ticks,
-            tickNodes,
-            state,
             params.lower,
             params.upper,
             params.amount,
-            0,
+            // 0,
             params.zeroForOne,
             true,
             true
@@ -314,12 +312,10 @@ library Positions {
             }
             Ticks.remove(
                 ticks,
-                tickNodes,
-                state,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 uint128(uint128(params.amount)),
-                cache.position.liquidityStashed,
+                // cache.position.liquidityStashed,
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper

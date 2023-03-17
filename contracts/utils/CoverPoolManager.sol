@@ -16,7 +16,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public _factory;
 
     /// @dev - feeTier => tickSpread => twapLength => auctionLength
-    mapping(uint16 => mapping(uint16 => mapping(uint16 => uint16))) public spreadTiers;
+    mapping(uint16 => mapping(int16 => mapping(uint16 => uint16))) public spreadTiers;
     uint16 public protocolFee;
 
     error OwnerOnly();
@@ -28,6 +28,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         _owner = msg.sender;
         _feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
+
+        spreadTiers[500][20][5] = 20;
+        emit SpreadTierEnabled(500, 20, 5, 20);
 
         spreadTiers[500][40][40] = 40;
         emit SpreadTierEnabled(500, 40, 40, 40);
@@ -114,7 +117,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
     function enableSpreadTier(
         uint16 feeTier,
-        uint16 tickSpread,
+        int16 tickSpread,
         uint16 twapLength,
         uint16 auctionLength
     ) external onlyOwner {

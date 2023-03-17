@@ -38,8 +38,7 @@ describe('CoverPoolFactory Tests', function () {
                     '0x0000000000000000000000000000000000000000',
                     '500',
                     '20',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
     })
@@ -53,8 +52,7 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '500',
                     '10',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('TickSpreadNotAtLeastDoubleTickSpread()')
     })
@@ -68,8 +66,7 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '500',
                     '25',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('TickSpreadNotMultipleOfTickSpacing()')
     })
@@ -83,8 +80,7 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '500',
                     '20',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
@@ -98,8 +94,7 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '1000',
                     '20',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('FeeTierNotSupported()')
     })

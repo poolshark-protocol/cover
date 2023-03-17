@@ -8,7 +8,7 @@ interface ICoverPoolManager {
     function protocolFee() external view returns (uint16);
     function spreadTiers(
         uint16 feeTier,
-        uint16 tickSpread,
+        int16  tickSpread,
         uint16 twapLength
     ) external view returns (uint16);
 }

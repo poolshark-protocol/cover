@@ -25,9 +25,9 @@ contract CoverPool is
 
     constructor(
         address _inputPool,
-        int16 _tickSpread,
-        uint16 _twapLength,
-        uint16 _auctionLength
+        int16   _tickSpread,
+        uint16  _twapLength,
+        uint16  _auctionLength
     ) {
         // set addresses
         factory   = msg.sender;

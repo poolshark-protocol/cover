@@ -30,31 +30,37 @@ contract CoverPoolFactory is
         address fromToken,
         address destToken,
         uint16 feeTier,
-        int16 tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength
+        int16  tickSpread,
+        uint16 twapLength
     ) external override returns (address pool) {
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
 
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength, auctionLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength));
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
-
-        // check fee tier exists and get tick spacing
+        // check fee tier exists
         int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(feeTier);
         if (tickSpacing == 0) {
             revert FeeTierNotSupported();
         }
-        int24 tickMultiple = tickSpread / tickSpacing;
-        if (tickMultiple * tickSpacing != tickSpread) {
-            revert TickSpreadNotMultipleOfTickSpacing();
-        } else if (tickMultiple < 2) {
-            revert TickSpreadNotAtLeastDoubleTickSpread();
+        // check tick multiple
+        {
+            int24 tickMultiple = tickSpread / tickSpacing;
+            if (tickMultiple * tickSpacing != tickSpread) {
+                revert TickSpreadNotMultipleOfTickSpacing();
+            } else if (tickMultiple < 2) {
+                revert TickSpreadNotAtLeastDoubleTickSpread();
+            }
         }
-
+        // check spread tier exists
+        uint16 auctionLength = ICoverPoolManager(owner).spreadTiers(feeTier, tickSpread, twapLength);
+        if (auctionLength == 0) {
+            revert SpreadTierNotSupported();
+        }
+        // get reference pool
         address inputPool = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
 
         // launch pool and save address
@@ -78,15 +84,14 @@ contract CoverPoolFactory is
         address destToken,
         uint16 feeTier,
         int16  tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength
+        uint16 twapLength
     ) public view override returns (address) {
         // set lexographical token address ordering
         address token0 = fromToken < destToken ? fromToken : destToken;
         address token1 = fromToken < destToken ? destToken : fromToken;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength, auctionLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength));
 
         return coverPools[key];
     }

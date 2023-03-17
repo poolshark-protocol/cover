@@ -36,7 +36,7 @@ library Ticks {
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         if (zeroForOne ? priceLimit >= cache.price 
                        : priceLimit <= cache.price 
             || cache.price == 0 
@@ -252,12 +252,10 @@ library Ticks {
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
-        ICoverPoolStructs.GlobalState memory state,
         int24 lower,
         int24 upper,
         uint128 amount,
-        uint128 amountStashed,
+        // uint128 amountStashed,
         bool isPool0,
         bool removeLower,
         bool removeUpper

@@ -12,7 +12,7 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
@@ -116,7 +116,7 @@ library Deltas {
     function onto(
         ICoverPoolStructs.Deltas memory fromDeltas,
         ICoverPoolStructs.Tick memory toTick
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Tick memory
     ) {

@@ -8,9 +8,8 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
         address fromToken,
         address destToken,
         uint16 fee,
-        int16 tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength
+        int16  tickSpread,
+        uint16 twapLength
     ) external virtual returns (address book);
 
     function getCoverPool(
@@ -18,8 +17,7 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
         address destToken,
         uint16 fee,
         int16 tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength
+        uint16 twapLength
     ) external view virtual returns (address);
 
     function collectProtocolFees(
