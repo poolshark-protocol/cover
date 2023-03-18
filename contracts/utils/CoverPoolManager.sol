@@ -16,12 +16,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public _factory;
 
     /// @dev - feeTier => tickSpread => twapLength => auctionLength
-    mapping(uint16 => mapping(int16 => mapping(uint16 => uint16))) public spreadTiers;
+    mapping(uint16 => mapping(int16 => mapping(uint16 => uint16))) public volatilityTiers;
     uint16 public protocolFee;
 
     error OwnerOnly();
     error FeeToOnly();
-    error SpreadTierAlreadyEnabled();
+    error VolatilityTierAlreadyEnabled();
     error TransferredToZeroAddress();
     
     constructor() {
@@ -29,11 +29,11 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         _feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
-        spreadTiers[500][20][5] = 20;
-        emit SpreadTierEnabled(500, 20, 5, 20);
+        volatilityTiers[500][20][5] = 20;
+        emit VolatilityTierEnabled(500, 20, 5, 20);
 
-        spreadTiers[500][40][40] = 40;
-        emit SpreadTierEnabled(500, 40, 40, 40);
+        volatilityTiers[500][40][40] = 40;
+        emit VolatilityTierEnabled(500, 40, 40, 40);
     }
 
     /**
@@ -115,17 +115,17 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(oldFeeTo, newFeeTo);
     }
 
-    function enableSpreadTier(
+    function enableVolatilityTier(
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength,
         uint16 auctionLength
     ) external onlyOwner {
-        if (spreadTiers[feeTier][tickSpread][twapLength] != 0) {
-            revert SpreadTierAlreadyEnabled();
+        if (volatilityTiers[feeTier][tickSpread][twapLength] != 0) {
+            revert VolatilityTierAlreadyEnabled();
         }
-        spreadTiers[feeTier][tickSpread][twapLength] = auctionLength;
-        emit SpreadTierEnabled(feeTier, tickSpread, twapLength, auctionLength);
+        volatilityTiers[feeTier][tickSpread][twapLength] = auctionLength;
+        emit VolatilityTierEnabled(feeTier, tickSpread, twapLength, auctionLength);
     }
 
     function setFactory(
