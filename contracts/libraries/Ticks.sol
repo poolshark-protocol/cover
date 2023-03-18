@@ -13,15 +13,12 @@ library Ticks {
     //TODO: alphabetize errors
     error NotImplementedYet();
     error InvalidLatestTick();
-    error InfiniteTickLoop0(int24);
-    error InfiniteTickLoop1(int24);
     error LiquidityOverflow();
     error WrongTickOrder();
     error WrongTickLowerRange();
     error WrongTickUpperRange();
     error WrongTickLowerOld();
     error WrongTickUpperOld();
-    error NoLiquidityToRollover();
     error AmountInDeltaNeutral();
     error AmountOutDeltaNeutral();
 
@@ -35,7 +32,7 @@ library Ticks {
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
-    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         if (zeroForOne ? priceLimit >= cache.price 
                        : priceLimit <= cache.price 
             || cache.price == 0 

@@ -7,7 +7,6 @@ import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
-import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -310,7 +309,6 @@ library Epochs {
         return (cache, pool);
     }
 
-    //TODO: bool stashDeltas might be better to avoid duplicate code
     function _accumulate(
         ICoverPoolStructs.TickNode memory accumTickNode,
         ICoverPoolStructs.TickNode memory crossTickNode,
