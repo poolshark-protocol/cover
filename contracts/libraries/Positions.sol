@@ -82,6 +82,8 @@ library Positions {
             }
         }
 
+        //TODO: move liquidityMinted here
+
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
         if (params.lower == params.upper) revert InvalidPositionBoundsTwap();
 

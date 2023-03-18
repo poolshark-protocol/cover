@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
     networks: {
         goerli: {
             chainId: 5,
-            gasPrice: 3000000000,
+            gasPrice: 22000000000,
             url: process.env.GOERLI_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,

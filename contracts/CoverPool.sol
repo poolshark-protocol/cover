@@ -105,14 +105,14 @@ contract CoverPool is
                 uint128(liquidityMinted)
             )
         );
-        // emit Mint(
-        //     params.to,
-        //     params.lower,
-        //     params.upper,
-        //     params.claim,
-        //     params.zeroForOne,
-        //     uint128(liquidityMinted)
-        // );
+        emit Mint(
+            params.to,
+            params.lower,
+            params.upper,
+            params.claim,
+            params.zeroForOne,
+            uint128(liquidityMinted)
+        );
         globalState = state;
     }
 
@@ -179,7 +179,7 @@ contract CoverPool is
             _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
             _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
 
-            // emit Collect(msg.sender, amountIn, amountOut);
+            emit Collect(msg.sender, amountIn, amountOut);
         }
         globalState = state;
     }
@@ -239,13 +239,13 @@ contract CoverPool is
                 _transferOut(recipient, token0, cache.input);
             }
             _transferOut(recipient, token1, amountOut);
-            // emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
+            emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
         } else {
             if (cache.input > 0) {
                 _transferOut(recipient, token1, cache.input);
             }
             _transferOut(recipient, token0, amountOut);
-            // emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
+            emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }
         globalState = state;
     }

@@ -105,6 +105,8 @@ export async function validateSync(newLatestTick: number) {
     )
     await txn.wait()
 
+    // console.log("-- START ACCUMULATE LAST BLOCK --");
+
     /// send a "no op" swap to trigger accumulate
     const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
     await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
@@ -116,6 +118,8 @@ export async function validateSync(newLatestTick: number) {
         BigNumber.from('4295128739')
     )
     await txn.wait()
+
+    // console.log("-- END ACCUMULATE LAST BLOCK --");
     /// check tick status after
 }
 
@@ -281,6 +285,8 @@ export async function validateMint(params: ValidateMintParams) {
                 upperOld: upperOld,
                 amount: amountDesired,
                 zeroForOne: zeroForOne
+              }, {
+                gasLimit: 700000,
               })
         await txn.wait()
     } else {

@@ -22,44 +22,54 @@ library Epochs {
         ICoverPoolStructs.PoolState memory pool0,
         ICoverPoolStructs.PoolState memory pool1,
         ICoverPoolStructs.GlobalState memory state
+    ) external returns (
+        ICoverPoolStructs.GlobalState memory,
+        ICoverPoolStructs.PoolState memory,
+        ICoverPoolStructs.PoolState memory
     )
-        external
-        returns (
-            ICoverPoolStructs.GlobalState memory,
-            ICoverPoolStructs.PoolState memory,
-            ICoverPoolStructs.PoolState memory
-        )
     {
         // update last block checked
-        
         if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
             return (state, pool0, pool1);
         }
         state.lastBlock = uint32(block.number) - state.genesisBlock;
         int24 nextLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         // only accumulate if latestTick needs to move
-        if (state.lastBlock - state.auctionStart <= state.auctionLength                     // auction has ended
+        if (state.lastBlock - state.auctionStart <= state.auctionLength                     // auction has not ended
             || nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // latestTick unchanged
         ) {
             return (state, pool0, pool1);
         }
-        // console.log("-- START ACCUMULATE LAST BLOCK --");
+
+        /// @dev - latestTick can only move in increments of tickSpread
+        if (nextLatestTick > state.latestTick) {
+            nextLatestTick = state.latestTick + state.tickSpread;
+        } 
+        else {
+            nextLatestTick = state.latestTick - state.tickSpread;
+        } 
         state.accumEpoch += 1;
 
+        // if (state.lastMoveUp) {
+        //     // pool1 has liquidity
+        //     _syncPool1()
+        // }
+
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
-            nextTickToCross0: state.latestTick,
-            nextTickToCross1: state.latestTick,
-            nextTickToAccum0: tickNodes[state.latestTick].previousTick, /// create tick if L > 0 and nextLatestTick != latestTick + tickSpread
-            nextTickToAccum1: tickNodes[state.latestTick].nextTick, /// create tick if L > 0 and nextLatestTick != latestTick - tickSpread
-            stopTick0: (nextLatestTick > state.latestTick)
+            nextTickToCross0: state.latestTick, // above
+            nextTickToCross1: state.latestTick, // below
+            nextTickToAccum0: tickNodes[state.latestTick].previousTick, // below
+            nextTickToAccum1: tickNodes[state.latestTick].nextTick,     // above
+            stopTick0: (nextLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - state.tickSpread
                 : nextLatestTick,
-            stopTick1: (nextLatestTick > state.latestTick)
+            stopTick1: (nextLatestTick > state.latestTick) // where we do stop for pool1 sync
                 ? nextLatestTick
                 : state.latestTick + state.tickSpread,
-            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), /// @dev - initialize to what was already on the pool
-            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0) /// @dev - initialize to what was already on the pool
+            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
+            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
         });
+
 
         // loop over ticks0 until stopTick0
         while (true) {
@@ -255,7 +265,7 @@ library Epochs {
         state.auctionStart = uint32(block.number - state.genesisBlock);
         state.latestTick = nextLatestTick;
         state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
-        // console.log("-- END ACCUMULATE LAST BLOCK --");
+        // state.lastMoveUp = nextLatestTick > state.latestTick;
         return (state, pool0, pool1);
     }
 

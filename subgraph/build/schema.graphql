@@ -9,11 +9,17 @@ type Token @entity {
 type CoverPool @entity {
     # poolAddress
     id: ID!
-    factory: Bytes!
     token0: Token!
     token1: Token!
-    inputPool: Bytes!
+    # factory: CoverPoolFactory!
+    # inputPool: Bytes! - to be added
     tickSpread: BigInt!
+}
+
+type CoverPoolFactory @entity {
+    # poolAddress
+    id: ID!
+    poolCount: BigInt!
 }
 
 type Position @entity {

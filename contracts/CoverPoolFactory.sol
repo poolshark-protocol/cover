@@ -70,6 +70,7 @@ contract CoverPoolFactory is
 
         emit PoolCreated(
             pool,
+            inputPool,
             token0,
             token1,
             feeTier,

@@ -26,7 +26,7 @@ export class MintPosition {
         }
         hre.nonce = await getNonce(hre, hre.props.alice.address)
         console.log(this.nonce)
-        await this.initialSetup.readHedgePoolSetup(this.nonce)
+        await this.initialSetup.readCoverPoolSetup(this.nonce)
         const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
         const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
         await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
@@ -38,22 +38,22 @@ export class MintPosition {
         const upperOld = hre.ethers.utils.parseUnits('887272', 0)
         const upper = hre.ethers.utils.parseUnits('30', 0)
 
-        await validateMint(
-            hre.props.alice,
-            hre.props.alice.address,
-            lowerOld,
-            lower,
-            upperOld,
-            upper,
-            lower,
-            token1Amount,
-            false,
-            token1Amount,
-            liquidityAmount,
-            false,
-            false,
-            ''
-        )
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lowerOld: '0',
+            lower: '20',
+            claim: '20',
+            upper: '40',
+            upperOld: '887272',
+            amount: token1Amount,
+            zeroForOne: false,
+            balanceInDecrease: token1Amount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
 
         console.log('position minted')
     }
