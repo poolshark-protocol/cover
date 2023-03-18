@@ -42,12 +42,12 @@ library Epochs {
         }
 
         /// @dev - latestTick can only move in increments of tickSpread
-        if (nextLatestTick > state.latestTick) {
-            nextLatestTick = state.latestTick + state.tickSpread;
-        } 
-        else {
-            nextLatestTick = state.latestTick - state.tickSpread;
-        } 
+        // if (nextLatestTick > state.latestTick) {
+        //     nextLatestTick = state.latestTick + state.tickSpread;
+        // } 
+        // else {
+        //     nextLatestTick = state.latestTick - state.tickSpread;
+        // } 
         state.accumEpoch += 1;
 
         // if (state.lastMoveUp) {
