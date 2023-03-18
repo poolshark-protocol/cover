@@ -1,5 +1,6 @@
-import { Address, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
+import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
 import { CoverPool, Position, Tick, Token } from '../../../generated/schema'
+import { ONE_BD } from './constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -7,6 +8,7 @@ import {
     BIGINT_ZERO,
     BIGDECIMAL_ZERO,
 } from './helpers'
+import { bigDecimalExponated, safeDiv } from './math'
 
 class LoadTokenRet {
     entity: Token
@@ -38,20 +40,23 @@ class LoadTickRet {
     entity: Tick
     exists: boolean
 }
-export function safeLoadTick(address: string, index: BigInt, zeroForOne: boolean): LoadTickRet {
+export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
     let exists = true
 
     let tickId = address
     .concat(index.toString())
-    .concat(zeroForOne.toString())
 
     let tickEntity = Tick.load(tickId)
 
     if (!tickEntity) {
         tickEntity = new Tick(tickId)
+        tickEntity.pool = address
         tickEntity.index = index
         tickEntity.previousTick = index.equals(BigInt.fromString("20")) ? BigInt.fromI32(-887272) : BigInt.fromI32(20)
         tickEntity.nextTick = index.equals(BigInt.fromString("20")) ? BigInt.fromI32(30) : BigInt.fromI32(887272)
+        // 1.0001^tick is token1/token0.
+        tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
+        tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
         exists = false
     }
 

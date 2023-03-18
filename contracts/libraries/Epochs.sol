@@ -7,7 +7,6 @@ import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
-import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -32,10 +31,16 @@ library Epochs {
         )
     {
         // update last block checked
+        
+        if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
+            return (state, pool0, pool1);
+        }
+        state.lastBlock = uint32(block.number) - state.genesisBlock;
         int24 nextLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
-        state.lastBlock = uint32(block.number);
         // only accumulate if latestTick needs to move
-        if (nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread)) {
+        if (state.lastBlock - state.auctionStart <= state.auctionLength                     // auction has ended
+            || nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // latestTick unchanged
+        ) {
             return (state, pool0, pool1);
         }
         // console.log("-- START ACCUMULATE LAST BLOCK --");
@@ -258,7 +263,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -293,9 +298,9 @@ library Epochs {
         //handle liquidity rollover
         if (isPool0) {
             // amountIn pool did not receive
-            uint128 amountInDelta     = uint128(DyDxMath.getDy(pool.liquidity, currentPrice, crossPrice, true));
+            uint128 amountInDelta;
             uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
-            amountInDelta      += pool.amountInDelta;
+            amountInDelta      = pool.amountInDelta;
             amountInDeltaMax   -= pool.amountInDeltaMaxClaimed;
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;
@@ -348,9 +353,8 @@ library Epochs {
         bool removeLiquidity,
         bool updateAccumDeltas
     ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
-        
         // update tick epoch
-        if (accumTick.liquidityDeltaMinus > 0 && updateAccumDeltas) {
+        if (accumTick.liquidityDeltaMinus > 0) {
             accumTickNode.accumEpochLast = accumEpoch;
         }
 
@@ -429,7 +433,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle amount in delta
@@ -439,7 +443,6 @@ library Epochs {
             (deltas, stashTick) = Deltas.onto(deltas, stashTick);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
-        
         return (stashTick);
     }
 }

@@ -29,13 +29,11 @@ export function handleMint(event: Mint): void {
 
     let loadLowerTick = safeLoadTick(
         poolAddress,
-        lower,
-        zeroForOneParam
+        lower
     )
     let loadUpperTick = safeLoadTick(
         poolAddress,
-        upper,
-        zeroForOneParam
+        upper
     )
     let loadPosition = safeLoadPosition(
         poolAddress,

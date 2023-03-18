@@ -5,29 +5,12 @@ import './ICoverPoolStructs.sol';
 
 //TODO: combine everything into one interface
 interface ICoverPool is ICoverPoolStructs {
-    function collect(
-        int24 lower,
-        int24 upper,
-        int24 claim,
-        bool zeroForOne
-    ) external;
-
     function mint(
-        int24 lowerOld,
-        int24 lower,
-        int24 upperOld,
-        int24 upper,
-        int24 claim,
-        uint128 amountDesired,
-        bool zeroForOne
+        MintParams memory mintParams
     ) external;
 
     function burn(
-        int24 lower,
-        int24 upper,
-        int24 claim,
-        bool zeroForOne,
-        uint128 amount
+        BurnParams calldata burnParams
     ) external;
 
     function swap(
@@ -40,5 +23,10 @@ interface ICoverPool is ICoverPoolStructs {
     returns (
         // bytes calldata data
         uint256 amountOut
+    );
+
+    function collectFees() external returns (
+        uint128 token0Fees,
+        uint128 token1Fees
     );
 }

@@ -6,17 +6,21 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadCoverPool, safeLoadToken } from './utils/loads'
+import { safeLoadCoverPool, safeLoadTick, safeLoadToken } from './utils/loads'
 import { Address, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
 
 export function handlePoolCreated(event: PoolCreated): void {
     let loadCoverPool = safeLoadCoverPool(event.params.pool.toHexString())
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
     let loadToken1 = safeLoadToken(event.params.token1.toHexString())
-
+    let loadMinTick = safeLoadTick(event.params.pool.toHexString(), BigInt.fromI32(887272))
+    let loadMaxTick = safeLoadTick(event.params.pool.toHexString(), BigInt.fromI32(-887272))
+    
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
     let pool = loadCoverPool.entity
+    let minTick = loadMinTick.entity
+    let maxTick = loadMaxTick.entity
 
     // fetch info if null
     if (!loadToken0.exists) {
@@ -50,6 +54,8 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.save()
     token0.save()
     token1.save()
+    maxTick.save()
+    minTick.save()
 
     // create the tracked contract based on the template
     CoverPoolTemplate.create(event.params.pool)

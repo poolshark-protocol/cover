@@ -34,9 +34,12 @@ type Position @entity {
 }
 
 type Tick @entity {
-    # poolAddress + index + zeroForOne
+    # poolAddress + index
     id: ID!
+    pool: CoverPool!
     index: BigInt!
     previousTick: BigInt!
     nextTick: BigInt!
+    price0: BigDecimal!
+    price1: BigDecimal!
 }

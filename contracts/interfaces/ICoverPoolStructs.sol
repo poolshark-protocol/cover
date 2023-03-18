@@ -17,6 +17,7 @@ interface ICoverPoolStructs {
         uint128  liquidityGlobal;
         uint160  latestPrice; /// @dev price of latestTick
         IRangePool inputPool;
+        ProtocolFees protocolFees;
     }
 
     //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
@@ -58,6 +59,32 @@ interface ICoverPoolStructs {
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
         uint160 claimPriceLast; // highest price claimed at
+    }
+
+    struct ProtocolFees {
+        uint128 token0;
+        uint128 token1;
+    }
+
+    struct MintParams {
+        address to;
+        int24 lowerOld;
+        int24 lower;
+        int24 claim;
+        int24 upper;
+        int24 upperOld;
+        uint128 amount;
+        bool zeroForOne;
+    }
+
+    struct BurnParams {
+        address to;
+        int24 lower;
+        int24 claim;
+        int24 upper;
+        bool zeroForOne;
+        uint128 amount;
+        bool collect;
     }
 
     //TODO: should we have a recipient field here?
@@ -102,6 +129,7 @@ interface ICoverPoolStructs {
     struct SwapCache {
         uint256 price;
         uint256 liquidity;
+        uint256 amountIn;
         uint256 input;
         uint256 inputBoosted;
         uint256 auctionDepth;

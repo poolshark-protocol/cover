@@ -11,6 +11,7 @@ abstract contract CoverPoolErrors {
     error Token0Missing();
     error Token1Missing();
     error InvalidTick();
+    error FactoryOnly();
     error LowerNotEvenTick();
     error UpperNotOddTick();
     error MaxTickLiquidity();
@@ -38,9 +39,13 @@ abstract contract CoverPositionErrors {
 }
 
 abstract contract CoverPoolFactoryErrors {
-    error IdenticalTokenAddresses();
+    error OwnerOnly();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
+    error SpreadTierNotSupported();
+    error InvalidTickSpread();
+    error TickSpreadNotMultipleOfTickSpacing();
+    error TickSpreadNotAtLeastDoubleTickSpread();
 }
 
 abstract contract CoverTransferErrors {

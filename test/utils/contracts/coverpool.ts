@@ -2,6 +2,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
 import { network } from 'hardhat';
+import { mineNBlocks } from '../blocks';
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 export const Q64x96 = BigNumber.from('2').pow(96)
 export const BN_ZERO = BigNumber.from('0')
@@ -86,11 +88,17 @@ export interface ValidateBurnParams {
     revertMessage: string
 }
 
-export async function validateSync(signer: SignerWithAddress, newLatestTick: string) {
+export async function validateSync(newLatestTick: number) {
     /// get tick node status before
 
-    // const tickNodes = await hre.props.coverPool.tickNodes();
-    /// update TWAP
+    const oldLatestTick: number = (await hre.props.coverPool.globalState()).latestTick
+
+    // if tick changes mine until end of auction
+    if (newLatestTick != oldLatestTick) {
+        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength;
+        mine(auctionLength)
+    }
+
     let txn = await hre.props.rangePoolMock.setTickCumulatives(
         BigNumber.from(newLatestTick).mul(120),
         BigNumber.from(newLatestTick).mul(60)
@@ -98,17 +106,16 @@ export async function validateSync(signer: SignerWithAddress, newLatestTick: str
     await txn.wait()
 
     /// send a "no op" swap to trigger accumulate
-    const token1Balance = await hre.props.token1.balanceOf(signer.address)
+    const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
     await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
 
     txn = await hre.props.coverPool.swap(
-        signer.address,
+        hre.props.admin.address,
         true,
         BigNumber.from('0'),
         BigNumber.from('4295128739')
     )
     await txn.wait()
-
     /// check tick status after
 }
 
@@ -142,7 +149,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const priceBefore = poolBefore.price
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
 
-    validateSync(hre.props.admin, (await hre.props.coverPool.globalState()).latestTick.toString())
+    validateSync((await hre.props.coverPool.globalState()).latestTick)
 
     // quote pre-swap and validate balance changes match post-swap
     const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, sqrtPriceLimitX96)
@@ -165,6 +172,8 @@ export async function validateSwap(params: ValidateSwapParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
+    //amountInDelta in the pool should have increased by the balance change
+    (await hre.props.coverPool.pool0()).amountInDelta.toString()
 
     let balanceInAfter
     let balanceOutAfter
@@ -214,16 +223,16 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
 
     //collect first to recreate positions if necessary
-    if (!collectRevertMessage) {
-        const txn = await hre.props.coverPool
-            .connect(params.signer)
-            .collect(lower, claim, upper, zeroForOne)
-        await txn.wait()
-    } else {
-        await expect(
-            hre.props.coverPool.connect(params.signer).collect(lower, claim, upper, zeroForOne)
-        ).to.be.revertedWith(collectRevertMessage)
-    }
+    // if (!collectRevertMessage) {
+    //     const txn = await hre.props.coverPool
+    //         .connect(params.signer)
+    //         .collect(lower, claim, upper, zeroForOne)
+    //     await txn.wait()
+    // } else {
+    //     await expect(
+    //         hre.props.coverPool.connect(params.signer).collect(lower, claim, upper, zeroForOne)
+    //     ).to.be.revertedWith(collectRevertMessage)
+    // }
     let balanceInBefore
     let balanceOutBefore
     if (zeroForOne) {
@@ -263,13 +272,31 @@ export async function validateMint(params: ValidateMintParams) {
     if (revertMessage == '') {
         const txn = await hre.props.coverPool
             .connect(params.signer)
-            .mint(lowerOld, lower, claim, upper, upperOld, amountDesired, zeroForOne)
+            .mint({
+                to: params.signer.address,
+                lowerOld: lowerOld, 
+                lower: lower,
+                claim: claim,
+                upper: upper,
+                upperOld: upperOld,
+                amount: amountDesired,
+                zeroForOne: zeroForOne
+              })
         await txn.wait()
     } else {
         await expect(
             hre.props.coverPool
                 .connect(params.signer)
-                .mint(lowerOld, lower, claim, upper, upperOld, amountDesired, zeroForOne)
+                .mint({
+                    to: params.signer.address,
+                    lowerOld: lowerOld, 
+                    lower: lower,
+                    claim: claim,
+                    upper: upper,
+                    upperOld: upperOld,
+                    amount: amountDesired,
+                    zeroForOne: zeroForOne
+                })
         ).to.be.revertedWith(revertMessage)
         return
     }
@@ -405,18 +432,29 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (revertMessage == '') {
         const burnTxn = await hre.props.coverPool
             .connect(signer)
-            .burn(lower, claim, upper, zeroForOne, liquidityAmount)
+            .burn({
+                to: signer.address,
+                lower: lower,
+                claim: claim,
+                upper: upper,
+                zeroForOne: zeroForOne,
+                amount: liquidityAmount,
+                collect: true
+            })
         await burnTxn.wait()
-        //TODO: expect balances to remain unchanged until collect
-        const collectTxn = await hre.props.coverPool
-            .connect(signer)
-            .collect(lower, claim, upper, zeroForOne)
-        await collectTxn.wait()
     } else {
         await expect(
             hre.props.coverPool
                 .connect(signer)
-                .burn(lower, claim, upper, zeroForOne, liquidityAmount)
+                .burn({
+                    to: signer.address,
+                    lower: lower,
+                    claim: claim,
+                    upper: upper,
+                    zeroForOne: zeroForOne,
+                    amount: liquidityAmount,
+                    collect: true
+                })
         ).to.be.revertedWith(revertMessage)
         return
     }

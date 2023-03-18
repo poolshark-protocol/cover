@@ -7,7 +7,6 @@ import '../utils/CoverPoolErrors.sol';
 import './FullPrecisionMath.sol';
 import './DyDxMath.sol';
 import './TwapOracle.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -37,18 +36,23 @@ library Ticks {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache
     ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
-        if (zeroForOne ? priceLimit >= cache.price : priceLimit <= cache.price || cache.price == 0 || cache.input == 0)
+        if (zeroForOne ? priceLimit >= cache.price 
+                       : priceLimit <= cache.price 
+            || cache.price == 0 
+            || cache.input == 0
+        )
             return (cache, 0);
         uint256 nextTickPrice = state.latestPrice;
         uint256 nextPrice = nextTickPrice;
 
         // determine input boost from tick auction
-        cache.auctionBoost = ((cache.auctionDepth <= state.auctionLength) ? cache.auctionDepth : state.auctionLength) * 1e14 / state.auctionLength * uint16(state.tickSpread);
+        cache.auctionBoost = ((cache.auctionDepth <= state.auctionLength) ? cache.auctionDepth 
+                                                                          : state.auctionLength
+                             ) * 1e14 / state.auctionLength * uint16(state.tickSpread);
         cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
-
         if (zeroForOne) {
-            // Trading token 0 (x) for token 1 (y).
-            // price  is decreasing.
+            // trade token 0 (x) for token 1 (y)
+            // price decreases
             if (priceLimit > nextPrice) {
                 // stop at price limit
                 nextPrice = priceLimit;
@@ -59,7 +63,6 @@ library Ticks {
             // store amountInDelta in pool either way
             // putting in less either way
             if (cache.inputBoosted <= maxDx) {
-                // We can swap within the current range.
                 uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
                 uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(
@@ -67,43 +70,36 @@ library Ticks {
                     cache.price,
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
-                /// @auditor - check tests to see if we need overflow handle
-                // if (!(nextTickPrice <= newPrice && newPrice < cache.price)) {
-                //     console.log('overflow check');
-                //     newPrice = uint160(FullPrecisionMath.divRoundingUp(liquidityPadded, liquidityPadded / cache.price + cache.input));
-                // }
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = uint160(newPrice);
-                cache.amountInDelta = maxDx - maxDx * cache.input / cache.inputBoosted;
                 cache.input = 0;
+                cache.amountInDelta = cache.amountIn;
             } else if (maxDx > 0) {
                 amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
                 cache.price = nextPrice;
-                cache.amountInDelta = maxDx - maxDx * cache.input / cache.inputBoosted;
-                cache.input -= maxDx * cache.input / cache.inputBoosted; /// @dev - convert back to input amount
+                cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
+                cache.amountInDelta = cache.amountIn - cache.input;
             }
         } else {
-            // Price is increasing.
+            // price increases
             if (priceLimit < nextPrice) {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
             uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextPrice, false);
             if (cache.inputBoosted <= maxDy) {
-                // We can swap within the current range.
-                // Calculate new price after swap: ΔP = Δy/L.
+                // calculate price after swap
                 uint256 newPrice = cache.price +
                     FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
-                // Calculate output of swap
                 amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;
-                cache.amountInDelta = cache.inputBoosted - cache.input;
                 cache.input = 0;
+                cache.amountInDelta = cache.amountIn;
             } else if (maxDy > 0) {
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextTickPrice, false);
+                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
                 cache.price = nextPrice;
-                cache.amountInDelta = maxDy - maxDy * cache.input / cache.inputBoosted;
-                cache.input -= maxDy * cache.input / cache.inputBoosted + 1; /// @dev - handles rounding errors with amountInDelta
+                cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
+                cache.amountInDelta = cache.amountIn - cache.input;
             }
         }
         return (cache, amountOut);
@@ -152,7 +148,6 @@ library Ticks {
         return state;
     }
 
-    //TODO: ALL TICKS NEED TO BE CREATED WITH
     function insert(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
@@ -163,7 +158,7 @@ library Ticks {
         int24 upper,
         uint128 amount,
         bool isPool0
-    ) public returns (ICoverPoolStructs.GlobalState memory) {
+    ) external {
         /// @auditor - validation of ticks is in Positions.validate
         // load into memory to reduce storage reads/writes
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
@@ -183,6 +178,9 @@ library Ticks {
                 tickLower.liquidityDeltaMinus += amount;
             } else {
                 tickLower.liquidityDelta += int128(amount);
+            }
+            if (upper == tickNodes[upperOld].previousTick) {
+                tickNodeLower.nextTick = upper;
             }
         } else {
             // tick does not exist
@@ -216,6 +214,9 @@ library Ticks {
                 tickUpper.liquidityDelta -= int128(amount);
                 tickUpper.liquidityDeltaMinus += amount;
             }
+            if (lower == tickNodes[lowerOld].nextTick) {
+                tickNodeUpper.previousTick = lower;
+            }
         } else {
             if (isPool0) {
                 tickUpper = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
@@ -241,18 +242,14 @@ library Ticks {
         ticks[upper] = tickUpper;
         tickNodes[lower] = tickNodeLower;
         tickNodes[upper] = tickNodeUpper;
-
-        return state;
     }
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
-        ICoverPoolStructs.GlobalState memory state,
         int24 lower,
         int24 upper,
         uint128 amount,
-        uint128 amountStashed,
+        // uint128 amountStashed,
         bool isPool0,
         bool removeLower,
         bool removeUpper

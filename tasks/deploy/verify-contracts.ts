@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config'
 import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps'
-import { DEPLOY_HEDGEPOOLS, VERIFY_CONTRACTS } from '../constants/taskNames'
+import { DEPLOY_COVERPOOLS, VERIFY_CONTRACTS } from '../constants/taskNames'
 import { VerifyContracts } from './utils/verifyContracts'
 
 class VerifyContractsTask {

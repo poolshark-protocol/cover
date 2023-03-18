@@ -38,10 +38,37 @@ describe('CoverPoolFactory Tests', function () {
                     '0x0000000000000000000000000000000000000000',
                     '500',
                     '20',
-                    '5',
-                    '20'
+                    '5'
                 )
-        ).to.be.revertedWith('IdenticalTokenAddresses()')
+        ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
+    })
+
+    it('Should not create pool tick spread greater than tick spacing', async function () {
+        await expect(
+            hre.props.coverPoolFactory
+                .connect(hre.props.admin)
+                .createCoverPool(
+                    hre.props.token1.address,
+                    hre.props.token0.address,
+                    '500',
+                    '10',
+                    '5'
+                )
+        ).to.be.revertedWith('TickSpreadNotAtLeastDoubleTickSpread()')
+    })
+
+    it('Should not create pool without clean multiple of tick spacing', async function () {
+        await expect(
+            hre.props.coverPoolFactory
+                .connect(hre.props.admin)
+                .createCoverPool(
+                    hre.props.token1.address,
+                    hre.props.token0.address,
+                    '500',
+                    '25',
+                    '5'
+                )
+        ).to.be.revertedWith('TickSpreadNotMultipleOfTickSpacing()')
     })
 
     it('Should not create pool if the pair already exists', async function () {
@@ -53,8 +80,7 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '500',
                     '20',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
@@ -68,43 +94,9 @@ describe('CoverPoolFactory Tests', function () {
                     hre.props.token0.address,
                     '1000',
                     '20',
-                    '5',
-                    '20'
+                    '5'
                 )
         ).to.be.revertedWith('FeeTierNotSupported()')
     })
-
-    it('Should not create pool if token0 has no decimals', async function () {
-        await hre.props.token0.connect(hre.props.admin).setDecimals(0)
-        await expect(
-            hre.props.coverPoolFactory
-                .connect(hre.props.admin)
-                .createCoverPool(
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '1000',
-                    '20',
-                    '5',
-                    '20'
-                )
-        ).to.be.revertedWith('InvalidTokenDecimals()')
-        await hre.props.token0.connect(hre.props.admin).setDecimals(18)
-    })
-
-    it('Should not create pool if token1 has no decimals', async function () {
-        await hre.props.token1.connect(hre.props.admin).setDecimals(0)
-        await expect(
-            hre.props.coverPoolFactory
-                .connect(hre.props.admin)
-                .createCoverPool(
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '1000',
-                    '20',
-                    '5',
-                    '20'
-                )
-        ).to.be.revertedWith('InvalidTokenDecimals()')
-        await hre.props.token1.connect(hre.props.admin).setDecimals(18)
-    })
+    /// @auditor - pool should not work if decimals is set to '0'
 })

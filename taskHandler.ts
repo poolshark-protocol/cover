@@ -1,6 +1,6 @@
 import { SUPPORTED_NETWORKS } from './scripts/constants/supportedNetworks'
 import {
-    DEPLOY_HEDGEPOOLS,
+    DEPLOY_COVERPOOLS,
     MINT_POSITION,
     MINT_TOKENS,
     VERIFY_CONTRACTS,
@@ -17,9 +17,9 @@ function handleCoverPoolTasks() {
     //     hre.masterNetwork = MASTER_NETWORKS[network];
     //     break;
     // }
-    if (process.argv.includes(DEPLOY_HEDGEPOOLS)) {
+    if (process.argv.includes(DEPLOY_COVERPOOLS)) {
         import('./tasks/deploy/deploy-coverpools')
-        logTask(DEPLOY_HEDGEPOOLS)
+        logTask(DEPLOY_COVERPOOLS)
     } else if (process.argv.includes(MINT_TOKENS)) {
         import('./tasks/deploy/mint-tokens')
         logTask(MINT_TOKENS)

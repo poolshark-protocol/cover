@@ -14,11 +14,16 @@ import {
     TwapOracle,
     Epochs,
     Deltas,
+    Claims,
+    CoverPoolRouter,
+    CoverPoolManager,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 
 export interface BeforeEachProps {
     coverPool: CoverPool
+    coverPoolRouter: CoverPoolRouter
+    coverPoolManager: CoverPoolManager
     coverPoolFactory: CoverPoolFactory
     rangeFactoryMock: RangeFactoryMock
     rangePoolMock: RangePoolMock
@@ -29,6 +34,7 @@ export interface BeforeEachProps {
     fullPrecisionMathLib: FullPrecisionMath
     ticksLib: Ticks
     twapOracleLib: TwapOracle
+    claimsLib: Claims
     positionsLib: Positions
     tokenA: Token20
     tokenB: Token20
@@ -64,6 +70,8 @@ export class GetBeforeEach {
 
     public retrieveProps(): BeforeEachProps {
         let coverPool: CoverPool
+        let coverPoolRouter: CoverPoolRouter
+        let coverPoolManager: CoverPoolManager
         let coverPoolFactory: CoverPoolFactory
         let rangeFactoryMock: RangeFactoryMock
         let rangePoolMock: RangePoolMock
@@ -74,6 +82,7 @@ export class GetBeforeEach {
         let fullPrecisionMathLib: FullPrecisionMath
         let ticksLib: Ticks
         let twapOracleLib: TwapOracle
+        let claimsLib: Claims
         let positionsLib: Positions
         let tokenA: Token20
         let tokenB: Token20
@@ -87,6 +96,8 @@ export class GetBeforeEach {
 
         return {
             coverPool,
+            coverPoolRouter,
+            coverPoolManager,
             coverPoolFactory,
             rangeFactoryMock,
             rangePoolMock,
@@ -97,6 +108,7 @@ export class GetBeforeEach {
             fullPrecisionMathLib,
             ticksLib,
             twapOracleLib,
+            claimsLib,
             positionsLib,
             tokenA,
             tokenB,

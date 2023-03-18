@@ -8,9 +8,11 @@
         "compile": "npx hardhat compile",
         "test": "npx hardhat test",
         "deploy": "npx hardhat deploy-coverpools",
+        "verify": "npx hardhat verify-contracts",
         "all": "yarn clean; yarn compile; yarn test; yarn deploy;"
     },
     "devDependencies": {
+        "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
         "@nomiclabs/hardhat-ethers": "^2.0.5",
         "@nomiclabs/hardhat-etherscan": "^3.0.4",
         "@nomiclabs/hardhat-waffle": "^2.0.3",

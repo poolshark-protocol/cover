@@ -16,6 +16,9 @@ import {
     TwapOracle__factory,
     Epochs__factory,
     Deltas__factory,
+    Claims__factory,
+    CoverPoolRouter__factory,
+    CoverPoolManager__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -94,7 +97,7 @@ export class InitialSetup {
             '500'
         )
         hre.props.rangePoolMock = await hre.ethers.getContractAt('RangePoolMock', mockPoolAddress)
-
+        console.log(1)
         await this.deployAssist.saveContractDeployment(
             network,
             'RangePoolMock',
@@ -102,7 +105,7 @@ export class InitialSetup {
             hre.props.rangePoolMock,
             [hre.props.token0.address, hre.props.token1.address, '500']
         )
-
+        console.log(2)
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
@@ -184,6 +187,19 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            Claims__factory,
+            'claimsLib',
+            [],
+            {
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+            }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Positions__factory,
             'positionsLib',
             [],
@@ -193,8 +209,17 @@ export class InitialSetup {
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
             }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            CoverPoolManager__factory,
+            'coverPoolManager',
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -202,7 +227,10 @@ export class InitialSetup {
             // @ts-ignore
             CoverPoolFactory__factory,
             'coverPoolFactory',
-            [hre.props.rangeFactoryMock.address],
+            [   
+                hre.props.coverPoolManager.address,
+                hre.props.rangeFactoryMock.address
+            ],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
@@ -213,6 +241,14 @@ export class InitialSetup {
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
             }
         )
+
+        const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
+            hre.props.coverPoolFactory.address
+        )
+        await setFactoryTxn.wait()
+
+        hre.nonce += 1
+
         // // hre.nonce += 1;
 
         const createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
@@ -220,8 +256,7 @@ export class InitialSetup {
             hre.props.token1.address,
             '500',
             '20',
-            '5',
-            '20'
+            '5'
         )
         await createPoolTxn.wait()
 
@@ -232,8 +267,7 @@ export class InitialSetup {
             hre.props.token1.address,
             '500',
             '20',
-            '5',
-            '20'
+            '5'
         )
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
 
@@ -242,7 +276,7 @@ export class InitialSetup {
             'CoverPool',
             'coverPool',
             hre.props.coverPool,
-            [hre.props.rangePoolMock.address, '500', '20', '5', '20']
+            [hre.props.rangePoolMock.address, '500', '20', '5']
         )
 
         return hre.nonce
