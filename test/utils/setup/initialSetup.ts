@@ -97,7 +97,7 @@ export class InitialSetup {
             '500'
         )
         hre.props.rangePoolMock = await hre.ethers.getContractAt('RangePoolMock', mockPoolAddress)
-
+        console.log(1)
         await this.deployAssist.saveContractDeployment(
             network,
             'RangePoolMock',
@@ -105,7 +105,7 @@ export class InitialSetup {
             hre.props.rangePoolMock,
             [hre.props.token0.address, hre.props.token1.address, '500']
         )
-
+        console.log(2)
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
@@ -249,13 +249,6 @@ export class InitialSetup {
 
         hre.nonce += 1
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            CoverPoolRouter__factory,
-            'coverPoolRouter',
-            []
-        )
         // // hre.nonce += 1;
 
         const createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
