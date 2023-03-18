@@ -8,6 +8,12 @@ import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 
+// - Moving from linked list to bitmap
+// (linked list is too easy to break)
+
+// - Handle syncing issues
+
+
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
