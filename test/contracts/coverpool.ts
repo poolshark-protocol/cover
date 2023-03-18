@@ -547,6 +547,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        await validateSync(0)
         await validateSync(-20)
 
         await validateSwap({
@@ -670,6 +671,9 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
+
+        await validateSync(-40)
+        await validateSync(-20)
     })
 
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas 24', async function () {
@@ -722,6 +726,8 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
+
+        await validateSync(-20)        
     })
 
     it.skip('pool0 - Should move TWAP in range, fill, sync lower tick, and clear tick deltas 25', async function () {
@@ -779,6 +785,7 @@ describe('CoverPool Tests', function () {
         //     revertMessage: '',
         // })
         console.log('-40 tick', (await hre.props.coverPool.tickNodes('-40')).toString())
+        await validateSync(-40)
         await validateSync(-60)
         // await validateSync(-60)
         console.log('-40 tick', (await hre.props.coverPool.tickNodes('-40')).toString())
@@ -811,6 +818,9 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
+
+        await validateSync(-40)
+        await validateSync(-20)
     })
 
     it.skip('pool0 - Should dilute carry deltas during accumulate', async function () {
@@ -891,6 +901,10 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
+
+        await validateSync(-40)
+
+        await validateSync(-20)
     })
 
     it.skip('pool0 - Should updateAccumDeltas during sync 26', async function () {
@@ -915,7 +929,11 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        await validateSync(-20)
+        await validateSync(-40)
         await validateSync(-60)
+        await validateSync(-40)
+        await validateSync(-20)
 
         // await validateBurn({
         //     signer: hre.props.alice,
@@ -955,7 +973,6 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(-20)
-
         await validateSync(0)
 
         await validateBurn({
@@ -1248,6 +1265,7 @@ describe('CoverPool Tests', function () {
         })
 
         // move TWAP to tick 20
+        await validateSync(0)
         await validateSync(20)
 
         // should revert on twap bounds
@@ -1329,6 +1347,8 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: 'InvalidPositionBoundsTwap()',
         })
+
+        await validateSync(20)
     })
 
     it('pool1 - Should mint, swap, and then claim entire range 17', async function () {
