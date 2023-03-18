@@ -34,20 +34,20 @@ library Epochs {
             return (state, pool0, pool1);
         }
         state.lastBlock = uint32(block.number) - state.genesisBlock;
-        int24 nextLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
+        int24 newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         // only accumulate if latestTick needs to move
         if (state.lastBlock - state.auctionStart <= state.auctionLength                     // auction has not ended
-            || nextLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // latestTick unchanged
+            || newLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // latestTick unchanged
         ) {
             return (state, pool0, pool1);
         }
 
         /// @dev - latestTick can only move in increments of tickSpread
-        if (nextLatestTick > state.latestTick) {
-            nextLatestTick = state.latestTick + state.tickSpread;
+        if (newLatestTick > state.latestTick) {
+            newLatestTick = state.latestTick + state.tickSpread;
         } 
         else {
-            nextLatestTick = state.latestTick - state.tickSpread;
+            newLatestTick = state.latestTick - state.tickSpread;
         } 
         state.accumEpoch += 1;
 
@@ -56,20 +56,19 @@ library Epochs {
             nextTickToCross1: state.latestTick, // below
             nextTickToAccum0: tickNodes[state.latestTick].previousTick, // below
             nextTickToAccum1: tickNodes[state.latestTick].nextTick,     // above
-            stopTick0: (nextLatestTick > state.latestTick) // where we do stop for pool0 sync
+            stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - state.tickSpread
-                : nextLatestTick,
-            stopTick1: (nextLatestTick > state.latestTick) // where we do stop for pool1 sync
-                ? nextLatestTick
+                : newLatestTick,
+            stopTick1: (newLatestTick > state.latestTick) // where we do stop for pool1 sync
+                ? newLatestTick
                 : state.latestTick + state.tickSpread,
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
         });
 
-        // rollover deltas
+        // rollover pool0 deltas
         (cache, pool0) = _rollover(cache, pool0, true);
-
-        // accumulate deltas
+        // accumulate pool0 deltas
         {
             ICoverPoolStructs.AccumulateOutputs memory outputs;
             outputs = _accumulate(
@@ -78,11 +77,7 @@ library Epochs {
                 ticks0[cache.nextTickToCross0],
                 ticks0[cache.nextTickToAccum0],
                 cache.deltas0,
-                state.accumEpoch,
-                true,
-                nextLatestTick > state.latestTick
-                    ? cache.nextTickToAccum0 < cache.stopTick0
-                    : cache.nextTickToAccum0 > cache.stopTick0
+                state.accumEpoch
             );
             cache.deltas0 = outputs.deltas;
             tickNodes[cache.nextTickToAccum0] = outputs.accumTickNode;
@@ -90,21 +85,10 @@ library Epochs {
             ticks0[cache.nextTickToCross0] = outputs.crossTick;
             ticks0[cache.nextTickToAccum0] = outputs.accumTick;
         }
-        /// @dev - no longer necessary because we only move tickSpread at a time
-        // if (cache.nextTickToAccum0 > cache.stopTick0) {
-        //     (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
-        //         tickNodes[cache.nextTickToAccum0],
-        //         ticks0[cache.nextTickToAccum0].liquidityDelta,
-        //         cache.nextTickToCross0,
-        //         cache.nextTickToAccum0,
-        //         pool0.liquidity,
-        //         true
-        //     );     
-        // }
-        // pool0 sync
+        // pool0 checkpoint
         {
-            /// @dev - place liquidity at stopTick0 for continuation when TWAP moves back down
-            if (nextLatestTick > state.latestTick) {
+            if (newLatestTick > state.latestTick) {
+                // create stopTick0 if necessary
                 if (cache.nextTickToAccum0 != cache.stopTick0) {
                     tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
                         cache.nextTickToAccum0,
@@ -115,16 +99,16 @@ library Epochs {
                     tickNodes[cache.nextTickToCross0].previousTick = cache.stopTick0;
                 }
             }
-            /// @dev - update amount deltas on stopTick
             ICoverPoolStructs.Tick memory stopTick0 = ticks0[cache.stopTick0];
             ICoverPoolStructs.TickNode memory stopTickNode0 = tickNodes[cache.stopTick0];
+            // checkpoint at stopTick0
             (stopTick0) = _stash(
                 stopTick0,
                 cache,
                 pool0.liquidity,
                 true
             );
-            if (nextLatestTick < state.latestTick) {
+            if (newLatestTick < state.latestTick) {
                 if (cache.nextTickToAccum0 >= cache.stopTick0) {
                     // cross in and activate next auction
                     (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
@@ -136,16 +120,18 @@ library Epochs {
                         true
                     );
                 }
-                if (cache.nextTickToCross0 != nextLatestTick) {
+                if (cache.nextTickToCross0 != newLatestTick) {
+                    // create newLatestTick
                     stopTickNode0 = ICoverPoolStructs.TickNode(
                         cache.nextTickToAccum0,
                         cache.nextTickToCross0,
                         state.accumEpoch
                     );
-                    tickNodes[cache.nextTickToAccum0].nextTick = nextLatestTick;
-                    tickNodes[cache.nextTickToCross0].previousTick = nextLatestTick;
+                    tickNodes[cache.nextTickToAccum0].nextTick = newLatestTick;
+                    tickNodes[cache.nextTickToCross0].previousTick = newLatestTick;
                 }
             }
+            // zero out tick liquidity
             stopTick0.liquidityDelta += int128(
                 stopTick0.liquidityDeltaMinus
             );
@@ -154,9 +140,9 @@ library Epochs {
             ticks0[cache.stopTick0] = stopTick0;
             tickNodes[cache.stopTick0] = stopTickNode0; 
         }
-
+        // rollover deltas pool1
         (cache, pool1) = _rollover(cache, pool1, false);
-        // accumulate to next tick
+        // accumulate deltas pool1
         {
             ICoverPoolStructs.AccumulateOutputs memory outputs;
             outputs = _accumulate(
@@ -165,11 +151,7 @@ library Epochs {
                 ticks1[cache.nextTickToCross1],
                 ticks1[cache.nextTickToAccum1],
                 cache.deltas1,
-                state.accumEpoch,
-                true,
-                nextLatestTick > state.latestTick
-                    ? cache.nextTickToAccum1 < cache.stopTick1
-                    : cache.nextTickToAccum1 > cache.stopTick1
+                state.accumEpoch
             );
             cache.deltas1 = outputs.deltas;
             tickNodes[cache.nextTickToAccum1] = outputs.accumTickNode;
@@ -177,28 +159,10 @@ library Epochs {
             ticks1[cache.nextTickToCross1] = outputs.crossTick;
             ticks1[cache.nextTickToAccum1] = outputs.accumTick;
         }
-        /// @dev - no longer necessary because we move in increments of tickSpread
-        // if (cache.nextTickToAccum1 < cache.stopTick1) {
-        //     (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
-        //         tickNodes[cache.nextTickToAccum1],
-        //         ticks1[cache.nextTickToAccum1].liquidityDelta,
-        //         cache.nextTickToCross1,
-        //         cache.nextTickToAccum1,
-        //         pool1.liquidity,
-        //         false
-        //     );
-        //     console.log('crossing as needed');
-        // }
-        // loop over ticks1 until stopTick1
-        // while (true) {
-        //     // rollover deltas from current auction
-            
-            
-        // }
-        // post-loop pool1 sync
+        // pool1 checkpoint
         {
-            /// @dev - place liquidity at stopTick1 for continuation when TWAP moves back up
-            if (nextLatestTick < state.latestTick) {
+            if (newLatestTick < state.latestTick) {
+                // create stopTick1 if necessary
                 if (cache.nextTickToAccum1 != cache.stopTick1) {
                     tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
@@ -209,25 +173,25 @@ library Epochs {
                     tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;
                 }
             }
-            /// @dev - update amount deltas on stopTick
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
             ICoverPoolStructs.TickNode memory stopTickNode1 = tickNodes[cache.stopTick1];
+            // update deltas on stopTick
             (stopTick1) = _stash(
                 stopTick1,
                 cache,
                 pool1.liquidity,
                 false
             );
-            if (nextLatestTick > state.latestTick) {
-                // if this is true we need to insert new latestTick
-                if (cache.nextTickToAccum1 != nextLatestTick) {
+            if (newLatestTick > state.latestTick) {
+                // create newLatestTick
+                if (cache.nextTickToAccum1 != newLatestTick) {
                     stopTickNode1 = ICoverPoolStructs.TickNode(
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
                         state.accumEpoch
                     );
-                    tickNodes[cache.nextTickToCross1].nextTick = nextLatestTick;
-                    tickNodes[cache.nextTickToAccum1].previousTick = nextLatestTick;
+                    tickNodes[cache.nextTickToCross1].nextTick = newLatestTick;
+                    tickNodes[cache.nextTickToAccum1].previousTick = newLatestTick;
                 }
                 if (cache.nextTickToAccum1 <= cache.stopTick1) {
                     (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
@@ -239,8 +203,10 @@ library Epochs {
                         false
                     );
                 }
+                // clear pool0 liquidity if latestTick increases
                 pool0.liquidity = 0;
             } else {
+                // clear pool1 liquidity if latestTick decreases
                 pool1.liquidity = 0;
             }
             stopTick1.liquidityDelta += int128(
@@ -251,13 +217,15 @@ library Epochs {
             ticks1[cache.stopTick1] = stopTick1;
             tickNodes[cache.stopTick1] = stopTickNode1;
         }
-        // set pool price based on nextLatestTick
-        pool0.price = TickMath.getSqrtRatioAtTick(nextLatestTick - state.tickSpread);
-        pool1.price = TickMath.getSqrtRatioAtTick(nextLatestTick + state.tickSpread);
+        // set pool price based on newLatestTick
+        pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - state.tickSpread);
+        pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + state.tickSpread);
+
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.number - state.genesisBlock);
-        state.latestTick = nextLatestTick;
-        state.latestPrice = TickMath.getSqrtRatioAtTick(nextLatestTick);
+        state.latestTick = newLatestTick;
+        state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
+    
         return (state, pool0, pool1);
     }
 
@@ -342,8 +310,6 @@ library Epochs {
         return (cache, pool);
     }
 
-    //TODO: deltas struct so just that can be passed in
-    //TODO: accumulate takes Tick and TickNode structs instead of storage pointer
     //TODO: bool stashDeltas might be better to avoid duplicate code
     function _accumulate(
         ICoverPoolStructs.TickNode memory accumTickNode,
@@ -351,10 +317,10 @@ library Epochs {
         ICoverPoolStructs.Tick memory crossTick,
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
-        uint32 accumEpoch,
-        bool removeLiquidity,
-        bool updateAccumDeltas
-    ) internal view returns (ICoverPoolStructs.AccumulateOutputs memory) {
+        uint32 accumEpoch
+    ) internal pure returns (
+        ICoverPoolStructs.AccumulateOutputs memory
+    ) {
         // update tick epoch
         if (accumTick.liquidityDeltaMinus > 0) {
             accumTickNode.accumEpochLast = accumEpoch;
@@ -365,26 +331,10 @@ library Epochs {
             // add carry amounts to cache
             (crossTick, deltas) = Deltas.unstash(crossTick, deltas);
         }
-        // if (updateAccumDeltas) {
-        //     console.log('update accum deltas');
-        //     // migrate carry deltas from cache to accum tick
-        //     ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
-        //     if (accumTick.deltas.amountInDeltaMax > 0) {
-        //         uint256 percentInOnTick = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
-        //         uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
-        //         (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
-        //         accumTick.deltas = accumDeltas;
-        //         // update delta maxes
-        //         deltas.amountInDeltaMax -= uint128(uint256(deltas.amountInDeltaMax) * (1e38 - percentInOnTick) / 1e38);
-        //         deltas.amountOutDeltaMax -= uint128(uint256(deltas.amountOutDeltaMax) * (1e38 - percentOutOnTick) / 1e38);
-        //     }
-        // }
 
-        //remove all liquidity from cross tick
-        if (removeLiquidity) {
-            crossTick.liquidityDelta = 0;
-            crossTick.liquidityDeltaMinus = 0;
-        }
+        // remove all liquidity
+        crossTick.liquidityDelta = 0;
+        crossTick.liquidityDeltaMinus = 0;
         // clear out stash
         crossTick.amountInDeltaMaxStashed  = 0;
         crossTick.amountOutDeltaMaxStashed = 0;
