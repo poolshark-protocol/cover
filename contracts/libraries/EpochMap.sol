@@ -4,15 +4,75 @@ pragma solidity ^0.8.13;
 import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
-library TickBitmap {
+library EpochMap {
 
     error TickIndexOverflow();
     error TickIndexUnderflow();
     error BlockIndexOverflow();
 
-    function _getIndices(
+    function set(
+        ICoverPoolStructs.TickMap storage tickMap,
+        int24  tick,
+        uint256 epoch
+    ) external {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex,
+            uint256 volumeIndex
+        ) = getIndices(tick);
+
+        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        // clear previous value
+        epochValue &= ~(1 << (tickIndex & 0x7 * 8) - 1);
+        // add new value to word
+        epochValue &= epoch << (tickIndex & 0x7 * 8);
+        // store word in map
+        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
+    }
+
+    function unset(
+        ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
-    ) internal pure returns (
+    ) external {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex,
+            uint256 volumeIndex
+        ) = getIndices(tick);
+
+        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        // clear previous value
+        epochValue &= ~(1 << (tickIndex & 0x7 * 8) - 1);
+        // store word in map
+        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
+    }
+
+    function get(
+        ICoverPoolStructs.TickMap storage tickMap,
+        int24 tick
+    ) external view returns (
+        uint32 epoch
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex,
+            uint256 volumeIndex
+        ) = getIndices(tick);
+
+        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        // right shift so first 8 bits are epoch value
+        epochValue >>= (tickIndex & 0x7 * 8);
+        // clear other bits
+        epochValue &= (1 << 8 - 1);
+        return uint32(epochValue);
+    }
+
+    function getIndices(
+        int24 tick
+    ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex,
@@ -39,44 +99,5 @@ library TickBitmap {
             if (tickIndex > uint24(TickMath.MAX_TICK * 2)) revert TickIndexOverflow();
             tick = int24(int256(tickIndex) + TickMath.MIN_TICK);
         }
-    }
-
-    function _set(
-        ICoverPoolStructs.TickMap storage tickMap,
-        int24  tick,
-        uint256 epoch
-    ) internal {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex,
-            uint256 volumeIndex
-        ) = _getIndices(tick);
-
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
-        // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 8) - 1);
-        // add new value to word
-        epochValue &= epoch << (tickIndex & 0x7 * 8);
-        // store word in map
-        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
-    }
-
-    function unset(
-        ICoverPoolStructs.TickMap storage tickMap,
-        int24 tick
-    ) internal {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex,
-            uint256 volumeIndex
-        ) = _getIndices(tick);
-
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
-        // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 8) - 1);
-        // store word in map
-        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
     }
 }
