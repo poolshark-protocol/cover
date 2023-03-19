@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-// import './DyDxMath.sol';
-import './TickMath.sol';
+// import './math/DyDxMath.sol';
+import './math/TickMath.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 

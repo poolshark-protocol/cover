@@ -12,6 +12,7 @@ abstract contract CoverPoolStorage is ICoverPoolStructs, CoverPoolErrors {
 
     address public feeTo;
 
+    TickMap public tickmap;
     mapping(int24 => TickNode) public tickNodes; /// @dev Tick nodes in linked list
     mapping(int24 => Tick) public ticks0; /// @dev Ticks containing token0 as output
     mapping(int24 => Tick) public ticks1; /// @dev Ticks containing token1 as output

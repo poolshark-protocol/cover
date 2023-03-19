@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './TickMath.sol';
+import './math/TickMath.sol';
 import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-import './FullPrecisionMath.sol';
-import './DyDxMath.sol';
+import './math/FullPrecisionMath.sol';
+import './math/DyDxMath.sol';
 import './Claims.sol';
 
 /// @notice Position management library for ranged liquidity.

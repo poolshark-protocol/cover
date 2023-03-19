@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '../interfaces/IRangeFactory.sol';
 import '../interfaces/IRangePool.sol';
-import './TickMath.sol';
+import './math/TickMath.sol';
 
 // will the blockTimestamp be consistent across the entire block?
 library TwapOracle {

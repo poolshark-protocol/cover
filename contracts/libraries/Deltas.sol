@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './DyDxMath.sol';
+import './math/DyDxMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 // import 'hardhat/console.sol';
 //TODO: stash and unstash

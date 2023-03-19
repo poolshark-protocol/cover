@@ -36,6 +36,19 @@ interface ICoverPoolStructs {
         uint32  accumEpochLast; // Used to check for claim updates
     }
 
+    struct TickMap {
+        uint256 sets;                        /// @dev - sets of words
+        mapping(uint256 => uint256) blocks;  /// @dev - sets to words
+        mapping(uint256 => uint256)  words;  /// @dev - words to ticks
+    }
+
+    struct EpochMap {
+        uint256 collections;                 /// @dev - collections of sets
+        mapping(uint256 => uint256) sets;    /// @dev - sets of words
+        mapping(uint256 => uint256) blocks;  /// @dev - sets to words
+        mapping(uint256 => uint256)  words;  /// @dev - words to ticks
+    }
+
     struct Tick {
         int128  liquidityDelta;
         uint128 liquidityDeltaMinus;

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './TickMath.sol';
+import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
-import './FullPrecisionMath.sol';
-import './DyDxMath.sol';
+import './math/FullPrecisionMath.sol';
+import './math/DyDxMath.sol';
 import './TwapOracle.sol';
 
 /// @notice Tick management library for ranged liquidity.

@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './TickMath.sol';
-import './DyDxMath.sol';
+import './math/TickMath.sol';
+import './math/DyDxMath.sol';
 import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
-
-// - Moving from linked list to bitmap
-// (linked list is too easy to break)
-
-// - Handle syncing issues
-
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -62,7 +56,6 @@ library Epochs {
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
         });
 
-        
         while (true) {
             // rollover pool0 deltas
             (cache, pool0) = _rollover(cache, pool0, true);
@@ -306,6 +299,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
+        //TODO: add syncing fee
         if (pool.liquidity == 0) {
             /// @auditor - deltas should be zeroed out here
             return (cache, pool);
