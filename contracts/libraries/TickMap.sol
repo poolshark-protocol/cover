@@ -118,8 +118,8 @@ library TickBitmap {
             if (tick > TickMath.MAX_TICK) revert TickIndexOverflow();
             if (tick < TickMath.MIN_TICK) revert TickIndexUnderflow();
             tickIndex = uint256(int256((tick - TickMath.MIN_TICK)));
-            wordIndex = tickIndex >> 8;
-            blockIndex = tickIndex >> 16;
+            wordIndex = tickIndex >> 8;   // 2^8 ticks per word
+            blockIndex = tickIndex >> 16; // 2^8 words per block
             if (blockIndex > 255) revert BlockIndexOverflow();
         }
     }

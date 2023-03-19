@@ -24,9 +24,9 @@ library EpochMap {
 
         uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
         // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 8) - 1);
+        epochValue &= ~(1 << (tickIndex & 0x7 * 32) - 1);
         // add new value to word
-        epochValue &= epoch << (tickIndex & 0x7 * 8);
+        epochValue &= epoch << (tickIndex & 0x7 * 32);
         // store word in map
         tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
     }
@@ -44,7 +44,7 @@ library EpochMap {
 
         uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
         // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 8) - 1);
+        epochValue &= ~(1 << (tickIndex & 0x7 * 32) - 1);
         // store word in map
         tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
     }
@@ -64,9 +64,9 @@ library EpochMap {
 
         uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
         // right shift so first 8 bits are epoch value
-        epochValue >>= (tickIndex & 0x7 * 8);
+        epochValue >>= (tickIndex & 0x7 * 32);
         // clear other bits
-        epochValue &= (1 << 8 - 1);
+        epochValue &= (1 << 32 - 1);
         return uint32(epochValue);
     }
 
