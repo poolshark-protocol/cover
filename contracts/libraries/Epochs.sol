@@ -34,26 +34,16 @@ library Epochs {
         ICoverPoolStructs.PoolState memory
     )
     {
-        // update last block checked
-        if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
-            return (state, pool0, pool1);
-        }
-        state.lastBlock = uint32(block.number) - state.genesisBlock;
-        int24 newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
-        // only accumulate if latestTick needs to move
-        if (state.lastBlock - state.auctionStart <= state.auctionLength                     // auction has not ended
-            || newLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // latestTick unchanged
-        ) {
-            return (state, pool0, pool1);
+        int24 newLatestTick;
+        {
+            bool earlyReturn;
+            (newLatestTick, earlyReturn) = _syncTick(state);
+            if (earlyReturn) {
+                return (state, pool0, pool1);
+            }
         }
 
-        /// @dev - latestTick can only move in increments of tickSpread
-        if (newLatestTick > state.latestTick) {
-            newLatestTick = state.latestTick + state.tickSpread;
-        } 
-        else {
-            newLatestTick = state.latestTick - state.tickSpread;
-        } 
+        // increase epoch counter
         state.accumEpoch += 1;
 
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
@@ -232,6 +222,44 @@ library Epochs {
         state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
     
         return (state, pool0, pool1);
+    }
+
+    function _syncTick(
+        ICoverPoolStructs.GlobalState memory state
+    ) internal view returns(
+        int24 newLatestTick,
+        bool
+    ) {
+        // update last block checked
+        if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
+            return (0, true);
+        }
+        state.lastBlock = uint32(block.number) - state.genesisBlock;
+        newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
+        newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
+
+        // only accumulate if latestTick needs to move
+        int32 auctionsElapsed = int32((state.lastBlock - state.auctionStart) / state.auctionLength);
+        if (auctionsElapsed == 0                                                           // auction has not ended
+            || newLatestTick / (state.tickSpread) == state.latestTick / (state.tickSpread) // tick has not moved
+        ) {
+            return (0, true);
+        }
+
+        /// @dev - latestTick can only move based on auctionsElapsed 
+        if (newLatestTick > state.latestTick) {
+            int24 maxLatestTickMove =  int24(int32(uint16(state.tickSpread) 
+                                        * (state.lastBlock - state.auctionStart) / state.auctionLength));
+            if (newLatestTick - state.latestTick > maxLatestTickMove) {
+                newLatestTick = state.latestTick + maxLatestTickMove;
+            } else {
+                newLatestTick = state.latestTick + state.tickSpread;
+            }
+        } else {
+            newLatestTick = state.latestTick - state.tickSpread;
+        } 
+
+        return (newLatestTick, false);
     }
 
     function _rollover(

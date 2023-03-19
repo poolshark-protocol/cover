@@ -17,7 +17,6 @@ import {
     Epochs__factory,
     Deltas__factory,
     Claims__factory,
-    CoverPoolRouter__factory,
     CoverPoolManager__factory,
 } from '../../../typechain'
 
@@ -246,17 +245,6 @@ export class InitialSetup {
             hre.props.coverPoolFactory.address
         )
         await setFactoryTxn.wait()
-
-        hre.nonce += 1
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            CoverPoolRouter__factory,
-            'coverPoolRouter',
-            []
-        )
-        // // hre.nonce += 1;
 
         const createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
             hre.props.token0.address,
