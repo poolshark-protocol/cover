@@ -89,7 +89,8 @@ library TickBitmap {
                 uint256 block_ = tickMap.words[blockIndex] & ((1 << (wordIndex & 0xFF)) - 1);
                 if (block_ == 0) {
                     uint256 blockMap = tickMap.blocks & ((1 << blockIndex) - 1);
-                    assert(blockMap != 0);
+                    // assert(blockMap != 0);
+                    // if blockMap == 0 return type(int24).min() or MIN_TICK
 
                     blockIndex = _msb(blockMap);
                     block_ = tickMap.words[blockIndex];
@@ -101,7 +102,6 @@ library TickBitmap {
         }
     }
 
-    //TODO: NEXT ABOVE
     function next(
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
@@ -113,20 +113,21 @@ library TickBitmap {
               uint256 blockIndex
             ) = _getIndices(tick);
 
-            uint256 word = tickMap.ticks[wordIndex] & ((1 << (tickIndex & 0xFF)) - 1);
+            uint256 word = tickMap.ticks[wordIndex] & ~((1 << (tickIndex & 0xFF + 1)) - 1);
             if (word == 0) {
-                uint256 block_ = tickMap.words[blockIndex] & ((1 << (wordIndex & 0xFF)) - 1);
+                uint256 block_ = tickMap.words[blockIndex] & ~((1 << (wordIndex & 0xFF + 1)) - 1);
                 if (block_ == 0) {
-                    uint256 blockMap = tickMap.blocks & ((1 << blockIndex) - 1);
-                    assert(blockMap != 0);
+                    uint256 blockMap = tickMap.blocks & ~((1 << blockIndex + 1) - 1);
+                    // assert(blockMap != 0);
+                    //if blockMap == 0 return type(int24).max()
 
-                    blockIndex = _msb(blockMap);
+                    blockIndex = _lsb(blockMap);
                     block_ = tickMap.words[blockIndex];
                 }
-                wordIndex = (blockIndex << 8) | _msb(block_);
+                wordIndex = (blockIndex << 8) | _lsb(block_);
                 word = tickMap.ticks[wordIndex];
             }
-            nextTick = _tick((wordIndex << 8) | _msb(word));
+            nextTick = _tick((wordIndex << 8) | _lsb(word));
         }
     }
 
@@ -162,6 +163,49 @@ library TickBitmap {
                 r += 2;
             }
             if (x >= 0x2) r += 1;
+        }
+    }
+
+    function _lsb(uint256 x) internal pure returns (uint8 r) {
+        unchecked {
+            assert(x > 0); // if x is 0 return 0
+            r = 255;
+            if (x & type(uint128).max > 0) {
+                r -= 128;
+            } else {
+                x >>= 128;
+            }
+            if (x & type(uint64).max > 0) {
+                r -= 64;
+            } else {
+                x >>= 64;
+            }
+            if (x & type(uint32).max > 0) {
+                r -= 32;
+            } else {
+                x >>= 32;
+            }
+            if (x & type(uint16).max > 0) {
+                r -= 16;
+            } else {
+                x >>= 16;
+            }
+            if (x & type(uint8).max > 0) {
+                r -= 8;
+            } else {
+                x >>= 8;
+            }
+            if (x & 0xf > 0) {
+                r -= 4;
+            } else {
+                x >>= 4;
+            }
+            if (x & 0x3 > 0) {
+                r -= 2;
+            } else {
+                x >>= 2;
+            }
+            if (x & 0x1 > 0) r -= 1;
         }
     }
     

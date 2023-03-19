@@ -37,16 +37,10 @@ interface ICoverPoolStructs {
     }
 
     struct TickMap {
-        uint256 blocks;                   //blockMap     /// @dev - sets of words
-        mapping(uint256 => uint256) words;//blocks  /// @dev - sets to words
-        mapping(uint256 => uint256) ticks;//words  /// @dev - words to ticks
-    }
-
-    struct EpochMap {
-        uint256 collections;                 /// @dev - collections of sets
-        mapping(uint256 => uint256) blocks;    /// @dev - sets of words
+        uint256 blocks;                     /// @dev - sets of words
         mapping(uint256 => uint256) words;  /// @dev - sets to words
-        mapping(uint256 => uint256)  ticks;  /// @dev - words to ticks
+        mapping(uint256 => uint256) ticks;  /// @dev - words to ticks
+        mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) epochs; /// @dev - ticks to epochs
     }
 
     struct Tick {
