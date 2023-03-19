@@ -275,17 +275,16 @@ library Epochs {
             return (0, true);
         }
 
+        int24 maxLatestTickMove =  int24(int32(uint16(state.tickSpread) 
+                                        * (state.lastBlock - state.auctionStart) / state.auctionLength));
+
         /// @dev - latestTick can only move based on auctionsElapsed 
         if (newLatestTick > state.latestTick) {
-            int24 maxLatestTickMove =  int24(int32(uint16(state.tickSpread) 
-                                        * (state.lastBlock - state.auctionStart) / state.auctionLength));
-            if (newLatestTick - state.latestTick > maxLatestTickMove) {
+            if (newLatestTick - state.latestTick > maxLatestTickMove)
                 newLatestTick = state.latestTick + maxLatestTickMove;
-            } else {
-                newLatestTick = state.latestTick + state.tickSpread;
-            }
         } else {
-            newLatestTick = state.latestTick - state.tickSpread;
+            if (state.latestTick - newLatestTick > maxLatestTickMove)
+                newLatestTick = state.latestTick - maxLatestTickMove;
         } 
 
         return (newLatestTick, false);

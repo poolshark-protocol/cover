@@ -6,31 +6,36 @@ import '../interfaces/ICoverPoolStructs.sol';
 
 library TickBitmap {
 
-    error SetIndexOverflow();
-    
+    error TickIndexOverflow();
+    error TickIndexUnderflow();
+    error BlockIndexOverflow();
+
     function _getIndices(
         int24 tick
     ) internal pure returns (
-            uint256 tickOffset,
+            uint256 tickIndex,
             uint256 wordIndex,
-            uint256 setIndex
+            uint256 blockIndex
         )
     {
         unchecked {
-            tickOffset = uint256(int256((tick - TickMath.MIN_TICK)));
-            setIndex = tickOffset >> 16;
-            wordIndex = tickOffset >> 8;
-            if (setIndex >= 32) revert SetIndexOverflow();
+            if (tick > TickMath.MAX_TICK) revert TickIndexOverflow();
+            if (tick < TickMath.MIN_TICK) revert TickIndexUnderflow();
+            tickIndex = uint256(int256((tick - TickMath.MIN_TICK)));
+            wordIndex = tickIndex >> 8;
+            blockIndex = tickIndex >> 16;
+            if (blockIndex > 255) revert BlockIndexOverflow();
         }
     }
 
     function _tick (
-        uint256 tickOffset
+        uint256 tickIndex
     ) internal pure returns (
         int24 tick
     ) {
         unchecked {
-            tick = int24(int256(tickOffset) + TickMath.MIN_TICK);
+            if (tickIndex > uint24(TickMath.MAX_TICK * 2)) revert TickIndexOverflow();
+            tick = int24(int256(tickIndex) + TickMath.MIN_TICK);
         }
     }
 
@@ -39,77 +44,89 @@ library TickBitmap {
         int24 tick
     ) internal {
         (
-            uint256 blockIdx,
-            uint256 wordIdx,
-            uint256 compressed
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex
         ) = _getIndices(tick);
 
-        tickMap.words[wordIdx]   |= 1 << (compressed & 0xFF);
-        tickMap.blocks[blockIdx] |= 1 << (wordIdx & 0xFF);
-        tickMap.sets |= 1 << blockIdx;
+        tickMap.ticks[wordIndex]    |= 1 << (tickIndex & 0xFF); // same as modulus 255
+        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF);
+        tickMap.blocks |= 1 << blockIndex;
     }
 
     function unset(
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
     ) internal {
-        (uint256 blockIdx, uint256 wordIdx, uint256 compressed) = _getIndices(tick);
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+            uint256 blockIndex
+        ) = _getIndices(tick);
 
-        tickMap.words[wordIdx] &= ~(1 << (compressed & 0xFF));
-        if (tickMap.words[wordIdx] == 0) {
-            tickMap.blocks[blockIdx] &= ~(1 << (wordIdx & 0xFF));
-            if (tickMap.blocks[blockIdx] == 0) {
-                tickMap.sets &= ~(1 << blockIdx);
+        tickMap.ticks[wordIndex] &= ~(1 << (tickIndex & 0xFF));
+        if (tickMap.ticks[wordIndex] == 0) {
+            tickMap.words[blockIndex] &= ~(1 << (wordIndex & 0xFF));
+            if (tickMap.words[blockIndex] == 0) {
+                tickMap.blocks &= ~(1 << blockIndex);
             }
         }
     }
 
-    function nextBelow(
+    function previous(
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
-    ) internal view returns (int24 tickBelow) {
+    ) internal view returns (int24 previousTick) {
         unchecked {
-            (uint256 blockIdx, uint256 wordIdx, uint256 compressed) = _getIndices(tick);
+            (
+              uint256 tickIndex,
+              uint256 wordIndex,
+              uint256 blockIndex
+            ) = _getIndices(tick);
 
-            uint256 word = tickMap.words[wordIdx] & ((1 << (compressed & 0xFF)) - 1);
+            uint256 word = tickMap.ticks[wordIndex] & ((1 << (tickIndex & 0xFF)) - 1);
             if (word == 0) {
-                uint256 block_ = tickMap.blocks[blockIdx] & ((1 << (wordIdx & 0xFF)) - 1);
+                uint256 block_ = tickMap.words[blockIndex] & ((1 << (wordIndex & 0xFF)) - 1);
                 if (block_ == 0) {
-                    uint256 blockMap = tickMap.sets & ((1 << blockIdx) - 1);
+                    uint256 blockMap = tickMap.blocks & ((1 << blockIndex) - 1);
                     assert(blockMap != 0);
 
-                    blockIdx = _msb(blockMap);
-                    block_ = tickMap.blocks[blockIdx];
+                    blockIndex = _msb(blockMap);
+                    block_ = tickMap.words[blockIndex];
                 }
-                wordIdx = (blockIdx << 8) | _msb(block_);
-                word = tickMap.words[wordIdx];
+                wordIndex = (blockIndex << 8) | _msb(block_);
+                word = tickMap.ticks[wordIndex];
             }
-            tickBelow = _tick((wordIdx << 8) | _msb(word));
+            previousTick = _tick((wordIndex << 8) | _msb(word));
         }
     }
 
     //TODO: NEXT ABOVE
-    function nextAbove(
+    function next(
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
-    ) internal view returns (int24 tickBelow) {
+    ) internal view returns (int24 nextTick) {
         unchecked {
-            (uint256 blockIdx, uint256 wordIdx, uint256 compressed) = _getIndices(tick);
+            (
+              uint256 tickIndex,
+              uint256 wordIndex,
+              uint256 blockIndex
+            ) = _getIndices(tick);
 
-            uint256 word = tickMap.words[wordIdx] & ((1 << (compressed & 0xFF)) - 1);
+            uint256 word = tickMap.ticks[wordIndex] & ((1 << (tickIndex & 0xFF)) - 1);
             if (word == 0) {
-                uint256 block_ = tickMap.blocks[blockIdx] & ((1 << (wordIdx & 0xFF)) - 1);
+                uint256 block_ = tickMap.words[blockIndex] & ((1 << (wordIndex & 0xFF)) - 1);
                 if (block_ == 0) {
-                    uint256 blockMap = tickMap.sets & ((1 << blockIdx) - 1);
+                    uint256 blockMap = tickMap.blocks & ((1 << blockIndex) - 1);
                     assert(blockMap != 0);
 
-                    blockIdx = _msb(blockMap);
-                    block_ = tickMap.blocks[blockIdx];
+                    blockIndex = _msb(blockMap);
+                    block_ = tickMap.words[blockIndex];
                 }
-                wordIdx = (blockIdx << 8) | _msb(block_);
-                word = tickMap.words[wordIdx];
+                wordIndex = (blockIndex << 8) | _msb(block_);
+                word = tickMap.ticks[wordIndex];
             }
-            tickBelow = _tick((wordIdx << 8) | _msb(word));
+            nextTick = _tick((wordIndex << 8) | _msb(word));
         }
     }
 

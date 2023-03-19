@@ -128,7 +128,7 @@ export class InitialSetup {
             'dydxMathLib',
             [],
             {
-                'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
+                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
             }
         )
@@ -148,7 +148,7 @@ export class InitialSetup {
             'deltasLib',
             [],
             {
-                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address
+                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address
             }
         )
 
@@ -159,10 +159,10 @@ export class InitialSetup {
             'epochsLib',
             [],
             {
-                'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
-                'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
+                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address
             }
@@ -175,10 +175,10 @@ export class InitialSetup {
             'ticksLib',
             [],
             {
-                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
-                'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
+                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
             }
         )
@@ -191,8 +191,8 @@ export class InitialSetup {
             [],
             {
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
-                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
             }
         )
 
@@ -203,10 +203,10 @@ export class InitialSetup {
             'positionsLib',
             [],
             {
-                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
-                'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
+                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
@@ -233,10 +233,10 @@ export class InitialSetup {
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/FullPrecisionMath.sol:FullPrecisionMath':
+                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/TickMath.sol:TickMath': hre.props.tickMathLib.address,
-                'contracts/libraries/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
+                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
             }
         )
