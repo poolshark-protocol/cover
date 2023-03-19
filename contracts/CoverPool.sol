@@ -46,6 +46,7 @@ contract CoverPool is
         // set initial ticks
         state = Ticks.initialize(
             tickNodes,
+            tickMap,
             pool0,
             pool1,
             state
@@ -59,8 +60,8 @@ contract CoverPool is
     ) external lock {
         GlobalState memory state = globalState;
         (state, pool0, pool1) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
+            tickMap.ticks0,
+            tickMap.ticks1,
             tickNodes,
             pool0,
             pool1,
@@ -77,7 +78,7 @@ contract CoverPool is
         // recreates position if required
         state = Positions.update(
             params.zeroForOne ? positions0 : positions1,
-            params.zeroForOne ? ticks0 : ticks1,
+            params.zeroForOne ? tickMap.ticks0 : tickMap.ticks1,
             tickNodes,
             state,
             params.zeroForOne ? pool0 : pool1,
@@ -92,8 +93,8 @@ contract CoverPool is
         );
         Positions.add(
             params.zeroForOne ? positions0 : positions1,
-            params.zeroForOne ? ticks0 : ticks1,
-            tickNodes,
+            params.zeroForOne ? tickMap.ticks0 : tickMap.ticks1,
+            tickMap,
             state,
             AddParams(
                 params.to,
@@ -121,8 +122,8 @@ contract CoverPool is
     ) external lock {
         GlobalState memory state = globalState;
         (state, pool0, pool1) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
+            tickMap.ticks0,
+            tickMap.ticks1,
             tickNodes,
             pool0,
             pool1,
@@ -134,7 +135,7 @@ contract CoverPool is
             // if position has been crossed into
             state = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
-                params.zeroForOne ? ticks0 : ticks1,
+                params.zeroForOne ? tickMap.ticks0 : tickMap.ticks1,
                 tickNodes,
                 state,
                 params.zeroForOne ? pool0 : pool1,
@@ -151,7 +152,7 @@ contract CoverPool is
             // if position hasn't been crossed into
             (, state) = Positions.remove(
                 params.zeroForOne ? positions0 : positions1,
-                params.zeroForOne ? ticks0 : ticks1,
+                params.zeroForOne ? tickMap.ticks0 : tickMap.ticks1,
                 tickNodes,
                 state,
                 RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
@@ -199,8 +200,8 @@ contract CoverPool is
         PoolState memory pool = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
         (state, pool0, pool1) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
+            tickMap.ticks0,
+            tickMap.ticks1,
             tickNodes,
             pool0,
             pool1,

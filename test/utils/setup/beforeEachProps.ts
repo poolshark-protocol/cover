@@ -17,6 +17,8 @@ import {
     Claims,
     CoverPoolRouter,
     CoverPoolManager,
+    TickMap,
+    EpochMap,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 
@@ -27,10 +29,12 @@ export interface BeforeEachProps {
     coverPoolFactory: CoverPoolFactory
     rangeFactoryMock: RangeFactoryMock
     rangePoolMock: RangePoolMock
+    tickMapLib: TickMap
     tickMathLib: TickMath
     dydxMathLib: DyDxMath
     deltasLib: Deltas
     epochsLib: Epochs
+    epochMapLib: EpochMap
     fullPrecisionMathLib: FullPrecisionMath
     ticksLib: Ticks
     twapOracleLib: TwapOracle
@@ -75,10 +79,12 @@ export class GetBeforeEach {
         let coverPoolFactory: CoverPoolFactory
         let rangeFactoryMock: RangeFactoryMock
         let rangePoolMock: RangePoolMock
+        let tickMapLib: TickMap
         let tickMathLib: TickMath
         let dydxMathLib: DyDxMath
         let deltasLib: Deltas
         let epochsLib: Epochs
+        let epochMapLib: EpochMap
         let fullPrecisionMathLib: FullPrecisionMath
         let ticksLib: Ticks
         let twapOracleLib: TwapOracle
@@ -101,10 +107,12 @@ export class GetBeforeEach {
             coverPoolFactory,
             rangeFactoryMock,
             rangePoolMock,
+            tickMapLib,
             tickMathLib,
             dydxMathLib,
             deltasLib,
             epochsLib,
+            epochMapLib,
             fullPrecisionMathLib,
             ticksLib,
             twapOracleLib,

@@ -8,6 +8,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './Claims.sol';
+import './EpochMap.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -97,7 +98,7 @@ library Positions {
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params
     ) external {
@@ -117,9 +118,9 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -130,11 +131,9 @@ library Positions {
         // add liquidity to ticks
         Ticks.insert(
             ticks,
-            tickNodes,
+            tickMap,
             state,
-            params.lowerOld,
             params.lower,
-            params.upperOld,
             params.upper,
             uint128(params.amount),
             params.zeroForOne

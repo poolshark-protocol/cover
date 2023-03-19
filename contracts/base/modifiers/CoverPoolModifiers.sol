@@ -7,7 +7,7 @@ import '../../libraries/Ticks.sol';
 abstract contract CoverPoolModifiers is CoverPoolStorage {
     modifier lock() {
         if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickNodes, pool0, pool1, globalState);
+            globalState = Ticks.initialize(tickNodes, tickMap, pool0, pool1, globalState);
         }
         if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
         if (globalState.unlocked == 2) revert Locked();

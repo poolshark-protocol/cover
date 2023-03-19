@@ -30,13 +30,9 @@ interface ICoverPoolStructs {
         uint160 price; /// @dev Starting price current
     }
 
-    struct TickNode {
-        int24   previousTick;
-        int24   nextTick;
-        uint32  accumEpochLast; // Used to check for claim updates
-    }
-
     struct TickMap {
+        mapping(int24 => Tick) ticks0; /// @dev Ticks containing token0 as output
+        mapping(int24 => Tick) ticks1; /// @dev Ticks containing token1 as output
         uint256 blocks;                     /// @dev - sets of words
         mapping(uint256 => uint256) words;  /// @dev - sets to words
         mapping(uint256 => uint256) ticks;  /// @dev - words to ticks

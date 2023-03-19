@@ -18,6 +18,8 @@ import {
     Deltas__factory,
     Claims__factory,
     CoverPoolManager__factory,
+    TickMap__factory,
+    EpochMap__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -144,6 +146,22 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            TickMap__factory,
+            'tickMapLib',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            EpochMap__factory,
+            'epochMapLib',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Deltas__factory,
             'deltasLib',
             [],
@@ -180,6 +198,7 @@ export class InitialSetup {
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
             }
         )
 

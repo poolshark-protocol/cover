@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -13,16 +14,26 @@ library TickMap {
     function set(
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
-    ) external {
+    ) external returns (
+        bool intiialized
+    )    
+    {
         (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex
         ) = getIndices(tick);
 
-        tickMap.ticks[wordIndex]    |= 1 << (tickIndex & 0xFF); // same as modulus 255
-        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF);
-        tickMap.blocks |= 1 << blockIndex;
+        // check if bit is already set
+        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
+        if (word == tickMap.ticks[wordIndex]) {
+            return false;
+        }
+
+        tickMap.ticks[wordIndex]     = word; 
+        tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF); // same as modulus 255
+        tickMap.blocks              |= 1 << blockIndex;
+        return true;
     }
 
     function unset(
@@ -44,10 +55,29 @@ library TickMap {
         }
     }
 
+    function get(
+        ICoverPoolStructs.TickMap storage tickMap,
+        int24 tick
+    ) external view returns (
+        bool initialized
+    ) {
+        (
+            uint256 tickIndex,
+            uint256 wordIndex,
+        ) = getIndices(tick);
+
+        // check if bit is already set
+        uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
+        if (word == tickMap.ticks[wordIndex]) {
+            return false;
+        }
+        return true;
+    }
+
     function previous(
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
-    ) internal view returns (
+    ) external view returns (
         int24 previousTick
     ) {
         unchecked {

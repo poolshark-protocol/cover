@@ -7,6 +7,7 @@ import '../utils/CoverPoolErrors.sol';
 import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './TwapOracle.sol';
+import './TickMap.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -104,6 +105,7 @@ library Ticks {
 
     function initialize(
         mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.PoolState storage pool0,
         ICoverPoolStructs.PoolState storage pool1,
         ICoverPoolStructs.GlobalState memory state
@@ -125,18 +127,21 @@ library Ticks {
                 tickNodes[state.latestTick] = ICoverPoolStructs.TickNode(
                     TickMath.MIN_TICK,
                     TickMath.MAX_TICK,
-                    state.accumEpoch
+                    0
                 );
+                TickMap.set(tickMap, state.latestTick);
                 tickNodes[TickMath.MIN_TICK] = ICoverPoolStructs.TickNode(
                     TickMath.MIN_TICK,
                     state.latestTick,
-                    state.accumEpoch
+                    0
                 );
+                TickMap.set(tickMap, TickMath.MIN_TICK);
                 tickNodes[TickMath.MAX_TICK] = ICoverPoolStructs.TickNode(
                     state.latestTick,
                     TickMath.MAX_TICK,
-                    state.accumEpoch
+                    0
                 );
+                TickMap.set(tickMap, TickMath.MAX_TICK);
 
                 pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread);
                 pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
@@ -147,11 +152,9 @@ library Ticks {
 
     function insert(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
-        int24 lowerOld,
         int24 lower,
-        int24 upperOld,
         int24 upper,
         uint128 amount,
         bool isPool0
@@ -163,82 +166,31 @@ library Ticks {
             revert LiquidityOverflow();
         ICoverPoolStructs.Tick memory tickLower = ticks[lower];
         ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
-        ICoverPoolStructs.TickNode memory tickNodeLower = tickNodes[lower];
-        ICoverPoolStructs.TickNode memory tickNodeUpper = tickNodes[upper];
         /// @auditor lower or upper = latestTick -> should not be possible
         /// @auditor - should we check overflow/underflow of lower and upper ticks?
         /// @auditor - we need to be able to deprecate pools if necessary; so not much reason to do overflow/underflow check
-        if (tickNodeLower.nextTick != tickNodeLower.previousTick) {
-            // tick exists
-            if (isPool0) {
+
+        // sets bit in map
+        TickMap.set(tickMap, lower);
+
+        // updates liquidity values
+        if (isPool0) {
                 tickLower.liquidityDelta -= int128(amount);
                 tickLower.liquidityDeltaMinus += amount;
-            } else {
-                tickLower.liquidityDelta += int128(amount);
-            }
-            if (upper == tickNodes[upperOld].previousTick) {
-                tickNodeLower.nextTick = upper;
-            }
         } else {
-            // tick does not exist
-            if (isPool0) {
-                tickLower = ICoverPoolStructs.Tick(-int128(amount), amount, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
-            } else {
-                tickLower = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
-            }
-            /// @auditor new latestTick being in between lowerOld and lower handled by Positions.validate()
-            int24 oldNextTick = tickNodes[lowerOld].nextTick;
-            if (upper < oldNextTick) {
-                oldNextTick = upper;
-            }
-            /// @auditor - don't set previous tick so upper can be initialized
-            else {
-                tickNodes[oldNextTick].previousTick = lower;
-            }
-
-            if (lowerOld >= lower || lower >= oldNextTick) {
-                revert WrongTickLowerOld();
-            }
-            tickNodeLower = ICoverPoolStructs.TickNode(lowerOld, oldNextTick, 0);
-            tickNodes[lowerOld].nextTick = lower;
+                tickLower.liquidityDelta += int128(amount);
         }
 
-        /// @auditor -> is it safe to add to liquidityDelta w/o Tick struct initialization
-        if (tickNodeUpper.nextTick != tickNodeUpper.previousTick) {
-            if (isPool0) {
+        TickMap.set(tickMap, upper);
+
+        if (isPool0) {
                 tickUpper.liquidityDelta += int128(amount);
-            } else {
-                tickUpper.liquidityDelta -= int128(amount);
-                tickUpper.liquidityDeltaMinus += amount;
-            }
-            if (lower == tickNodes[lowerOld].nextTick) {
-                tickNodeUpper.previousTick = lower;
-            }
         } else {
-            if (isPool0) {
-                tickUpper = ICoverPoolStructs.Tick(int128(amount), 0, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
-            } else {
-                tickUpper = ICoverPoolStructs.Tick(-int128(amount), amount, 0, 0, ICoverPoolStructs.Deltas(0, 0, 0, 0));
-            }
-            int24 oldPrevTick = tickNodes[upperOld].previousTick;
-            if (lower > oldPrevTick) oldPrevTick = lower;
-            //TODO: handle new TWAP being in between upperOld and upper
-            /// @dev - if nextTick == previousTick this tick node is uninitialized
-            if (
-                tickNodes[upperOld].nextTick == tickNodes[upperOld].previousTick ||
-                upperOld <= upper ||
-                upper <= oldPrevTick
-            ) {
-                revert WrongTickUpperOld();
-            }
-            tickNodeUpper = ICoverPoolStructs.TickNode(oldPrevTick, upperOld, 0);
-            tickNodes[oldPrevTick].nextTick = upper;
-            tickNodes[upperOld].previousTick = upper;
+            tickUpper.liquidityDelta -= int128(amount);
+            tickUpper.liquidityDeltaMinus += amount;
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
-        tickNodes[lower] = tickNodeLower;
-        tickNodes[upper] = tickNodeUpper;
     }
 
     function remove(
