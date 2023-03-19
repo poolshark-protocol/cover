@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
-library TickBitmap {
+library TickMap {
 
     error TickIndexOverflow();
     error TickIndexUnderflow();
