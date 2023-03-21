@@ -42,7 +42,7 @@ library Positions {
         if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
         if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
         if (params.amount == 0) revert InvalidPositionAmount();
-        if (params.lower >= params.upper || params.lowerOld >= params.upperOld)
+        if (params.lower >= params.upper)
             revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {
             if (params.lower >= state.latestTick) revert InvalidPositionBoundsTwap();
@@ -64,7 +64,6 @@ library Positions {
         if (params.zeroForOne) {
             if (params.upper >= state.latestTick) {
                 params.upper = state.latestTick - int24(state.tickSpread);
-                params.upperOld = state.latestTick;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
                     DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false)
@@ -74,7 +73,6 @@ library Positions {
         } else {
             if (params.lower <= state.latestTick) {
                 params.lower = state.latestTick + int24(state.tickSpread);
-                params.lowerOld = state.latestTick;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
                     DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false)
@@ -83,6 +81,7 @@ library Positions {
             }
         }
 
+        // recalculate liquidity minted based on new amount
         //TODO: move liquidityMinted here
 
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();

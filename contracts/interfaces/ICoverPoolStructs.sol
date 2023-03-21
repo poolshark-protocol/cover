@@ -6,7 +6,6 @@ import "./IRangePool.sol";
 interface ICoverPoolStructs {
     struct GlobalState {
         uint8    unlocked;
-        // uint8    lastMoveUp; /// @dev 1 => last TWAP move up; 2 => last TWAP move down
         int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16   twapLength; /// @dev number of blocks used for TWAP sampling
         uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
@@ -21,7 +20,6 @@ interface ICoverPoolStructs {
         ProtocolFees protocolFees;
     }
 
-    //TODO: adjust nearestTick if someone burns all liquidity from current nearestTick
     struct PoolState {
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 amountInDelta; /// @dev Delta for the current tick auction
@@ -52,7 +50,6 @@ interface ICoverPoolStructs {
         uint128 amountOutDeltaMax; // max unfilled
     }
 
-    // balance needs to be immediately transferred to the position owner
     struct Position {
         uint8   claimCheckpoint; // used to dictate claim state
         uint32  accumEpochLast; // last epoch this position was updated at
@@ -70,11 +67,9 @@ interface ICoverPoolStructs {
 
     struct MintParams {
         address to;
-        int24 lowerOld;
         int24 lower;
         int24 claim;
         int24 upper;
-        int24 upperOld;
         uint128 amount;
         bool zeroForOne;
     }
@@ -92,10 +87,8 @@ interface ICoverPoolStructs {
     //TODO: should we have a recipient field here?
     struct AddParams {
         address owner;
-        int24 lowerOld;
         int24 lower;
         int24 upper;
-        int24 upperOld;
         bool zeroForOne;
         uint128 amount;
     }
@@ -117,17 +110,6 @@ interface ICoverPoolStructs {
         uint128 amount;
     }
 
-    struct ValidateParams {
-        int24 lowerOld;
-        int24 lower;
-        int24 upper;
-        int24 upperOld;
-        bool zeroForOne;
-        uint128 amount;
-        GlobalState state;
-    }
-
-    //TODO: optimize this struct
     struct SwapCache {
         uint256 price;
         uint256 liquidity;

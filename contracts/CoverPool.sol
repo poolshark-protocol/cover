@@ -97,10 +97,8 @@ contract CoverPool is
             state,
             AddParams(
                 params.to,
-                params.lowerOld,
                 params.lower,
                 params.upper,
-                params.upperOld,
                 params.zeroForOne,
                 uint128(liquidityMinted)
             )
