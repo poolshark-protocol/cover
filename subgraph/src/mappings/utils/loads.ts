@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { CoverPool, Position, Tick, Token } from '../../../generated/schema'
+import { CoverPool, CoverPoolFactory, Position, Tick, Token } from '../../../generated/schema'
 import { ONE_BD } from './constants'
 import {
     fetchTokenSymbol,
@@ -66,22 +66,42 @@ export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
     }
 }
 
+class LoadCoverPoolFactoryRet {
+    entity: CoverPoolFactory
+    exists: boolean
+}
+export function safeLoadCoverPoolFactory(factoryAddress: string): LoadCoverPoolFactoryRet {
+    let exists = true
+    let coverPoolFactoryEntity = CoverPoolFactory.load(factoryAddress)
+
+    if (!coverPoolFactoryEntity) {
+        coverPoolFactoryEntity = new CoverPoolFactory(factoryAddress)
+        coverPoolFactoryEntity.poolCount = BIGINT_ZERO
+        exists = false
+    }
+
+    return {
+        entity: coverPoolFactoryEntity,
+        exists: exists,
+    }
+}
+
 class LoadCoverPoolRet {
     entity: CoverPool
     exists: boolean
 }
 export function safeLoadCoverPool(poolAddress: string): LoadCoverPoolRet {
     let exists = true
-    let hedgePoolEntity = CoverPool.load(poolAddress)
+    let coverPoolEntity = CoverPool.load(poolAddress)
 
-    if (!hedgePoolEntity) {
-        hedgePoolEntity = new CoverPool(poolAddress)
-
+    if (!coverPoolEntity) {
+        coverPoolEntity = new CoverPool(poolAddress)
+        
         exists = false
     }
 
     return {
-        entity: hedgePoolEntity,
+        entity: coverPoolEntity,
         exists: exists,
     }
 }

@@ -55,10 +55,10 @@ contract CoverPoolFactory is
                 revert TickSpreadNotAtLeastDoubleTickSpread();
             }
         }
-        // check spread tier exists
-        uint16 auctionLength = ICoverPoolManager(owner).spreadTiers(feeTier, tickSpread, twapLength);
+        // check volatility tier exists
+        uint16 auctionLength = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
         if (auctionLength == 0) {
-            revert SpreadTierNotSupported();
+            revert VolatilityTierNotSupported();
         }
         // get reference pool
         address inputPool = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
@@ -70,6 +70,7 @@ contract CoverPoolFactory is
 
         emit PoolCreated(
             pool,
+            inputPool,
             token0,
             token1,
             feeTier,

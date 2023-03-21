@@ -6,10 +6,11 @@ import "./IRangePool.sol";
 interface ICoverPoolStructs {
     struct GlobalState {
         uint8    unlocked;
+        // uint8    lastMoveUp; /// @dev 1 => last TWAP move up; 2 => last TWAP move down
         int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
         uint16   twapLength; /// @dev number of blocks used for TWAP sampling
         uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
-        int24    latestTick; /// @dev latest updated inputPool price tick
+        int24    latestTick;   /// @dev latest updated inputPool price tick
         uint32   genesisBlock; /// @dev reference block for which auctionStart is an offset of
         uint32   lastBlock;    /// @dev last block checked
         uint32   auctionStart; /// @dev last block price reference was updated
@@ -45,8 +46,8 @@ interface ICoverPoolStructs {
 
     struct Deltas {
         uint128 amountInDelta;     // amt unfilled
-        uint128 amountInDeltaMax;  // max unfilled
         uint128 amountOutDelta;    // amt unfilled
+        uint128 amountInDeltaMax;  // max unfilled 
         uint128 amountOutDeltaMax; // max unfilled
     }
 

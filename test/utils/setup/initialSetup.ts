@@ -17,7 +17,6 @@ import {
     Epochs__factory,
     Deltas__factory,
     Claims__factory,
-    CoverPoolRouter__factory,
     CoverPoolManager__factory,
 } from '../../../typechain'
 
@@ -249,8 +248,6 @@ export class InitialSetup {
 
         hre.nonce += 1
 
-        // // hre.nonce += 1;
-
         const createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
             hre.props.token0.address,
             hre.props.token1.address,
@@ -311,9 +308,20 @@ export class InitialSetup {
             )
         ).contractAddress
 
+        const rangePoolMockAddress = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'rangePoolMock',
+                },
+                'readCoverPoolSetup'
+            )
+        ).contractAddress
+
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
+        hre.props.rangePoolMock = await hre.ethers.getContractAt('RangePoolMock', rangePoolMockAddress)
 
         return nonce
     }

@@ -1,6 +1,7 @@
 import { SUPPORTED_NETWORKS } from './scripts/constants/supportedNetworks'
 import {
     DEPLOY_COVERPOOLS,
+    INCREASE_SAMPLES,
     MINT_POSITION,
     MINT_TOKENS,
     VERIFY_CONTRACTS,
@@ -20,6 +21,9 @@ function handleCoverPoolTasks() {
     if (process.argv.includes(DEPLOY_COVERPOOLS)) {
         import('./tasks/deploy/deploy-coverpools')
         logTask(DEPLOY_COVERPOOLS)
+    } else if (process.argv.includes(INCREASE_SAMPLES)) {
+        import('./tasks/deploy/increase-samples')
+        logTask(INCREASE_SAMPLES)
     } else if (process.argv.includes(MINT_TOKENS)) {
         import('./tasks/deploy/mint-tokens')
         logTask(MINT_TOKENS)

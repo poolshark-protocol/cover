@@ -6,7 +6,7 @@ interface ICoverPoolManager {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
     function protocolFee() external view returns (uint16);
-    function spreadTiers(
+    function volatilityTiers(
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength

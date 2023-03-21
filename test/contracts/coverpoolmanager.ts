@@ -7,7 +7,7 @@ import { BigNumber } from 'ethers'
 import { BN_ZERO } from '../utils/contracts/coverpool'
 
 alice: SignerWithAddress
-describe('RangePoolAdmin Tests', function () {
+describe('CoverPoolManager Tests', function () {
   let token0Amount: BigNumber
   let token1Amount: BigNumber
   let token0Decimals: number
@@ -206,39 +206,39 @@ describe('RangePoolAdmin Tests', function () {
     ).to.be.equal(hre.props.coverPoolFactory.address)
   })
 
-  it('Should enable fee tier', async function () {
+  it('Should enable volatility tier', async function () {
     // check initial protocol fees
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enableSpreadTier("100", "20", "20", "20")
+        .enableVolatilityTier("100", "20", "20", "20")
     ).to.be.revertedWith('OwnerOnly()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableSpreadTier("500", "40", "40", "40")
-    ).to.be.revertedWith('SpreadTierAlreadyEnabled()')
+        .enableVolatilityTier("500", "40", "40", "40")
+    ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     // should revert when non-admin calls
     expect(await
       hre.props.coverPoolManager
-        .spreadTiers("500", "40", "40")
+        .volatilityTiers("500", "40", "40")
     ).to.be.equal(40)
 
     expect(await
         hre.props.coverPoolManager
-          .spreadTiers("500", "30", "30")
+          .volatilityTiers("500", "30", "30")
       ).to.be.equal(0)
 
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableSpreadTier("500", "30", "30", "30")
+        .enableVolatilityTier("500", "30", "30", "30")
 
     expect(await
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .spreadTiers("500", "30", "30")
+        .volatilityTiers("500", "30", "30")
     ).to.be.equal(30)
   })
 })

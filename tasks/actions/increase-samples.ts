@@ -1,23 +1,23 @@
 import { task } from 'hardhat/config'
 import { GetBeforeEach } from '../../test/utils/setup/beforeEachProps'
-import { DEPLOY_COVERPOOLS } from '../constants/taskNames'
-import { DeployCoverPools } from '../deploy/utils/deployCoverPools'
+import { INCREASE_SAMPLES } from '../constants/taskNames'
+import { IncreaseSamples } from '../deploy/utils/increaseSamples'
 
-class DeployCoverPoolsTask {
-    public deployCoverPools: DeployCoverPools
+class IncreaseSamplesTask {
+    public deployCoverPools: IncreaseSamples
     public getBeforeEach: GetBeforeEach
 
     constructor() {
-        this.deployCoverPools = new DeployCoverPools()
+        this.deployCoverPools = new IncreaseSamples()
         this.getBeforeEach = new GetBeforeEach()
         hre.props = this.getBeforeEach.retrieveProps()
     }
 }
 
-task(DEPLOY_COVERPOOLS)
+task(INCREASE_SAMPLES)
     .setDescription('Deploys Hedge Pools')
     .setAction(async function ({ ethers }) {
-        const deployCoverPools: DeployCoverPoolsTask = new DeployCoverPoolsTask()
+        const deployCoverPools: IncreaseSamplesTask = new IncreaseSamplesTask()
 
         if (!deployCoverPools.deployCoverPools.canDeploy()) return
 

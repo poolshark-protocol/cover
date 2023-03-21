@@ -39,7 +39,31 @@ export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     },
     {
         networkName: 'goerli',
+        objectName: 'epochsLib'
+    },
+    {
+        networkName: 'goerli',
+        objectName: 'ticksLib'
+    },
+    {
+        networkName: 'goerli',
+        objectName: 'claimsLib'
+    },
+    {
+        networkName: 'goerli',
+        objectName: 'positionsLib'
+    },
+    {
+        networkName: 'goerli',
+        objectName: 'coverPoolManager'
+    },
+    {
+        networkName: 'goerli',
         objectName: 'coverPoolFactory'
+    },
+    {
+        networkName: 'goerli',
+        objectName: 'coverPoolRouter'
     },
     {
         networkName: 'goerli',

@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 abstract contract CoverPoolFactoryEvents {
     event PoolCreated(
         address pool,
+        address inputPool,
         address indexed token0,
         address indexed token1,
         uint16 indexed fee,
