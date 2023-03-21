@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './TickMath.sol';
+import './math/TickMath.sol';
 import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-import './FullPrecisionMath.sol';
-import './DyDxMath.sol';
+import './math/FullPrecisionMath.sol';
+import './math/DyDxMath.sol';
 import './Claims.sol';
+import './EpochMap.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -41,7 +42,7 @@ library Positions {
         if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
         if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
         if (params.amount == 0) revert InvalidPositionAmount();
-        if (params.lower >= params.upper || params.lowerOld >= params.upperOld)
+        if (params.lower >= params.upper)
             revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {
             if (params.lower >= state.latestTick) revert InvalidPositionBoundsTwap();
@@ -63,7 +64,6 @@ library Positions {
         if (params.zeroForOne) {
             if (params.upper >= state.latestTick) {
                 params.upper = state.latestTick - int24(state.tickSpread);
-                params.upperOld = state.latestTick;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
                     DyDxMath.getDx(liquidityMinted, priceNewUpper, priceUpper, false)
@@ -73,7 +73,6 @@ library Positions {
         } else {
             if (params.lower <= state.latestTick) {
                 params.lower = state.latestTick + int24(state.tickSpread);
-                params.lowerOld = state.latestTick;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
                     DyDxMath.getDy(liquidityMinted, priceLower, priceNewLower, false)
@@ -82,6 +81,7 @@ library Positions {
             }
         }
 
+        // recalculate liquidity minted based on new amount
         //TODO: move liquidityMinted here
 
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
@@ -97,7 +97,7 @@ library Positions {
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params
     ) external {
@@ -117,9 +117,9 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -130,11 +130,9 @@ library Positions {
         // add liquidity to ticks
         Ticks.insert(
             ticks,
-            tickNodes,
+            tickMap,
             state,
-            params.lowerOld,
             params.lower,
-            params.upperOld,
             params.upper,
             uint128(params.amount),
             params.zeroForOne
@@ -156,7 +154,7 @@ library Positions {
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.RemoveParams memory params
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
@@ -174,9 +172,9 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -217,7 +215,7 @@ library Positions {
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.PoolState storage pool,
         ICoverPoolStructs.UpdateParams memory params
@@ -237,7 +235,6 @@ library Positions {
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
-            claimTickNode: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
@@ -249,7 +246,7 @@ library Positions {
             bool earlyReturn;
             (cache, earlyReturn) = Claims.validate(
                 positions,
-                tickNodes,
+                tickMap,
                 state,
                 pool,
                 params,
@@ -286,7 +283,6 @@ library Positions {
 
         // save claim tick and tick node
         ticks[params.claim] = cache.claimTick;
-        tickNodes[params.claim] = cache.claimTickNode;
         
         // update pool liquidity
         if (state.latestTick == params.claim

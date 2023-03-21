@@ -45,7 +45,7 @@ contract CoverPool is
 
         // set initial ticks
         state = Ticks.initialize(
-            tickNodes,
+            tickMap,
             pool0,
             pool1,
             state
@@ -61,7 +61,7 @@ contract CoverPool is
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
-            tickNodes,
+            tickMap,
             pool0,
             pool1,
             state
@@ -78,7 +78,7 @@ contract CoverPool is
         state = Positions.update(
             params.zeroForOne ? positions0 : positions1,
             params.zeroForOne ? ticks0 : ticks1,
-            tickNodes,
+            tickMap,
             state,
             params.zeroForOne ? pool0 : pool1,
             UpdateParams(
@@ -93,14 +93,12 @@ contract CoverPool is
         Positions.add(
             params.zeroForOne ? positions0 : positions1,
             params.zeroForOne ? ticks0 : ticks1,
-            tickNodes,
+            tickMap,
             state,
             AddParams(
                 params.to,
-                params.lowerOld,
                 params.lower,
                 params.upper,
-                params.upperOld,
                 params.zeroForOne,
                 uint128(liquidityMinted)
             )
@@ -123,7 +121,7 @@ contract CoverPool is
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
-            tickNodes,
+            tickMap,
             pool0,
             pool1,
             state
@@ -135,7 +133,7 @@ contract CoverPool is
             state = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
-                tickNodes,
+                tickMap,
                 state,
                 params.zeroForOne ? pool0 : pool1,
                 UpdateParams(
@@ -152,7 +150,7 @@ contract CoverPool is
             (, state) = Positions.remove(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
-                tickNodes,
+                tickMap,
                 state,
                 RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
             );
@@ -201,7 +199,7 @@ contract CoverPool is
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
-            tickNodes,
+            tickMap,
             pool0,
             pool1,
             state

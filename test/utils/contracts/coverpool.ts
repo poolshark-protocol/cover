@@ -259,7 +259,7 @@ export async function validateMint(params: ValidateMintParams) {
     if (zeroForOne) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-        positionBefore = await hre.props.coverPool.positions0(
+        positionBefore  = await hre.props.coverPool.positions0(
             recipient,
             lower,
             expectedUpper ? expectedUpper : upper
@@ -267,7 +267,7 @@ export async function validateMint(params: ValidateMintParams) {
     } else {
         lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
-        positionBefore = await hre.props.coverPool.positions1(
+        positionBefore  = await hre.props.coverPool.positions1(
             recipient,
             expectedLower ? expectedLower : lower,
             upper
@@ -286,7 +286,7 @@ export async function validateMint(params: ValidateMintParams) {
                 amount: amountDesired,
                 zeroForOne: zeroForOne
               }, {
-                gasLimit: 700000,
+                gasLimit: 800000,
               })
         await txn.wait()
     } else {
