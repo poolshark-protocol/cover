@@ -15,7 +15,7 @@ library TickMap {
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
     ) external returns (
-        bool intiialized
+        bool exists
     )    
     {
         (
@@ -27,13 +27,13 @@ library TickMap {
         // check if bit is already set
         uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
         if (word == tickMap.ticks[wordIndex]) {
-            return false;
+            return true;
         }
 
         tickMap.ticks[wordIndex]     = word; 
         tickMap.words[blockIndex]   |= 1 << (wordIndex & 0xFF); // same as modulus 255
         tickMap.blocks              |= 1 << blockIndex;
-        return true;
+        return false;
     }
 
     function unset(
@@ -59,7 +59,7 @@ library TickMap {
         ICoverPoolStructs.TickMap storage tickMap,
         int24 tick
     ) external view returns (
-        bool initialized
+        bool exists
     ) {
         (
             uint256 tickIndex,
@@ -69,9 +69,9 @@ library TickMap {
         // check if bit is already set
         uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
         if (word == tickMap.ticks[wordIndex]) {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     function previous(
@@ -117,10 +117,9 @@ library TickMap {
               uint256 wordIndex,
               uint256 blockIndex
             ) = getIndices(tick);
-
-            uint256 word = tickMap.ticks[wordIndex] & ~((1 << (tickIndex & 0xFF + 1)) - 1);
+            uint256 word = tickMap.ticks[wordIndex] & ~((1 << ((tickIndex & 0xFF) + 1)) - 1);
             if (word == 0) {
-                uint256 block_ = tickMap.words[blockIndex] & ~((1 << (wordIndex & 0xFF + 1)) - 1);
+                uint256 block_ = tickMap.words[blockIndex] & ~((1 << ((wordIndex & 0xFF) + 1)) - 1);
                 if (block_ == 0) {
                     uint256 blockMap = tickMap.blocks & ~((1 << blockIndex + 1) - 1);
                     // assert(blockMap != 0);

@@ -31,8 +31,6 @@ interface ICoverPoolStructs {
     }
 
     struct TickMap {
-        mapping(int24 => Tick) ticks0; /// @dev Ticks containing token0 as output
-        mapping(int24 => Tick) ticks1; /// @dev Ticks containing token1 as output
         uint256 blocks;                     /// @dev - sets of words
         mapping(uint256 => uint256) words;  /// @dev - sets to words
         mapping(uint256 => uint256) ticks;  /// @dev - words to ticks
@@ -157,7 +155,6 @@ interface ICoverPoolStructs {
         uint256 amountInFilledMax;    // considers the range covered by each update
         uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
-        TickNode claimTickNode;
         Position position;
         Deltas deltas;
         Deltas finalDeltas;
@@ -176,8 +173,6 @@ interface ICoverPoolStructs {
 
     struct AccumulateOutputs {
         Deltas deltas;
-        TickNode accumTickNode;
-        TickNode crossTickNode;
         Tick crossTick;
         Tick accumTick;
     }

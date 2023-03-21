@@ -7,6 +7,8 @@ import './TwapOracle.sol';
 import '../interfaces/IRangePool.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
+import './TickMap.sol';
+import './EpochMap.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -18,7 +20,7 @@ library Epochs {
     function syncLatest(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks0,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks1,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.PoolState memory pool0,
         ICoverPoolStructs.PoolState memory pool1,
         ICoverPoolStructs.GlobalState memory state
@@ -44,8 +46,8 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
-            nextTickToAccum0: tickNodes[state.latestTick].previousTick, // below
-            nextTickToAccum1: tickNodes[state.latestTick].nextTick,     // above
+            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick), // below
+            nextTickToAccum1: TickMap.next(tickMap, state.latestTick),     // above
             stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - state.tickSpread
                 : newLatestTick, 
@@ -62,26 +64,24 @@ library Epochs {
             // accumulate to next tick
             ICoverPoolStructs.AccumulateOutputs memory outputs;
             outputs = _accumulate(
-                tickNodes[cache.nextTickToAccum0],
-                tickNodes[cache.nextTickToCross0],
                 ticks0[cache.nextTickToCross0],
                 ticks0[cache.nextTickToAccum0],
                 cache.deltas0,
-                state.accumEpoch,
                 newLatestTick > state.latestTick
                     ? cache.nextTickToAccum0 < cache.stopTick0
                     : cache.nextTickToAccum0 > cache.stopTick0
             );
+            if (outputs.accumTick.liquidityDeltaMinus > 0) {
+                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+            }
             cache.deltas0 = outputs.deltas;
-            tickNodes[cache.nextTickToAccum0] = outputs.accumTickNode;
-            tickNodes[cache.nextTickToCross0] = outputs.crossTickNode;
             ticks0[cache.nextTickToCross0] = outputs.crossTick;
             ticks0[cache.nextTickToAccum0] = outputs.accumTick;
             
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 > cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
-                    tickNodes[cache.nextTickToAccum0],
+                    tickMap,
                     ticks0[cache.nextTickToAccum0].liquidityDelta,
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
@@ -95,17 +95,10 @@ library Epochs {
             if (newLatestTick > state.latestTick) {
                 // create stopTick0 if necessary
                 if (cache.nextTickToAccum0 != cache.stopTick0) {
-                    tickNodes[cache.stopTick0] = ICoverPoolStructs.TickNode(
-                        cache.nextTickToAccum0,
-                        cache.nextTickToCross0,
-                        0
-                    );
-                    tickNodes[cache.nextTickToAccum0].nextTick = cache.stopTick0;
-                    tickNodes[cache.nextTickToCross0].previousTick = cache.stopTick0;
+                    TickMap.set(tickMap, cache.stopTick0);
                 }
             }
             ICoverPoolStructs.Tick memory stopTick0 = ticks0[cache.stopTick0];
-            ICoverPoolStructs.TickNode memory stopTickNode0 = tickNodes[cache.stopTick0];
             // checkpoint at stopTick0
             (stopTick0) = _stash(
                 stopTick0,
@@ -117,7 +110,7 @@ library Epochs {
                 if (cache.nextTickToAccum0 >= cache.stopTick0) {
                     // cross in and activate next auction
                     (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
-                        tickNodes[cache.nextTickToAccum0],
+                        tickMap,
                         ticks0[cache.nextTickToAccum0].liquidityDelta,
                         cache.nextTickToCross0,
                         cache.nextTickToAccum0,
@@ -127,13 +120,7 @@ library Epochs {
                 }
                 if (cache.nextTickToCross0 != newLatestTick) {
                     // create newLatestTick
-                    stopTickNode0 = ICoverPoolStructs.TickNode(
-                        cache.nextTickToAccum0,
-                        cache.nextTickToCross0,
-                        state.accumEpoch
-                    );
-                    tickNodes[cache.nextTickToAccum0].nextTick = newLatestTick;
-                    tickNodes[cache.nextTickToCross0].previousTick = newLatestTick;
+                    TickMap.set(tickMap, cache.stopTick0);
                 }
             }
             // zero out tick liquidity
@@ -141,9 +128,8 @@ library Epochs {
                 stopTick0.liquidityDeltaMinus
             );
             stopTick0.liquidityDeltaMinus = 0;
-            stopTickNode0.accumEpochLast = state.accumEpoch;
+            EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch);
             ticks0[cache.stopTick0] = stopTick0;
-            tickNodes[cache.stopTick0] = stopTickNode0; 
         }
 
         while (true) {
@@ -153,19 +139,14 @@ library Epochs {
             {
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
                 outputs = _accumulate(
-                    tickNodes[cache.nextTickToAccum1],
-                    tickNodes[cache.nextTickToCross1],
                     ticks1[cache.nextTickToCross1],
                     ticks1[cache.nextTickToAccum1],
                     cache.deltas1,
-                    state.accumEpoch,
                     newLatestTick > state.latestTick
                         ? cache.nextTickToAccum1 < cache.stopTick1
                         : cache.nextTickToAccum1 > cache.stopTick1
                 );
                 cache.deltas1 = outputs.deltas;
-                tickNodes[cache.nextTickToAccum1] = outputs.accumTickNode;
-                tickNodes[cache.nextTickToCross1] = outputs.crossTickNode;
                 ticks1[cache.nextTickToCross1] = outputs.crossTick;
                 ticks1[cache.nextTickToAccum1] = outputs.accumTick;
             }
@@ -173,7 +154,7 @@ library Epochs {
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 < cache.stopTick1) {
                 (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
-                    tickNodes[cache.nextTickToAccum1],
+                    tickMap,
                     ticks1[cache.nextTickToAccum1].liquidityDelta,
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
@@ -188,17 +169,17 @@ library Epochs {
             if (newLatestTick < state.latestTick) {
                 // create stopTick1 if necessary
                 if (cache.nextTickToAccum1 != cache.stopTick1) {
-                    tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
-                        cache.nextTickToCross1,
-                        cache.nextTickToAccum1,
-                        0
-                    );
-                    tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
-                    tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;
+                    TickMap.set(tickMap, cache.stopTick1);
+                    // tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
+                    //     cache.nextTickToCross1,
+                    //     cache.nextTickToAccum1,
+                    //     0
+                    // );
+                    // tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
+                    // tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;
                 }
             }
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
-            ICoverPoolStructs.TickNode memory stopTickNode1 = tickNodes[cache.stopTick1];
             // update deltas on stopTick
             (stopTick1) = _stash(
                 stopTick1,
@@ -209,17 +190,18 @@ library Epochs {
             if (newLatestTick > state.latestTick) {
                 // create newLatestTick
                 if (cache.nextTickToAccum1 != newLatestTick) {
-                    stopTickNode1 = ICoverPoolStructs.TickNode(
-                        cache.nextTickToCross1,
-                        cache.nextTickToAccum1,
-                        state.accumEpoch
-                    );
-                    tickNodes[cache.nextTickToCross1].nextTick = newLatestTick;
-                    tickNodes[cache.nextTickToAccum1].previousTick = newLatestTick;
+                    TickMap.set(tickMap, cache.stopTick1);
+                    // stopTickNode1 = ICoverPoolStructs.TickNode(
+                    //     cache.nextTickToCross1,
+                    //     cache.nextTickToAccum1,
+                    //     state.accumEpoch
+                    // );
+                    // tickNodes[cache.nextTickToCross1].nextTick = newLatestTick;
+                    // tickNodes[cache.nextTickToAccum1].previousTick = newLatestTick;
                 }
                 if (cache.nextTickToAccum1 <= cache.stopTick1) {
                     (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
-                        tickNodes[cache.nextTickToAccum1],
+                        tickMap,
                         ticks1[cache.nextTickToAccum1].liquidityDelta,
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
@@ -237,9 +219,8 @@ library Epochs {
                 stopTick1.liquidityDeltaMinus
             );
             stopTick1.liquidityDeltaMinus = 0;
-            stopTickNode1.accumEpochLast = state.accumEpoch;
             ticks1[cache.stopTick1] = stopTick1;
-            tickNodes[cache.stopTick1] = stopTickNode1;
+            EpochMap.set(tickMap, cache.stopTick1, state.accumEpoch);
         }
         // set pool price based on newLatestTick
         pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - state.tickSpread);
@@ -373,20 +354,13 @@ library Epochs {
     }
 
     function _accumulate(
-        ICoverPoolStructs.TickNode memory accumTickNode,
-        ICoverPoolStructs.TickNode memory crossTickNode,
         ICoverPoolStructs.Tick memory crossTick,
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
-        uint32 accumEpoch,
         bool updateAccumDeltas
     ) internal pure returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
-        // update tick epoch
-        if (accumTick.liquidityDeltaMinus > 0) {
-            accumTickNode.accumEpochLast = accumEpoch;
-        }
 
         if (crossTick.amountInDeltaMaxStashed > 0) {
             /// @dev - else we migrate carry deltas onto cache
@@ -418,8 +392,6 @@ library Epochs {
         return
             ICoverPoolStructs.AccumulateOutputs(
                 deltas,
-                accumTickNode,
-                crossTickNode,
                 crossTick,
                 accumTick
             );
@@ -427,20 +399,17 @@ library Epochs {
 
     //maybe call ticks on msg.sender to get tick
     function _cross(
-        ICoverPoolStructs.TickNode memory accumTickNode,
+        ICoverPoolStructs.TickMap storage tickMap,
         int128 liquidityDelta,
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
         bool zeroForOne
+    ) internal view returns (
+        uint128,
+        int24,
+        int24
     )
-        internal
-        pure
-        returns (
-            uint128,
-            int24,
-            int24
-        )
     {
         nextTickToCross = nextTickToAccum;
 
@@ -450,9 +419,9 @@ library Epochs {
             currentLiquidity -= uint128(uint128(-liquidityDelta));
         }
         if (zeroForOne) {
-            nextTickToAccum = accumTickNode.previousTick;
+            nextTickToAccum = TickMap.previous(tickMap, nextTickToAccum);
         } else {
-            nextTickToAccum = accumTickNode.nextTick;
+            nextTickToAccum = TickMap.next(tickMap, nextTickToAccum);
         }
         return (currentLiquidity, nextTickToCross, nextTickToAccum);
     }

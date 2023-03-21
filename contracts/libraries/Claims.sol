@@ -5,6 +5,8 @@ pragma solidity ^0.8.13;
 import './math/TickMath.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import './EpochMap.sol';
+import './TickMap.sol';
 
 library Claims {
     error InvalidClaimTick();
@@ -16,7 +18,7 @@ library Claims {
     function validate(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.PoolState storage pool,
         ICoverPoolStructs.UpdateParams memory params,
@@ -30,9 +32,9 @@ library Claims {
         if (cache.position.liquidity == 0) {
             return (cache, true);
         } else if (params.zeroForOne ? params.claim == params.upper 
-                                        && tickNodes[params.upper].accumEpochLast <= cache.position.accumEpochLast
+                                        && EpochMap.get(tickMap, params.upper) <= cache.position.accumEpochLast
                                      : params.claim == params.lower 
-                                        && tickNodes[params.lower].accumEpochLast <= cache.position.accumEpochLast
+                                        && EpochMap.get(tickMap, params.lower) <= cache.position.accumEpochLast
         ) {
             return (cache, true);
         }
@@ -48,45 +50,46 @@ library Claims {
         // claim tick sanity checks
         else if (
             cache.position.claimPriceLast > 0 &&
-            (
-                params.zeroForOne
+            (params.zeroForOne
                     ? cache.position.claimPriceLast < cache.priceClaim
                     : cache.position.claimPriceLast > cache.priceClaim
             ) && params.claim != state.latestTick
         ) revert InvalidClaimTick(); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
+        uint32 claimTickEpoch = EpochMap.get(tickMap, params.claim);
+
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-             if (cache.claimTickNode.accumEpochLast <= cache.position.accumEpochLast)
+             if (claimTickEpoch <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
             cache.position.liquidityStashed = 0;
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? tickNodes[cache.claimTickNode.previousTick].accumEpochLast
-                : tickNodes[cache.claimTickNode.nextTick].accumEpochLast;
+                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim))
+                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim));
             ///@dev - next accumEpoch should not be greater
-            if (claimTickNextAccumEpoch > cache.position.accumEpochLast)
+            if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 revert WrongTickClaimedAt();
+            }
+                
 
             // check if liquidity removal required
             if (params.amount > 0) {
                 /// @dev - check if liquidity removal required
                 cache.removeLower = params.zeroForOne
                     ? true
-                    : tickNodes[cache.claimTickNode.nextTick].accumEpochLast <=
-                        cache.position.accumEpochLast;
+                    : claimTickNextAccumEpoch <= cache.position.accumEpochLast;
                 cache.removeUpper = params.zeroForOne
-                    ? tickNodes[cache.claimTickNode.previousTick].accumEpochLast <=
-                        cache.position.accumEpochLast
+                    ? claimTickNextAccumEpoch <= cache.position.accumEpochLast
                     : true;
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
             // check accumEpochLast on claim tick
-            if (tickNodes[params.claim].accumEpochLast <= cache.position.accumEpochLast)
+            if (claimTickEpoch <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {

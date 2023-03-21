@@ -3,6 +3,10 @@ pragma solidity ^0.8.13;
 
 import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import 'hardhat/console.sol';
+
+//TODO: EpochMap and TickMap can be the same thing
+//TODO: helper functions for TickMap/EpochMap
 
 library EpochMap {
 
@@ -21,12 +25,12 @@ library EpochMap {
             uint256 blockIndex,
             uint256 volumeIndex
         ) = getIndices(tick);
-
+        // assert epoch isn't bigger than max uint32
         uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
         // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 32) - 1);
+        epochValue &=  ~(((1 << 9) - 1) << ((tickIndex & 0x7) * 32));
         // add new value to word
-        epochValue &= epoch << (tickIndex & 0x7 * 32);
+        epochValue |= epoch << ((tickIndex & 0x7) * 32);
         // store word in map
         tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
     }
@@ -64,9 +68,9 @@ library EpochMap {
 
         uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
         // right shift so first 8 bits are epoch value
-        epochValue >>= (tickIndex & 0x7 * 32);
+        epochValue >>= ((tickIndex & 0x7) * 32);
         // clear other bits
-        epochValue &= (1 << 32 - 1);
+        epochValue &= ((1 << 32) - 1);
         return uint32(epochValue);
     }
 

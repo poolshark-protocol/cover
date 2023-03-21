@@ -182,7 +182,9 @@ export class InitialSetup {
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/TwapOracle.sol:TwapOracle': hre.props.twapOracleLib.address,
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
         )
 
@@ -212,6 +214,8 @@ export class InitialSetup {
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
         )
 
@@ -229,6 +233,7 @@ export class InitialSetup {
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
         )
 

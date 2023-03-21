@@ -155,7 +155,7 @@ library Positions {
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.RemoveParams memory params
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
@@ -173,9 +173,9 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        tickNodes[params.upper].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        tickNodes[params.lower].accumEpochLast > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -216,7 +216,7 @@ library Positions {
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(int24 => ICoverPoolStructs.TickNode) storage tickNodes,
+        ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.PoolState storage pool,
         ICoverPoolStructs.UpdateParams memory params
@@ -236,7 +236,6 @@ library Positions {
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
-            claimTickNode: tickNodes[params.claim],
             removeLower: true,
             removeUpper: true,
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
@@ -248,7 +247,7 @@ library Positions {
             bool earlyReturn;
             (cache, earlyReturn) = Claims.validate(
                 positions,
-                tickNodes,
+                tickMap,
                 state,
                 pool,
                 params,
@@ -285,7 +284,6 @@ library Positions {
 
         // save claim tick and tick node
         ticks[params.claim] = cache.claimTick;
-        tickNodes[params.claim] = cache.claimTickNode;
         
         // update pool liquidity
         if (state.latestTick == params.claim
