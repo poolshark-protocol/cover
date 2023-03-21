@@ -1,4 +1,10 @@
 module.exports = {
-    skipFiles: ['test', 'utils'],
+    skipFiles: [
+        'test', 
+        'utils',
+        'libraries/TickMap.sol', 
+        'libraries/EpochMap.sol',
+        'CoverPoolRouter.sol'
+    ],
     configureYulOptimizer: true,
 }
