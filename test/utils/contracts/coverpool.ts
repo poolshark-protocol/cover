@@ -89,12 +89,14 @@ export interface ValidateBurnParams {
 export async function validateSync(newLatestTick: number) {
     /// get tick node status before
 
-    const oldLatestTick: number = (await hre.props.coverPool.globalState()).latestTick
+    const globalState = (await hre.props.coverPool.globalState())
+    const oldLatestTick: number = globalState.latestTick
+    const tickSpread: number = globalState.tickSpread
 
     //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
         // mine until end of auction
-        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength;
+        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         mine(auctionLength)
     }
 
