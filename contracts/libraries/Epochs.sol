@@ -66,21 +66,14 @@ library Epochs {
         while (true) {
             // rollover pool0 deltas
             (cache, pool0) = _rollover(cache, pool0, true);
-                                                if (newLatestTick == -40) {
-            console.log('epoch check 2');
-            console.log(EpochMap.get(tickMap, -60));
-        }
+            if (newLatestTick == 85) {
+                console.log('epoch check 2');
+                console.log(EpochMap.get(tickMap, -60));
+            }
             if (cache.nextTickToAccum0 > cache.stopTick0 
                  && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
                 EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
             }
-                                    if (newLatestTick == -40) {
-            console.log('epoch check 3');
-            console.logInt(cache.nextTickToAccum0);
-            console.logInt(cache.stopTick0);
-            console.logInt(cache.nextTickToCross0);
-            console.log(EpochMap.get(tickMap, -60));
-        }
             // accumulate to next tick
             ICoverPoolStructs.AccumulateOutputs memory outputs;
             outputs = _accumulate(
@@ -159,6 +152,10 @@ library Epochs {
             // rollover deltas pool1
             (cache, pool1) = _rollover(cache, pool1, false);
             // accumulate deltas pool1
+            if (cache.nextTickToAccum0 > cache.stopTick0 
+                 && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
+                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+            }
             {
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
                 outputs = _accumulate(
@@ -269,6 +266,13 @@ library Epochs {
         }
         state.lastBlock = uint32(block.number) - state.genesisBlock;
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
+        if (newLatestTick == 100) {
+            console.log('tick update');
+            console.logInt(newLatestTick / state.tickSpread * state.tickSpread);
+            console.log((state.lastBlock - state.auctionStart));
+            console.log(state.auctionLength);
+            console.logInt(state.latestTick);
+        }
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
 
         // only accumulate if latestTick needs to move
@@ -279,9 +283,13 @@ library Epochs {
             return (0, true);
         }
 
-        int24 maxLatestTickMove =  int24(int32(uint16(state.tickSpread) 
-                                        * (state.lastBlock - state.auctionStart) / state.auctionLength));
+        int24 maxLatestTickMove =  int24(state.tickSpread * auctionsElapsed);
 
+        if (newLatestTick == 100) {
+            console.log('tick update 2');
+            console.logInt(maxLatestTickMove);
+            console.logInt(int16(state.tickSpread) * auctionsElapsed);
+        }
         /// @dev - latestTick can only move based on auctionsElapsed 
         if (newLatestTick > state.latestTick) {
             if (newLatestTick - state.latestTick > maxLatestTickMove)

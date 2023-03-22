@@ -73,6 +73,12 @@ library Claims {
                 : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim));
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
+                console.log('epoch check');
+                console.logInt(params.claim);
+                console.logInt(TickMap.previous(tickMap, params.claim));
+                console.log(EpochMap.get(tickMap, -60));
+                console.log(claimTickNextAccumEpoch);
+                console.log(cache.position.accumEpochLast);
                 revert WrongTickClaimedAt();
             }
                 
