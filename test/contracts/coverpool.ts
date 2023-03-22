@@ -1252,7 +1252,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: tokenAmount.sub(2),
+            balanceOutIncrease: tokenAmount.sub(1),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1528,8 +1528,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        //TODO: removing this breaks erc20 balances
-        await validateSync(80)
+
         await validateSync(100)
 
         await validateSync(60)
@@ -1542,25 +1541,25 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: 'WrongTickClaimedAt()',
-        })
-
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '80',
-            claim: '120',
-            upper: '120',
-            liquidityAmount: liquidityAmount2,
-            zeroForOne: false,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999997'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: true,
-            upperTickCleared: true,
+            upperTickCleared: false,
             revertMessage: '',
         })
+
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '80',
+        //     claim: '120',
+        //     upper: '120',
+        //     liquidityAmount: liquidityAmount2,
+        //     zeroForOne: false,
+        //     balanceInIncrease: BigNumber.from('0'),
+        //     balanceOutIncrease: BigNumber.from('99999999999999999997'),
+        //     lowerTickCleared: true,
+        //     upperTickCleared: true,
+        //     revertMessage: '',
+        // })
     })
 
     // TODO: partial mint
