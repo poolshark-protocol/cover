@@ -3,8 +3,8 @@ pragma solidity ^0.8.13;
 
 import './math/DyDxMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-// import 'hardhat/console.sol';
-//TODO: stash and unstash
+import 'hardhat/console.sol';
+//TODO: put default condition first
 //TODO: transfer delta maxes as well in Positions.update()
 library Deltas {
     function transfer(
@@ -79,11 +79,19 @@ library Deltas {
         ICoverPoolStructs.Deltas memory
     ) {
         if(!maxOnly) {
-            fromDeltas.amountInDelta  -= burnDeltas.amountInDelta;
-            fromDeltas.amountOutDelta -= burnDeltas.amountOutDelta;
+            fromDeltas.amountInDelta -= (fromDeltas.amountInDelta 
+                                          < burnDeltas.amountInDelta) ? fromDeltas.amountInDelta
+                                                                      : burnDeltas.amountInDelta;
+            fromDeltas.amountOutDelta -= (fromDeltas.amountOutDelta 
+                                           < burnDeltas.amountOutDelta) ? fromDeltas.amountOutDelta
+                                                                        : burnDeltas.amountOutDelta;
         }
-        fromDeltas.amountInDeltaMax  -= burnDeltas.amountInDeltaMax;
-        fromDeltas.amountOutDeltaMax -= burnDeltas.amountOutDeltaMax;
+        fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
+                                         < burnDeltas.amountInDeltaMax) ? fromDeltas.amountInDeltaMax
+                                                                        : burnDeltas.amountInDeltaMax;
+        fromDeltas.amountOutDeltaMax -= (fromDeltas.amountOutDeltaMax 
+                                          < burnDeltas.amountOutDeltaMax) ? fromDeltas.amountOutDeltaMax
+                                                                          : burnDeltas.amountOutDeltaMax;
         return fromDeltas;
     }
 

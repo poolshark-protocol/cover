@@ -39,6 +39,11 @@ library Epochs {
             }
         }
 
+        if (newLatestTick == -40) {
+            console.log('epoch check 1');
+            console.log(EpochMap.get(tickMap, -60));
+        }
+
         // increase epoch counter
         state.accumEpoch += 1;
 
@@ -61,6 +66,21 @@ library Epochs {
         while (true) {
             // rollover pool0 deltas
             (cache, pool0) = _rollover(cache, pool0, true);
+                                                if (newLatestTick == -40) {
+            console.log('epoch check 2');
+            console.log(EpochMap.get(tickMap, -60));
+        }
+            if (cache.nextTickToAccum0 > cache.stopTick0 
+                 && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
+                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+            }
+                                    if (newLatestTick == -40) {
+            console.log('epoch check 3');
+            console.logInt(cache.nextTickToAccum0);
+            console.logInt(cache.stopTick0);
+            console.logInt(cache.nextTickToCross0);
+            console.log(EpochMap.get(tickMap, -60));
+        }
             // accumulate to next tick
             ICoverPoolStructs.AccumulateOutputs memory outputs;
             outputs = _accumulate(
@@ -71,9 +91,6 @@ library Epochs {
                     ? cache.nextTickToAccum0 < cache.stopTick0
                     : cache.nextTickToAccum0 > cache.stopTick0
             );
-            if (outputs.accumTick.liquidityDeltaMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
-            }
             cache.deltas0 = outputs.deltas;
             ticks0[cache.nextTickToCross0] = outputs.crossTick;
             ticks0[cache.nextTickToAccum0] = outputs.accumTick;
@@ -106,6 +123,7 @@ library Epochs {
                 pool0.liquidity,
                 true
             );
+
             if (newLatestTick < state.latestTick) {
                 if (cache.nextTickToAccum0 >= cache.stopTick0) {
                     // cross in and activate next auction
@@ -127,8 +145,13 @@ library Epochs {
             stopTick0.liquidityDelta += int128(
                 stopTick0.liquidityDeltaMinus
             );
+                    
             stopTick0.liquidityDeltaMinus = 0;
             EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch);
+                    if (newLatestTick == -40) {
+            console.log('epoch check 3');
+            console.log(EpochMap.get(tickMap, -60));
+        }
             ticks0[cache.stopTick0] = stopTick0;
         }
 
@@ -358,7 +381,7 @@ library Epochs {
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
         bool updateAccumDeltas
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -371,8 +394,10 @@ library Epochs {
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
             ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
-            if (accumTick.deltas.amountInDeltaMax > 0) {
+            if (accumDeltas.amountInDeltaMax > 0) {
+                console.log('percent in:', deltas.amountInDeltaMax, accumDeltas.amountInDeltaMax);
                 uint256 percentInOnTick = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
+                console.log('percent out:', deltas.amountOutDeltaMax, accumDeltas.amountOutDeltaMax);
                 uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
                 (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
                 accumTick.deltas = accumDeltas;

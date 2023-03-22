@@ -223,7 +223,7 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    it('pool0 - Should mint, swap, and then claim entire range 30', async function () {
+    it('pool0 - Should mint, swap, and then claim entire range', async function () {
         await validateSync(0)
 
         await validateMint({
@@ -299,7 +299,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should revert if tick not divisible by tickSpread 30', async function () {
+    it('pool0 - Should revert if tick not divisible by tickSpread', async function () {
         // move TWAP to tick 0
         await validateSync(0)
 
@@ -338,7 +338,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should swap with zero output 30', async function () {
+    it('pool0 - Should swap with zero output', async function () {
         // move TWAP to tick 0
         await validateSync(0)
 
@@ -385,7 +385,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should handle partial mint 30', async function () {
+    it('pool0 - Should handle partial mint', async function () {
         const liquidityAmount3 = BigNumber.from('49952516624167694475096')
         const tokenAmount3 = BigNumber.from('50024998748000306423')
         // move TWAP to tick 0
@@ -449,7 +449,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, and burn 30', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(0)
@@ -501,7 +501,7 @@ describe('CoverPool Tests', function () {
         await validateSync(0)
     })
 
-    it('pool0 - Should handle partial range cross w/ unfilled amount 30', async function () {
+    it('pool0 - Should handle partial range cross w/ unfilled amount', async function () {
         const liquidityAmount4 = BigNumber.from('49952516624167694475096')
         //TODO: 124905049859212811 leftover from precision loss
 
@@ -579,7 +579,7 @@ describe('CoverPool Tests', function () {
 
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 31', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(0)
@@ -664,7 +664,7 @@ describe('CoverPool Tests', function () {
         await validateSync(-20)
     })
 
-    it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas 24', async function () {
+    it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(0)
@@ -1564,19 +1564,20 @@ describe('CoverPool Tests', function () {
     })
 
     //TODO: these revert catches no longer work inside a library
-    it.skip('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness 111', async function () {
+    it('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDeltaCarryPercent correctness 111', async function () {
         const liquidityAmount2 = BigNumber.from('49753115595468372952776')
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
+        await validateSync(20)
+        await validateSync(40)
         await validateSync(60)
+        
 
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
-            lowerOld: '60',
             lower: '80',
             claim: '80',
             upper: '120',
-            upperOld: '887272',
             amount: tokenAmount,
             zeroForOne: false,
             balanceInDecrease: tokenAmount,
@@ -1585,9 +1586,9 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-
+        await validateSync(80)
         await validateSync(100)
-
+        await validateSync(80)
         await validateSync(60)
 
         await validateBurn({

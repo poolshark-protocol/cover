@@ -46,9 +46,7 @@ export interface Deltas {
 export interface ValidateMintParams {
     signer: SignerWithAddress
     recipient: string
-    lowerOld: string
     lower: string
-    upperOld: string
     upper: string
     claim: string
     amount: BigNumber
@@ -93,8 +91,9 @@ export async function validateSync(newLatestTick: number) {
 
     const oldLatestTick: number = (await hre.props.coverPool.globalState()).latestTick
 
-    // if tick changes mine until end of auction
+    //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
+        // mine until end of auction
         const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength;
         mine(auctionLength)
     }
@@ -210,10 +209,8 @@ export async function validateSwap(params: ValidateSwapParams) {
 export async function validateMint(params: ValidateMintParams) {
     const signer = params.signer
     const recipient = params.recipient
-    const lowerOld = BigNumber.from(params.lowerOld)
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
-    const upperOld = BigNumber.from(params.upperOld)
     const claim = BigNumber.from(params.claim)
     const amountDesired = params.amount
     const zeroForOne = params.zeroForOne
@@ -278,11 +275,9 @@ export async function validateMint(params: ValidateMintParams) {
             .connect(params.signer)
             .mint({
                 to: params.signer.address,
-                lowerOld: lowerOld, 
                 lower: lower,
                 claim: claim,
                 upper: upper,
-                upperOld: upperOld,
                 amount: amountDesired,
                 zeroForOne: zeroForOne
               }, {
@@ -295,11 +290,9 @@ export async function validateMint(params: ValidateMintParams) {
                 .connect(params.signer)
                 .mint({
                     to: params.signer.address,
-                    lowerOld: lowerOld, 
                     lower: lower,
                     claim: claim,
                     upper: upper,
-                    upperOld: upperOld,
                     amount: amountDesired,
                     zeroForOne: zeroForOne
                 })

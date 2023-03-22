@@ -7,6 +7,7 @@ import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
+import 'hardhat/console.sol';
 
 library Claims {
     error InvalidClaimTick();
