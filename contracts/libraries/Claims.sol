@@ -75,7 +75,6 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 revert WrongTickClaimedAt();
             }
-                
 
             // check if liquidity removal required
             if (params.amount > 0) {
@@ -351,7 +350,7 @@ library Claims {
         return cache;
     }
 
-        /// @dev - calculate claim from position start up to claim tick
+    /// @dev - calculate claim from position start up to claim tick
     function section5(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,

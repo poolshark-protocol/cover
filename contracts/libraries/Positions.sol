@@ -113,13 +113,15 @@ library Positions {
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
         } else {
-            /// safety check...might be unnecessary given the user is forced to update()
+            // safety check in case we somehow get here
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper))
+                            > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower))
+                            > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -172,9 +174,11 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper))
+                            > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower))
+                            > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }

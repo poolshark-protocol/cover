@@ -691,7 +691,64 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateSync(-20)        
+        await validateSync(-20)
+        await validateSync(0)      
+    })
+
+    it('pool1 - sync multiple ticks at once and process claim 113', async function () {
+        const liquidityAmount2 = BigNumber.from('49753115595468372952776')
+        const liquidityAmount3 = BigNumber.from('99456505428612725961158')
+        await validateSync(-20)
+        await validateSync(-40)
+        await validateSync(-60)
+        
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-120',
+            claim: '-80',
+            upper: '-80',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount2,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(-100)
+
+        await validateSync(-60)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-120',
+            claim: '-80',
+            upper: '-80',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-120',
+            claim: '-120',
+            upper: '-80',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
     })
 
     it.skip('pool0 - Should move TWAP in range, fill, sync lower tick, and clear tick deltas 25', async function () {
