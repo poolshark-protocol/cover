@@ -796,6 +796,31 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10104469721801981866'),
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-120',
+            claim: '-80',
+            upper: '-80',
+            liquidityAmount: BN_ZERO,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('0'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
         await validateSync(-100)
         await validateSync(-60)
 
@@ -821,7 +846,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('89898514340986714609'),
+            balanceOutIncrease: BigNumber.from('79794044619184732743'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',

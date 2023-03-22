@@ -210,7 +210,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool   isPool0
-    ) public pure returns (
+    ) public view returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -292,7 +292,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool isPool0
-    ) external pure returns (
+    ) external view returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -335,7 +335,7 @@ library Deltas {
         uint160 priceUpper,
         bool   isPool0,
         bool   isAdded
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory
     ) {
         // update max deltas
