@@ -234,8 +234,8 @@ library Positions {
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? state.latestTick - state.tickSpread 
-                                                                       : state.latestTick + state.tickSpread),
+            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - state.tickSpread 
+                                                                       : params.claim + state.tickSpread),
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
@@ -322,9 +322,10 @@ library Positions {
             );
             cache.position.liquidity -= uint128(params.amount);
         }
+        /// @dev - this also clears out position end claims
         if (params.zeroForOne ? params.claim != params.upper 
                               : params.claim != params.lower) {
-            // clear out position
+            // clear out old position
             delete positions[params.owner][params.lower][params.upper];
         } 
         if (cache.position.liquidity == 0) {

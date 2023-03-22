@@ -205,6 +205,7 @@ contract CoverPool is
             state
         );
         if (amountIn == 0) {
+            // transfer out syncing fee here
             globalState = state;
             return 0;
         }

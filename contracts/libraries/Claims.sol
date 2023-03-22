@@ -178,16 +178,18 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.GlobalState memory state
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
         if(cache.position.claimPriceLast == 0) {
             cache.position.claimPriceLast = (params.zeroForOne ? cache.priceUpper 
                                                                : cache.priceLower);
-        } else if (cache.position.claimPriceLast != (params.zeroForOne ? cache.priceUpper 
-                                                                       : cache.priceLower)
-                   && cache.priceClaim > cache.priceSpread ) {
+        } else if (params.zeroForOne ? (cache.position.claimPriceLast != cache.priceUpper
+                                        && cache.position.claimPriceLast > cache.priceClaim)
+                                     : (cache.position.claimPriceLast != cache.priceLower
+                                        && cache.position.claimPriceLast < cache.priceClaim))
+        {
             // section 1 - complete previous auction claim
             {
                 // amounts claimed on this update
@@ -207,8 +209,7 @@ library Claims {
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
-                                                               : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
+            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)                                                       : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
         return cache;
     }
@@ -247,7 +248,7 @@ library Claims {
         return cache;
     }
 
-    /// @dev - calculate claim from position start up to claim tick
+    /// @dev - calculate claim from current auction unfilled section
     function section3(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,

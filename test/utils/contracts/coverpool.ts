@@ -96,11 +96,20 @@ export async function validateSync(newLatestTick: number) {
     //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
         // mine until end of auction
-        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
+        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
+                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         mine(auctionLength)
     }
 
-    let txn = await hre.props.rangePoolMock.setTickCumulatives(
+    let txn = await hre.props.coverPool.swap(
+        hre.props.admin.address,
+        true,
+        BigNumber.from('0'),
+        BigNumber.from('4295128739')
+    )
+    await txn.wait()
+
+    txn = await hre.props.rangePoolMock.setTickCumulatives(
         BigNumber.from(newLatestTick).mul(120),
         BigNumber.from(newLatestTick).mul(60)
     )
@@ -111,7 +120,6 @@ export async function validateSync(newLatestTick: number) {
     /// send a "no op" swap to trigger accumulate
     const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
     await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
-
     txn = await hre.props.coverPool.swap(
         hre.props.admin.address,
         true,

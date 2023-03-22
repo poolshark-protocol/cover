@@ -254,6 +254,7 @@ library Epochs {
         state.lastBlock = uint32(block.number) - state.genesisBlock;
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
+        
 
         // only accumulate if latestTick needs to move
         int32 auctionsElapsed = int32((state.lastBlock - state.auctionStart) / state.auctionLength);

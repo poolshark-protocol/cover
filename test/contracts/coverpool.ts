@@ -695,13 +695,12 @@ describe('CoverPool Tests', function () {
         await validateSync(0)      
     })
 
-    it('pool1 - sync multiple ticks at once and process claim 113', async function () {
+    it('pool0 - sync multiple ticks at once and process claim 113', async function () {
         const liquidityAmount2 = BigNumber.from('49753115595468372952776')
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
         await validateSync(-20)
         await validateSync(-40)
         await validateSync(-60)
-        
 
         await validateMint({
             signer: hre.props.alice,
@@ -719,7 +718,6 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(-100)
-
         await validateSync(-60)
 
         await validateBurn({
@@ -745,6 +743,85 @@ describe('CoverPool Tests', function () {
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    })
+
+    it('pool0 - Should process section1 claim on partial previous auction 114', async function () {
+        const liquidityAmount2 = BigNumber.from('49753115595468372952776')
+        const liquidityAmount3 = BigNumber.from('99456505428612725961158')
+        await validateSync(-60)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-120',
+            claim: '-80',
+            upper: '-80',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount2,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(-80)
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10101485659013285390'),
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-120',
+            claim: '-80',
+            upper: '-80',
+            liquidityAmount: BN_ZERO,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('0'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateSync(-100)
+        await validateSync(-60)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-120',
+            claim: '-100',
+            upper: '-80',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: true,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: BN_ZERO,
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: 'WrongTickClaimedAt()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-120',
+            claim: '-120',
+            upper: '-80',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('89898514340986714609'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -838,7 +915,6 @@ describe('CoverPool Tests', function () {
 
     it.skip('pool0 - Should dilute carry deltas during accumulate', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-        console.log('-40 tick before:', (await hre.props.coverPool.ticks0("-40")).toString())
         await validateSync(0)
 
         await validateMint({
