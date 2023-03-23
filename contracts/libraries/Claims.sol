@@ -241,10 +241,6 @@ library Claims {
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
             params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
                               : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
-        } else if (params.zeroForOne ? cache.priceClaim > cache.position.claimPriceLast 
-                                     : cache.priceClaim < cache.position.claimPriceLast) {
-            /// @dev - second claim within current auction
-            // cache.priceClaim = pool.price;
         }
         return cache;
     }
