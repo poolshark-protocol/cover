@@ -46,7 +46,7 @@ library Claims {
                     ? params.claim == params.upper && cache.priceUpper != pool.price
                     : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
             ) && params.claim == state.latestTick
-        ) { if (cache.position.claimPriceLast == pool.price) return (cache, true); } /// @dev - nothing to update if pool price hasn't moved
+        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) return (cache, true); } /// @dev - nothing to update if pool price hasn't moved
         
         // claim tick sanity checks
         else if (
@@ -244,7 +244,7 @@ library Claims {
         } else if (params.zeroForOne ? cache.priceClaim > cache.position.claimPriceLast 
                                      : cache.priceClaim < cache.position.claimPriceLast) {
             /// @dev - second claim within current auction
-            cache.priceClaim = pool.price;
+            // cache.priceClaim = pool.price;
         }
         return cache;
     }
