@@ -71,21 +71,12 @@ library Deltas {
         return (fromDeltas, toDeltas);
     }
 
-    function burn(
+    function burnMax(
         ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Deltas memory burnDeltas,
-        bool maxOnly
+        ICoverPoolStructs.Deltas memory burnDeltas
     ) external pure returns (
         ICoverPoolStructs.Deltas memory
     ) {
-        if(!maxOnly) {
-            fromDeltas.amountInDelta -= (fromDeltas.amountInDelta 
-                                          < burnDeltas.amountInDelta) ? fromDeltas.amountInDelta
-                                                                      : burnDeltas.amountInDelta;
-            fromDeltas.amountOutDelta -= (fromDeltas.amountOutDelta 
-                                           < burnDeltas.amountOutDelta) ? fromDeltas.amountOutDelta
-                                                                        : burnDeltas.amountOutDelta;
-        }
         fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
                                          < burnDeltas.amountInDeltaMax) ? fromDeltas.amountInDeltaMax
                                                                         : burnDeltas.amountInDeltaMax;

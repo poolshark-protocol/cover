@@ -159,7 +159,7 @@ library Claims {
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
+            (updateTick.deltas) = Deltas.burnMax(updateTick.deltas, cache.finalDeltas);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
             //TODO: handle partial stashed and partial on tick
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
