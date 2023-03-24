@@ -149,6 +149,7 @@ library Claims {
         }
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+        console.log('final deltas', cache.finalDeltas.amountOutDeltaMax);
         // apply deltas and add to position
         if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
             //TODO: take a portion based on the protocol fee
@@ -372,11 +373,12 @@ library Claims {
                     params.zeroForOne
                 );
                 cache.position.amountOut += amountOutRemoved;
+                console.log('amount out removed');
+                console.log(amountOutRemoved);
+                console.log(ticks[params.lower].deltas.amountOutDeltaMax);
                 if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                    params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
-                                      : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
-                    params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
-                                      : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
+                    cache.finalDeltas.amountInDeltaMax += amountInOmitted;
+                    cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
                 }      
             }
         }

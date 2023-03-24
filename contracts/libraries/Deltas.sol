@@ -12,16 +12,19 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
         {
             uint128 amountInDeltaChange = uint128(uint256(fromDeltas.amountInDelta) * percentInTransfer / 1e38);
             if (amountInDeltaChange < fromDeltas.amountInDelta ) {
+                // console.log('partial in delta removal');
+                // console.log(percentInTransfer);
                 fromDeltas.amountInDelta -= amountInDeltaChange;
                 toDeltas.amountInDelta += amountInDeltaChange;
             } else {
+                // console.log('full in delta removal');
                 toDeltas.amountInDelta += fromDeltas.amountInDelta;
                 fromDeltas.amountInDelta = 0;
             }
@@ -29,6 +32,8 @@ library Deltas {
         {
             uint128 amountOutDeltaChange = uint128(uint256(fromDeltas.amountOutDelta) * percentOutTransfer / 1e38);
             if (amountOutDeltaChange < fromDeltas.amountOutDelta ) {
+                // console.log('partial out delta removal');
+                // console.log(percentOutTransfer);
                 fromDeltas.amountOutDelta -= amountOutDeltaChange;
                 toDeltas.amountOutDelta += amountOutDeltaChange;
             } else {
@@ -44,13 +49,15 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
         {
             uint128 amountInDeltaMaxChange = uint128(uint256(fromDeltas.amountInDeltaMax) * percentInTransfer / 1e38);
             if (fromDeltas.amountInDeltaMax > amountInDeltaMaxChange) {
+                // console.log('partial in delta max removal');
+                // console.log(percentInTransfer);
                 fromDeltas.amountInDeltaMax -= amountInDeltaMaxChange;
                 toDeltas.amountInDeltaMax += amountInDeltaMaxChange;
             } else {
@@ -61,6 +68,8 @@ library Deltas {
         {
             uint128 amountOutDeltaMaxChange = uint128(uint256(fromDeltas.amountOutDeltaMax) * percentOutTransfer / 1e38);
             if (fromDeltas.amountOutDeltaMax > amountOutDeltaMaxChange) {
+                // console.log('partial out delta max removal');
+                // console.log(percentOutTransfer);
                 fromDeltas.amountOutDeltaMax -= amountOutDeltaMaxChange;
                 toDeltas.amountOutDeltaMax   += amountOutDeltaMaxChange;
             } else {

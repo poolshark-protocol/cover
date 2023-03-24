@@ -433,7 +433,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, and burn', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, and burn 43', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(0)
@@ -559,7 +559,7 @@ describe('CoverPool Tests', function () {
 
     })
 
-    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn', async function () {
+    it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 43', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
         await validateSync(0)
@@ -900,18 +900,6 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        // await validateSwap({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     zeroForOne: false,
-        //     amountIn: tokenAmount.div(10),
-        //     sqrtPriceLimitX96: maxPrice,
-        //     balanceInDecrease: BigNumber.from('10000000000000000000'),
-        //     balanceOutIncrease: BigNumber.from('10104469721801981866'),
-        //     revertMessage: '',
-        // })
-
-        //TODO: half of liquidity burned should given balanceOut back
         await validateBurn({
             signer: hre.props.alice,
             lower: '-120',
@@ -939,37 +927,6 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         })
-
-        // await validateSync(-100)
-        // await validateSync(-60)
-
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-120',
-        //     claim: '-100',
-        //     upper: '-80',
-        //     liquidityAmount: liquidityAmount2,
-        //     zeroForOne: true,
-        //     balanceInIncrease: BN_ZERO,
-        //     balanceOutIncrease: BN_ZERO,
-        //     lowerTickCleared: true,
-        //     upperTickCleared: true,
-        //     revertMessage: 'WrongTickClaimedAt()',
-        // })
-
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-120',
-        //     claim: '-120',
-        //     upper: '-80',
-        //     liquidityAmount: liquidityAmount2.div(2),
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('0'),
-        //     balanceOutIncrease: BigNumber.from('79794044619184732743'),
-        //     lowerTickCleared: true,
-        //     upperTickCleared: true,
-        //     revertMessage: '',
-        // })
     })
 
     it.skip('pool0 - Should move TWAP in range, fill, sync lower tick, and clear tick deltas 25', async function () {
@@ -1044,10 +1001,24 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-20',
-            liquidityAmount: liquidityAmount4,
+            liquidityAmount: liquidityAmount4.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('254504143839762320698'),
+            balanceOutIncrease: BigNumber.from('254504143839762320698').div(2),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('254504143839762320698').div(2),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1179,6 +1150,7 @@ describe('CoverPool Tests', function () {
 
     it('pool0 - Should move TWAP up and create stopTick0 during sync 27', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
+        const liquidityAmount5 = liquidityAmount4.div(2)
 
         await validateSync(0)
 
@@ -1197,18 +1169,77 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
         await validateSync(-20)
         await validateSync(0)
+
+        // console.log((await hre.props.coverPool.ticks0('-60')))
 
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            liquidityAmount: liquidityAmount5,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('74987500625999846787'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: liquidityAmount4.sub(liquidityAmount5),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('74987500625999846788'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'NotEnoughPositionLiquidity()',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            liquidityAmount: liquidityAmount4.sub(liquidityAmount5),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('25012499374000153211'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            balanceOutIncrease: BigNumber.from('99999999999999999998'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',

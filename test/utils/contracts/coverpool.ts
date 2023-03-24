@@ -491,11 +491,13 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        positionAfter = await hre.props.coverPool.positions0(signer.address, lower, upper)
+        positionAfter = await hre.props.coverPool.positions0(signer.address, zeroForOne ? lower : claim,
+                                                                             zeroForOne ? claim : upper)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(lower)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        positionAfter = await hre.props.coverPool.positions1(signer.address, lower, upper)
+        positionAfter = await hre.props.coverPool.positions1(signer.address, zeroForOne ? lower : claim,
+                                                                             zeroForOne ? claim : upper)
     }
     //dependent on zeroForOne
     if (zeroForOne) {
