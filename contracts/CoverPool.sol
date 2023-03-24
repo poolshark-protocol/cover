@@ -127,7 +127,7 @@ contract CoverPool is
             state
         );
         Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                              : positions1[msg.sender][params.lower][params.upper];
+                                                     : positions1[msg.sender][params.lower][params.upper];
         if (position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
             || params.claim == state.latestTick)
@@ -197,7 +197,6 @@ contract CoverPool is
         returns (uint256 amountOut)
     {
         GlobalState memory state = globalState;
-        PoolState memory pool = zeroForOne ? pool1 : pool0;
         TickMath.validatePrice(priceLimit);
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
@@ -207,6 +206,7 @@ contract CoverPool is
             pool1,
             state
         );
+        PoolState memory pool = zeroForOne ? pool1 : pool0;
         if (amountIn == 0) {
             // transfer out syncing fee here
             globalState = state;

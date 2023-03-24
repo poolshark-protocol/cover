@@ -210,7 +210,7 @@ library Positions {
 
         cache.position.liquidity -= uint128(params.amount);
         positions[params.owner][params.lower][params.upper] = cache.position;
-
+        //TODO: emit Burn event here
         return (params.amount, state);
     }
 
@@ -263,7 +263,7 @@ library Positions {
         
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
-        
+
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, state);
         
