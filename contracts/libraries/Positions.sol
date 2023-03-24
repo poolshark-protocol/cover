@@ -183,7 +183,6 @@ library Positions {
                 revert WrongTickClaimedAt();
             }
         }
-        //TODO: if cPL > 0 call update()
 
         Ticks.remove(
             ticks,
@@ -202,7 +201,6 @@ library Positions {
             tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
             ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
         }
-        console.log('tick max remove deltas:', ticks[params.lower].deltas.amountOutDeltaMax);
 
         cache.position.amountOut += uint128(
             params.zeroForOne
@@ -262,38 +260,32 @@ library Positions {
                 return state;
             }
         }
-        console.log('tick max start:', ticks[params.lower].deltas.amountOutDeltaMax);
         
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
-         console.log('tick max get deltas:', ticks[params.lower].deltas.amountOutDeltaMax);
         
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, state);
-         console.log('tick max section1:', ticks[params.lower].deltas.amountOutDeltaMax);
         
         /// @dev - section 2 => position start -> claim tick
         cache = Claims.section2(ticks, cache, params, pool);
-        console.log('tick max section2:', ticks[params.lower].deltas.amountOutDeltaMax);
+
         // check if auction in progress 
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             /// @dev - section 3 => claim tick - unfilled section
             cache = Claims.section3(ticks, cache, params, pool);
-            console.log('tick max section3:', ticks[params.lower].deltas.amountOutDeltaMax);
             
             /// @dev - section 4 => claim tick - filled section
             cache = Claims.section4(cache, params, pool);
-            console.log('tick max section4:', ticks[params.lower].deltas.amountOutDeltaMax);
         }
 
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(ticks, cache, params);
-        console.log('tick max section5:', ticks[params.lower].deltas.amountOutDeltaMax);
-         console.log('tick max end:', ticks[params.lower].deltas.amountOutDeltaMax);
+
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);
- console.log('tick max end 2:', ticks[params.lower].deltas.amountOutDeltaMax);
+
         // save claim tick and tick node
         ticks[params.claim] = cache.claimTick;
         

@@ -1185,6 +1185,18 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(-20)
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10042081637267475343'),
+            revertMessage: '',
+        })
+
         await validateSync(0)
 
         // console.log((await hre.props.coverPool.ticks0('-60')))
@@ -1196,8 +1208,8 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('74987500625999846787'),
+            balanceInIncrease: BigNumber.from('5000000000000000000'),
+            balanceOutIncrease: BigNumber.from('69966459807366109116'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1238,8 +1250,8 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceInIncrease: BigNumber.from('5000000000000000000'),
+            balanceOutIncrease: BigNumber.from('94978959181366262326'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',

@@ -126,8 +126,11 @@ contract CoverPool is
             pool1,
             state
         );
-        if (params.claim != (params.zeroForOne ? params.upper : params.lower) 
-                         || params.claim == state.latestTick)
+        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                              : positions1[msg.sender][params.lower][params.upper];
+        if (position.claimPriceLast > 0
+            || params.claim != (params.zeroForOne ? params.upper : params.lower) 
+            || params.claim == state.latestTick)
         {
             // if position has been crossed into
             state = Positions.update(
