@@ -175,6 +175,8 @@ library Ticks {
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
+
+        // state.liquidityGlobal += amount;
     }
 
     function remove(

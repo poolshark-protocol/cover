@@ -159,6 +159,7 @@ contract CoverPool is
             );
         }
         // emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
+        // force collection
         if (params.collect) {
              mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = params.zeroForOne ? positions0 : positions1;
             params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
@@ -177,6 +178,7 @@ contract CoverPool is
             positions[msg.sender][params.lower][params.upper].amountOut = 0;
 
             /// transfer out balances
+            // transfer out to params.to
             _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
             _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
 
@@ -279,7 +281,7 @@ contract CoverPool is
         return (inAmount, outAmount);
     }
 
-    function collectFees() public onlyFactory(factory) returns (uint128 token0Fees, uint128 token1Fees) {
+    function collectFees() public returns (uint128 token0Fees, uint128 token1Fees) {
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();

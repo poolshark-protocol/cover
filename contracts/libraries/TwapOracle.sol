@@ -41,7 +41,7 @@ library TwapOracle {
         view
         returns (int24 averageTick)
     {
-        uint32[] memory secondsAgos = new uint32[](3);
+        uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 0;
         secondsAgos[1] = blockTime * twapLength;
         (int56[] memory tickCumulatives, ) = pool.observe(secondsAgos);

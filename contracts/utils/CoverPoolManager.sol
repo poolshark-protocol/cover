@@ -138,6 +138,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function setProtocolFee(
         uint16 protocolFee_
     ) external onlyOwner {
+        if (protocolFee_ > MAX_FEE) revert MaxFeeExceeeded();
         emit ProtocolFeeUpdated(protocolFee, protocolFee_);
         protocolFee = protocolFee_;
     }
