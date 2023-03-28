@@ -117,7 +117,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
     function enableVolatilityTier(
         uint16 feeTier,
-        int16 tickSpread,
+        int16  tickSpread,
         uint16 twapLength,
         uint16 auctionLength
     ) external onlyOwner {

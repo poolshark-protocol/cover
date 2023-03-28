@@ -278,11 +278,9 @@ export async function validateMint(params: ValidateMintParams) {
             .connect(params.signer)
             .mint({
                 to: params.signer.address,
-                lowerOld: lowerOld, 
                 lower: lower,
                 claim: claim,
                 upper: upper,
-                upperOld: upperOld,
                 amount: amountDesired,
                 zeroForOne: zeroForOne
               }, {
@@ -295,11 +293,9 @@ export async function validateMint(params: ValidateMintParams) {
                 .connect(params.signer)
                 .mint({
                     to: params.signer.address,
-                    lowerOld: lowerOld, 
                     lower: lower,
                     claim: claim,
                     upper: upper,
-                    upperOld: upperOld,
                     amount: amountDesired,
                     zeroForOne: zeroForOne
                 })

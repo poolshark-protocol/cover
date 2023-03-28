@@ -155,7 +155,7 @@ contract CoverPool is
                 RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
             );
         }
-        // emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
+        emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
         if (params.collect) {
              mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = params.zeroForOne ? positions0 : positions1;
             params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;

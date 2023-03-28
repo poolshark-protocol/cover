@@ -1,3 +1,42 @@
+type CoverPoolFactory @entity {
+    # poolAddress
+    id: ID!
+    poolCount: BigInt!
+    txnCount: BigInt!
+    volumeUsdTotal: BigDecimal!
+    volumeEthTotal: BigDecimal!
+    feesUsdTotal: BigDecimal!
+    feesEthTotal: BigDecimal!
+    totalValueLockedUsd: BigDecimal!
+    totalValueLockedEth: BigDecimal!
+}
+
+type CoverPoolManager @entity {
+    id: ID!
+    owner: Bytes!
+    feeTo: Bytes!
+    # factory: CoverPoolFactory!
+    volatilityTiers: [VolatilityTier!]!
+}
+
+type BasePrice @entity {
+    id: ID!
+    ethUsd: BigDecimal!
+}
+
+type VolatilityTier @entity {
+    # fee amount + tick spread + twap length + auction length
+    id: ID!
+    feeAmount: BigInt!
+    tickSpread: BigInt!
+    twapLength: BigInt!
+    auctionLength: BigInt!
+
+    # creation stats
+    createdAtTimestamp: BigInt!
+    createdAtBlockNumber: BigInt!
+}
+
 type Token @entity {
     # token address
     id: ID!
@@ -12,14 +51,40 @@ type CoverPool @entity {
     token0: Token!
     token1: Token!
     # factory: CoverPoolFactory!
-    # inputPool: Bytes! - to be added
-    tickSpread: BigInt!
-}
 
-type CoverPoolFactory @entity {
-    # poolAddress
-    id: ID!
-    poolCount: BigInt!
+    # pool setup
+    inputPool: Bytes!
+    volatilityTier: VolatilityTier!
+
+    # price:     BigInt!
+    liquidity: BigInt!
+    liquidityGlobal: BigInt!
+    latestTick: Tick!
+
+    price0: BigDecimal!
+    price1: BigDecimal!
+    volumeToken0: BigDecimal!
+    volumeToken1: BigDecimal!
+    volumeUsd: BigDecimal!
+    volumeEth: BigDecimal!
+    feesUsd: BigDecimal!
+    feesEth: BigDecimal!
+    txnCount: BigInt!
+
+    totalValueLocked0: BigDecimal!
+    totalValueLocked1: BigDecimal!
+    totalValueLockedUsd: BigDecimal!
+    totalValueLockedEth: BigDecimal!
+
+    # collects: [PositionCollect!]! @derivedFrom(field: "pool")
+    # swaps: [Swap!]! @derivedFrom(field: "pool")
+    # ticks: [Tick!]! @derivedFrom(field: "pool")
+
+    # creation stats
+    createdAtTimestamp: BigInt!
+    createdAtBlockNumber: BigInt!
+    updatedAtTimestamp: BigInt!
+    updatedAtBlockNumber: BigInt!
 }
 
 type Position @entity {

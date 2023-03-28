@@ -6,11 +6,11 @@ schema:
 dataSources:
     - kind: ethereum/contract
       name: CoverPoolFactory
-      network: goerli
+      network: arbitrum-goerli
       source:
-          address: '0x15C79B6AA62328C803541974d30d548Cc16Bf2e6'
+          address: '0xC7F9348F005508f5354B4f5753C2F3C948B889F8'
           abi: CoverPoolFactory
-          startBlock: 8671660
+          startBlock: 13890000
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -31,12 +31,43 @@ dataSources:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: PoolCreated(address,indexed address,indexed address,indexed uint16,int16,uint16,uint16)
+              - event: PoolCreated(address,address,indexed address,indexed address,indexed uint16,int16,uint16,uint16)
                 handler: handlePoolCreated
+    - kind: ethereum/contract
+      name: CoverPoolManager
+      network: arbitrum-goerli
+      source:
+          address: '0x33A28c58Ab9C2fc5Bc0eF84CA1b28763A904c4DD'
+          abi: CoverPoolManager
+          startBlock: 13800000
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/coverpoolmanager.ts
+          entities:
+              - CoverPool
+              - CoverPoolFactory
+          abis:
+              - name: CoverPoolManager
+                file: ./abis/CoverPoolManager.json
+          eventHandlers:
+              - event: VolatilityTierEnabled(uint16,int16,uint16,uint16)
+                handler: handleVolatilityTierEnabled
+              - event: FeeToTransfer(indexed address,indexed address)
+                handler: handleFeeToTransfer
+              - event: OwnerTransfer(indexed address,indexed address)
+                handler: handleOwnerTransfer
+              - event: ProtocolFeeCollected(indexed address,uint128,uint128)
+                handler: handleProtocolFeeCollected
+              - event: ProtocolFeeUpdated(uint16,uint16)
+                handler: handleProtocolFeeUpdated
+              - event: FactoryChanged(indexed address,indexed address)
+                handler: handleFactoryChanged
 templates:
     - kind: ethereum/contract
       name: CoverPoolTemplate
-      network: goerli
+      network: arbitrum-goerli
       source:
           abi: CoverPool
       mapping:

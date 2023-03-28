@@ -9,12 +9,7 @@ require('hardhat-contract-sizer')
 import { handleHardhatTasks } from './taskHandler'
 
 handleHardhatTasks()
-
 dotenv.config()
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
 const config: HardhatUserConfig = {
     solidity: {
         compilers: [
@@ -38,10 +33,17 @@ const config: HardhatUserConfig = {
             timeout: 60000,
             allowUnlimitedContractSize: true,
         },
+        arb_goerli: {
+            chainId: 421613,
+            gasPrice: 3000000000,
+            url: process.env.ARBITRUM_GOERLI_URL || '',
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            timeout: 60000,
+            allowUnlimitedContractSize: true,
+        },
     },
     etherscan: {
-        apiKey: process.env.ETHEREUM_API_KEY,
+        apiKey: process.env.ARBITRUM_GOERLI_API_KEY,
     },
 }
-
 export default config

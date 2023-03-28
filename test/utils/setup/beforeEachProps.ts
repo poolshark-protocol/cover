@@ -15,7 +15,6 @@ import {
     Epochs,
     Deltas,
     Claims,
-    CoverPoolRouter,
     CoverPoolManager,
     TickMap,
     EpochMap,
@@ -24,7 +23,6 @@ import { InitialSetup } from './initialSetup'
 
 export interface BeforeEachProps {
     coverPool: CoverPool
-    coverPoolRouter: CoverPoolRouter
     coverPoolManager: CoverPoolManager
     coverPoolFactory: CoverPoolFactory
     rangeFactoryMock: RangeFactoryMock
@@ -74,7 +72,6 @@ export class GetBeforeEach {
 
     public retrieveProps(): BeforeEachProps {
         let coverPool: CoverPool
-        let coverPoolRouter: CoverPoolRouter
         let coverPoolManager: CoverPoolManager
         let coverPoolFactory: CoverPoolFactory
         let rangeFactoryMock: RangeFactoryMock
@@ -102,7 +99,6 @@ export class GetBeforeEach {
 
         return {
             coverPool,
-            coverPoolRouter,
             coverPoolManager,
             coverPoolFactory,
             rangeFactoryMock,
