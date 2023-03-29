@@ -59,12 +59,15 @@ class LoadVolatilityTierRet {
     entity: VolatilityTier
     exists: boolean
 }
-export function safeLoadVolatilityTier(volatilityTier: BigInt, tickSpread: BigInt, twapLength: BigInt, auctionLength: BigInt): LoadVolatilityTierRet {
+export function safeLoadVolatilityTier(feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt, auctionLength: BigInt): LoadVolatilityTierRet {
     let exists = true
 
-    let volatilityTierId = volatilityTier.toString()
+    let volatilityTierId = feeTier.toString()
+                           .concat('-')
                            .concat(tickSpread.toString())
+                           .concat('-')
                            .concat(twapLength.toString())
+                           .concat('-')
                            .concat(auctionLength.toString())
 
     let volatilityTierEntity = VolatilityTier.load(volatilityTierId)

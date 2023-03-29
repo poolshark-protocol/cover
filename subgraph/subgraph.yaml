@@ -37,7 +37,7 @@ dataSources:
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x33A28c58Ab9C2fc5Bc0eF84CA1b28763A904c4DD'
+          address: '0x125D13B5245127b97d44Ac2F7b819763e2A190be'
           abi: CoverPoolManager
           startBlock: 13800000
       mapping:

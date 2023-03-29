@@ -13,7 +13,6 @@ import {
     safeLoadTick,
     safeLoadToken,
 } from './utils/loads'
-import { Position } from '../../generated/schema'
 import { ONE_BI } from './utils/constants'
 
 export function handleMint(event: Mint): void {

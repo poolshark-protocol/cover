@@ -39,7 +39,7 @@ export function handleFactoryChanged(event: FactoryChanged): void {
     // manager.factory = factory.id
     // factory.owner = manager.id
     
-    manager.save()
+    // manager.save()
     // factory.save()
 }
 
