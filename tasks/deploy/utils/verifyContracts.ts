@@ -33,7 +33,6 @@ export class VerifyContracts {
         const signers = await ethers.getSigners()
         hre.props.alice = signers[0]
         hre.props.admin = signers[0]
-        console.log(hre.network.name)
         if (hre.network.name == 'hardhat') {
             hre.props.bob = signers[1]
             hre.carol = signers[2]

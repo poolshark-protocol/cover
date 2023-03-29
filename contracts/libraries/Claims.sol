@@ -38,14 +38,14 @@ library Claims {
         ) {
             return (cache, true);
         }
-        // early return if no update
+        // early return if no update and amount burned is 0
         if (
             (
                 params.zeroForOne
                     ? params.claim == params.upper && cache.priceUpper != pool.price
                     : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
             ) && params.claim == state.latestTick
-        ) { if (cache.position.claimPriceLast == pool.price) return (cache, true); } /// @dev - nothing to update if pool price hasn't moved
+        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) return (cache, true); } /// @dev - nothing to update if pool price hasn't moved
         
         // claim tick sanity checks
         else if (
@@ -74,7 +74,6 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 revert WrongTickClaimedAt();
             }
-                
 
             // check if liquidity removal required
             if (params.amount > 0) {
@@ -112,7 +111,7 @@ library Claims {
     function getDeltas(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache
@@ -159,7 +158,7 @@ library Claims {
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (updateTick.deltas) = Deltas.burn(updateTick.deltas, cache.finalDeltas, true);
+            (updateTick.deltas) = Deltas.burnMax(updateTick.deltas, cache.finalDeltas);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
             //TODO: handle partial stashed and partial on tick
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
@@ -178,16 +177,18 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.GlobalState memory state
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
         if(cache.position.claimPriceLast == 0) {
             cache.position.claimPriceLast = (params.zeroForOne ? cache.priceUpper 
                                                                : cache.priceLower);
-        } else if (cache.position.claimPriceLast != (params.zeroForOne ? cache.priceUpper 
-                                                                       : cache.priceLower)
-                   && cache.priceClaim > cache.priceSpread ) {
+        } else if (params.zeroForOne ? (cache.position.claimPriceLast != cache.priceUpper
+                                        && cache.position.claimPriceLast > cache.priceClaim)
+                                     : (cache.position.claimPriceLast != cache.priceLower
+                                        && cache.position.claimPriceLast < cache.priceClaim))
+        {
             // section 1 - complete previous auction claim
             {
                 // amounts claimed on this update
@@ -207,8 +208,7 @@ library Claims {
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
-                                                               : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
+            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)                                                       : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
         return cache;
     }
@@ -223,7 +223,8 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
-        if (cache.position.claimPriceLast != cache.priceClaim) {
+        if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
+                              : cache.priceClaim > cache.position.claimPriceLast) {
             // calculate if we at least cover one full tick
             uint128 amountInFilledMax; uint128 amountOutUnfilledMax;
             (
@@ -239,15 +240,11 @@ library Claims {
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
             params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
                               : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
-        } else if (params.zeroForOne ? cache.priceClaim > cache.position.claimPriceLast 
-                                     : cache.priceClaim < cache.position.claimPriceLast) {
-            /// @dev - second claim within current auction
-            cache.priceClaim = pool.price;
         }
         return cache;
     }
 
-    /// @dev - calculate claim from position start up to claim tick
+    /// @dev - calculate claim from current auction unfilled section
     function section3(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
@@ -350,7 +347,7 @@ library Claims {
         return cache;
     }
 
-        /// @dev - calculate claim from position start up to claim tick
+    /// @dev - calculate claim from position start up to claim tick
     function section5(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
@@ -375,10 +372,8 @@ library Claims {
                 );
                 cache.position.amountOut += amountOutRemoved;
                 if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                    params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
-                                      : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
-                    params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
-                                      : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
+                    cache.finalDeltas.amountInDeltaMax += amountInOmitted;
+                    cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
                 }      
             }
         }

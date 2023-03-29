@@ -113,13 +113,15 @@ library Positions {
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
         } else {
-            /// safety check...might be unnecessary given the user is forced to update()
+            // safety check in case we somehow get here
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper))
+                            > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower))
+                            > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -172,9 +174,11 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, params.upper) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper))
+                            > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, params.lower) > cache.position.accumEpochLast
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower))
+                            > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
             }
@@ -230,8 +234,8 @@ library Positions {
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? state.latestTick - state.tickSpread 
-                                                                       : state.latestTick + state.tickSpread),
+            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - state.tickSpread 
+                                                                       : params.claim + state.tickSpread),
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
@@ -256,6 +260,7 @@ library Positions {
                 return state;
             }
         }
+        
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
         
@@ -264,7 +269,7 @@ library Positions {
         
         /// @dev - section 2 => position start -> claim tick
         cache = Claims.section2(ticks, cache, params, pool);
-        
+
         // check if auction in progress 
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
@@ -277,7 +282,7 @@ library Positions {
 
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(ticks, cache, params);
-        
+
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);
 
@@ -301,6 +306,7 @@ library Positions {
         /// @dev - prior to Ticks.remove() so we don't overwrite liquidity delta changes
         // if burn or second mint
         //TODO: handle claim of current auction and second mint
+        
         if ((params.amount > 0)) {
             if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
                 //TODO: switch to being the current price if necessary
@@ -318,9 +324,10 @@ library Positions {
             );
             cache.position.liquidity -= uint128(params.amount);
         }
+        /// @dev - this also clears out position end claims
         if (params.zeroForOne ? params.claim != params.upper 
                               : params.claim != params.lower) {
-            // clear out position
+            // clear out old position
             delete positions[params.owner][params.lower][params.upper];
         } 
         if (cache.position.liquidity == 0) {

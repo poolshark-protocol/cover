@@ -61,6 +61,10 @@ library Epochs {
         while (true) {
             // rollover pool0 deltas
             (cache, pool0) = _rollover(cache, pool0, true);
+            if (cache.nextTickToAccum0 > cache.stopTick0 
+                 && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
+                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+            }
             // accumulate to next tick
             ICoverPoolStructs.AccumulateOutputs memory outputs;
             outputs = _accumulate(
@@ -71,9 +75,6 @@ library Epochs {
                     ? cache.nextTickToAccum0 < cache.stopTick0
                     : cache.nextTickToAccum0 > cache.stopTick0
             );
-            if (outputs.accumTick.liquidityDeltaMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
-            }
             cache.deltas0 = outputs.deltas;
             ticks0[cache.nextTickToCross0] = outputs.crossTick;
             ticks0[cache.nextTickToAccum0] = outputs.accumTick;
@@ -106,6 +107,7 @@ library Epochs {
                 pool0.liquidity,
                 true
             );
+
             if (newLatestTick < state.latestTick) {
                 if (cache.nextTickToAccum0 >= cache.stopTick0) {
                     // cross in and activate next auction
@@ -127,6 +129,7 @@ library Epochs {
             stopTick0.liquidityDelta += int128(
                 stopTick0.liquidityDeltaMinus
             );
+                    
             stopTick0.liquidityDeltaMinus = 0;
             EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch);
             ticks0[cache.stopTick0] = stopTick0;
@@ -136,6 +139,10 @@ library Epochs {
             // rollover deltas pool1
             (cache, pool1) = _rollover(cache, pool1, false);
             // accumulate deltas pool1
+            if (cache.nextTickToAccum0 > cache.stopTick0 
+                 && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
+                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+            }
             {
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
                 outputs = _accumulate(
@@ -247,6 +254,7 @@ library Epochs {
         state.lastBlock = uint32(block.number) - state.genesisBlock;
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
+        
 
         // only accumulate if latestTick needs to move
         int32 auctionsElapsed = int32((state.lastBlock - state.auctionStart) / state.auctionLength);
@@ -256,8 +264,8 @@ library Epochs {
             return (0, true);
         }
 
-        int24 maxLatestTickMove =  int24(int32(uint16(state.tickSpread) 
-                                        * (state.lastBlock - state.auctionStart) / state.auctionLength));
+        int24 maxLatestTickMove =  int24(state.tickSpread * auctionsElapsed);
+
 
         /// @dev - latestTick can only move based on auctionsElapsed 
         if (newLatestTick > state.latestTick) {
@@ -266,7 +274,7 @@ library Epochs {
         } else {
             if (state.latestTick - newLatestTick > maxLatestTickMove)
                 newLatestTick = state.latestTick - maxLatestTickMove;
-        } 
+        }
 
         return (newLatestTick, false);
     }
@@ -275,7 +283,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -313,7 +321,7 @@ library Epochs {
             // amountIn pool did not receive
             uint128 amountInDelta;
             uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
-            amountInDelta      = pool.amountInDelta;
+            amountInDelta       = pool.amountInDelta;
             amountInDeltaMax   -= pool.amountInDeltaMaxClaimed;
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;
@@ -325,15 +333,15 @@ library Epochs {
             pool.amountOutDeltaMaxClaimed = 0;
 
             // update cache deltas
-            cache.deltas0.amountInDelta += amountInDelta;
-            cache.deltas0.amountInDeltaMax += amountInDeltaMax;
-            cache.deltas0.amountOutDelta += amountOutDelta;
+            cache.deltas0.amountInDelta     += amountInDelta;
+            cache.deltas0.amountInDeltaMax  += amountInDeltaMax;
+            cache.deltas0.amountOutDelta    += amountOutDelta;
             cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
         } else {
             // amountIn pool did not receive
-            uint128 amountInDelta = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, currentPrice, false));
+            uint128 amountInDelta;
             uint128 amountInDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, accumPrice, false));
-            amountInDelta      += pool.amountInDelta;
+            amountInDelta       = pool.amountInDelta;
             amountInDeltaMax   -= pool.amountInDeltaMaxClaimed;
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;
@@ -345,9 +353,9 @@ library Epochs {
             pool.amountOutDeltaMaxClaimed = 0;
 
             // update cache deltas
-            cache.deltas1.amountInDelta += amountInDelta + 1;
-            cache.deltas1.amountInDeltaMax += amountInDeltaMax;
-            cache.deltas1.amountOutDelta += amountOutDelta - 1;
+            cache.deltas1.amountInDelta     += amountInDelta;
+            cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
+            cache.deltas1.amountOutDelta    += amountOutDelta;
             cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
         }
         return (cache, pool);
@@ -358,7 +366,7 @@ library Epochs {
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
         bool updateAccumDeltas
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -371,14 +379,17 @@ library Epochs {
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
             ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
-            if (accumTick.deltas.amountInDeltaMax > 0) {
-                uint256 percentInOnTick = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
-                uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
-                (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
-                accumTick.deltas = accumDeltas;
-                // update delta maxes
-                deltas.amountInDeltaMax -= uint128(uint256(deltas.amountInDeltaMax) * (1e38 - percentInOnTick) / 1e38);
-                deltas.amountOutDeltaMax -= uint128(uint256(deltas.amountOutDeltaMax) * (1e38 - percentOutOnTick) / 1e38);
+            if (accumDeltas.amountInDeltaMax > 0) {
+                //TODO: fix this
+                // console.log('percent in:', deltas.amountInDeltaMax, accumDeltas.amountInDeltaMax);
+                // uint256 percentInOnTick = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
+                // console.log('percent out:', deltas.amountOutDeltaMax, accumDeltas.amountOutDeltaMax);
+                // uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
+                // (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
+                // accumTick.deltas = accumDeltas;
+                // // update delta maxes
+                // deltas.amountInDeltaMax -= uint128(uint256(deltas.amountInDeltaMax) * (1e38 - percentInOnTick) / 1e38);
+                // deltas.amountOutDeltaMax -= uint128(uint256(deltas.amountOutDeltaMax) * (1e38 - percentOutOnTick) / 1e38);
             }
         }
 
@@ -431,7 +442,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+    ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle amount in delta
