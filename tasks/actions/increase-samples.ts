@@ -15,7 +15,7 @@ class IncreaseSamplesTask {
 }
 
 task(INCREASE_SAMPLES)
-    .setDescription('Deploys Hedge Pools')
+    .setDescription('Increase Twap Sample Length on Mock Pool')
     .setAction(async function ({ ethers }) {
         const deployCoverPools: IncreaseSamplesTask = new IncreaseSamplesTask()
 

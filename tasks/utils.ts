@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { ERC20_ABI, TOKENS } from '../test/utils/constants'
+import { ERC20_ABI } from '../test/utils/constants'
 import '@nomiclabs/hardhat-ethers'
 
 export async function getWalletAddress(
@@ -60,46 +60,4 @@ export async function writeDeploymentsFile(
     deploymentsStr = JSON.stringify(deployments, null, 4)
     writeFileSync('./tasks/deploy/deployments.json', deploymentsStr)
     return true
-}
-
-export async function fundUser(
-    hre: HardhatRuntimeEnvironment,
-    token,
-    userToFund,
-    amount,
-    needsEth = false
-) {
-    let whaleAddress = token.whale
-
-    await hre.ethers.provider.send('hardhat_impersonateAccount', [whaleAddress])
-    const impersonatedAccount = await hre.ethers.provider.getSigner(whaleAddress)
-
-    if (token.symbol == 'ETH') {
-        // send ethers
-        await impersonatedAccount.sendTransaction({
-            to: userToFund.address,
-            value: amount,
-        })
-    } else {
-        // send ERC20 tokens
-        const tokenContract = await hre.ethers.getContractAt(ERC20_ABI, token.address)
-        await tokenContract.connect(impersonatedAccount).transfer(userToFund.address, amount)
-    }
-
-    await hre.ethers.provider.send('hardhat_stopImpersonatingAccount', [whaleAddress])
-
-    if (needsEth) {
-        whaleAddress = TOKENS.eth.whale
-
-        await hre.ethers.provider.send('hardhat_impersonateAccount', [whaleAddress])
-        const ETHimpersonatedAccount = await hre.ethers.provider.getSigner(whaleAddress)
-
-        await ETHimpersonatedAccount.sendTransaction({
-            to: userToFund.address,
-            // send 100 gwei
-            value: 100_000_000_000_000,
-        })
-
-        await hre.ethers.provider.send('hardhat_stopImpersonatingAccount', [whaleAddress])
-    }
 }

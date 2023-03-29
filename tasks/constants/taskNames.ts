@@ -8,7 +8,9 @@ export const VERIFY_CONTRACTS = 'verify-contracts'
 
 /* Deploy */
 export const DEPLOY_COVERPOOLS = 'deploy-coverpools'
-export const INCREASE_SAMPLES = 'increase-samples'
+export const DEPLOY_COVERPOOL  = 'deploy-pool'
+export const INCREASE_SAMPLES  = 'increase-samples'
+export const ADD_VOLATILITY_TIER = 'add-tier'
 
 /* Utils */
 export const MINT_TOKENS = 'mint-tokens'
