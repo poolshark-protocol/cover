@@ -3,8 +3,7 @@ pragma solidity ^0.8.13;
 
 import './math/DyDxMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-// import 'hardhat/console.sol';
-//TODO: stash and unstash
+//TODO: put default condition first
 //TODO: transfer delta maxes as well in Positions.update()
 library Deltas {
     function transfer(
@@ -12,7 +11,7 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
@@ -44,7 +43,7 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
@@ -71,19 +70,18 @@ library Deltas {
         return (fromDeltas, toDeltas);
     }
 
-    function burn(
+    function burnMax(
         ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Deltas memory burnDeltas,
-        bool maxOnly
+        ICoverPoolStructs.Deltas memory burnDeltas
     ) external pure returns (
         ICoverPoolStructs.Deltas memory
     ) {
-        if(!maxOnly) {
-            fromDeltas.amountInDelta  -= burnDeltas.amountInDelta;
-            fromDeltas.amountOutDelta -= burnDeltas.amountOutDelta;
-        }
-        fromDeltas.amountInDeltaMax  -= burnDeltas.amountInDeltaMax;
-        fromDeltas.amountOutDeltaMax -= burnDeltas.amountOutDeltaMax;
+        fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
+                                         < burnDeltas.amountInDeltaMax) ? fromDeltas.amountInDeltaMax
+                                                                        : burnDeltas.amountInDeltaMax;
+        fromDeltas.amountOutDeltaMax -= (fromDeltas.amountOutDeltaMax 
+                                          < burnDeltas.amountOutDeltaMax) ? fromDeltas.amountOutDeltaMax
+                                                                          : burnDeltas.amountOutDeltaMax;
         return fromDeltas;
     }
 
@@ -202,7 +200,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool   isPool0
-    ) public pure returns (
+    ) public view returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -284,7 +282,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool isPool0
-    ) external pure returns (
+    ) external view returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -327,7 +325,7 @@ library Deltas {
         uint160 priceUpper,
         bool   isPool0,
         bool   isAdded
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.Deltas memory
     ) {
         // update max deltas

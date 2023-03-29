@@ -233,6 +233,7 @@ export class InitialSetup {
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
         )

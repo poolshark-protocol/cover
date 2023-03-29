@@ -31,22 +31,23 @@ export class MintTokens {
         await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
         await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice])
 
-        const token0Balance = await hre.props.token0.balanceOf(
-            '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca'
-        )
-        console.log(
-            '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca',
-            'token 0 balance:',
-            token0Balance.toString()
-        )
-        const token1Balance = await hre.props.token1.balanceOf(
-            '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca'
-        )
-        console.log(
-            '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca',
-            'token 1 balance:',
-            token1Balance.toString()
-        )
+        //TODO: take in address parameter
+        // const token0Balance = await hre.props.token0.balanceOf(
+        //     '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca'
+        // )
+        // console.log(
+        //     '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca',
+        //     'token 0 balance:',
+        //     token0Balance.toString()
+        // )
+        // const token1Balance = await hre.props.token1.balanceOf(
+        //     '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca'
+        // )
+        // console.log(
+        //     '0x50924f626d1Ae4813e4a81E2c5589EC3882C13ca',
+        //     'token 1 balance:',
+        //     token1Balance.toString()
+        // )
     }
 
     public async postDeployment() {}

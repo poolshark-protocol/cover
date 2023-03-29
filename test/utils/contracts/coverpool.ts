@@ -46,9 +46,7 @@ export interface Deltas {
 export interface ValidateMintParams {
     signer: SignerWithAddress
     recipient: string
-    lowerOld: string
     lower: string
-    upperOld: string
     upper: string
     claim: string
     amount: BigNumber
@@ -91,15 +89,27 @@ export interface ValidateBurnParams {
 export async function validateSync(newLatestTick: number) {
     /// get tick node status before
 
-    const oldLatestTick: number = (await hre.props.coverPool.globalState()).latestTick
+    const globalState = (await hre.props.coverPool.globalState())
+    const oldLatestTick: number = globalState.latestTick
+    const tickSpread: number = globalState.tickSpread
 
-    // if tick changes mine until end of auction
+    //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
-        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength;
+        // mine until end of auction
+        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
+                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         mine(auctionLength)
     }
 
-    let txn = await hre.props.rangePoolMock.setTickCumulatives(
+    let txn = await hre.props.coverPool.swap(
+        hre.props.admin.address,
+        true,
+        BigNumber.from('0'),
+        BigNumber.from('4295128739')
+    )
+    await txn.wait()
+
+    txn = await hre.props.rangePoolMock.setTickCumulatives(
         BigNumber.from(newLatestTick).mul(120),
         BigNumber.from(newLatestTick).mul(60)
     )
@@ -110,7 +120,6 @@ export async function validateSync(newLatestTick: number) {
     /// send a "no op" swap to trigger accumulate
     const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
     await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
-
     txn = await hre.props.coverPool.swap(
         hre.props.admin.address,
         true,
@@ -210,10 +219,8 @@ export async function validateSwap(params: ValidateSwapParams) {
 export async function validateMint(params: ValidateMintParams) {
     const signer = params.signer
     const recipient = params.recipient
-    const lowerOld = BigNumber.from(params.lowerOld)
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
-    const upperOld = BigNumber.from(params.upperOld)
     const claim = BigNumber.from(params.claim)
     const amountDesired = params.amount
     const zeroForOne = params.zeroForOne
@@ -484,11 +491,13 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        positionAfter = await hre.props.coverPool.positions0(signer.address, lower, upper)
+        positionAfter = await hre.props.coverPool.positions0(signer.address, zeroForOne ? lower : claim,
+                                                                             zeroForOne ? claim : upper)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(lower)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        positionAfter = await hre.props.coverPool.positions1(signer.address, lower, upper)
+        positionAfter = await hre.props.coverPool.positions1(signer.address, zeroForOne ? lower : claim,
+                                                                             zeroForOne ? claim : upper)
     }
     //dependent on zeroForOne
     if (zeroForOne) {
