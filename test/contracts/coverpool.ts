@@ -839,6 +839,85 @@ describe('CoverPool Tests', function () {
         })
     });
 
+    it("pool0 - liquidityDelta added to stash tick for resuming position fill :: GUARDIAN AUDITS", async function () {
+        await validateSync(20);
+
+        const aliceLiquidity = BigNumber.from("33285024970969944913475")
+
+        // Alice creates a position from 0 -> -20
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidity,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+            expectedUpper: '0',
+        });
+
+        // Price goes into Alice's position
+        await validateSync(0);
+
+        let upperTick = await hre.props.coverPool.ticks0(0);
+        expect(upperTick.liquidityDelta).to.eq("33285024970969944913475");
+        expect(upperTick.liquidityDeltaMinus).to.eq("0");
+
+        // After going down to -20, tick 0 will be the cross tick and the liquidityDelta will be cleared
+        await validateSync(-20);
+        upperTick = await hre.props.coverPool.ticks0(0);
+        expect(upperTick.liquidityDelta).to.eq("0");
+        expect(upperTick.liquidityDeltaMinus).to.eq("0");
+
+        // Pool has active liquidity once tick0 is crossed.
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("33285024970969944913475");
+
+        // Go back up to tick 0. Since there is no liquidity delta on tick0 anymore, the system
+        // will not kick in any liquidity into the pool for swapping.
+        await validateSync(0);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
+
+        // Nothing gained from swap as no liquidity is active in the pool
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BN_ZERO,
+            balanceOutIncrease: BN_ZERO,
+            revertMessage: '',
+        });
+
+        await validateSync(-20); 
+        await validateSync(-40); 
+        await validateSync(
+            -60,
+            true
+        );
+
+        // alice can now burn her position
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '0',
+            liquidityAmount: aliceLiquidity,
+            zeroForOne: true,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: tokenAmount.sub(2),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+    });
+
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
