@@ -1012,7 +1012,79 @@ describe('CoverPool Tests', function () {
 
     });
 
-    
+    it("pool0 - amountOutDeltaMax should not underflow :: GUARDIAN AUDITS", async function () {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
+        const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-40',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateSync(0)
+        await validateSync(-20);
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount,
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BigNumber.from('74772840297597165330'),
+            balanceOutIncrease: BigNumber.from('75012486881504305413'),
+            revertMessage: '',
+        });
+
+        // Notice that Bob's burn reverts due to an underflow in the amountOutDeltaMax.
+        // This is because the cache.finalDeltas.amountOutDelta is not removed from the
+        // cache.finalDeltas.amountOutDeltaMax after it is shifted onto the cache.position.amountOut.
+        // Once that value is decremented from the cache.finalDeltas.amountOutDeltaMax, the
+        // burn can happen and Bob's funds are no longer locked.
+        // When you uncomment the suggested line, the following burn no longer reverts & Bob receives
+        // the expected amount of token0 & token1.
+        // Without the suggestion, bobs funds are locked and he cannot retrieve them until
+        // his position is fully filled.
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-80',
+            claim: '-20', // Bob claims partially through his position @ tick -20
+            upper: '0',
+            liquidityAmount: bobLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('24907659208740128448'),
+            balanceOutIncrease: BigNumber.from('75012511866496001008'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+    });
 
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
