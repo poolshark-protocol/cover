@@ -138,9 +138,9 @@ library Claims {
             if (transferDeltas) {
                 (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
             }
-            if (debugDeltas) {
-                console.log('initial deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-            }
+            // if (debugDeltas) {
+            //     console.log('initial deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
+            // }
 
         } /// @dev - deltas transfer from claim tick are replaced after applying changes
         return cache;
@@ -160,9 +160,9 @@ library Claims {
                 percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
             }
         }
-        if (debugDeltas) {
-            console.log('final deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-        }   
+        // if (debugDeltas) {
+        //     console.log('final deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
+        // }   
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         // apply deltas and add to position
@@ -228,11 +228,11 @@ library Claims {
             // move price to next tick in sequence for section 2
             cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)                                                       : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
-        if(debugDeltas) {
-            console.log('section 1 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 1 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -263,11 +263,11 @@ library Claims {
             params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
                               : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
         }
-        if(debugDeltas) {
-            console.log('section 2 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 2 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -300,11 +300,11 @@ library Claims {
             params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
                               : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
         }
-        if(debugDeltas) {
-            console.log('section 3 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 3 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -376,11 +376,11 @@ library Claims {
         }
         // modify claim price for section 5
         cache.priceClaim = cache.priceSpread;
-        if(debugDeltas) {
-            console.log('section 4 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 4 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -417,11 +417,11 @@ library Claims {
                 }      
             }
         }
-        if(debugDeltas) {
-            console.log('section 5 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 5 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 }
