@@ -268,7 +268,7 @@ library Positions {
         cache = Claims.section1(cache, params, state);
         
         /// @dev - section 2 => position start -> claim tick
-        cache = Claims.section2(ticks, cache, params, pool);
+        cache = Claims.section2(ticks, cache, params);
 
         // check if auction in progress 
         if (params.claim == state.latestTick 
@@ -281,7 +281,7 @@ library Positions {
         }
 
         /// @dev - section 5 => claim tick -> position end
-        cache = Claims.section5(ticks, cache, params);
+        cache = Claims.section5(cache, params);
 
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);

@@ -11,7 +11,7 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
@@ -43,7 +43,7 @@ library Deltas {
         ICoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Deltas memory
     ) {
@@ -200,7 +200,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool   isPool0
-    ) public view returns (
+    ) public pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -236,7 +236,7 @@ library Deltas {
         );
     }
 
-    function maxTest(
+    function maxRoundUp(
         uint128 liquidity,
         uint160 priceStart,
         uint160 priceEnd,
@@ -266,13 +266,13 @@ library Deltas {
                     liquidity,
                     priceEnd,
                     priceStart,
-                    false
+                    true
                 )
                 : DyDxMath.getDy(
                     liquidity,
                     priceStart,
                     priceEnd,
-                    false
+                    true
                 )
         );
     }
@@ -282,7 +282,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool isPool0
-    ) external view returns (
+    ) external pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -325,7 +325,7 @@ library Deltas {
         uint160 priceUpper,
         bool   isPool0,
         bool   isAdded
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.Deltas memory
     ) {
         // update max deltas

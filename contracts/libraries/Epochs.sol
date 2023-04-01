@@ -9,6 +9,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
+import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -73,8 +74,8 @@ library Epochs {
                 ticks0[cache.nextTickToAccum0],
                 cache.deltas0,
                 newLatestTick > state.latestTick
-                    ? cache.nextTickToAccum0 < cache.stopTick0
-                    : cache.nextTickToAccum0 > cache.stopTick0
+                    ? cache.nextTickToAccum0 == cache.stopTick0
+                    : cache.nextTickToAccum0 >= cache.stopTick0
             );
             cache.deltas0 = outputs.deltas;
             ticks0[cache.nextTickToCross0] = outputs.crossTick;
@@ -108,7 +109,6 @@ library Epochs {
                 pool0.liquidity,
                 true
             );
-
             if (newLatestTick < state.latestTick) {
                 if (cache.nextTickToAccum0 >= cache.stopTick0) {
                     // cross in and activate next auction
@@ -151,8 +151,8 @@ library Epochs {
                     ticks1[cache.nextTickToAccum1],
                     cache.deltas1,
                     newLatestTick > state.latestTick
-                        ? cache.nextTickToAccum1 < cache.stopTick1
-                        : cache.nextTickToAccum1 > cache.stopTick1
+                        ? cache.nextTickToAccum1 <= cache.stopTick1
+                        : cache.nextTickToAccum1 == cache.stopTick1
                 );
                 cache.deltas1 = outputs.deltas;
                 ticks1[cache.nextTickToCross1] = outputs.crossTick;
@@ -178,13 +178,6 @@ library Epochs {
                 // create stopTick1 if necessary
                 if (cache.nextTickToAccum1 != cache.stopTick1) {
                     TickMap.set(tickMap, cache.stopTick1);
-                    // tickNodes[cache.stopTick1] = ICoverPoolStructs.TickNode(
-                    //     cache.nextTickToCross1,
-                    //     cache.nextTickToAccum1,
-                    //     0
-                    // );
-                    // tickNodes[cache.nextTickToCross1].nextTick = cache.stopTick1;
-                    // tickNodes[cache.nextTickToAccum1].previousTick = cache.stopTick1;
                 }
             }
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
@@ -199,13 +192,6 @@ library Epochs {
                 // create newLatestTick
                 if (cache.nextTickToAccum1 != newLatestTick) {
                     TickMap.set(tickMap, cache.stopTick1);
-                    // stopTickNode1 = ICoverPoolStructs.TickNode(
-                    //     cache.nextTickToCross1,
-                    //     cache.nextTickToAccum1,
-                    //     state.accumEpoch
-                    // );
-                    // tickNodes[cache.nextTickToCross1].nextTick = newLatestTick;
-                    // tickNodes[cache.nextTickToAccum1].previousTick = newLatestTick;
                 }
                 // is there a tick in between?
                 if (cache.nextTickToAccum1 <= cache.stopTick1) {
@@ -231,8 +217,8 @@ library Epochs {
             ticks1[cache.stopTick1] = stopTick1;
             EpochMap.set(tickMap, cache.stopTick1, state.accumEpoch);
         }
-        // set pool price based on newLatestTick
         //TODO: only set price on one side
+        // set pool price based on newLatestTick
         pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - state.tickSpread);
         pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + state.tickSpread);
 
@@ -393,27 +379,25 @@ library Epochs {
             // add carry amounts to cache
             (crossTick, deltas) = Deltas.unstash(crossTick, deltas);
         }
-
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
             ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
-            if (accumDeltas.amountInDeltaMax > 0) {
-                //TODO: fix this
-                // console.log('percent in:', deltas.amountInDeltaMax, accumDeltas.amountInDeltaMax);
-                // uint256 percentInOnTick = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax + accumDeltas.amountInDeltaMax);
-                // console.log('percent out:', deltas.amountOutDeltaMax, accumDeltas.amountOutDeltaMax);
-                // uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax + accumDeltas.amountOutDeltaMax);
-                // (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
-                // accumTick.deltas = accumDeltas;
-                // // update delta maxes
-                // deltas.amountInDeltaMax -= uint128(uint256(deltas.amountInDeltaMax) * (1e38 - percentInOnTick) / 1e38);
-                // deltas.amountOutDeltaMax -= uint128(uint256(deltas.amountOutDeltaMax) * (1e38 - percentOutOnTick) / 1e38);
+            if (deltas.amountInDeltaMax > 0) {
+                if (accumDeltas.amountInDeltaMax > 0) {
+                    uint256 percentInOnTick  = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax);
+                    uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax);
+                    // transfer 
+                    (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
+                    // burn delta maxes in cache
+                    deltas = Deltas.burnMax(deltas, accumDeltas);
+                    accumTick.deltas = accumDeltas;
+                }
             }
         }
-
         // remove all liquidity
         crossTick.liquidityDelta = 0;
         crossTick.liquidityDeltaMinus = 0;
+
         // clear out stash
         crossTick.amountInDeltaMaxStashed  = 0;
         crossTick.amountOutDeltaMaxStashed = 0;
@@ -463,12 +447,9 @@ library Epochs {
     ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
-        // handle amount in delta
+        // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         if (deltas.amountInDeltaMax > 0) {
-            //TODO: double transferring deltas
-            (deltas, stashTick.deltas) = Deltas.transfer(deltas, stashTick.deltas, 1e38, 1e38);
-            (deltas, stashTick) = Deltas.onto(deltas, stashTick);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
         stashTick.liquidityDelta += int128(currentLiquidity);
