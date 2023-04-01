@@ -111,27 +111,6 @@ library Deltas {
         return (fromTick, toDeltas);
     }
 
-    function onto(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Tick memory toTick
-    ) external pure returns (
-        ICoverPoolStructs.Deltas memory,
-        ICoverPoolStructs.Tick memory
-    ) {
-        if (fromDeltas.amountInDeltaMax > toTick.deltas.amountInDeltaMax) {
-            fromDeltas.amountInDeltaMax -= toTick.deltas.amountInDeltaMax;
-        } else {
-            fromDeltas.amountInDeltaMax = 0;
-        }
-        if (fromDeltas.amountOutDeltaMax > toTick.deltas.amountOutDeltaMax) {
-            fromDeltas.amountOutDeltaMax -= toTick.deltas.amountOutDeltaMax;
-        } else {
-            fromDeltas.amountOutDeltaMax = 0;
-        }
-        
-        return (fromDeltas, toTick);
-    }
-
     function to(
         ICoverPoolStructs.Deltas memory fromDeltas,
         ICoverPoolStructs.Tick memory toTick
