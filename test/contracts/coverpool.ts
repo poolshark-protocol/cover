@@ -918,6 +918,102 @@ describe('CoverPool Tests', function () {
 
     });
 
+    it("pool0 - liquidity should not be locked due to Deltas.to calculation :: GUARDIAN AUDITS", async function () {
+        await validateSync(20);
+
+        // Alice creates a position from 0 to -20
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-20',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from("99955008249587388643769"),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+            expectedUpper: '0',
+        });
+
+        // Bob creates a position from 0 to -20
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-20',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from("99955008249587388643769"),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+            expectedUpper: '0',
+        });
+
+        await validateSync(0);  // Trigger Auction from 0 -> -20
+
+        // Active liquidity consists of liquidity which Alice and Bob provided.
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("199910016499174777287538");
+
+        // User swaps in 10 tokens.
+        // Now the pool should consist of 190 token0 and 10 token1.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10), // Swap in 10 tokens
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('10021521111719305613'),
+            revertMessage: '',
+        });
+
+        await validateSync(-20);
+
+        // Bob claims on lower tick
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-20',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: BigNumber.from("99955008249587388643769"),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from("5000000000000000000"), // Get half of the 10 tokens swapped in
+            balanceOutIncrease: BigNumber.from("94989239444140347192"), // ~(100 - 5)
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        // Alice is unable to burn. Her liquidity is locked.
+        // This is because Deltas.to performs `toTick.deltas.amountOutDelta += fromDeltas.amountOutDeltaMax`
+        // instead of `toTick.deltas.amountOutDelta += fromDeltas.amountOutDelta`
+        // As a result, the delta on the claim tick is larger than supposed to be 
+        // and more tokens are sent to the user than intended. Around 100 token0 are attempted to
+        // be sent to Alice although her allocation should only be about 95 token0.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-20',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: BigNumber.from("1"),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from("5000000000000000000"),
+            balanceOutIncrease: BigNumber.from("94989239444140347193"), // This is the increase it ought to be it is actually 99999999999999999999
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: "",
+        });
+
+    });
+
+    
+
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear carry deltas', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
