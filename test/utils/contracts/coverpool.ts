@@ -70,6 +70,7 @@ export interface ValidateSwapParams {
     balanceInDecrease: BigNumber
     balanceOutIncrease: BigNumber
     revertMessage: string
+    syncRevertMessage?: string
 }
 
 export interface ValidateBurnParams {
@@ -86,7 +87,7 @@ export interface ValidateBurnParams {
     revertMessage: string
 }
 
-export async function validateSync(newLatestTick: number) {
+export async function validateSync(newLatestTick: number, revertMessage?: string) {
     /// get tick node status before
 
     const globalState = (await hre.props.coverPool.globalState())
@@ -101,15 +102,7 @@ export async function validateSync(newLatestTick: number) {
         mine(auctionLength)
     }
 
-    let txn = await hre.props.coverPool.swap(
-        hre.props.admin.address,
-        true,
-        BigNumber.from('0'),
-        BigNumber.from('4295128739')
-    )
-    await txn.wait()
-
-    txn = await hre.props.rangePoolMock.setTickCumulatives(
+    let txn = await hre.props.rangePoolMock.setTickCumulatives(
         BigNumber.from(newLatestTick).mul(120),
         BigNumber.from(newLatestTick).mul(60)
     )
@@ -120,12 +113,26 @@ export async function validateSync(newLatestTick: number) {
     /// send a "no op" swap to trigger accumulate
     const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
     await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
-    txn = await hre.props.coverPool.swap(
-        hre.props.admin.address,
-        true,
-        BigNumber.from('0'),
-        BigNumber.from('4295128739')
-    )
+
+    if (!revertMessage || revertMessage == '') {
+        txn = await hre.props.coverPool.swap(
+            hre.props.admin.address,
+            true,
+            BigNumber.from('0'),
+            BigNumber.from('4295128739')
+        )
+        await txn.wait()
+    } else {
+        await expect(
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                BigNumber.from('4295128739')
+            )
+        ).to.be.revertedWith(revertMessage)
+        return
+    }
     await txn.wait()
 
     // console.log("-- END ACCUMULATE LAST BLOCK --");
@@ -141,6 +148,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const balanceInDecrease = params.balanceInDecrease
     const balanceOutIncrease = params.balanceOutIncrease
     const revertMessage = params.revertMessage
+    const syncRevertMessage = params.syncRevertMessage
 
     let balanceInBefore
     let balanceOutBefore
@@ -162,7 +170,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const priceBefore = poolBefore.price
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
 
-    validateSync((await hre.props.coverPool.globalState()).latestTick)
+    await validateSync((await hre.props.coverPool.globalState()).latestTick, syncRevertMessage)
 
     // quote pre-swap and validate balance changes match post-swap
     const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, sqrtPriceLimitX96)

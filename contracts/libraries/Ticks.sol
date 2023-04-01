@@ -8,6 +8,7 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './TwapOracle.sol';
 import './TickMap.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -175,6 +176,8 @@ library Ticks {
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
+
+        // state.liquidityGlobal += amount;
     }
 
     function remove(

@@ -54,7 +54,7 @@ library Deltas {
                 toDeltas.amountInDeltaMax += amountInDeltaMaxChange;
             } else {
                 toDeltas.amountInDeltaMax += fromDeltas.amountInDeltaMax;
-                fromDeltas.amountOutDeltaMax = 0;
+                fromDeltas.amountInDeltaMax = 0;
             }
         }
         {

@@ -43,6 +43,8 @@ interface ICoverPoolStructs {
         Deltas deltas;
     }
 
+    //TODO: can we just modify amountDeltaMaxStashed on burn/collect
+
     struct Deltas {
         uint128 amountInDelta;     // amt unfilled
         uint128 amountOutDelta;    // amt unfilled
@@ -75,7 +77,7 @@ interface ICoverPoolStructs {
     }
 
     struct BurnParams {
-        address to;
+        address to; // address(0) should revert
         int24 lower;
         int24 claim;
         int24 upper;

@@ -127,7 +127,7 @@ library Positions {
             }
         }
         // Positions.update() called first before additional mints
-        if (cache.position.claimPriceLast > 0) { revert ClaimPriceLastNonZero(); }
+        if (cache.position.claimPriceLast != 0) { revert ClaimPriceLastNonZero(); }
         
         // add liquidity to ticks
         Ticks.insert(
@@ -210,7 +210,7 @@ library Positions {
 
         cache.position.liquidity -= uint128(params.amount);
         positions[params.owner][params.lower][params.upper] = cache.position;
-
+        //TODO: emit Burn event here
         return (params.amount, state);
     }
 
@@ -263,7 +263,7 @@ library Positions {
         
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
-        
+
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, state);
         
@@ -286,7 +286,7 @@ library Positions {
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);
 
-        // save claim tick and tick node
+        // save claim tick
         ticks[params.claim] = cache.claimTick;
         
         // update pool liquidity
@@ -329,7 +329,11 @@ library Positions {
                               : params.claim != params.lower) {
             // clear out old position
             delete positions[params.owner][params.lower][params.upper];
-        } 
+        } else {
+            // save position
+        }
+        // force collection to the user
+        // store cached position in memory
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = 0;
             cache.position.claimPriceLast = 0;
@@ -338,7 +342,7 @@ library Positions {
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;
-
+        // return cached position in memory and transfer out
         return state;
     }
 }

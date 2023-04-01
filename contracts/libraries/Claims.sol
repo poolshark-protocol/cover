@@ -31,7 +31,9 @@ library Claims {
         if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
             return (cache, true);
-        } else if (params.zeroForOne ? params.claim == params.upper 
+        }
+        // if the position has not been crossed into at all
+        else if (params.zeroForOne ? params.claim == params.upper 
                                         && EpochMap.get(tickMap, params.upper) <= cache.position.accumEpochLast
                                      : params.claim == params.lower 
                                         && EpochMap.get(tickMap, params.lower) <= cache.position.accumEpochLast
@@ -49,6 +51,7 @@ library Claims {
         
         // claim tick sanity checks
         else if (
+            // claim tick is on a prior tick
             cache.position.claimPriceLast > 0 &&
             (params.zeroForOne
                     ? cache.position.claimPriceLast < cache.priceClaim
@@ -64,6 +67,7 @@ library Claims {
              if (claimTickEpoch <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
             cache.position.liquidityStashed = 0;
+            //TODO: set both booleans here for claim == lower : upper
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
             // zero fill or partial fill
@@ -72,18 +76,19 @@ library Claims {
                 : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim));
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
+                //TODO: search for claim tick if necessary
+                //TODO: limit search to within 10 closest words
                 revert WrongTickClaimedAt();
             }
-
             // check if liquidity removal required
             if (params.amount > 0) {
                 /// @dev - check if liquidity removal required
                 cache.removeLower = params.zeroForOne
-                    ? true
+                    ? true //TODO: if claim == lower then don't clear liquidity
                     : claimTickNextAccumEpoch <= cache.position.accumEpochLast;
                 cache.removeUpper = params.zeroForOne
                     ? claimTickNextAccumEpoch <= cache.position.accumEpochLast
-                    : true;
+                    : true; //TODO: if claim == lower then don't clear liquidity
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
@@ -149,6 +154,7 @@ library Claims {
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         // apply deltas and add to position
+        //TODO: this shouldn't be needed; we apply what is present
         if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
             //TODO: take a portion based on the protocol fee
             cache.position.amountIn  += cache.finalDeltas.amountInDelta;
@@ -357,8 +363,11 @@ library Claims {
     ) {
         // section 5 - burned liquidity past claim tick
         {
-            if (params.amount > 0) {
+            uint160 endPrice = params.zeroForOne ? cache.priceLower
+                                                 : cache.priceUpper;
+            if (params.amount > 0 && cache.priceClaim != endPrice) {
                 // update max deltas based on liquidity removed
+                //TODO: remove maxTest
                 uint128 amountInOmitted; uint128 amountOutRemoved;
                 (
                     amountInOmitted,
@@ -366,8 +375,7 @@ library Claims {
                 ) = Deltas.maxTest(
                     params.amount,
                     cache.priceClaim,
-                    params.zeroForOne ? cache.priceLower
-                                      : cache.priceUpper,
+                    endPrice,
                     params.zeroForOne
                 );
                 cache.position.amountOut += amountOutRemoved;
