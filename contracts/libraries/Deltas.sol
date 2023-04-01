@@ -120,7 +120,7 @@ library Deltas {
     ) {
         toTick.deltas.amountInDelta     += fromDeltas.amountInDelta;
         toTick.deltas.amountInDeltaMax  += fromDeltas.amountInDeltaMax;
-        toTick.deltas.amountOutDelta    += fromDeltas.amountOutDeltaMax;
+        toTick.deltas.amountOutDelta    += fromDeltas.amountOutDelta;
         toTick.deltas.amountOutDeltaMax += fromDeltas.amountOutDeltaMax;
         fromDeltas = ICoverPoolStructs.Deltas(0,0,0,0);
         return (fromDeltas, toTick);
@@ -133,9 +133,11 @@ library Deltas {
         ICoverPoolStructs.Deltas memory,
         ICoverPoolStructs.Tick memory
     ) {
+        // store deltas on tick
         toTick.deltas.amountInDelta     += fromDeltas.amountInDelta;
-        toTick.amountInDeltaMaxStashed  += fromDeltas.amountInDeltaMax;
         toTick.deltas.amountOutDelta    += fromDeltas.amountOutDelta;
+        // store delta maxes on stashed deltas
+        toTick.amountInDeltaMaxStashed  += fromDeltas.amountInDeltaMax;
         toTick.amountOutDeltaMaxStashed += fromDeltas.amountOutDeltaMax;
         fromDeltas = ICoverPoolStructs.Deltas(0,0,0,0);
         return (fromDeltas, toTick);
