@@ -13,7 +13,7 @@ import {
     safeLoadTick,
     safeLoadToken,
 } from './utils/loads'
-import { Position } from '../../generated/schema'
+import { ONE_BI } from './utils/constants'
 
 export function handleMint(event: Mint): void {
     let ownerParam = event.params.owner.toHex()
@@ -44,8 +44,8 @@ export function handleMint(event: Mint): void {
     )
     let loadCoverPool = safeLoadCoverPool(poolAddress)
 
-    let position = loadPosition.entity
-    let pool = loadCoverPool.entity
+    let position  = loadPosition.entity
+    let pool      = loadCoverPool.entity
     let lowerTick = loadLowerTick.entity
     let upperTick = loadUpperTick.entity
 
@@ -65,7 +65,18 @@ export function handleMint(event: Mint): void {
         position.txnHash = event.transaction.hash
         position.pool = poolAddress
     }
+    // increase liquidity count
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
+    pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
+    pool.txnCount = pool.txnCount.plus(ONE_BI)
+    // increase tvl count
+    if (zeroForOneParam) {
+        //TODO: calculate by using getAmountsForLiquidity
+        // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
+    } else {
+        // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
+    }
+    pool.save()
     position.save()
     lowerTick.save()
     upperTick.save()
@@ -103,5 +114,15 @@ export function handleBurn(event: Burn): void {
     } else {
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
     }
+    pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
+    pool.txnCount = pool.txnCount.plus(ONE_BI)
+    // decrease tvl count
+    if (zeroForOneParam) {
+        //TODO: calculate by using getAmountsForLiquidity
+        // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
+    } else {
+        // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
+    }
+
     position.save()
 }

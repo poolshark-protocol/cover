@@ -9,6 +9,12 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "inputPool",
+        "type": "address"
+      },
+      {
         "indexed": true,
         "internalType": "address",
         "name": "token0",

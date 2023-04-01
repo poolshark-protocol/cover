@@ -159,9 +159,6 @@ export class DeployAssist {
             networkName,
             objectName,
         })
-
-        console.log(addr)
-
         return await hre.ethers.getContractAt(contractName, addr)
     }
 
@@ -186,16 +183,12 @@ export class DeployAssist {
             const key: ContractDeploymentsKey = CONTRACT_DEPLOYMENT_KEYS[k]
 
             const contractName = await this.contractDeploymentsJson.getContractName(key)
-            console.log(contractName)
-            console.log('test')
             const contract = await this.getContract(
                 contractName,
                 key.networkName as SUPPORTED_NETWORKS,
                 key.objectName
             )
-            console.log('test')
             const constructorArguments = await this.getScrubbedConstructorArguments(key)
-            console.log('test')
             await this.verifyContract(
                 key.networkName,
                 contractName,

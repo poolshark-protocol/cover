@@ -298,7 +298,7 @@ export class InitialSetup {
             'CoverPool',
             'coverPool',
             hre.props.coverPool,
-            [hre.props.rangePoolMock.address, '500', '20', '5']
+            [hre.props.rangePoolMock.address, '20', '5', '20']
         )
 
         return hre.nonce
@@ -343,11 +343,36 @@ export class InitialSetup {
             )
         ).contractAddress
 
+        const coverPoolFactoryAddress = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'coverPoolFactory',
+                },
+                'readCoverPoolSetup'
+            )
+        ).contractAddress
+
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
+        hre.props.coverPoolFactory = await hre.ethers.getContractAt('CoverPoolFactory', coverPoolFactoryAddress)
         hre.props.rangePoolMock = await hre.ethers.getContractAt('RangePoolMock', rangePoolMockAddress)
 
         return nonce
+    }
+
+    public async createCoverPool(): Promise<void> {
+
+        await hre.props.coverPoolFactory
+          .connect(hre.props.admin)
+          .createCoverPool(
+            hre.props.token0.address,
+            hre.props.token1.address,
+            '500',
+            '40',
+            '40'
+        )
+        hre.nonce += 1
     }
 }

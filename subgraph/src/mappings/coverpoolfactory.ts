@@ -6,21 +6,34 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadTick, safeLoadToken } from './utils/loads'
+import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadTick, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
 import { Address, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
+import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
+import { VolatilityTier } from '../../generated/schema'
 
 export function handlePoolCreated(event: PoolCreated): void {
-    let loadCoverPool = safeLoadCoverPool(event.params.pool.toHexString())
-    let loadCoverPoolFactory = safeLoadCoverPoolFactory(event.address.toHex())
+    let feeTierParam = BigInt.fromI32(event.params.fee)
+    let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
+    let twapLengthParam = BigInt.fromI32(event.params.twapLength)
+    let auctionLengthParam = BigInt.fromI32(event.params.auctionLength)
+    let poolAddressParam = event.params.pool.toHex()
+
+    let loadVolatilityTier = safeLoadVolatilityTier(feeTierParam, tickSpreadParam, twapLengthParam, auctionLengthParam)
+    let loadCoverPool = safeLoadCoverPool(poolAddressParam)
+    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS)
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
     let loadToken1 = safeLoadToken(event.params.token1.toHexString())
-    let loadMinTick = safeLoadTick(event.params.pool.toHexString(), BigInt.fromI32(887272))
-    let loadMaxTick = safeLoadTick(event.params.pool.toHexString(), BigInt.fromI32(-887272))
+    //TODO: use TickCreated event
+    let loadLatestTick = safeLoadTick(poolAddressParam, BigInt.fromI32(0))
+    let loadMinTick = safeLoadTick(poolAddressParam, BigInt.fromI32(887272))
+    let loadMaxTick = safeLoadTick(poolAddressParam, BigInt.fromI32(-887272))
     
+    let volatilityTier = loadVolatilityTier.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
     let pool = loadCoverPool.entity
     let factory = loadCoverPoolFactory.entity
+    let latestTick = loadLatestTick.entity
     let minTick = loadMinTick.entity
     let maxTick = loadMaxTick.entity
 
@@ -49,14 +62,24 @@ export function handlePoolCreated(event: PoolCreated): void {
         token1.decimals = decimals
     }
 
+    pool.inputPool = event.params.inputPool
+    pool.volatilityTier = volatilityTier.id
     pool.token0 = token0.id
     pool.token1 = token1.id
-    pool.factory = event.address.toHex()
-    pool.tickSpread = BigInt.fromI32(event.params.tickSpread)
+    pool.latestTick = latestTick.id
+    pool.createdAtBlockNumber = event.block.number
+    pool.createdAtTimestamp   = event.block.timestamp
+    pool.updatedAtBlockNumber = event.block.number
+    pool.updatedAtTimestamp   = event.block.timestamp
+
+    factory.poolCount = factory.poolCount.plus(ONE_BI)
+    factory.txnCount  = factory.txnCount.plus(ONE_BI)
 
     pool.save()
+    factory.save()
     token0.save()
     token1.save()
+    latestTick.save()
     maxTick.save()
     minTick.save()
 

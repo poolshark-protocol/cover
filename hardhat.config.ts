@@ -9,12 +9,7 @@ require('hardhat-contract-sizer')
 import { handleHardhatTasks } from './taskHandler'
 
 handleHardhatTasks()
-
 dotenv.config()
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
 const config: HardhatUserConfig = {
     solidity: {
         compilers: [
@@ -51,5 +46,4 @@ const config: HardhatUserConfig = {
         apiKey: process.env.ARBITRUM_GOERLI_API_KEY,
     },
 }
-
 export default config

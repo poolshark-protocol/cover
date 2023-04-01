@@ -1,12 +1,11 @@
-import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { CoverPool, CoverPoolFactory, Position, Tick, Token } from '../../../generated/schema'
+import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
+import { CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, Token, VolatilityTier } from '../../../generated/schema'
 import { ONE_BD } from './constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
     BIGINT_ZERO,
-    BIGDECIMAL_ZERO,
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 
@@ -32,6 +31,54 @@ export function safeLoadToken(address: string): LoadTokenRet {
 
     return {
         entity: tokenEntity,
+        exists: exists,
+    }
+}
+
+class LoadManagerRet {
+    entity: CoverPoolManager
+    exists: boolean
+}
+export function safeLoadManager(address: string): LoadManagerRet {
+    let exists = true
+
+    let managerEntity = CoverPoolManager.load(address)
+
+    if (!managerEntity) {
+        managerEntity = new CoverPoolManager(address)
+        exists = false
+    }
+
+    return {
+        entity: managerEntity,
+        exists: exists,
+    }
+}
+
+class LoadVolatilityTierRet {
+    entity: VolatilityTier
+    exists: boolean
+}
+export function safeLoadVolatilityTier(feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt, auctionLength: BigInt): LoadVolatilityTierRet {
+    let exists = true
+
+    let volatilityTierId = feeTier.toString()
+                           .concat('-')
+                           .concat(tickSpread.toString())
+                           .concat('-')
+                           .concat(twapLength.toString())
+                           .concat('-')
+                           .concat(auctionLength.toString())
+
+    let volatilityTierEntity = VolatilityTier.load(volatilityTierId)
+
+    if (!volatilityTierEntity) {
+        volatilityTierEntity = new VolatilityTier(volatilityTierId)
+        exists = false
+    }
+
+    return {
+        entity: volatilityTierEntity,
         exists: exists,
     }
 }
