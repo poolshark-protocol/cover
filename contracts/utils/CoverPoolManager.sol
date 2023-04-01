@@ -14,6 +14,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public _owner;
     address private _feeTo;
     address public _factory;
+    uint16  public immutable MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
 
     /// @dev - feeTier => tickSpread => twapLength => auctionLength
     mapping(uint16 => mapping(int16 => mapping(uint16 => uint16))) public volatilityTiers;
@@ -23,6 +24,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     error FeeToOnly();
     error VolatilityTierAlreadyEnabled();
     error TransferredToZeroAddress();
+    error ProtocolFeeCeilingExceeded();
     
     constructor() {
         _owner = msg.sender;
@@ -138,7 +140,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function setProtocolFee(
         uint16 protocolFee_
     ) external onlyOwner {
-        if (protocolFee_ > MAX_FEE) revert MaxFeeExceeeded();
+        if (protocolFee_ > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
         emit ProtocolFeeUpdated(protocolFee, protocolFee_);
         protocolFee = protocolFee_;
     }
