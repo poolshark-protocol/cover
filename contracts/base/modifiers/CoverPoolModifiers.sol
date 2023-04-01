@@ -15,9 +15,4 @@ abstract contract CoverPoolModifiers is CoverPoolStorage {
         _;
         globalState.unlocked = 1;
     }
-
-    modifier onlyFactory(address _factory) {
-        if (_factory != msg.sender) revert FactoryOnly();
-        _;
-    }
 }
