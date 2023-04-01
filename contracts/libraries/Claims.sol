@@ -7,6 +7,7 @@ import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
+import 'hardhat/console.sol';
 
 library Claims {
     error InvalidClaimTick();
@@ -14,6 +15,9 @@ library Claims {
     error WrongTickClaimedAt();
     error UpdatePositionFirstAt(int24, int24);
     error NotEnoughPositionLiquidity();
+
+    /////////// DEBUG FLAGS ///////////
+    bool constant debugDeltas = false;
 
     function validate(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
@@ -130,9 +134,14 @@ library Claims {
                                && (params.claim != (params.zeroForOne ? params.upper : params.lower)))
                                || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
                                                      : cache.position.claimPriceLast < cache.priceClaim && cache.position.claimPriceLast != 0);
+            
             if (transferDeltas) {
                 (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
             }
+            // if (debugDeltas) {
+            //     console.log('initial deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
+            // }
+
         } /// @dev - deltas transfer from claim tick are replaced after applying changes
         return cache;
     }
@@ -151,6 +160,9 @@ library Claims {
                 percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
             }
         }
+        // if (debugDeltas) {
+        //     console.log('final deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
+        // }   
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         // apply deltas and add to position
@@ -216,6 +228,11 @@ library Claims {
             // move price to next tick in sequence for section 2
             cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)                                                       : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
+        // if(debugDeltas) {
+        //     console.log('section 1 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -223,8 +240,7 @@ library Claims {
     function section2(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState storage pool
+        ICoverPoolStructs.UpdateParams memory params
     ) external returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -247,6 +263,11 @@ library Claims {
             params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
                               : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
         }
+        // if(debugDeltas) {
+        //     console.log('section 2 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -279,6 +300,11 @@ library Claims {
             params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
                               : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
         }
+        // if(debugDeltas) {
+        //     console.log('section 3 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -350,15 +376,19 @@ library Claims {
         }
         // modify claim price for section 5
         cache.priceClaim = cache.priceSpread;
+        // if(debugDeltas) {
+        //     console.log('section 4 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
     /// @dev - calculate claim from position start up to claim tick
     function section5(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 5 - burned liquidity past claim tick
@@ -367,24 +397,31 @@ library Claims {
                                                  : cache.priceUpper;
             if (params.amount > 0 && cache.priceClaim != endPrice) {
                 // update max deltas based on liquidity removed
-                //TODO: remove maxTest
+                //TODO: remove maxRoundUp
                 uint128 amountInOmitted; uint128 amountOutRemoved;
                 (
                     amountInOmitted,
                     amountOutRemoved
-                ) = Deltas.maxTest(
+                ) = Deltas.maxRoundUp(
                     params.amount,
                     cache.priceClaim,
                     endPrice,
                     params.zeroForOne
                 );
                 cache.position.amountOut += amountOutRemoved;
+                /// @auditor - we don't add to cache.amountInFilledMax and cache.amountOutUnfilledMax 
+                ///            since this section of the curve is not reflected in the deltas
                 if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
                     cache.finalDeltas.amountInDeltaMax += amountInOmitted;
                     cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
                 }      
             }
         }
+        // if(debugDeltas) {
+        //     console.log('section 5 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 }

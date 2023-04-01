@@ -1,8 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
-import { network } from 'hardhat';
-import { mineNBlocks } from '../blocks';
 const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 export const Q64x96 = BigNumber.from('2').pow(96)
@@ -87,7 +85,15 @@ export interface ValidateBurnParams {
     revertMessage: string
 }
 
-export async function validateSync(newLatestTick: number, revertMessage?: string) {
+export async function getLatestTick(print: boolean = false): Promise<number> {
+    const latestTick = (await hre.props.coverPool.globalState()).latestTick
+    if (print) {
+        console.log('latest tick:', latestTick)
+    }
+    return latestTick
+}
+
+export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string) {
     /// get tick node status before
 
     const globalState = (await hre.props.coverPool.globalState())
@@ -99,6 +105,7 @@ export async function validateSync(newLatestTick: number, revertMessage?: string
         // mine until end of auction
         const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
+        // console.log('auction length:', auctionLength)
         mine(auctionLength)
     }
 
@@ -106,7 +113,7 @@ export async function validateSync(newLatestTick: number, revertMessage?: string
         BigNumber.from(newLatestTick).mul(120),
         BigNumber.from(newLatestTick).mul(60)
     )
-    await txn.wait()
+    await txn.wait();
 
     // console.log("-- START ACCUMULATE LAST BLOCK --");
 
@@ -114,27 +121,28 @@ export async function validateSync(newLatestTick: number, revertMessage?: string
     const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
     await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
 
-    if (!revertMessage || revertMessage == '') {
-        txn = await hre.props.coverPool.swap(
-            hre.props.admin.address,
-            true,
-            BigNumber.from('0'),
-            BigNumber.from('4295128739')
-        )
-        await txn.wait()
-    } else {
-        await expect(
-            hre.props.coverPool.swap(
+    if (autoSync) {
+        if (!revertMessage || revertMessage == '') {
+            txn = await hre.props.coverPool.swap(
                 hre.props.admin.address,
                 true,
                 BigNumber.from('0'),
                 BigNumber.from('4295128739')
             )
-        ).to.be.revertedWith(revertMessage)
-        return
+            await txn.wait()
+        } else {
+            await expect(
+                hre.props.coverPool.swap(
+                    hre.props.admin.address,
+                    true,
+                    BigNumber.from('0'),
+                    BigNumber.from('4295128739')
+                )
+            ).to.be.revertedWith(revertMessage)
+            return
+        }
+        await txn.wait()
     }
-    await txn.wait()
-
     // console.log("-- END ACCUMULATE LAST BLOCK --");
     /// check tick status after
 }
@@ -169,8 +177,6 @@ export async function validateSwap(params: ValidateSwapParams) {
     const amountInDeltaBefore = poolBefore.amountInDelta
     const priceBefore = poolBefore.price
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
-
-    await validateSync((await hre.props.coverPool.globalState()).latestTick, syncRevertMessage)
 
     // quote pre-swap and validate balance changes match post-swap
     const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, sqrtPriceLimitX96)
