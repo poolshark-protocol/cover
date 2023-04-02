@@ -93,6 +93,33 @@ export async function getLatestTick(print: boolean = false): Promise<number> {
     return latestTick
 }
 
+export async function getLiquidity(isPool0: boolean, print: boolean = false): Promise<BigNumber> {
+    let liquidity: BigNumber = isPool0 ? (await hre.props.coverPool.pool0()).liquidity
+                                       : (await hre.props.coverPool.pool1()).liquidity;
+    if (print) {
+        console.log('pool liquidity:', liquidity.toString())
+    }
+    return liquidity
+}
+
+export async function getPrice(isPool0: boolean, print: boolean = false): Promise<BigNumber> {
+    let price: BigNumber = isPool0 ? (await hre.props.coverPool.pool0()).price
+                                   : (await hre.props.coverPool.pool1()).price;
+    if (print) {
+        console.log('price:', price.toString())
+    }
+    return price
+}
+
+export async function getTick(isPool0: boolean, tickIndex: number, print: boolean = false): Promise<Tick> {
+    let tick: Tick = isPool0 ? (await hre.props.coverPool.ticks0(tickIndex))
+                             : (await hre.props.coverPool.ticks1(tickIndex));
+    if (print) {
+        console.log(tickIndex,'tick:', tick.toString())
+    }
+    return tick
+}
+
 export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string) {
     /// get tick node status before
 

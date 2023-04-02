@@ -9,7 +9,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -62,7 +62,7 @@ library Epochs {
 
         while (true) {
             // get values from current auction
-            (cache, pool0) = _rollover(cache, pool0, true);
+            (cache, pool0) = _rollover(state, cache, pool0, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
                  && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
                 EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
@@ -138,7 +138,7 @@ library Epochs {
 
         while (true) {
             // rollover deltas pool1
-            (cache, pool1) = _rollover(cache, pool1, false);
+            (cache, pool1) = _rollover(state, cache, pool1, false);
             // accumulate deltas pool1
             if (cache.nextTickToAccum0 > cache.stopTick0 
                  && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
@@ -283,10 +283,11 @@ library Epochs {
     }
 
     function _rollover(
+        ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -295,11 +296,16 @@ library Epochs {
             /// @auditor - deltas should be zeroed out here
             return (cache, pool);
         }
+        // console.log('rollover check');
+        // console.logInt(cache.nextTickToCross0);
+        // console.log(TickMath.getSqrtRatioAtTick(-20));
+        // console.log(pool.price);
         uint160 crossPrice = TickMath.getSqrtRatioAtTick(
             isPool0 ? cache.nextTickToCross0 : cache.nextTickToCross1
         );
         uint160 accumPrice;
         {
+            /// @dev - set accum price to either stopTick or nextTickToAccum
             int24 nextTickToAccum;
             if (isPool0) {
                 nextTickToAccum = (cache.nextTickToAccum0 < cache.stopTick0)
@@ -315,9 +321,14 @@ library Epochs {
         uint160 currentPrice = pool.price;
         // full tick unfilled vs. partial tick unfilled
         if (isPool0){
+            // if we're outside the bounds set currentPrice to start of auction
+            // this is for skipping multiple auctions in one syncLatest() call
             if (!(pool.price > accumPrice && pool.price < crossPrice)) currentPrice = accumPrice;
+            // if auction is current and fully filled => set currentPrice to crossPrice
+            if (state.latestTick == cache.nextTickToCross0 && crossPrice == pool.price) currentPrice = crossPrice;
         } else{
             if (!(pool.price < accumPrice && pool.price > crossPrice)) currentPrice = accumPrice;
+            if (state.latestTick == cache.nextTickToCross1 && crossPrice == pool.price) currentPrice = crossPrice;
         }
 
         //handle liquidity rollover
@@ -350,6 +361,11 @@ library Epochs {
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;
 
+            /// @dev - if auction fully filled amountOutDelta should be zero
+            // if(state.latestTick == cache.nextTickToCross1 && crossPrice == pool.price) {
+            //     currentPrice = pool.price;
+            // }
+
             // amountOut pool has leftover
             uint128 amountOutDelta   = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
             uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
@@ -370,7 +386,7 @@ library Epochs {
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
         bool updateAccumDeltas
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -444,7 +460,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
