@@ -168,6 +168,11 @@ contract CoverPool is
             uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
             uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
+            // console.log('amountIn:', amountIn);
+            // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+            // console.log('amountOut:', amountOut);
+            // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+
             // zero out balances
             positions[msg.sender][params.lower][params.upper].amountIn = 0;
             positions[msg.sender][params.lower][params.upper].amountOut = 0;

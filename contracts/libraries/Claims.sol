@@ -7,7 +7,7 @@ import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library Claims {
     error InvalidClaimTick();
@@ -17,7 +17,7 @@ library Claims {
     error NotEnoughPositionLiquidity();
 
     /////////// DEBUG FLAGS ///////////
-    bool constant debugDeltas = false;
+    bool constant debugDeltas = true;
 
     function validate(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
@@ -120,7 +120,7 @@ library Claims {
     function getDeltas(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache
@@ -195,7 +195,7 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.GlobalState memory state
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
@@ -226,7 +226,8 @@ library Claims {
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)                                                       : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
+            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
+                                                               : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
         // if(debugDeltas) {
         //     console.log('section 1 check');
@@ -388,7 +389,7 @@ library Claims {
     function section5(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 5 - burned liquidity past claim tick
