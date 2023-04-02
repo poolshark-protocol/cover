@@ -1016,7 +1016,7 @@ describe('CoverPool Tests', function () {
 
     });
 
-    it("pool0 - amountOutDeltaMax should not underflow :: GUARDIAN AUDITS 57", async function () {
+    it("pool0 - amountOutDeltaMax should not underflow :: GUARDIAN AUDITS", async function () {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
         const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
@@ -1179,6 +1179,108 @@ describe('CoverPool Tests', function () {
         // This can lead to users being able to claim amounts from ticks that have not yet actually
         // been crossed, potentially perturbing the pool accounting.
         // In addition to users not being able to claim their filled amounts as shown in this PoC.
+    });
+
+    it("pool0: twap rate-limiting yields invalid tick :: GUARDIAN AUDITS 58", async function () {
+        await validateSync(20);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-20',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from("99955008249587388643769"),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        // Get an invalid latestTick by being rate limited.
+        // The invalid tick results from the maxLatestTickMove not being a multiple of the tickSpread.
+        // This occurs when the state.lastBlock - state.auctionStart is not a perfect multiple of the auctionLength.
+        // Which will happen in the majority of cases.
+        await validateSync(-20);
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-60',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: BigNumber.from("33366670549555043973"),
+            liquidityIncrease: BigNumber.from("33285024970969944913475"),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+            expectedUpper: '-40'
+        });
+
+        // Notice that this swap occurs over the tick range -5 to -25
+        // however alice's liquidity is used for this swap.
+        // Additionally, the amountOut is greater than alice's liquidity -- meaning that the swapper
+        // stole some of bob's liquidity when it wasn't in this range.
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.mul(2),
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: BigNumber.from("0"),
+            balanceOutIncrease: BigNumber.from('0'), // Greater than alice's "99955008249587388643769" liquidity
+            revertMessage: '',
+        });
+
+        // Now if both alice and bob attempted to burn all of their liquidity, they could not remove it all.
+
+        // Alice burns
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-20',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: BigNumber.from("99955008249587388643769"), // Alice was already filled 100%
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        // Bob burns & cannot burn his entire position
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-60',
+            claim: '-25',
+            upper: '-25',
+            liquidityAmount: BigNumber.from("33285024970969944913475"),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('0'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'NotEnoughPositionLiquidity()', // Bob cannot burn his entire position because the pool doesn't have all his tokens
+        })
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            liquidityAmount: BigNumber.from("33285024970969944913475"),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('33366670549555043972'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '', // Bob cannot burn his entire position because the pool doesn't have all his tokens
+        })
     });
 
 
