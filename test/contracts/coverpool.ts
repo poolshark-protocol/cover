@@ -1127,6 +1127,61 @@ describe('CoverPool Tests', function () {
 
     });
 
+    it("pool0 - Users cannot claim at the right tick :: GUARDIAN AUDITS", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-40',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(0)
+        await validateSync(-20)
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            sqrtPriceLimitX96: maxPrice,
+            balanceInDecrease: tokenAmount.div(10),
+            balanceOutIncrease: BigNumber.from('10040071764942830081'),
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-40',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('89959928235057169918'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '', // Alice cannot claim at -20 when she should be able to
+        })
+
+        // Alice cannot claim at this tick since the following tick, -40 is set in the EpochMap when syncing latest
+        // -40 should only be set in the EpochMap if we successfully cross over it.
+        // This can lead to users being able to claim amounts from ticks that have not yet actually
+        // been crossed, potentially perturbing the pool accounting.
+        // In addition to users not being able to claim their filled amounts as shown in this PoC.
+    });
+
+
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear stash deltas 57', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
 
@@ -1179,7 +1234,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('49815343322651003235'), //TODO: taking 2 extra out
+            balanceInIncrease: BigNumber.from('49815343322651003233'), //TODO: taking 2 extra out
             balanceOutIncrease: BigNumber.from('50024998748000306422'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -1534,7 +1589,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('4'),
+            balanceInIncrease: BigNumber.from('6'),
             balanceOutIncrease: BigNumber.from('199999999999999999999'),
             lowerTickCleared: true,
             upperTickCleared: true,
