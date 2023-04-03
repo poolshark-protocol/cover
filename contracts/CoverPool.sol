@@ -76,7 +76,7 @@ contract CoverPool is
             _transferIn(token1, params.amount);
         }
         // recreates position if required
-        state = Positions.update(
+        (state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1,
             params.zeroForOne ? ticks0 : ticks1,
             tickMap,
@@ -134,7 +134,7 @@ contract CoverPool is
             || params.claim == state.latestTick)
         {
             // if position has been crossed into
-            state = Positions.update(
+            (state, params.claim) = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,

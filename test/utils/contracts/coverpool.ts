@@ -82,6 +82,8 @@ export interface ValidateBurnParams {
     balanceOutIncrease: BigNumber
     lowerTickCleared: boolean
     upperTickCleared: boolean
+    expectedLower?: string
+    expectedUpper?: string
     revertMessage: string
 }
 
@@ -133,7 +135,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
         const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         // console.log('auction length:', auctionLength)
-        mine(auctionLength)
+        await mine(auctionLength)
     }
 
     let txn = await hre.props.rangePoolMock.setTickCumulatives(
@@ -451,6 +453,9 @@ export async function validateBurn(params: ValidateBurnParams) {
     const upperTickCleared = params.upperTickCleared
     const lowerTickCleared = params.lowerTickCleared
     const revertMessage = params.revertMessage
+    const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
+    const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
+    console.log(params.expectedLower)
 
     let balanceInBefore
     let balanceOutBefore
@@ -532,13 +537,12 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        positionAfter = await hre.props.coverPool.positions0(signer.address, zeroForOne ? lower : claim,
-                                                                             zeroForOne ? claim : upper)
+        console.log(expectedUpper)
+        positionAfter = await hre.props.coverPool.positions0(signer.address, lower, expectedUpper ? expectedUpper : claim)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(lower)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        positionAfter = await hre.props.coverPool.positions1(signer.address, zeroForOne ? lower : claim,
-                                                                             zeroForOne ? claim : upper)
+        positionAfter = await hre.props.coverPool.positions1(signer.address, expectedLower ? expectedLower : claim, upper)
     }
     //dependent on zeroForOne
     if (zeroForOne) {
