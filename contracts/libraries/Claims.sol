@@ -265,8 +265,6 @@ library Claims {
             );
             cache.amountInFilledMax += amountInFilledMax;
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
-            // params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
-            //                   : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
         }
         // if(debugDeltas) {
         //     console.log('section 2 check');
