@@ -1281,7 +1281,7 @@ describe('CoverPool Tests', function () {
         })
     });
 
-    it("pool0 - enderflow when claiming for the second time :: GUARDIAN AUDITS", async () => {
+    it("pool0 - underflow when claiming for the second time :: GUARDIAN AUDITS", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
 
@@ -1383,6 +1383,55 @@ describe('CoverPool Tests', function () {
 
     });
 
+    it("pool0 - burn leading to division by 0 :: GUARDIAN AUDITS 61", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
+        const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateSync(0);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateSync(-20);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateSync(0);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
+        // If we claim at 0 or -20 we do get out money back
+
+        await validateSync(-40);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-80',
+            claim: '-40',
+            upper: '0',
+            liquidityAmount: bobLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999996'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+    });
+
 
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear stash deltas 57', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
@@ -1429,7 +1478,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('49815343322651003233'), //TODO: taking 2 extra out
-            balanceOutIncrease: BigNumber.from('50024998748000306422'),
+            balanceOutIncrease: BigNumber.from('50024998748000306423'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -2018,7 +2067,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
-            balanceOutIncrease: BigNumber.from('69966961710462894066'),
+            balanceOutIncrease: BigNumber.from('69966961710462894067'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -2681,6 +2730,8 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('339999999999999999999999999997721907021'),
             revertMessage: '',
         })
+
+        //TODO: swap has precision loss of 2278092979 or (6.7e-28) %
 
         await validateBurn({
             signer: hre.props.alice,
