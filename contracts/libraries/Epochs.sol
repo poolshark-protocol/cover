@@ -9,7 +9,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -287,7 +287,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -296,10 +296,6 @@ library Epochs {
             /// @auditor - deltas should be zeroed out here
             return (cache, pool);
         }
-        // console.log('rollover check');
-        // console.logInt(cache.nextTickToCross0);
-        // console.log(TickMath.getSqrtRatioAtTick(-20));
-        // console.log(pool.price);
         uint160 crossPrice = TickMath.getSqrtRatioAtTick(
             isPool0 ? cache.nextTickToCross0 : cache.nextTickToCross1
         );
@@ -386,7 +382,7 @@ library Epochs {
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
         bool updateAccumDeltas
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -460,7 +456,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+    ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas

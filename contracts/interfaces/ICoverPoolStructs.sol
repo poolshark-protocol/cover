@@ -139,6 +139,7 @@ interface ICoverPoolStructs {
         uint256 amountInFilledMax;    // considers the range covered by each update
         uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
+        Tick finalTick;
         Position position;
         Deltas deltas;
         Deltas finalDeltas;

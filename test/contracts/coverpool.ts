@@ -110,7 +110,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount,
-            sqrtPriceLimitX96: minPrice,
+            priceLimit: minPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: 'WaitUntilEnoughObservations()',
@@ -158,7 +158,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount,
-            sqrtPriceLimitX96: minPrice,
+            priceLimit: minPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: 'WaitUntilEnoughObservations()',
@@ -206,7 +206,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount,
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -270,7 +270,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('99680524411508040121'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
@@ -387,7 +387,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -444,7 +444,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -516,7 +516,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            priceLimit: BigNumber.from('79148977909814923576066331264'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10040069750091208712'),
             revertMessage: '',
@@ -574,7 +574,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -588,7 +588,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: tokenAmount.div(10),
             balanceOutIncrease: BigNumber.from('10040071764942830081'),
             revertMessage: '',
@@ -665,7 +665,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331265'),
+            priceLimit: BigNumber.from('79148977909814923576066331265'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10040069750091208712'),
             revertMessage: '',
@@ -780,7 +780,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -892,7 +892,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -971,7 +971,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10), // Swap in 10 tokens
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10021521111719305613'),
             revertMessage: '',
@@ -1053,19 +1053,17 @@ describe('CoverPool Tests', function () {
 
         // await validateSync(0)
         await validateSync(-20);
-        await getPrice(true, debugMode)
         
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount,
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('74772840297597165330'),
             balanceOutIncrease: BigNumber.from('75012486881504305413'),
             revertMessage: '',
         });
-        await getPrice(true, debugMode)
 
         // Notice that Bob's burn reverts due to an underflow in the amountOutDeltaMax.
         // This is because the cache.finalDeltas.amountOutDelta is not removed from the
@@ -1154,7 +1152,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: tokenAmount.div(10),
             balanceOutIncrease: BigNumber.from('10040071764942830081'),
             revertMessage: '',
@@ -1230,7 +1228,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from("0"),
             balanceOutIncrease: BigNumber.from('0'), // Greater than alice's "99955008249587388643769" liquidity
             revertMessage: '',
@@ -1283,6 +1281,157 @@ describe('CoverPool Tests', function () {
         })
     });
 
+    it("pool0 - underflow when claiming for the second time :: GUARDIAN AUDITS", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(0)
+        await validateSync(-20)
+
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount,
+            priceLimit: maxPrice,
+            balanceInDecrease: BigNumber.from('24907659208740128447'),
+            balanceOutIncrease: BigNumber.from('24987488133503998990'),
+            revertMessage: '',
+        })
+
+        if (deltaMaxAfterCheck) {
+            console.log('claim tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
+            console.log('final tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
+        }
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-80',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('24907659208740128447'),
+            balanceOutIncrease: BigNumber.from('49987513124744754072'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '', 
+        });
+
+        if (deltaMaxAfterCheck) {
+            console.log('claim tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
+            console.log('final tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
+        }
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+
+        await validateSync(-40);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+
+        await validateSync(-60);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount,
+            priceLimit: maxPrice,
+            balanceInDecrease: BigNumber.from('12428948079035618256'),
+            balanceOutIncrease: BigNumber.from('12518755307248153715'),
+            revertMessage: '',
+        });
+        await validateSync(-80);
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-80',
+            claim: '-80',
+            upper: '-20',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('12428948079035618256'),
+            balanceOutIncrease: BigNumber.from('12506243434503093221'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '', 
+        });
+
+    });
+
+    it("pool0 - burn leading to division by 0 :: GUARDIAN AUDITS 61", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
+        const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateSync(0);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateSync(-20);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateSync(0);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
+        // If we claim at 0 or -20 we do get out money back
+
+        await validateSync(-40);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-80',
+            claim: '-40',
+            upper: '0',
+            liquidityAmount: bobLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999996'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+    });
+
 
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear stash deltas 57', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
@@ -1306,26 +1455,18 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-20)
 
-        await getLatestTick(debugMode)
-        await getLiquidity(true, debugMode)
-        await getPrice(true, debugMode)
-
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('49815343322651003239'),
             balanceOutIncrease: BigNumber.from('49975001251999693577'),
             revertMessage: '',
         })
 
-        await getPrice(true, debugMode)
-
         await validateSync(-40)
-
-        await getTick(true, -40, debugMode)
 
         //TODO: precision loss of 2 here
 
@@ -1337,7 +1478,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('49815343322651003233'), //TODO: taking 2 extra out
-            balanceOutIncrease: BigNumber.from('50024998748000306422'),
+            balanceOutIncrease: BigNumber.from('50024998748000306423'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1454,7 +1595,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10100476017389330229'),
             revertMessage: '',
@@ -1479,7 +1620,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10099423961650481309'),
             revertMessage: '',
@@ -1570,7 +1711,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10100476017389330229'),
             revertMessage: '',
@@ -1673,7 +1814,7 @@ describe('CoverPool Tests', function () {
         //     recipient: hre.props.alice.address,
         //     zeroForOne: false,
         //     amountIn: tokenAmount.mul(2),
-        //     sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+        //     priceLimit: BigNumber.from('79148977909814923576066331264'),
         //     balanceInDecrease: BigNumber.from('200000000000000000000'),
         //     balanceOutIncrease: BigNumber.from('200727459013899578577'),
         //     revertMessage: '',
@@ -1707,7 +1848,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'), 
-            balanceOutIncrease: BigNumber.from('200000000000000000000'),
+            balanceOutIncrease: BigNumber.from('200000000000000000000').sub(2),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1790,7 +1931,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1804,7 +1945,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from('99755307984763292988257'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            balanceOutIncrease: BigNumber.from('99999999999999999998'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1908,7 +2049,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10041077831073905446'),
             revertMessage: '',
@@ -1926,7 +2067,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
-            balanceOutIncrease: BigNumber.from('69966961710462894066'),
+            balanceOutIncrease: BigNumber.from('69966961710462894067'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1968,7 +2109,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
-            balanceOutIncrease: BigNumber.from('94979461084463047276'),
+            balanceOutIncrease: BigNumber.from('94979461084463047278'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -2018,7 +2159,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999997'), //TODO: precision off by a few
+            balanceOutIncrease: BigNumber.from('99999999999999999998'), //TODO: precision off by a few
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -2066,7 +2207,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            priceLimit: BigNumber.from('79148977909814923576066331264'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10040069750091208712'),
             revertMessage: '',
@@ -2079,7 +2220,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: BigNumber.from('79148977909814923576066331264'),
+            priceLimit: BigNumber.from('79148977909814923576066331264'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10038045043818217528'),
             revertMessage: '',
@@ -2165,7 +2306,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount,
-            sqrtPriceLimitX96: maxPrice,
+            priceLimit: maxPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -2221,7 +2362,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: minPrice,
+            priceLimit: minPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -2298,7 +2439,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount,
-            sqrtPriceLimitX96: minPrice,
+            priceLimit: minPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
@@ -2394,7 +2535,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount.mul(2),
-            sqrtPriceLimitX96: minPrice,
+            priceLimit: minPrice,
             balanceInDecrease: BigNumber.from('99680524411508040121'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
@@ -2477,7 +2618,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: BigNumber.from('79307426338960776842885539846'),
+            priceLimit: BigNumber.from('79307426338960776842885539846'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10040069750091208712'),
             revertMessage: '',
@@ -2584,11 +2725,13 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             zeroForOne: true,
             amountIn: tokenAmount.div(10),
-            sqrtPriceLimitX96: minPrice,
+            priceLimit: minPrice,
             balanceInDecrease: BigNumber.from('2982576962873'),
             balanceOutIncrease: BigNumber.from('339999999999999999999999999997721907021'),
             revertMessage: '',
         })
+
+        //TODO: swap has precision loss of 2278092979 or (6.7e-28) %
 
         await validateBurn({
             signer: hre.props.alice,

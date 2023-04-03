@@ -239,6 +239,7 @@ library Positions {
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
+            finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
             removeLower: true,
             removeUpper: true,
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
@@ -266,23 +267,19 @@ library Positions {
 
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, state);
-        
         /// @dev - section 2 => position start -> claim tick
         cache = Claims.section2(ticks, cache, params);
-
         // check if auction in progress 
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             /// @dev - section 3 => claim tick - unfilled section
             cache = Claims.section3(ticks, cache, params, pool);
-            
             /// @dev - section 4 => claim tick - filled section
             cache = Claims.section4(cache, params, pool);
         }
 
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
-
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);
 

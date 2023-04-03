@@ -64,7 +64,7 @@ export interface ValidateSwapParams {
     recipient: string
     zeroForOne: boolean
     amountIn: BigNumber
-    sqrtPriceLimitX96: BigNumber
+    priceLimit: BigNumber
     balanceInDecrease: BigNumber
     balanceOutIncrease: BigNumber
     revertMessage: string
@@ -179,7 +179,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const recipient = params.recipient
     const zeroForOne = params.zeroForOne
     const amountIn = params.amountIn
-    const sqrtPriceLimitX96 = params.sqrtPriceLimitX96
+    const priceLimit = params.priceLimit
     const balanceInDecrease = params.balanceInDecrease
     const balanceOutIncrease = params.balanceOutIncrease
     const revertMessage = params.revertMessage
@@ -206,7 +206,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
 
     // quote pre-swap and validate balance changes match post-swap
-    const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, sqrtPriceLimitX96)
+    const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, priceLimit)
 
     const amountInQuoted = quote[0]
     const amountOutQuoted = quote[1]
@@ -216,13 +216,13 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (revertMessage == '') {
         let txn = await hre.props.coverPool
             .connect(signer)
-            .swap(signer.address, zeroForOne, amountIn, sqrtPriceLimitX96)
+            .swap(signer.address, zeroForOne, amountIn, priceLimit)
         await txn.wait()
     } else {
         await expect(
             hre.props.coverPool
                 .connect(signer)
-                .swap(signer.address, zeroForOne, amountIn, sqrtPriceLimitX96)
+                .swap(signer.address, zeroForOne, amountIn, priceLimit)
         ).to.be.revertedWith(revertMessage)
         return
     }
