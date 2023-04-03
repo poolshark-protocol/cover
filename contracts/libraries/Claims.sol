@@ -235,11 +235,11 @@ library Claims {
             cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
                                                                : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
         }
-        if(debugDeltas) {
-            console.log('section 1 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 1 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 
@@ -252,8 +252,8 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
-        console.log(cache.position.claimPriceLast);
-        console.log(cache.priceClaim);
+        // console.log(cache.position.claimPriceLast);
+        // console.log(cache.priceClaim);
         if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
                               : cache.priceClaim > cache.position.claimPriceLast) {
             // calculate if we at least cover one full tick
@@ -270,11 +270,11 @@ library Claims {
             cache.amountInFilledMax += amountInFilledMax;
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
         }
-        if(debugDeltas) {
-            console.log('section 2 check');
-            console.log(cache.amountInFilledMax);
-            console.log(cache.amountOutUnfilledMax);
-        }
+        // if(debugDeltas) {
+        //     console.log('section 2 check');
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
+        // }
         return cache;
     }
 

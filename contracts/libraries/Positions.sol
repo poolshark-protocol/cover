@@ -333,7 +333,6 @@ library Positions {
         if (params.zeroForOne ? params.claim != params.upper 
                               : params.claim != params.lower) {
             /// @dev - this also clears out position end claims
-            console.log('deleting old position');
             delete positions[params.owner][params.lower][params.upper];
         } else {
             // save position
@@ -344,8 +343,6 @@ library Positions {
             cache.position.accumEpochLast = 0;
             cache.position.claimPriceLast = 0;
         }
-        console.logInt(params.lower);
-        console.logInt(params.claim);
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;
