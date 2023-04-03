@@ -7,7 +7,7 @@ import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library Claims {
     error InvalidClaimTick();
@@ -156,9 +156,11 @@ library Claims {
         uint256 percentInDelta; uint256 percentOutDelta;
         if(cache.deltas.amountInDeltaMax > 0) {
             percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
+            console.log('percentInDelta: ', percentInDelta);
             percentInDelta = percentInDelta > 1e38 ? 1e38 : percentInDelta;
             if (cache.deltas.amountOutDeltaMax > 0) {
                 percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
+                console.log('percentOutDelta:', percentOutDelta);
                 percentOutDelta = percentOutDelta > 1e38 ? 1e38 : percentOutDelta;
             }
         }
@@ -250,6 +252,8 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
+        // console.log(cache.position.claimPriceLast);
+        // console.log(cache.priceClaim);
         if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
                               : cache.priceClaim > cache.position.claimPriceLast) {
             // calculate if we at least cover one full tick
@@ -268,8 +272,8 @@ library Claims {
         }
         // if(debugDeltas) {
         //     console.log('section 2 check');
-        //     console.log(cache.position.amountOut);
-        //     // console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
@@ -305,8 +309,8 @@ library Claims {
         }
         // if(debugDeltas) {
         //     console.log('section 3 check');
-        //     console.log(cache.position.amountOut);
-        //     // console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
@@ -381,8 +385,8 @@ library Claims {
         cache.priceClaim = cache.priceSpread;
         // if(debugDeltas) {
         //     console.log('section 4 check');
-        //     console.log(cache.position.amountOut);
-        //     // console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
@@ -423,8 +427,8 @@ library Claims {
         }
         // if(debugDeltas) {
         //     console.log('section 5 check');
-        //     console.log(cache.position.amountOut);
-        //     // console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.amountInFilledMax);
+        //     console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }

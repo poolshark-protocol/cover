@@ -70,7 +70,7 @@ library Ticks {
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
                 amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
-                cache.price = uint160(newPrice);
+                cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDx > 0) {

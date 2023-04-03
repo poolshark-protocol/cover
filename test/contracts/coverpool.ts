@@ -731,6 +731,96 @@ describe('CoverPool Tests', function () {
         }
     })
 
+    it("Underflow when claiming for the second time", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(0)
+        await validateSync(-20)
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount,
+            priceLimit: maxPrice,
+            balanceInDecrease: BigNumber.from('24907659208740128447'),
+            balanceOutIncrease: BigNumber.from('24987488133503998990'),
+            revertMessage: '',
+        })
+
+        console.log("--------------- First Burn -------------");
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-80',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('24907659208740128447'),
+            balanceOutIncrease: BigNumber.from('49987513124744754072'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            expectedUpper: '-40',
+            revertMessage: '',
+        });
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+
+        await validateSync(-40);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+
+        await validateSync(-60);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+
+        await validateSync(-80);
+
+
+        console.log("--------------- Second Burn -------------");
+
+        // Notice that the following burn reverts -- if the subtraction from the end tick in section2
+        // is removed the double counting no longer occurs -- and the burn can succeed.
+
+        // Notice that after implementing the suggested fix above, 
+        // during the burn we log a percentInOnTick value that is greater than 100
+        // This is due to section2 counting a larger price range then it ought to.
+        // Currently, the section2 function will include tick -20 in it's calculations.
+        // However tick -20 was already claimed by the user in the previous burn from section4.
+        // The priceClaimLast ought to be updated to tick -40 in section1, but since the previous auction
+        // was fully filled, it was not. The fix for this is to allow this case to enter the else if in
+        // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-80',
+            claim: '-80',
+            upper: '-40',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('25024998741751246936'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+    });
+
     it("pool0 - outdated price does not perturb the pool accounting :: GUARDIAN AUDITS", async function () {
         const liquidityAmountBob = BigNumber.from('497780033507028255257726') 
         await validateSync(0);
@@ -1281,10 +1371,10 @@ describe('CoverPool Tests', function () {
         })
     });
 
-    it("pool0 - underflow when claiming for the second time :: GUARDIAN AUDITS", async () => {
+    it("pool0 - underflow when claiming for the second time :: GUARDIAN AUDITS 58", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
-
+        console.log('first mint')
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1304,7 +1394,7 @@ describe('CoverPool Tests', function () {
         await validateSync(-20)
 
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
-
+        console.log('first swap')
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1324,7 +1414,7 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
         }
-
+        console.log('first burn')
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -1336,6 +1426,7 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('49987513124744754072'),
             lowerTickCleared: false,
             upperTickCleared: true,
+            expectedUpper: '-40',
             revertMessage: '', 
         });
 
@@ -1354,7 +1445,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-60);
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-
+        console.log('second swap')
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1366,22 +1457,24 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
         await validateSync(-80);
-
+        console.log('second burn')
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
             claim: '-80',
-            upper: '-20',
+            upper: '-40',
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('12428948079035618256'),
-            balanceOutIncrease: BigNumber.from('12506243434503093221'),
+            balanceInIncrease: BigNumber.from('12428948079035618254'),
+            balanceOutIncrease: BigNumber.from('12506243434503093220'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '', 
         });
 
     });
+
+
 
     it("pool0 - burn leading to division by 0 :: GUARDIAN AUDITS 61", async () => {
         await validateSync(20);

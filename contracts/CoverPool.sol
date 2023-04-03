@@ -76,7 +76,7 @@ contract CoverPool is
             _transferIn(token1, params.amount);
         }
         // recreates position if required
-        state = Positions.update(
+        (state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1,
             params.zeroForOne ? ticks0 : ticks1,
             tickMap,
@@ -134,7 +134,7 @@ contract CoverPool is
             || params.claim == state.latestTick)
         {
             // if position has been crossed into
-            state = Positions.update(
+            (state, params.claim) = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
@@ -169,10 +169,10 @@ contract CoverPool is
             uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
             uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
-            console.log('amountIn:', amountIn);
-            console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-            console.log('amountOut:', amountOut);
-            console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+            // console.log('amountIn:', amountIn);
+            // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+            // console.log('amountOut:', amountOut);
+            // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
 
             // zero out balances
             positions[msg.sender][params.lower][params.upper].amountIn = 0;

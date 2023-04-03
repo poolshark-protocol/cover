@@ -53,7 +53,6 @@ interface ICoverPoolStructs {
     }
 
     struct Position {
-        uint8   claimCheckpoint; // used to dictate claim state
         uint32  accumEpochLast; // last epoch this position was updated at
         uint128 liquidity; // expected amount to be used not actual
         uint128 liquidityStashed; // what percent of this position is stashed liquidity

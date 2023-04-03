@@ -223,10 +223,9 @@ library Positions {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.PoolState storage pool,
         ICoverPoolStructs.UpdateParams memory params
-    )
-        external
-        returns (
-            ICoverPoolStructs.GlobalState memory
+    ) external returns (
+            ICoverPoolStructs.GlobalState memory,
+            int24
         )
     {
         ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
@@ -258,7 +257,7 @@ library Positions {
                 cache
             );
             if (earlyReturn) {
-                return state;
+                return (state, params.claim);
             }
         }
         
@@ -292,14 +291,7 @@ library Positions {
         ) pool.liquidity -= params.amount;
         
         /// @dev - mark last claim price
-        cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
-        cache.position.claimPriceLast = (params.claim == state.latestTick)
-            ? pool.price
-            : cache.priceClaim;
-        /// @dev - if tick 0% filled, set CPL to latestTick
-        if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
-        /// @dev - if tick 100% filled, set CPL to next tick to unlock
-        if (pool.price == cache.priceClaim && params.claim == state.latestTick) cache.position.claimPriceLast = cache.priceClaim;
+
         /// @dev - prior to Ticks.remove() so we don't overwrite liquidity delta changes
         // if burn or second mint
         //TODO: handle claim of current auction and second mint
@@ -321,10 +313,26 @@ library Positions {
             );
             cache.position.liquidity -= uint128(params.amount);
         }
-        /// @dev - this also clears out position end claims
+
+        // update claimPriceLast
+        cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
+        cache.position.claimPriceLast = (params.claim == state.latestTick)
+            ? pool.price
+            : cache.priceClaim;
+        /// @dev - if tick 0% filled, set CPL to latestTick
+        if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
+        /// @dev - if tick 100% filled, set CPL to next tick to unlock
+        if (pool.price == cache.priceClaim && params.claim == state.latestTick){
+            cache.position.claimPriceLast = cache.priceSpread;
+            // set claim tick to claim + tickSpread
+            params.claim = params.zeroForOne ? params.claim - state.tickSpread
+                                             : params.claim + state.tickSpread;
+        }
+
+        // clear out old position
         if (params.zeroForOne ? params.claim != params.upper 
                               : params.claim != params.lower) {
-            // clear out old position
+            /// @dev - this also clears out position end claims
             delete positions[params.owner][params.lower][params.upper];
         } else {
             // save position
@@ -334,12 +342,11 @@ library Positions {
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = 0;
             cache.position.claimPriceLast = 0;
-            cache.position.claimCheckpoint = 0;
         }
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;
         // return cached position in memory and transfer out
-        return state;
+        return (state, params.claim);
     }
 }
