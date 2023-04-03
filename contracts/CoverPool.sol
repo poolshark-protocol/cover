@@ -11,6 +11,7 @@ import './utils/CoverPoolErrors.sol';
 import './libraries/Ticks.sol';
 import './libraries/Positions.sol';
 import './libraries/Epochs.sol';
+import 'hardhat/console.sol';
 
 /// @notice Poolshark Cover Pool Implementation
 contract CoverPool is

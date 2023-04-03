@@ -120,7 +120,7 @@ library Claims {
     function getDeltas(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache
@@ -156,12 +156,15 @@ library Claims {
         uint256 percentInDelta; uint256 percentOutDelta;
         if(cache.deltas.amountInDeltaMax > 0) {
             percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
+            percentInDelta = percentInDelta > 1e38 ? 1e38 : percentInDelta;
             if (cache.deltas.amountOutDeltaMax > 0) {
                 percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
+                percentOutDelta = percentOutDelta > 1e38 ? 1e38 : percentOutDelta;
             }
         }
         // if (debugDeltas) {
-        //     console.log('final deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
+        //     console.log('final deltas:', cache.deltas.amountInDelta, cache.deltas.amountInDeltaMax);
+        //     console.log(cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
         // }   
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
@@ -176,6 +179,7 @@ library Claims {
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
             (updateTick.deltas) = Deltas.burnMax(updateTick.deltas, cache.finalDeltas);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
             //TODO: handle partial stashed and partial on tick
@@ -195,7 +199,7 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.GlobalState memory state
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
@@ -261,13 +265,13 @@ library Claims {
             );
             cache.amountInFilledMax += amountInFilledMax;
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
-            params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
-                              : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
+            // params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutUnfilledMax
+            //                   : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutUnfilledMax;
         }
         // if(debugDeltas) {
         //     console.log('section 2 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.position.amountOut);
+        //     // console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
@@ -303,8 +307,8 @@ library Claims {
         }
         // if(debugDeltas) {
         //     console.log('section 3 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.position.amountOut);
+        //     // console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
@@ -379,8 +383,8 @@ library Claims {
         cache.priceClaim = cache.priceSpread;
         // if(debugDeltas) {
         //     console.log('section 4 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.position.amountOut);
+        //     // console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
@@ -389,11 +393,12 @@ library Claims {
     function section5(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 5 - burned liquidity past claim tick
         {
+            // console.log('price claim check:', cache.priceClaim);
             uint160 endPrice = params.zeroForOne ? cache.priceLower
                                                  : cache.priceUpper;
             if (params.amount > 0 && cache.priceClaim != endPrice) {
@@ -420,8 +425,8 @@ library Claims {
         }
         // if(debugDeltas) {
         //     console.log('section 5 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
+        //     console.log(cache.position.amountOut);
+        //     // console.log(cache.amountOutUnfilledMax);
         // }
         return cache;
     }
