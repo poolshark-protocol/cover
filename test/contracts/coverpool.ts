@@ -1281,7 +1281,7 @@ describe('CoverPool Tests', function () {
         })
     });
 
-    it.skip("Underflow when claiming for the second time 59", async () => {
+    it("pool0 - enderflow when claiming for the second time :: GUARDIAN AUDITS", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
 
