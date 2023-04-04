@@ -731,7 +731,7 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    it("pool0 - underflow when claiming for the second time :: GUARDIAN AUDITS", async () => {
+    it("pool0 - fully filled auction should push claim to next tick :: GUARDIAN AUDITS", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
 
@@ -809,6 +809,138 @@ describe('CoverPool Tests', function () {
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('25024998741751246936'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+    });
+
+    it("pool0 - accounting should be correct for multiple positions sharing same range :: GUARDIAN AUDITS", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
+        const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        console.log("--------------- Alice First mint -------------");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        console.log("--------------- Bob First mint -------------");
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '-80',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: bobLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(0)
+
+        await validateSync(-20)
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("49902566621651196968970");
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount,
+            priceLimit: maxPrice,
+            balanceInDecrease: BigNumber.from('49815318417480256896'),
+            balanceOutIncrease: BigNumber.from('49974976267007997981'),
+            revertMessage: '',
+        })
+
+        console.log("--------------- Alice #1 burn ---------------");
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-80',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('24907659208740128448'),
+            balanceOutIncrease: BigNumber.from('49987513124744754071'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            expectedUpper: '-40',
+            revertMessage: '',
+        });
+
+        await validateSync(-40);
+        await validateSync(-60);
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount,
+            priceLimit: maxPrice,
+            balanceInDecrease: BigNumber.from('37286844237106854770'),
+            balanceOutIncrease: BigNumber.from('37556265921744461147'),
+            revertMessage: '',
+        });
+        await validateSync(-80);
+
+        console.log("--------------- Alice #2 Burn -------------");
+
+        // Notice that Alice is able to burn for more than the 25 tokens she has left.
+        // This is because we do not enter the else if in section1 so our claimPriceLast
+        // is never updated. This allows Alice to get the tokens from tick -20 twice.
+        // Alice will burn for ~ 37 tokens but should only be allowed to burn for the
+        // 25 she has left.
+        // Bob will be a victim of this and only receive ~ 87 tokens for burning his 
+        // position of 100 tokens
+        // The fix for this is to allow this case to enter the else if in
+        // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
+
+        // This shows the same issue from https://github.com/GuardianAudits/Poolsharks-Cover/pull/13
+        // In a more critical way.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-80',
+            claim: '-80',
+            upper: '-40',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('12428948079035618256'),
+            balanceOutIncrease: BigNumber.from('12506243434503093221'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+
+        console.log("--------------- Bob #2 Burn -------------");
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '-80',
+            claim: '-80',
+            upper: '-0',
+            liquidityAmount: bobLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('49765555366811364960'),
+            balanceOutIncrease: BigNumber.from('49975001251999693577'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
