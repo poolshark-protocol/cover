@@ -70,11 +70,8 @@ contract CoverPool is
         uint256 liquidityMinted;
         (params, liquidityMinted) = Positions.validate(params, state);
 
-        if (params.zeroForOne) {
-            _transferIn(token0, params.amount);
-        } else {
-            _transferIn(token1, params.amount);
-        }
+        if (params.amount > 0)
+            _transferIn(params.zeroForOne ? token0 : token1, params.amount);
         // recreates position if required
         (state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1,
