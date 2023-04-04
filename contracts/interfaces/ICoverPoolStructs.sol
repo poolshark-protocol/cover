@@ -84,6 +84,14 @@ interface ICoverPoolStructs {
         bool collect;
     }
 
+    struct CollectParams {
+        address to; // address(0) should revert
+        int24 lower;
+        int24 claim;
+        int24 upper;
+        bool zeroForOne;
+    }
+
     //TODO: should we have a recipient field here?
     struct AddParams {
         address owner;
