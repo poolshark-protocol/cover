@@ -91,28 +91,30 @@ contract CoverPool is
                 0
             )
         );
-        Positions.add(
-            params.zeroForOne ? positions0 : positions1,
-            params.zeroForOne ? ticks0 : ticks1,
-            tickMap,
-            state,
-            AddParams(
+        if (params.amount > 0) {
+            Positions.add(
+                params.zeroForOne ? positions0 : positions1,
+                params.zeroForOne ? ticks0 : ticks1,
+                tickMap,
+                state,
+                AddParams(
+                    params.to,
+                    params.lower,
+                    params.claim,
+                    params.upper,
+                    params.zeroForOne,
+                    uint128(liquidityMinted)
+                )
+            );
+            emit Mint(
                 params.to,
                 params.lower,
-                params.claim,
                 params.upper,
+                params.claim,
                 params.zeroForOne,
                 uint128(liquidityMinted)
-            )
-        );
-        emit Mint(
-            params.to,
-            params.lower,
-            params.upper,
-            params.claim,
-            params.zeroForOne,
-            uint128(liquidityMinted)
-        );
+            );
+        }
         _collect(
             CollectParams(
                 params.to, //address(0) goes to msg.sender
