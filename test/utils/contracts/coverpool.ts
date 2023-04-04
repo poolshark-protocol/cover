@@ -122,6 +122,15 @@ export async function getTick(isPool0: boolean, tickIndex: number, print: boolea
     return tick
 }
 
+export async function getPositionLiquidity(isPool0: boolean, owner: string, lower: number, upper: number, print: boolean = false): Promise<BigNumber> {
+    let positionLiquidity: BigNumber = isPool0 ? (await hre.props.coverPool.positions0(owner, lower, upper)).liquidity
+                                               : (await hre.props.coverPool.positions1(owner, lower, upper)).liquidity;
+    if (print) {
+        console.log('position liquidity:', positionLiquidity.toString())
+    }
+    return positionLiquidity
+}
+
 export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string) {
     /// get tick node status before
 

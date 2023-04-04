@@ -16,6 +16,7 @@ import {
     getLiquidity,
     getPrice,
     getTick,
+    getPositionLiquidity,
 } from '../utils/contracts/coverpool'
 
 // TODO: ✔ pool0 - Should handle partial mint (479ms)
@@ -1167,6 +1168,7 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
         }
+
         await validateBurn({
             signer: hre.props.bob,
             lower: '-80',
@@ -1208,6 +1210,217 @@ describe('CoverPool Tests', function () {
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
         }
 
+    });
+
+    it("pool0 - Claim on stash tick; Mint after sync; Block overlapping position claim 312", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
+        const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(0)
+        await validateSync(-20)
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            priceLimit: maxPrice,
+            balanceInDecrease: tokenAmount.div(10),
+            balanceOutIncrease: BigNumber.from('10039063382085642276'),
+            revertMessage: '',
+        })
+
+        await getTick(true, -20, debugMode)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-20',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('61630471922511652519'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+        await validateSync(0)
+        await getTick(true, -20, debugMode)
+        await getLiquidity(true, debugMode)
+        await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
+        await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount2,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        await getTick(true, -40, debugMode)
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('61630471922511652519'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: 'UpdatePositionFirstAt(-60, -40)', // Alice cannot claim until she closes her position at (-60, -40)
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            liquidityAmount: aliceLiquidityAmount2,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '', // Alice cannot claim until she closes her position at (-60, -40)
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: aliceLiquidityAmount.div(2).add(1),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('28330464695402705203'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '', // Alice cannot claim until she closes her position at (-60, -40)
+        })
+
+        // Alice cannot claim at this tick since the following tick, -40 is set in the EpochMap when syncing latest
+        // -40 should only be set in the EpochMap if we successfully cross over it.
+        // This can lead to users being able to claim amounts from ticks that have not yet actually
+        // been crossed, potentially perturbing the pool accounting.
+        // In addition to users not being able to claim their filled amounts as shown in this PoC.
+    });
+
+    it("pool0 - Claim on stash tick; Mint again on stash tick", async () => {
+        await validateSync(20);
+        const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
+        const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            claim: '0',
+            upper: '0',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(0)
+        await validateSync(-20)
+
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            priceLimit: maxPrice,
+            balanceInDecrease: tokenAmount.div(10),
+            balanceOutIncrease: BigNumber.from('10039063382085642276'),
+            revertMessage: '',
+        })
+
+        await getTick(true, -20, debugMode)
+
+        await validateSync(0)
+        await getTick(true, -20, debugMode)
+        await getLiquidity(true, debugMode)
+        await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
+        await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount.div(2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('10000000000000000000'),
+            balanceOutIncrease: BigNumber.from('73277601343136835738'),
+            lowerTickCleared: false,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityAmount2,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        await getTick(true, -40, debugMode)
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            liquidityAmount: aliceLiquidityAmount.div(2).add(1).add(aliceLiquidityAmount2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('116683335274777521987'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '', // Alice cannot claim at -20 when she should be able to
+        })
+
+        // Alice cannot claim at this tick since the following tick, -40 is set in the EpochMap when syncing latest
+        // -40 should only be set in the EpochMap if we successfully cross over it.
+        // This can lead to users being able to claim amounts from ticks that have not yet actually
+        // been crossed, potentially perturbing the pool accounting.
+        // In addition to users not being able to claim their filled amounts as shown in this PoC.
     });
 
     it("pool0 - Users cannot claim at the right tick :: GUARDIAN AUDITS", async () => {
@@ -1510,7 +1723,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999996'),
+            balanceOutIncrease: BigNumber.from('99999999999999999997'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -3002,7 +3215,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',

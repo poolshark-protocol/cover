@@ -99,6 +99,7 @@ contract CoverPool is
             AddParams(
                 params.to,
                 params.lower,
+                params.claim,
                 params.upper,
                 params.zeroForOne,
                 uint128(liquidityMinted)

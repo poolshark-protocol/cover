@@ -70,7 +70,6 @@ library Claims {
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
              if (claimTickEpoch <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
-            cache.position.liquidityStashed = 0;
             //TODO: set both booleans here for claim == lower : upper
             params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
@@ -109,10 +108,7 @@ library Claims {
                     revert UpdatePositionFirstAt(params.claim, params.upper);
                 }
             }
-            // 100% of liquidity is stashed
-            //TODO: work through cases with this
-            cache.position.liquidityStashed = cache.position.liquidity;
-            /// @auditor - user cannot add liquidity if auction is active; checked for in Positions.validate()
+            /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
         return (cache, false);
     }
