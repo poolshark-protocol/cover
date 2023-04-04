@@ -465,6 +465,7 @@ library Epochs {
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
         stashTick.liquidityDelta += int128(currentLiquidity);
+        stashTick.liquidityDelta -= int128(stashTick.liquidityDeltaMinus);
         return (stashTick);
     }
 }

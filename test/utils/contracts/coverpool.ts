@@ -455,7 +455,6 @@ export async function validateBurn(params: ValidateBurnParams) {
     const revertMessage = params.revertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
-    console.log(params.expectedLower)
 
     let balanceInBefore
     let balanceOutBefore
@@ -537,7 +536,6 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        console.log(expectedUpper)
         positionAfter = await hre.props.coverPool.positions0(signer.address, lower, expectedUpper ? expectedUpper : claim)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(lower)
