@@ -113,6 +113,15 @@ contract CoverPool is
             params.zeroForOne,
             uint128(liquidityMinted)
         );
+        _collect(
+            CollectParams(
+                params.to, //address(0) goes to msg.sender
+                params.lower,
+                params.claim,
+                params.upper,
+                params.zeroForOne
+            )
+        );
         globalState = state;
     }
 
