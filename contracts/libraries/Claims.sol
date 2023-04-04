@@ -156,11 +156,11 @@ library Claims {
         uint256 percentInDelta; uint256 percentOutDelta;
         if(cache.deltas.amountInDeltaMax > 0) {
             percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
-            console.log('percentInDelta: ', percentInDelta);
+            // console.log('percentInDelta: ', percentInDelta);
             percentInDelta = percentInDelta > 1e38 ? 1e38 : percentInDelta;
             if (cache.deltas.amountOutDeltaMax > 0) {
                 percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
-                console.log('percentOutDelta:', percentOutDelta);
+                // console.log('percentOutDelta:', percentOutDelta);
                 percentOutDelta = percentOutDelta > 1e38 ? 1e38 : percentOutDelta;
             }
         }
