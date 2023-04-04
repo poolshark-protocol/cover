@@ -765,8 +765,6 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("--------------- First Burn -------------");
-
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -790,9 +788,6 @@ describe('CoverPool Tests', function () {
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
 
         await validateSync(-80);
-
-
-        console.log("--------------- Second Burn -------------");
 
         // Notice that the following burn reverts -- if the subtraction from the end tick in section2
         // is removed the double counting no longer occurs -- and the burn can succeed.
@@ -1506,7 +1501,7 @@ describe('CoverPool Tests', function () {
     it("pool0 - underflow when claiming for the second time :: GUARDIAN AUDITS 58", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
-        console.log('first mint')
+
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1526,7 +1521,7 @@ describe('CoverPool Tests', function () {
         await validateSync(-20)
 
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("24951283310825598484485");
-        console.log('first swap')
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1546,7 +1541,7 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
         }
-        console.log('first burn')
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -1577,7 +1572,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-60);
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-        console.log('second swap')
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -1588,8 +1583,9 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('12518755307248153715'),
             revertMessage: '',
         });
+
         await validateSync(-80);
-        console.log('second burn')
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -1603,10 +1599,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '', 
         });
-
     });
-
-
 
     it("pool0 - burn leading to division by 0 :: GUARDIAN AUDITS 61", async () => {
         await validateSync(20);
@@ -1657,6 +1650,83 @@ describe('CoverPool Tests', function () {
 
     });
 
+    it('pool0 - should not have incorrect pool liquidity when final tick of position crossed :: GUARDIAN AUDITS', async function () {
+        validateSync(0)
+        const aliceLiquidityIncrease = BigNumber.from("49902591570441687020675")
+
+        // Alice mints a position from -20 -> -60
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-60',
+            claim: '-20',
+            upper: '-20',
+            amount: tokenAmount,
+            zeroForOne: true,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: aliceLiquidityIncrease,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateSync(-20);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(aliceLiquidityIncrease);
+
+        await validateSync(-40);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(aliceLiquidityIncrease);
+
+        // Stash liquidity delta on tick -60
+        await validateSync(-20);
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(0);
+
+        await validateSync(-40);
+        await validateSync(-60);
+        // There is active liquidity at the end of Alice's position
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq(BN_ZERO);
+
+        // Swap being performed with Alice's liquidity at the end of her position
+        await validateSwap({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            zeroForOne: false,
+            amountIn: tokenAmount.div(10),
+            priceLimit: BigNumber.from('79148977909814923576066331264'),
+            balanceInDecrease: BN_ZERO,
+            balanceOutIncrease: BN_ZERO,
+            revertMessage: '',
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-20',
+            liquidityAmount: BigNumber.from('1'),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: 'WrongTickClaimedAt()',
+        });
+
+        await validateSync(-80);
+        // Still can't burn
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-60',
+            upper: '-20',
+            liquidityAmount: BigNumber.from('1'),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+    });
 
     it('pool0 - Should move TWAP in range, fill, sync lower tick, and clear stash deltas 57', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
