@@ -60,6 +60,20 @@ library Epochs {
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
         });
 
+                // Uncomment the fix below to initialize the next tick if it doesn't exist
+
+        // Get the next tick number
+        int24 nextTick0 = state.latestTick - state.tickSpread;
+        int24 nextTick1 = state.latestTick + state.tickSpread;
+
+        // Check if the nextTick doesn't exist
+        if (!TickMap.get(tickMap, nextTick0)) {
+            
+        }
+        if (!TickMap.get(tickMap, nextTick1)) {
+            TickMap.set(tickMap, nextTick1);
+        }
+
         while (true) {
             // get values from current auction
             (cache, pool0) = _rollover(state, cache, pool0, true);

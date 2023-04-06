@@ -1008,6 +1008,187 @@ describe('CoverPool Tests', function () {
 
     });
 
+    
+    it("pool0 - multiple tick length jumps should not cause users to lose assets :: GUARDIAN AUDITS", async () => {
+        // Note: unused, way to initialize all the ticks in the range manually
+        let liquidityAmountBob = hre.ethers.utils.parseUnits("99855108194609381495771", 0);
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '20',
+            claim: '20',
+            upper: '40',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmountBob,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '60',
+            claim: '60',
+            upper: '80',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from("99655607520258884066351"),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '100',
+            claim: '100',
+            upper: '120',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from("99456505428612725961158"),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '20',
+            claim: '20',
+            upper: '40',
+            liquidityAmount: liquidityAmountBob,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '60',
+            claim: '60',
+            upper: '80',
+            liquidityAmount: BigNumber.from("99655607520258884066351"),
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '100',
+            claim: '100',
+            upper: '120',
+            liquidityAmount: BigNumber.from("99456505428612725961158"),
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+        await validateSync(-20);
+        const liquidityAmount2 = hre.ethers.utils.parseUnits('16617549983581976690927', 0);
+        liquidityAmountBob = hre.ethers.utils.parseUnits("99855108194609381495771", 0);
+
+        const aliceLiquidityAmount = BigNumber.from('0')
+        const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
+
+        // console.log("--------------- Alice First mint -------------");
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '0',
+            claim: '0',
+            upper: '120',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount2,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+        // console.log("--------------- Sync 0 -------------");
+        await validateSync(0)
+        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
+        // console.log("--------------- Sync 20 -------------");
+        await validateSync(20)
+        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
+
+        // console.log("--------------- Sync 40 -------------");
+        await validateSync(40);
+        expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
+
+        // console.log("--------------- Alice #1 burn ---------------");
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '0',
+            claim: '40',
+            upper: '120',
+            liquidityAmount: BigNumber.from('0'),
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('33266692264193520416'),
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+
+        // console.log("--------------- Sync $120 -------------");
+        await validateSync(120);
+
+
+        // console.log("--------------- Alice #2 Burn -------------");
+
+        // When alice burns she realizes an errant loss of 50 out tokens.
+        // This is because the syncLatest to 120 only increases the amountOutDelta
+        // by an amount calculated from the tick 40 to tick 60 range, rather than the tick
+        // 40 to tick 120 range.
+
+        // The while loop for pool1 in syncLatest will only execute a single time since there
+        // are no existing ticks between tick 40 and tick 120. In the _rollover for this
+        // single execution the amountOutDelta will be constricted to the 40 to 60 range due to
+        // line 343, where the if case fails and the currentPrice is not able to be set to the accumPrice.
+
+        // The if case prevents amountDelta calculations from straddling the current pool.price.
+        // One fix however is to allow such a straddling for the amountDelta in this particular scenario.
+
+        // Another fix is to initialize the next tick before setting the nextTickToAccum when initializing the cache.
+        // This way the while loop is able to continue for a second iteration and complete the rest of the range
+        // that was previously curtailed due to the straddling.
+        // This fix has been implemented in the syncLatest function, uncomment it and you will see that alice receives
+        // all of her tokens back as expected.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '120',
+            upper: '120',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('66733307735806479579'), // Notice Alice loses half her position!
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+    });
+
     it("pool0 - liquidity should not be locked due to Deltas.to calculation :: GUARDIAN AUDITS", async function () {
         await validateSync(20);
 
