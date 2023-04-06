@@ -302,10 +302,9 @@ library Positions {
                 // only remove once if final tick of position
                 cache.removeLower = false;
                 cache.removeUpper = false;
-            }
-            if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                    params.zeroForOne ? cache.removeUpper = true 
-                                      : cache.removeLower = true;
+            } else {
+                params.zeroForOne ? cache.removeUpper = true 
+                                  : cache.removeLower = true;
             }
             Ticks.remove(
                 ticks,
