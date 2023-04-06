@@ -42,7 +42,7 @@ library Positions {
         if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
         if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
         if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
-        // if (params.amount == 0) revert InvalidPositionAmount();
+        if (params.amount == 0) revert InvalidPositionAmount();
         if (params.lower >= params.upper)
             revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {

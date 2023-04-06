@@ -1636,14 +1636,8 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('116683335274777521987'),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: '', // Alice cannot claim at -20 when she should be able to
+            revertMessage: '',
         })
-
-        // Alice cannot claim at this tick since the following tick, -40 is set in the EpochMap when syncing latest
-        // -40 should only be set in the EpochMap if we successfully cross over it.
-        // This can lead to users being able to claim amounts from ticks that have not yet actually
-        // been crossed, potentially perturbing the pool accounting.
-        // In addition to users not being able to claim their filled amounts as shown in this PoC.
     });
 
     it("pool0 - Users cannot claim at the right tick :: GUARDIAN AUDITS", async () => {
