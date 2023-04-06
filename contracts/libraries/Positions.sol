@@ -300,8 +300,8 @@ library Positions {
         if ((params.amount > 0)) {
             if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
                 // only remove once if final tick of position
-                params.zeroForOne ? cache.removeUpper = false 
-                                  : cache.removeLower = false;
+                cache.removeLower = false;
+                cache.removeUpper = false;
             }
             if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
                     params.zeroForOne ? cache.removeUpper = true 

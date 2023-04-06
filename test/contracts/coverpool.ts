@@ -1212,7 +1212,7 @@ describe('CoverPool Tests', function () {
 
     });
 
-    it.skip("pool0 - Claim on stash tick; Mint again on start tick in same transaction :: alphak3y 313", async () => {
+    it("pool0 - Claim on stash tick; Mint again on start tick in same transaction :: alphak3y 313", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
         const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
@@ -1248,61 +1248,59 @@ describe('CoverPool Tests', function () {
 
         await getTick(true, -20, debugMode)
 
-        await validateSync(0)
+        await validateSync(20)
         await getTick(true, -20, debugMode)
         await getLiquidity(true, debugMode)
         await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
         await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
 
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-60',
-        //     claim: '-40',
-        //     upper: '0',
-        //     liquidityAmount: BN_ZERO,
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('10000000000000000000'),
-        //     balanceOutIncrease: BigNumber.from('56594266068359313750'),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: false,
-        //     revertMessage: '', // Alice cannot claim at -20 when she should be able to
-        // })
+        getTick(true, 0, debugMode)
 
+        // minting with claim is the same outcome as burning with claim
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
             claim: '-40',
             upper: '0',
-            amount: BN_ZERO,
+            amount: tokenAmount,
             zeroForOne: true,
-            balanceInDecrease: BN_ZERO,
-            balanceOutIncrease: BigNumber.from('56594266068359313750'),
-            liquidityIncrease: BN_ZERO,
-            upperTickCleared: true,
+            balanceInDecrease: BigNumber.from('43405733931640686251'), // alice gets amounOut back
+            balanceOutIncrease: BigNumber.from('10000000000000000000'),
+            liquidityIncrease: aliceLiquidityAmount,
+            positionLiquidityChange: BigNumber.from('0'),
+            upperTickCleared: false,
             lowerTickCleared: false,
             revertMessage: ''
         })
         // await getTick(true, -40, debugMode)
-        // await validateBurn({
-        //     signer: hre.props.alice,
-        //     lower: '-60',
-        //     claim: '-40',
-        //     upper: '-40',
-        //     liquidityAmount: aliceLiquidityAmount.div(2).add(1).add(aliceLiquidityAmount2),
-        //     zeroForOne: true,
-        //     balanceInIncrease: BigNumber.from('0'),
-        //     balanceOutIncrease: BigNumber.from('116683335274777521987'),
-        //     lowerTickCleared: false,
-        //     upperTickCleared: false,
-        //     revertMessage: '', // Alice cannot claim at -20 when she should be able to
-        // })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            liquidityAmount: aliceLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('33366670549555043973'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '', // Alice cannot claim at -20 when she should be able to
+        })
 
-        // Alice cannot claim at this tick since the following tick, -40 is set in the EpochMap when syncing latest
-        // -40 should only be set in the EpochMap if we successfully cross over it.
-        // This can lead to users being able to claim amounts from ticks that have not yet actually
-        // been crossed, potentially perturbing the pool accounting.
-        // In addition to users not being able to claim their filled amounts as shown in this PoC.
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '0',
+            upper: '0',
+            liquidityAmount: aliceLiquidityAmount,
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '', // Alice cannot claim at -20 when she should be able to
+        })
     });
 
     it("pool0 - Claim on stash tick; Mint after sync; Block overlapping position claim 312", async () => {
@@ -1411,7 +1409,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2).add(1),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('28330464695402705203'),
+            balanceOutIncrease: BigNumber.from('28330464695402705204'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '', // Alice cannot claim until she closes her position at (-60, -40)
@@ -1570,7 +1568,7 @@ describe('CoverPool Tests', function () {
         // In addition to users not being able to claim their filled amounts as shown in this PoC.
     });
 
-    it("pool0: twap rate-limiting yields invalid tick :: GUARDIAN AUDITS 58", async function () {
+    it("pool0 - twap rate-limiting yields invalid tick :: GUARDIAN AUDITS 58", async function () {
         await validateSync(20);
 
         await validateMint({

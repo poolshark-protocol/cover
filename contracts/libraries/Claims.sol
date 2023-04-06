@@ -34,6 +34,7 @@ library Claims {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
+
             return (cache, true);
         }
         // if the position has not been crossed into at all
@@ -51,7 +52,7 @@ library Claims {
                     ? params.claim == params.upper && cache.priceUpper != pool.price
                     : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
             ) && params.claim == state.latestTick
-        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) return (cache, true); } /// @dev - nothing to update if pool price hasn't moved
+        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {return (cache, true);} } /// @dev - nothing to update if pool price hasn't moved
         
         // claim tick sanity checks
         else if (
@@ -70,8 +71,6 @@ library Claims {
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
              if (claimTickEpoch <= cache.position.accumEpochLast)
                 revert WrongTickClaimedAt();
-            //TODO: set both booleans here for claim == lower : upper
-            params.zeroForOne ? cache.removeLower = false : cache.removeUpper = false;
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
@@ -82,16 +81,6 @@ library Claims {
                 //TODO: search for claim tick if necessary
                 //TODO: limit search to within 10 closest words
                 revert WrongTickClaimedAt();
-            }
-            // check if liquidity removal required
-            if (params.amount > 0) {
-                /// @dev - check if liquidity removal required
-                cache.removeLower = params.zeroForOne
-                    ? true //TODO: if claim == lower then don't clear liquidity
-                    : claimTickNextAccumEpoch <= cache.position.accumEpochLast;
-                cache.removeUpper = params.zeroForOne
-                    ? claimTickNextAccumEpoch <= cache.position.accumEpochLast
-                    : true; //TODO: if claim == lower then don't clear liquidity
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
