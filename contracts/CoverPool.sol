@@ -70,11 +70,8 @@ contract CoverPool is
         uint256 liquidityMinted;
         (params, liquidityMinted) = Positions.validate(params, state);
 
-        if (params.zeroForOne) {
-            _transferIn(token0, params.amount);
-        } else {
-            _transferIn(token1, params.amount);
-        }
+        if (params.amount > 0)
+            _transferIn(params.zeroForOne ? token0 : token1, params.amount);
         // recreates position if required
         (state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1,
@@ -91,26 +88,38 @@ contract CoverPool is
                 0
             )
         );
-        Positions.add(
-            params.zeroForOne ? positions0 : positions1,
-            params.zeroForOne ? ticks0 : ticks1,
-            tickMap,
-            state,
-            AddParams(
+        if (params.amount > 0) {
+            Positions.add(
+                params.zeroForOne ? positions0 : positions1,
+                params.zeroForOne ? ticks0 : ticks1,
+                tickMap,
+                state,
+                AddParams(
+                    params.to,
+                    params.lower,
+                    params.claim,
+                    params.upper,
+                    params.zeroForOne,
+                    uint128(liquidityMinted)
+                )
+            );
+            emit Mint(
                 params.to,
                 params.lower,
                 params.upper,
+                params.claim,
                 params.zeroForOne,
                 uint128(liquidityMinted)
+            );
+        }
+        _collect(
+            CollectParams(
+                params.to, //address(0) goes to msg.sender
+                params.lower,
+                params.claim,
+                params.upper,
+                params.zeroForOne
             )
-        );
-        emit Mint(
-            params.to,
-            params.lower,
-            params.upper,
-            params.claim,
-            params.zeroForOne,
-            uint128(liquidityMinted)
         );
         globalState = state;
     }
@@ -161,30 +170,15 @@ contract CoverPool is
         }
         // force collection
         emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
-        if (params.collect) {
-             mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = params.zeroForOne ? positions0 : positions1;
-            params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
-
-            // store amounts for transferOut
-            uint128 amountIn = positions[msg.sender][params.lower][params.upper].amountIn;
-            uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
-
-            // console.log('amountIn:', amountIn);
-            // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-            // console.log('amountOut:', amountOut);
-            // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
-
-            // zero out balances
-            positions[msg.sender][params.lower][params.upper].amountIn = 0;
-            positions[msg.sender][params.lower][params.upper].amountOut = 0;
-
-            /// transfer out balances
-            // transfer out to params.to
-            _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
-            _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
-
-            emit Collect(msg.sender, amountIn, amountOut);
-        }
+        _collect(
+            CollectParams(
+                params.to, //address(0) goes to msg.sender
+                params.lower,
+                params.claim,
+                params.upper,
+                params.zeroForOne
+            )
+        );
         globalState = state;
     }
 
@@ -290,6 +284,40 @@ contract CoverPool is
         _transferOut(feeTo, token1, token1Fees);
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
+    }
+
+    function _collect(
+        CollectParams memory params
+    ) internal {
+        mapping(address => mapping(int24 => mapping(int24 => Position))) storage positions = params.zeroForOne ? positions0 : positions1;
+        params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
+
+        // store amounts for transferOut
+        uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
+        uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
+
+        // console.log('amountIn:', amountIn);
+        // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
+        // console.log('amountOut:', amountOut);
+        // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
+
+        /// zero out balances and transfer out
+        if (amountIn > 0) {
+            positions[msg.sender][params.lower][params.upper].amountIn = 0;
+            _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
+        } 
+        if (amountOut > 0) {
+            positions[msg.sender][params.lower][params.upper].amountOut = 0;
+            _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
+        } 
+
+        // emit event
+        if (amountIn > 0 || amountOut > 0) 
+            emit Collect(
+                msg.sender,
+                params.zeroForOne ? amountIn : amountOut,
+                params.zeroForOne ? amountOut : amountIn
+            );
     }
 
     //TODO: zap into LP position

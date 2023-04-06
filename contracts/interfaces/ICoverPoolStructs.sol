@@ -53,11 +53,10 @@ interface ICoverPoolStructs {
     }
 
     struct Position {
-        uint32  accumEpochLast; // last epoch this position was updated at
         uint128 liquidity; // expected amount to be used not actual
-        uint128 liquidityStashed; // what percent of this position is stashed liquidity
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
+        uint32  accumEpochLast; // last epoch this position was updated at
         uint160 claimPriceLast; // highest price claimed at
     }
 
@@ -85,10 +84,19 @@ interface ICoverPoolStructs {
         bool collect;
     }
 
+    struct CollectParams {
+        address to; // address(0) should revert
+        int24 lower;
+        int24 claim;
+        int24 upper;
+        bool zeroForOne;
+    }
+
     //TODO: should we have a recipient field here?
     struct AddParams {
         address owner;
         int24 lower;
+        int24 claim;
         int24 upper;
         bool zeroForOne;
         uint128 amount;

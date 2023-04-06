@@ -19,13 +19,6 @@ export interface PoolState {
     price: BigNumber
 }
 
-export interface TickNode {
-    previousTick: number
-    nextTick: number
-    accumEpochLast: number
-    liquidityDeltaMinus: BigNumber
-}
-
 export interface Tick {
     liquidityDelta: BigNumber
     liquidityDeltaMinus: BigNumber
@@ -50,7 +43,9 @@ export interface ValidateMintParams {
     amount: BigNumber
     zeroForOne: boolean
     balanceInDecrease: BigNumber
+    balanceOutIncrease?: BigNumber
     liquidityIncrease: BigNumber
+    positionLiquidityChange?: BigNumber
     upperTickCleared: boolean
     lowerTickCleared: boolean
     revertMessage: string
@@ -120,6 +115,15 @@ export async function getTick(isPool0: boolean, tickIndex: number, print: boolea
         console.log(tickIndex,'tick:', tick.toString())
     }
     return tick
+}
+
+export async function getPositionLiquidity(isPool0: boolean, owner: string, lower: number, upper: number, print: boolean = false): Promise<BigNumber> {
+    let positionLiquidity: BigNumber = isPool0 ? (await hre.props.coverPool.positions0(owner, lower, upper)).liquidity
+                                               : (await hre.props.coverPool.positions1(owner, lower, upper)).liquidity;
+    if (print) {
+        console.log('position liquidity:', positionLiquidity.toString())
+    }
+    return positionLiquidity
 }
 
 export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string) {
@@ -275,18 +279,9 @@ export async function validateMint(params: ValidateMintParams) {
     const collectRevertMessage = params.collectRevertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
+    const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : 0
 
-    //collect first to recreate positions if necessary
-    // if (!collectRevertMessage) {
-    //     const txn = await hre.props.coverPool
-    //         .connect(params.signer)
-    //         .collect(lower, claim, upper, zeroForOne)
-    //     await txn.wait()
-    // } else {
-    //     await expect(
-    //         hre.props.coverPool.connect(params.signer).collect(lower, claim, upper, zeroForOne)
-    //     ).to.be.revertedWith(collectRevertMessage)
-    // }
+
     let balanceInBefore
     let balanceOutBefore
     if (zeroForOne) {
@@ -364,7 +359,7 @@ export async function validateMint(params: ValidateMintParams) {
     }
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
-    expect(balanceOutBefore).to.be.equal(balanceOutAfter)
+    expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
 
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
@@ -437,7 +432,8 @@ export async function validateMint(params: ValidateMintParams) {
             expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
         }
     }
-    expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(liquidityIncrease)
+    const positionLiquidityChange = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityIncrease
+    expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(positionLiquidityChange)
 }
 
 export async function validateBurn(params: ValidateBurnParams) {

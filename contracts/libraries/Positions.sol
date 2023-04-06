@@ -9,6 +9,7 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
+import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -41,7 +42,7 @@ library Positions {
         if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
         if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
         if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
-        if (params.amount == 0) revert InvalidPositionAmount();
+        // if (params.amount == 0) revert InvalidPositionAmount();
         if (params.lower >= params.upper)
             revert InvalidPositionBoundsOrder();
         if (params.zeroForOne) {
@@ -127,7 +128,7 @@ library Positions {
             }
         }
         // Positions.update() called first before additional mints
-        if (cache.position.claimPriceLast != 0) { revert ClaimPriceLastNonZero(); }
+        // if (cache.position.claimPriceLast != 0) { revert ClaimPriceLastNonZero(); }
         
         // add liquidity to ticks
         Ticks.insert(
@@ -297,16 +298,19 @@ library Positions {
         //TODO: handle claim of current auction and second mint
         
         if ((params.amount > 0)) {
-            if (params.claim != (params.zeroForOne ? params.upper : params.lower)) {
-                //TODO: switch to being the current price if necessary
-                params.zeroForOne ? cache.removeUpper = false : cache.removeLower = false;
+            if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
+                // only remove once if final tick of position
+                cache.removeLower = false;
+                cache.removeUpper = false;
+            } else {
+                params.zeroForOne ? cache.removeUpper = true 
+                                  : cache.removeLower = true;
             }
             Ticks.remove(
                 ticks,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 uint128(uint128(params.amount)),
-                // cache.position.liquidityStashed,
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper
