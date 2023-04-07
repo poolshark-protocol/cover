@@ -246,7 +246,7 @@ library Claims {
             (
                 amountInFilledMax,
                 amountOutUnfilledMax
-            ) = Deltas.max(
+            ) = Deltas.maxRoundUp(
                 cache.position.liquidity,
                 cache.position.claimPriceLast,
                 cache.priceClaim,

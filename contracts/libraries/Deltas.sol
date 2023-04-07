@@ -273,13 +273,13 @@ library Deltas {
                     liquidity,
                     priceStart,
                     priceEnd,
-                    false
+                    true
                 )
                 : DyDxMath.getDx(
                     liquidity,
                     priceEnd,
                     priceStart,
-                    false
+                    true
                 )
         );
         amountOutDeltaMax = uint128(
@@ -288,13 +288,13 @@ library Deltas {
                     liquidity,
                     priceStart,
                     priceEnd,
-                    false
+                    true
                 )
                 : DyDxMath.getDy(
                     liquidity,
                     priceEnd,
                     priceStart,
-                    false
+                    true
                 )
         );
     }

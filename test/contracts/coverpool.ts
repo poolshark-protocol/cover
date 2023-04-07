@@ -44,7 +44,7 @@ describe('CoverPool Tests', function () {
     const debugMode           = false
     const balanceCheck        = false
     const deltaMaxBeforeCheck = false
-    const deltaMaxAfterCheck  = false
+    const deltaMaxAfterCheck  = true
     const latestTickCheck     = false
 
     //every test should clear out all liquidity
