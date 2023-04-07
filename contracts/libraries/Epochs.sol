@@ -44,6 +44,14 @@ library Epochs {
         // increase epoch counter
         state.accumEpoch += 1;
 
+        // Get the next tick number
+        int24 nextTick0 = state.latestTick - state.tickSpread;
+        int24 nextTick1 = state.latestTick + state.tickSpread;
+
+        // Check if the nextTick doesn't exist
+        TickMap.set(tickMap, nextTick0);
+        TickMap.set(tickMap, nextTick1);
+
         // setup cache
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0: state.latestTick, // above
@@ -59,20 +67,6 @@ library Epochs {
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
         });
-
-                // Uncomment the fix below to initialize the next tick if it doesn't exist
-
-        // Get the next tick number
-        int24 nextTick0 = state.latestTick - state.tickSpread;
-        int24 nextTick1 = state.latestTick + state.tickSpread;
-
-        // Check if the nextTick doesn't exist
-        if (!TickMap.get(tickMap, nextTick0)) {
-            
-        }
-        if (!TickMap.get(tickMap, nextTick1)) {
-            TickMap.set(tickMap, nextTick1);
-        }
 
         while (true) {
             // get values from current auction
@@ -310,6 +304,7 @@ library Epochs {
             /// @auditor - deltas should be zeroed out here
             return (cache, pool);
         }
+        //crossPrice based on next tick in direction of swap
         uint160 crossPrice = TickMath.getSqrtRatioAtTick(
             isPool0 ? cache.nextTickToCross0 : cache.nextTickToCross1
         );

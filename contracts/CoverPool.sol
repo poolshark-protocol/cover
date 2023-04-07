@@ -74,11 +74,11 @@ contract CoverPool is
             _transferIn(params.zeroForOne ? token0 : token1, params.amount);
         // recreates position if required
         (state,) = Positions.update(
-            params.zeroForOne ? positions0 : positions1,
-            params.zeroForOne ? ticks0 : ticks1,
-            tickMap,
+            params.zeroForOne ? positions0 : positions1, //TODO: start and end; one mapping
+            params.zeroForOne ? ticks0 : ticks1, //TODO: mappings of mappings; pass params.zeroForOne
+            tickMap, //TODO: merge epoch and tick map
             state,
-            params.zeroForOne ? pool0 : pool1,
+            params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
                 params.to,
                 params.lower,
