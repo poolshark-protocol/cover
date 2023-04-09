@@ -20,18 +20,22 @@ library Positions {
     error UpdatePositionFirstAt(int24, int24);
     error InvalidLowerTick();
     error InvalidUpperTick();
+    error InvalidPositionWidth();
     error InvalidPositionAmount();
     error InvalidPositionBoundsOrder();
-    error InvalidPositionBoundsTwap();
+    error PositionInsideSafetyWindow();
     error NotEnoughPositionLiquidity();
     error NotImplementedYet();
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
+    int24  internal constant MIN_POSITION_WIDTH = 5; //TODO: move to CoverPoolManager
 
     function validate(
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state
+        // uint16 minPositionWidth,
+        // uint16 minAuctionAmount
     ) external pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256 liquidityMinted
@@ -44,10 +48,15 @@ library Positions {
         if (params.amount == 0) revert InvalidPositionAmount();
         if (params.lower >= params.upper)
             revert InvalidPositionBoundsOrder();
-        if (params.zeroForOne) {
-            if (params.lower >= state.latestTick) revert InvalidPositionBoundsTwap();
+
+        // enforce safety window
+        int24 positionStart; 
+        if (params.zeroForOne) {    
+            positionStart = state.latestTick;
+            if (params.lower >= positionStart) revert PositionInsideSafetyWindow(); 
         } else {
-            if (params.upper <= state.latestTick) revert InvalidPositionBoundsTwap();
+            positionStart = state.latestTick;
+            if (params.upper <= positionStart) revert PositionInsideSafetyWindow();
         }
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(params.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(params.upper));
@@ -81,12 +90,18 @@ library Positions {
             }
         }
 
-        // recalculate liquidity minted based on new amount
-        //TODO: move liquidityMinted here
-
+        // enforce minimum position width
+        // if ((params.upper - params.lower) < state.tickSpread * MIN_POSITION_WIDTH) revert InvalidPositionWidth();
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
-        if (params.lower == params.upper) revert InvalidPositionBoundsTwap();
+        if (params.lower == params.upper) revert InvalidPositionWidth();
 
+        // enforce minimum position liquidity
+        // amount per auction should not be less than some value
+        // that value is dependent on the average price of the range they cover
+        // this minimum value can be overcome by fractionalizing a position between multiple users
+        // we have to consider token decimals as well
+        // sync fee should be greater than zero on average for each auction
+ 
         return (
             params,
             liquidityMinted

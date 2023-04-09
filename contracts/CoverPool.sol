@@ -4,8 +4,9 @@ pragma solidity ^0.8.13;
 import './interfaces/ICoverPool.sol';
 import './interfaces/IRangePool.sol';
 import './interfaces/ICoverPoolManager.sol';
-import './base/modifiers/CoverPoolModifiers.sol';
 import './base/events/CoverPoolEvents.sol';
+import './base/structs/CoverPoolFactoryStructs.sol';
+import './base/modifiers/CoverPoolModifiers.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Ticks.sol';
@@ -16,6 +17,7 @@ import './libraries/Epochs.sol';
 contract CoverPool is
     ICoverPool,
     CoverPoolEvents,
+    CoverPoolFactoryStructs,
     CoverPoolModifiers,
     SafeTransfers
 {
@@ -24,23 +26,20 @@ contract CoverPool is
     address internal immutable token1;
 
     constructor(
-        address _inputPool,
-        int16   _tickSpread,
-        uint16  _twapLength,
-        uint16  _auctionLength
+        CoverPoolParams memory params
     ) {
         // set addresses
         factory   = msg.sender;
-        token0    = IRangePool(_inputPool).token0();
-        token1    = IRangePool(_inputPool).token1();
+        token0    = IRangePool(params.inputPool).token0();
+        token1    = IRangePool(params.inputPool).token1();
 
         // set global state
         GlobalState memory state;
-        state.tickSpread    = _tickSpread;
-        state.twapLength    = _twapLength;
-        state.auctionLength = _auctionLength;
+        state.tickSpread    = params.tickSpread;
+        state.twapLength    = params.twapLength;
+        state.auctionLength = params.auctionLength;
         state.genesisBlock  = uint32(block.number);
-        state.inputPool     = IRangePool(_inputPool);
+        state.inputPool     = IRangePool(params.inputPool);
         state.protocolFees  = ProtocolFees(0,0);
 
         // set initial ticks

@@ -821,7 +821,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
         const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
 
-        console.log("--------------- Alice First mint -------------");
+        if (debugMode) console.log("--------------- Alice First mint -------------");
 
         await validateMint({
             signer: hre.props.alice,
@@ -838,7 +838,6 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("--------------- Bob First mint -------------");
         await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
@@ -870,7 +869,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("--------------- Alice #1 burn ---------------");
+        if (debugMode) console.log("--------------- Alice #1 burn ---------------");
 
         await validateBurn({
             signer: hre.props.alice,
@@ -880,7 +879,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24907659208740128448'),
-            balanceOutIncrease: BigNumber.from('49987513124744754071'),
+            balanceOutIncrease: BigNumber.from('49987513124744754072'),
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-40',
@@ -902,7 +901,7 @@ describe('CoverPool Tests', function () {
         });
         await validateSync(-80);
 
-        console.log("--------------- Alice #2 Burn -------------");
+        if (debugMode) console.log("--------------- Alice #2 Burn -------------");
 
         // Notice that Alice is able to burn for more than the 25 tokens she has left.
         // This is because we do not enter the else if in section1 so our claimPriceLast
@@ -930,7 +929,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        console.log("--------------- Bob #2 Burn -------------");
+        if (debugMode) console.log("--------------- Bob #2 Burn -------------");
 
         await validateBurn({
             signer: hre.props.bob,
@@ -939,7 +938,7 @@ describe('CoverPool Tests', function () {
             upper: '-0',
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('49765555366811364960'),
+            balanceInIncrease: BigNumber.from('49765555366811364962'),
             balanceOutIncrease: BigNumber.from('49975001251999693577'),
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -3203,7 +3202,7 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'InvalidPositionBoundsTwap()',
+            revertMessage: 'InvalidPositionWidth()',
         })
 
         // no-op swap
@@ -3270,7 +3269,7 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'InvalidPositionBoundsTwap()',
+            revertMessage: 'PositionInsideSafetyWindow()',
         })
 
         await validateSync(20)
