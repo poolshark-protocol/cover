@@ -306,7 +306,7 @@ library Positions {
                 ticks,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
-                uint128(uint128(params.amount)),
+                params.amount,
                 params.zeroForOne,
                 cache.removeLower,
                 cache.removeUpper
