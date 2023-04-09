@@ -22,8 +22,10 @@ contract CoverPool is
     SafeTransfers
 {
     address public immutable factory;
-    address internal immutable token0;
-    address internal immutable token1;
+    address public immutable token0;
+    address public immutable token1;
+    int16   public immutable minPositionWidth;
+    uint128 public immutable minAuctionAmount;
 
     constructor(
         CoverPoolParams memory params
@@ -32,6 +34,10 @@ contract CoverPool is
         factory   = msg.sender;
         token0    = IRangePool(params.inputPool).token0();
         token1    = IRangePool(params.inputPool).token1();
+        
+        // set immutables
+        minPositionWidth = params.minPositionWidth;
+        minAuctionAmount = params.minAuctionAmount;
 
         // set global state
         GlobalState memory state;
@@ -66,7 +72,7 @@ contract CoverPool is
             state
         );
         uint256 liquidityMinted;
-        (params, liquidityMinted) = Positions.validate(params, state);
+        (params, liquidityMinted) = Positions.validate(params, state, minPositionWidth, minAuctionAmount);
 
         if (params.amount > 0)
             _transferIn(params.zeroForOne ? token0 : token1, params.amount);

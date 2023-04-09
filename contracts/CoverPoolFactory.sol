@@ -66,7 +66,7 @@ contract CoverPoolFactory is
             // get volatility tier config
             (
                 uint16  auctionLength,
-                uint16  minPositionWidth,
+                int16   minPositionWidth,
                 uint128 minAuctionAmount
             ) = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
 
@@ -86,6 +86,7 @@ contract CoverPoolFactory is
                          minAuctionAmount
                      );
         }
+
         // launch pool and save address
         pool = address(new CoverPool(params));
 

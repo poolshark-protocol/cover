@@ -33,9 +33,9 @@ library Positions {
 
     function validate(
         ICoverPoolStructs.MintParams memory params,
-        ICoverPoolStructs.GlobalState memory state
-        // uint16 minPositionWidth,
-        // uint16 minAuctionAmount
+        ICoverPoolStructs.GlobalState memory state,
+        int16   minPositionWidth,
+        uint128 minAuctionAmount
     ) external pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256 liquidityMinted
@@ -52,11 +52,12 @@ library Positions {
         // enforce safety window
         int24 positionStart; 
         if (params.zeroForOne) {    
-            positionStart = state.latestTick;
-            if (params.lower >= positionStart) revert PositionInsideSafetyWindow(); 
+            positionStart = state.latestTick - state.tickSpread * minPositionWidth;
+            if (params.lower > positionStart) revert PositionInsideSafetyWindow(); 
         } else {
-            positionStart = state.latestTick;
-            if (params.upper <= positionStart) revert PositionInsideSafetyWindow();
+            positionStart = state.latestTick + state.tickSpread * minPositionWidth;
+            if (params.upper < positionStart) revert PositionInsideSafetyWindow();
+
         }
         uint256 priceLower = uint256(TickMath.getSqrtRatioAtTick(params.lower));
         uint256 priceUpper = uint256(TickMath.getSqrtRatioAtTick(params.upper));
@@ -91,7 +92,7 @@ library Positions {
         }
 
         // enforce minimum position width
-        // if ((params.upper - params.lower) < state.tickSpread * MIN_POSITION_WIDTH) revert InvalidPositionWidth();
+        if ((params.upper - params.lower) < state.tickSpread * minPositionWidth) revert InvalidPositionWidth();
         if (liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
         if (params.lower == params.upper) revert InvalidPositionWidth();
 

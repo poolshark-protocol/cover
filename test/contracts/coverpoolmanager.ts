@@ -211,13 +211,13 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enableVolatilityTier("100", "20", "20", "20", ethers.utils.parseUnits("1", 18), "1")
+        .enableVolatilityTier("100", "20", "20", "20", "1", ethers.utils.parseUnits("1", 18))
     ).to.be.revertedWith('OwnerOnly()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "40", "40", "40", ethers.utils.parseUnits("1", 18), "5")
+        .enableVolatilityTier("500", "40", "40", "40", "5", ethers.utils.parseUnits("1", 18))
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     // should revert when non-admin calls
@@ -235,7 +235,7 @@ describe('CoverPoolManager Tests', function () {
 
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "30", "30", ethers.utils.parseUnits("1", 18), "5")
+        .enableVolatilityTier("500", "30", "30", "30", "5", ethers.utils.parseUnits("1", 18))
 
     volatilityTierConfig = await
         hre.props.coverPoolManager

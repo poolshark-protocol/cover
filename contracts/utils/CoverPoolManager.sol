@@ -16,7 +16,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public _factory;
     uint16  public immutable MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
 
-    /// @dev - feeTier => tickSpread => twapLength => auctionLength
+    /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
     mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) public volatilityTiers;
     uint16 public protocolFee;
 
@@ -32,7 +32,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         _feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
-        volatilityTiers[500][20][5] = CoverPoolConfig(20, 2, 1e18);
+        /// @dev - 1e18 works for pairs with a stablecoin
+        volatilityTiers[500][20][5] = CoverPoolConfig(20, 1, 1e18);
         emit VolatilityTierEnabled(500, 20, 5, 20, 2, 1e18);
 
         volatilityTiers[500][40][40] = CoverPoolConfig(40, 5, 1e18);
@@ -123,12 +124,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16   tickSpread,
         uint16  twapLength,
         uint16  auctionLength,
-        uint128 minAuctionAmount,
-        uint8   minPositionWidth
+        int16   minPositionWidth,
+        uint128 minAuctionAmount
     ) external onlyOwner {
         if (volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
             revert VolatilityTierAlreadyEnabled();
-        } else if (auctionLength == 0 || minAuctionAmount == 0 || minPositionWidth == 0) {
+        } else if (auctionLength == 0 || minAuctionAmount == 0 || minPositionWidth <= 0) {
             revert VolatilityTierInvalid();
         }
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(auctionLength, minPositionWidth, minAuctionAmount);
