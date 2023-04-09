@@ -301,7 +301,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -373,11 +373,6 @@ library Epochs {
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;
 
-            /// @dev - if auction fully filled amountOutDelta should be zero
-            // if(state.latestTick == cache.nextTickToCross1 && crossPrice == pool.price) {
-            //     currentPrice = pool.price;
-            // }
-
             // amountOut pool has leftover
             uint128 amountOutDelta   = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
             uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
@@ -398,7 +393,7 @@ library Epochs {
         ICoverPoolStructs.Tick memory accumTick,
         ICoverPoolStructs.Deltas memory deltas,
         bool updateAccumDeltas
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateOutputs memory
     ) {
 
@@ -472,7 +467,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas

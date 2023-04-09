@@ -261,14 +261,18 @@ library Positions {
                 return (state, params.claim);
             }
         }
-        
+        if(params.claim == -20 && params.lower == -40) {
+            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
+        }
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
-
+        if(params.claim == -20 && params.lower == -40) {
+            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
+        }
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, state);
         /// @dev - section 2 => position start -> claim tick
-        cache = Claims.section2(ticks, cache, params);
+        cache = Claims.section2(cache, params);
         // check if auction in progress 
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
@@ -280,9 +284,14 @@ library Positions {
 
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
+                if(params.claim == -20 && params.lower == -40) {
+            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
+        }
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);
-
+        if(params.claim == -20 && params.lower == -40) {
+            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
+        }
         // save claim tick
         ticks[params.claim] = cache.claimTick;
         

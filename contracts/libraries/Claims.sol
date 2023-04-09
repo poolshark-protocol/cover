@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-// import './math/DyDxMath.sol';
 import './math/TickMath.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
-import 'hardhat/console.sol';
 
 library Claims {
     error InvalidClaimTick();
@@ -105,7 +103,7 @@ library Claims {
     function getDeltas(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache
@@ -115,11 +113,11 @@ library Claims {
             /// @dev - deltas are applied once per each tick claimed at
             /// @dev - deltas should never be applied if position is not crossed into
             // check if tick already claimed at
+
             bool transferDeltas = (cache.position.claimPriceLast == 0
                                && (params.claim != (params.zeroForOne ? params.upper : params.lower)))
                                || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
                                                      : cache.position.claimPriceLast < cache.priceClaim && cache.position.claimPriceLast != 0);
-            
             if (transferDeltas) {
                 (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
             }
@@ -139,22 +137,21 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         uint256 percentInDelta; uint256 percentOutDelta;
-        if(cache.deltas.amountInDeltaMax > 0) {
+        if(cache.deltas.amountInDeltaMax > 0) { //TODO: if this is zero for some reason we can just give 100% of amountInDelta
             percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
-            // console.log('percentInDelta: ', percentInDelta);
             percentInDelta = percentInDelta > 1e38 ? 1e38 : percentInDelta;
             if (cache.deltas.amountOutDeltaMax > 0) {
                 percentOutDelta = uint256(cache.amountOutUnfilledMax) * 1e38 / uint256(cache.deltas.amountOutDeltaMax);
-                // console.log('percentOutDelta:', percentOutDelta);
                 percentOutDelta = percentOutDelta > 1e38 ? 1e38 : percentOutDelta;
             }
         }
         // if (debugDeltas) {
         //     console.log('final deltas:', cache.deltas.amountInDelta, cache.deltas.amountInDeltaMax);
         //     console.log(cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-        // }   
+        // }  
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
+
         // apply deltas and add to position
         //TODO: this shouldn't be needed; we apply what is present
         if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
@@ -186,7 +183,7 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.GlobalState memory state
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
@@ -230,10 +227,9 @@ library Claims {
 
     /// @dev - calculate claim from position start up to claim tick
     function section2(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
@@ -380,7 +376,7 @@ library Claims {
     function section5(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 5 - burned liquidity past claim tick
