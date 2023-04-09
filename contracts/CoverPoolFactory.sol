@@ -67,25 +67,26 @@ contract CoverPoolFactory is
             (
                 uint16  auctionLength,
                 int16   minPositionWidth,
-                uint128 minAuctionAmount
+                uint128 minAmountPerAuction,
+                bool    minLowerPriced
             ) = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
 
             if (auctionLength == 0) {
                 revert VolatilityTierNotSupported();
             }
 
-            // get reference pool
-            address inputPool = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
-
             params = CoverPoolParams(
-                         inputPool,
-                         tickSpread,
-                         twapLength,
-                         auctionLength, 
-                         minPositionWidth,
-                         minAuctionAmount
-                     );
+                        address(0),
+                        tickSpread,
+                        twapLength,
+                        auctionLength, 
+                        minPositionWidth,
+                        minAmountPerAuction,
+                        minLowerPriced
+                    );
         }
+        // get reference pool
+        params.inputPool  = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
 
         // launch pool and save address
         pool = address(new CoverPool(params));

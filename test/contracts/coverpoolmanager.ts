@@ -211,13 +211,13 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enableVolatilityTier("100", "20", "20", "20", "1", ethers.utils.parseUnits("1", 18))
+        .enableVolatilityTier("100", "20", "20", "20", "1", ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('OwnerOnly()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "40", "40", "40", "5", ethers.utils.parseUnits("1", 18))
+        .enableVolatilityTier("500", "40", "40", "40", "5", ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     // should revert when non-admin calls
@@ -227,6 +227,7 @@ describe('CoverPoolManager Tests', function () {
     expect(volatilityTierConfig[0]).to.be.equal(40)
     expect(volatilityTierConfig[1]).to.be.equal(5)
     expect(volatilityTierConfig[2]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[3]).to.be.equal(true)
 
     expect((await
         hre.props.coverPoolManager
@@ -235,7 +236,7 @@ describe('CoverPoolManager Tests', function () {
 
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "30", "30", "5", ethers.utils.parseUnits("1", 18))
+        .enableVolatilityTier("500", "30", "30", "30", "5", ethers.utils.parseUnits("1", 18), true)
 
     volatilityTierConfig = await
         hre.props.coverPoolManager
@@ -243,5 +244,6 @@ describe('CoverPoolManager Tests', function () {
     expect(volatilityTierConfig[0]).to.be.equal(30)
     expect(volatilityTierConfig[1]).to.be.equal(5)
     expect(volatilityTierConfig[2]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[3]).to.be.equal(true)
   })
 })

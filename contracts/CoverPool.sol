@@ -9,7 +9,6 @@ import './base/structs/CoverPoolFactoryStructs.sol';
 import './base/modifiers/CoverPoolModifiers.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
-import './libraries/Ticks.sol';
 import './libraries/Positions.sol';
 import './libraries/Epochs.sol';
 
@@ -24,8 +23,11 @@ contract CoverPool is
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
+    uint8   internal immutable token0Decimals;
+    uint8   internal immutable token1Decimals;
     int16   public immutable minPositionWidth;
-    uint128 public immutable minAuctionAmount;
+    uint128 public immutable minAmountPerAuction;
+    bool    public immutable minLowerPricedToken;
 
     constructor(
         CoverPoolParams memory params
@@ -36,8 +38,15 @@ contract CoverPool is
         token1    = IRangePool(params.inputPool).token1();
         
         // set immutables
+        token0Decimals = ERC20(token0).decimals();
+        token1Decimals = ERC20(token1).decimals();
+        if (token0Decimals > 18 || token1Decimals > 18
+          || token0Decimals < 6 || token1Decimals < 6) {
+            revert InvalidTokenDecimals();
+        }
         minPositionWidth = params.minPositionWidth;
-        minAuctionAmount = params.minAuctionAmount;
+        minAmountPerAuction = params.minAmountPerAuction;
+        minLowerPricedToken = params.minLowerPricedToken;
 
         // set global state
         GlobalState memory state;
@@ -47,14 +56,6 @@ contract CoverPool is
         state.genesisBlock  = uint32(block.number);
         state.inputPool     = IRangePool(params.inputPool);
         state.protocolFees  = ProtocolFees(0,0);
-
-        // set initial ticks
-        state = Ticks.initialize(
-            tickMap,
-            pool0,
-            pool1,
-            state
-        );
 
         globalState = state;
     }
@@ -72,7 +73,15 @@ contract CoverPool is
             state
         );
         uint256 liquidityMinted;
-        (params, liquidityMinted) = Positions.validate(params, state, minPositionWidth, minAuctionAmount);
+        (params, liquidityMinted) = Positions.validate(
+            params, 
+            state,
+            token0Decimals,
+            token1Decimals,
+            minPositionWidth,
+            minAmountPerAuction,
+            minLowerPricedToken
+        );
 
         if (params.amount > 0)
             _transferIn(params.zeroForOne ? token0 : token1, params.amount);
@@ -131,6 +140,7 @@ contract CoverPool is
     function burn(
         BurnParams memory params
     ) external lock {
+        if (params.to == address(0)) revert CollectToZeroAddress();
         GlobalState memory state = globalState;
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,

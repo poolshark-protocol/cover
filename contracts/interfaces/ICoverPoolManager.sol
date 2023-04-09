@@ -6,7 +6,8 @@ interface ICoverPoolManager {
     struct CoverPoolConfig {
         uint16  auctionLength;
         int16   minPositionWidth;
-        uint128 minAuctionAmount; // based on 18 decimals and then converted based on token decimals
+        uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
+        bool    minLowerPriced;
     }
     function owner() external view returns (address);
     function feeTo() external view returns (address);
@@ -18,6 +19,7 @@ interface ICoverPoolManager {
     ) external view returns (
         uint16,
         int16,
-        uint128
+        uint128,
+        bool
     );
 }

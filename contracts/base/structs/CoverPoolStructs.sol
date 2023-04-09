@@ -8,6 +8,6 @@ abstract contract CoverPoolStructs {
         uint16  twapLength;
         uint16  auctionLength;
         uint8   minPositionWidth;
-        uint128 minAuctionAmount; // based on 18 decimals and then converted based on token decimals
+        uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
     }
 }
