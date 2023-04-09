@@ -898,7 +898,7 @@ describe('CoverPool Tests', function () {
         await getLatestTick(latestTickCheck)
 
         const balanceOutIncrease1 = BigNumber.from('100300435406274192565')
-console.log('first burn')
+
         await validateBurn({
             signer: hre.props.bob,
             lower: '-100',
@@ -912,7 +912,7 @@ console.log('first burn')
             upperTickCleared: false,
             revertMessage: '',
         })
-        console.log('second burn')
+
         await validateBurn({
             signer: hre.props.bob,
             lower: '-100',

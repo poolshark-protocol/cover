@@ -9,7 +9,6 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -261,14 +260,8 @@ library Positions {
                 return (state, params.claim);
             }
         }
-        if(params.claim == -20 && params.lower == -40) {
-            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
-        }
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
-        if(params.claim == -20 && params.lower == -40) {
-            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
-        }
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, state);
         /// @dev - section 2 => position start -> claim tick
@@ -284,14 +277,8 @@ library Positions {
 
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
-                if(params.claim == -20 && params.lower == -40) {
-            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
-        }
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(ticks, cache, params);
-        if(params.claim == -20 && params.lower == -40) {
-            console.log('deltas on tick: ', ticks[-40].deltas.amountInDeltaMax);
-        }
         // save claim tick
         ticks[params.claim] = cache.claimTick;
         
