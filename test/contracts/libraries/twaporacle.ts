@@ -33,7 +33,7 @@ describe('TwapOracle Library Tests', function () {
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(genesisBlock).to.be.equal(currentBlock - 1)
+        expect(genesisBlock).to.be.equal(currentBlock - 2)
         expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
@@ -61,6 +61,8 @@ describe('TwapOracle Library Tests', function () {
     this.beforeEach(async function () {})
 
     it('Should return false for isPoolObservationsEnough', async function () {
+        await hre.props.rangePoolMock.setObservationCardinality('4')
+
         expect(
             await hre.props.twapOracleLib.isPoolObservationsEnough(
                 hre.props.rangePoolMock.address,

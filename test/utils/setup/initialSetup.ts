@@ -331,6 +331,8 @@ export class InitialSetup {
             [hre.props.rangePoolMock.address]
         )
 
+        //TODO: for coverPool2 we need a second mock pool with a different cardinality
+
         await hre.props.rangePoolMock.setObservationCardinality('5')
 
         return hre.nonce
