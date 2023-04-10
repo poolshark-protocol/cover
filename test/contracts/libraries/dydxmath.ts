@@ -33,7 +33,7 @@ describe('DyDxMath Library Tests', function () {
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(genesisBlock).to.be.equal(currentBlock)
+        expect(genesisBlock).to.be.equal(currentBlock - 1)
         expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 

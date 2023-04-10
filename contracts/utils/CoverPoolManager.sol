@@ -36,8 +36,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         volatilityTiers[500][20][5] = CoverPoolConfig(20, 1, 1e18, true);
         emit VolatilityTierEnabled(500, 20, 5, 20, 2, 1e18, true);
 
-        volatilityTiers[500][40][40] = CoverPoolConfig(40, 5, 1e18, true);
-        emit VolatilityTierEnabled(500, 40, 40, 40, 5, 1e18, true);
+        volatilityTiers[500][40][40] = CoverPoolConfig(40, 5, 1e18, false);
+        emit VolatilityTierEnabled(500, 40, 40, 40, 5, 1e18, false);
     }
 
     /**

@@ -156,7 +156,6 @@ library Positions {
                     revert PositionAuctionAmountTooSmall();
             }
         }
-
         // enforce minimum position width
         if (cache.auctionCount < uint16(minPositionWidth)) revert InvalidPositionWidth();
         if (cache.liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();

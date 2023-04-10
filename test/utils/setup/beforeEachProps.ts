@@ -23,6 +23,7 @@ import { InitialSetup } from './initialSetup'
 
 export interface BeforeEachProps {
     coverPool: CoverPool
+    coverPool2: CoverPool
     coverPoolManager: CoverPoolManager
     coverPoolFactory: CoverPoolFactory
     rangeFactoryMock: RangeFactoryMock
@@ -72,6 +73,7 @@ export class GetBeforeEach {
 
     public retrieveProps(): BeforeEachProps {
         let coverPool: CoverPool
+        let coverPool2: CoverPool
         let coverPoolManager: CoverPoolManager
         let coverPoolFactory: CoverPoolFactory
         let rangeFactoryMock: RangeFactoryMock
@@ -99,6 +101,7 @@ export class GetBeforeEach {
 
         return {
             coverPool,
+            coverPool2,
             coverPoolManager,
             coverPoolFactory,
             rangeFactoryMock,

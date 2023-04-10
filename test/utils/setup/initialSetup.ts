@@ -273,7 +273,8 @@ export class InitialSetup {
 
         hre.nonce += 1
 
-        const createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
+        // create first cover pool
+        let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
             hre.props.token0.address,
             hre.props.token1.address,
             '500',
@@ -284,7 +285,7 @@ export class InitialSetup {
 
         hre.nonce += 1
 
-        const coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
+        let coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
             hre.props.token0.address,
             hre.props.token1.address,
             '500',
@@ -298,8 +299,39 @@ export class InitialSetup {
             'CoverPool',
             'coverPool',
             hre.props.coverPool,
-            [hre.props.rangePoolMock.address, '20', '5', '20']
+            [hre.props.rangePoolMock.address]
         )
+
+        // create second cover pool
+        createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
+            hre.props.token0.address,
+            hre.props.token1.address,
+            '500',
+            '40',
+            '40'
+        )
+        await createPoolTxn.wait()
+
+        hre.nonce += 1
+
+        coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
+            hre.props.token0.address,
+            hre.props.token1.address,
+            '500',
+            '40',
+            '40'
+        )
+        hre.props.coverPool2 = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
+
+        await this.deployAssist.saveContractDeployment(
+            network,
+            'CoverPool',
+            'coverPool2',
+            hre.props.coverPool2,
+            [hre.props.rangePoolMock.address]
+        )
+
+        await hre.props.rangePoolMock.setObservationCardinality('5')
 
         return hre.nonce
     }

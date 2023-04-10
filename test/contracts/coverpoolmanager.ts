@@ -227,7 +227,7 @@ describe('CoverPoolManager Tests', function () {
     expect(volatilityTierConfig[0]).to.be.equal(40)
     expect(volatilityTierConfig[1]).to.be.equal(5)
     expect(volatilityTierConfig[2]).to.be.equal(ethers.utils.parseUnits("1", 18))
-    expect(volatilityTierConfig[3]).to.be.equal(true)
+    expect(volatilityTierConfig[3]).to.be.equal(false)
 
     expect((await
         hre.props.coverPoolManager
