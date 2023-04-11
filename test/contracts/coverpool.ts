@@ -1293,7 +1293,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice loses half her position!
+            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice gets her position back
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1358,26 +1358,8 @@ describe('CoverPool Tests', function () {
         await validateSync(120);
 
 
-        // console.log("--------------- Alice #2 Burn -------------");
+        if (debugMode) console.log("--------------- Alice #2 Burn -------------");
 
-        // When alice burns she realizes an errant loss of 50 out tokens.
-        // This is because the syncLatest to 120 only increases the amountOutDelta
-        // by an amount calculated from the tick 40 to tick 60 range, rather than the tick
-        // 40 to tick 120 range.
-
-        // The while loop for pool1 in syncLatest will only execute a single time since there
-        // are no existing ticks between tick 40 and tick 120. In the _rollover for this
-        // single execution the amountOutDelta will be constricted to the 40 to 60 range due to
-        // line 343, where the if case fails and the currentPrice is not able to be set to the accumPrice.
-
-        // The if case prevents amountDelta calculations from straddling the current pool.price.
-        // One fix however is to allow such a straddling for the amountDelta in this particular scenario.
-
-        // Another fix is to initialize the next tick before setting the nextTickToAccum when initializing the cache.
-        // This way the while loop is able to continue for a second iteration and complete the rest of the range
-        // that was previously curtailed due to the straddling.
-        // This fix has been implemented in the syncLatest function, uncomment it and you will see that alice receives
-        // all of her tokens back as expected.
         await validateBurn({
             signer: hre.props.alice,
             lower: '40',
@@ -1386,7 +1368,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice loses half her position!
+            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice gets her position back
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1458,7 +1440,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BN_ZERO,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice loses half her position!
+            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice gets her position back
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -2008,14 +1990,8 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('89959928235057169918'),
             lowerTickCleared: false,
             upperTickCleared: true,
-            revertMessage: '', // Alice cannot claim at -20 when she should be able to
+            revertMessage: '',
         })
-
-        // Alice cannot claim at this tick since the following tick, -40 is set in the EpochMap when syncing latest
-        // -40 should only be set in the EpochMap if we successfully cross over it.
-        // This can lead to users being able to claim amounts from ticks that have not yet actually
-        // been crossed, potentially perturbing the pool accounting.
-        // In addition to users not being able to claim their filled amounts as shown in this PoC.
     });
 
     it("pool0 - twap rate-limiting yields invalid tick :: GUARDIAN AUDITS 58", async function () {
@@ -2036,10 +2012,6 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        // Get an invalid latestTick by being rate limited.
-        // The invalid tick results from the maxLatestTickMove not being a multiple of the tickSpread.
-        // This occurs when the state.lastBlock - state.auctionStart is not a perfect multiple of the auctionLength.
-        // Which will happen in the majority of cases.
         await validateSync(-20);
 
         await validateMint({
@@ -2058,10 +2030,6 @@ describe('CoverPool Tests', function () {
             expectedUpper: '-40'
         });
 
-        // Notice that this swap occurs over the tick range -5 to -25
-        // however alice's liquidity is used for this swap.
-        // Additionally, the amountOut is greater than alice's liquidity -- meaning that the swapper
-        // stole some of bob's liquidity when it wasn't in this range.
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -2069,13 +2037,10 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.mul(2),
             priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from("0"),
-            balanceOutIncrease: BigNumber.from('0'), // Greater than alice's "99955008249587388643769" liquidity
+            balanceOutIncrease: BigNumber.from('0'),
             revertMessage: '',
         });
 
-        // Now if both alice and bob attempted to burn all of their liquidity, they could not remove it all.
-
-        // Alice burns
         await validateBurn({
             signer: hre.props.alice,
             lower: '-20',
@@ -2090,7 +2055,6 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        // Bob burns & cannot burn his entire position
         await validateBurn({
             signer: hre.props.bob,
             lower: '-60',
@@ -2102,7 +2066,7 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()', // Bob cannot burn his entire position because the pool doesn't have all his tokens
+            revertMessage: 'NotEnoughPositionLiquidity()',
         })
 
         await validateBurn({
@@ -2116,7 +2080,7 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: BigNumber.from('33366670549555043972'),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: '', // Bob cannot burn his entire position because the pool doesn't have all his tokens
+            revertMessage: '',
         })
     });
 
@@ -2719,20 +2683,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-20)
 
-        // await validateSwap({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     zeroForOne: false,
-        //     amountIn: tokenAmount.mul(2),
-        //     priceLimit: BigNumber.from('79148977909814923576066331264'),
-        //     balanceInDecrease: BigNumber.from('200000000000000000000'),
-        //     balanceOutIncrease: BigNumber.from('200727459013899578577'),
-        //     revertMessage: '',
-        // })
-
-        // await validateSync(-40)
-        // await validateSync(-60)
-        //TODO: precision loss of 1 on each tick sync
+        //TODO: precision loss of 1 on each tick sync?
         await validateSync(-60)
 
         await validateBurn({
