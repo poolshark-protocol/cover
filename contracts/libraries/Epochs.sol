@@ -249,19 +249,6 @@ library Epochs {
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
 
-        // only accumulate if latestTick needs to move
-        // tickSpread = 40; newLatest = 85; oldLatest = 80;
-        // newLatest / 40 = 2; 80 / 40 = 2
-        //  => 40
-        // 10 => 20 => 10 => 20
-        // tickSpacing 10
-        // > 50%
-        // 30 => 40 => 80 - 40
-        // 10 => 0
-        // 1.00 and 2.00 => $100 => 99.20
-        // 0.10 bps off on one tick
-        // latestTick hits 40
-        /// if the sample moves to 10, do you cut the auction length in half?
         if (newLatestTick == state.latestTick) {
             return (0, true);
         }
@@ -286,7 +273,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -302,7 +289,7 @@ library Epochs {
                                         : cache.nextTickToAccum0;
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
             // check for multiple auction skips
-            if (cache.nextTickToCross0 - nextTickToAccum > state.tickSpread) {
+            if (cache.nextTickToCross0 == state.latestTick && cache.nextTickToCross0 - nextTickToAccum > state.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0 - state.tickSpread);
                 /// @dev - amountOutDeltaMax accounted for down below
                 cache.deltas0.amountOutDelta += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
@@ -319,7 +306,7 @@ library Epochs {
                                         : cache.nextTickToAccum1;
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
             // check for multiple auction skips
-            if (nextTickToAccum - cache.nextTickToCross1 > state.tickSpread) {
+            if (cache.nextTickToCross1 == state.latestTick && nextTickToAccum - cache.nextTickToCross1 > state.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1 + state.tickSpread);
                 /// @dev - DeltaMax values accounted for down below
                 cache.deltas1.amountOutDelta += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
@@ -455,7 +442,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+    ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
