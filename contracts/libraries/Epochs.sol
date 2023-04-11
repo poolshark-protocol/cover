@@ -249,19 +249,6 @@ library Epochs {
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
 
-        // only accumulate if latestTick needs to move
-        // tickSpread = 40; newLatest = 85; oldLatest = 80;
-        // newLatest / 40 = 2; 80 / 40 = 2
-        //  => 40
-        // 10 => 20 => 10 => 20
-        // tickSpacing 10
-        // > 50%
-        // 30 => 40 => 80 - 40
-        // 10 => 0
-        // 1.00 and 2.00 => $100 => 99.20
-        // 0.10 bps off on one tick
-        // latestTick hits 40
-        /// if the sample moves to 10, do you cut the auction length in half?
         if (newLatestTick == state.latestTick) {
             return (0, true);
         }
@@ -363,8 +350,6 @@ library Epochs {
 
             // amountOut pool has leftover
             uint128 amountOutDelta   = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
-            // console.log('measuring from:', uint24(TickMath.getTickAtSqrtRatio(crossPrice)), uint24(TickMath.getTickAtSqrtRatio(currentPrice)));
-            // console.log('ticks:', uint24(cache.nextTickToCross1), uint24(cache.nextTickToAccum1));
             uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
             amountOutDeltaMax -= pool.amountOutDeltaMaxClaimed;
             pool.amountOutDeltaMaxClaimed = 0;
@@ -375,7 +360,6 @@ library Epochs {
             cache.deltas1.amountOutDelta    += amountOutDelta;
             cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
         }
-        // console.log('deltas', cache.deltas1.amountOutDelta, cache.deltas1.amountOutDeltaMax);
         return (cache, pool);
     }
 
