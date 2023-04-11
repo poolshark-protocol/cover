@@ -202,7 +202,7 @@ library Ticks {
             }
             /// @dev - not deleting ticks just yet
             ticks[lower] = tickLower;
-            if (lower != state.latestTick && lower != TickMath.MIN_TICK && _empty(tickLower)) {
+            if (lower != TickMath.MIN_TICK && _empty(tickLower)) {
                 TickMap.unset(tickMap, lower);
             }
         }
@@ -217,7 +217,7 @@ library Ticks {
                 }
             }
             ticks[upper] = tickUpper;
-            if (state.latestTick != upper && upper != TickMath.MAX_TICK && _empty(tickUpper)) {
+            if (upper != TickMath.MAX_TICK && _empty(tickUpper)) {
                 TickMap.unset(tickMap, upper);
             }
         }
