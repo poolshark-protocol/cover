@@ -296,7 +296,6 @@ library Epochs {
         }
         uint160 crossPrice; uint160 accumPrice; uint160 currentPrice;
         if (isPool0) {
-            //TODO: handle if cache.stopTick0 is the nextTickToAccum and is greater than state.tickSpread
             crossPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0);
             int24 nextTickToAccum = (cache.nextTickToAccum0 < cache.stopTick0)
                                         ? cache.stopTick0
