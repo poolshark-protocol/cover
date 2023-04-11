@@ -9,6 +9,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
+import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -306,8 +307,7 @@ library Epochs {
             if (cache.nextTickToCross0 - nextTickToAccum > state.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0 - state.tickSpread);
                 /// @dev - amountOutDeltaMax accounted for down below
-                cache.deltas0.amountOutDelta   += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
-                cache.deltas0.amountInDeltaMax += uint128(DyDxMath.getDy(pool.liquidity, accumPrice, spreadPrice, false));
+                cache.deltas0.amountOutDelta += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
             }
             currentPrice = pool.price;
             // if pool.price the bounds set currentPrice to start of auction
@@ -323,9 +323,8 @@ library Epochs {
             // check for multiple auction skips
             if (nextTickToAccum - cache.nextTickToCross1 > state.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1 + state.tickSpread);
-                /// @dev - amountOutDeltaMax accounted for down below
-                cache.deltas1.amountOutDelta   += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
-                cache.deltas1.amountInDeltaMax += uint128(DyDxMath.getDx(pool.liquidity, spreadPrice, accumPrice, false));
+                /// @dev - DeltaMax values accounted for down below
+                cache.deltas1.amountOutDelta += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
             }
             currentPrice = pool.price;
             if (!(pool.price < accumPrice && pool.price > crossPrice)) currentPrice = accumPrice;
@@ -464,7 +463,7 @@ library Epochs {
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         if (deltas.amountInDeltaMax > 0) {
-            // console.log('stashing deltas', deltas.amountOutDelta, deltas.amountInDelta);
+            // console.log('stashing deltas', deltas.amountOutDeltaMax, deltas.amountInDeltaMax);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
         stashTick.liquidityDelta += int128(currentLiquidity);

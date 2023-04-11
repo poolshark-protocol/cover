@@ -1246,18 +1246,18 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        console.log("--------------- Sync 0 -------------");
+        if(debugMode) console.log("--------------- Sync 0 -------------");
         await validateSync(0)
         expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
-        console.log("--------------- Sync 20 -------------");
+        if(debugMode) console.log("--------------- Sync 20 -------------");
         await validateSync(20)
         expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
 
-        console.log("--------------- Sync 40 -------------");
+        if(debugMode) console.log("--------------- Sync 40 -------------");
         await validateSync(40);
         expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
 
-        // console.log("--------------- Alice #1 burn ---------------");
+        if(debugMode) console.log("--------------- Alice #1 burn ---------------");
 
         await validateBurn({
             signer: hre.props.alice,
@@ -1273,11 +1273,11 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("--------------- Sync 120 -------------");
+        if(debugMode) console.log("--------------- Sync 120 -------------");
         await validateSync(120);
 
 
-        // console.log("--------------- Alice #2 Burn -------------");
+        if(debugMode) console.log("--------------- Alice #2 Burn -------------");
 
         // When alice burns she realizes an errant loss of 50 out tokens.
         // This is because the syncLatest to 120 only increases the amountOutDelta
@@ -1339,18 +1339,18 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        console.log("--------------- Sync 0 -------------");
+        if(debugMode) console.log("--------------- Sync 0 -------------");
         await validateSync(0)
         expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
-        console.log("--------------- Sync 20 -------------");
+        if(debugMode) console.log("--------------- Sync 20 -------------");
         await validateSync(20)
         expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
 
-        console.log("--------------- Sync 40 -------------");
+        if(debugMode) console.log("--------------- Sync 40 -------------");
         await validateSync(40);
         expect((await hre.props.coverPool.pool1()).liquidity).to.eq("16617549983581976690927");
 
-        // console.log("--------------- Alice #1 burn ---------------");
+        if(debugMode) console.log("--------------- Alice #1 burn ---------------");
 
         await validateBurn({
             signer: hre.props.alice,
@@ -1366,7 +1366,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        console.log("--------------- Sync 120 -------------");
+        if(debugMode) console.log("--------------- Sync 120 -------------");
         await validateSync(120);
 
 
@@ -1432,18 +1432,18 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        console.log("--------------- Sync 0 -------------");
+        if(debugMode) console.log("--------------- Sync 0 -------------");
         await validateSync(0)
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("16617549983581976690927");
-        console.log("--------------- Sync 20 -------------");
+        if(debugMode) console.log("--------------- Sync 20 -------------");
         await validateSync(-20)
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("16617549983581976690927");
 
-        console.log("--------------- Sync 40 -------------");
+        if(debugMode) console.log("--------------- Sync 40 -------------");
         await validateSync(-40);
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("16617549983581976690927");
 
-        console.log("--------------- Alice #1 burn ---------------");
+        if(debugMode) console.log("--------------- Alice #1 burn ---------------");
 
         await validateBurn({
             signer: hre.props.alice,
@@ -1459,7 +1459,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        // console.log("--------------- Sync 120 -------------");
+        if(debugMode) console.log("--------------- Sync 120 -------------");
         await validateSync(-120);
 
         await validateBurn({
