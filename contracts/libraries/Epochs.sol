@@ -153,9 +153,9 @@ library Epochs {
             // rollover deltas pool1
             (cache, pool1) = _rollover(state, cache, pool1, false);
             // accumulate deltas pool1
-            if (cache.nextTickToAccum0 > cache.stopTick0 
-                 && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+            if (cache.nextTickToAccum1 < cache.stopTick1 
+                 && ticks1[cache.nextTickToAccum1].liquidityDeltaMinus > 0) {
+                EpochMap.set(tickMap, cache.nextTickToAccum1, state.accumEpoch);
             }
             {
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
