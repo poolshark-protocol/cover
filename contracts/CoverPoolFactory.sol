@@ -6,10 +6,12 @@ import './CoverPool.sol';
 import './interfaces/ICoverPoolFactory.sol';
 import './interfaces/IRangeFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
+import './base/structs/CoverPoolFactoryStructs.sol';
 import './utils/CoverPoolErrors.sol';
 
 contract CoverPoolFactory is 
     ICoverPoolFactory,
+    CoverPoolFactoryStructs,
     CoverPoolFactoryEvents,
     CoverPoolFactoryErrors
 {
@@ -41,13 +43,15 @@ contract CoverPoolFactory is
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
-        // check fee tier exists
-        int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(feeTier);
-        if (tickSpacing == 0) {
-            revert FeeTierNotSupported();
-        }
-        // check tick multiple
+
         {
+            // check fee tier exists
+            int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(feeTier);
+            if (tickSpacing == 0) {
+                revert FeeTierNotSupported();
+            }
+
+            // check tick multiple
             int24 tickMultiple = tickSpread / tickSpacing;
             if (tickMultiple * tickSpacing != tickSpread) {
                 revert TickSpreadNotMultipleOfTickSpacing();
@@ -55,28 +59,48 @@ contract CoverPoolFactory is
                 revert TickSpreadNotAtLeastDoubleTickSpread();
             }
         }
-        // check volatility tier exists
-        uint16 auctionLength = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
-        if (auctionLength == 0) {
-            revert VolatilityTierNotSupported();
+
+        // get pool parameters
+        CoverPoolParams memory params;
+        {
+            // get volatility tier config
+            (
+                uint16  auctionLength,
+                int16   minPositionWidth,
+                uint128 minAmountPerAuction,
+                bool    minLowerPriced
+            ) = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
+
+            if (auctionLength == 0) {
+                revert VolatilityTierNotSupported();
+            }
+
+            params = CoverPoolParams(
+                        address(0),
+                        tickSpread,
+                        twapLength,
+                        auctionLength, 
+                        minPositionWidth,
+                        minAmountPerAuction,
+                        minLowerPriced
+                    );
         }
         // get reference pool
-        address inputPool = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
+        params.inputPool  = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
 
         // launch pool and save address
-        pool = address(new CoverPool(inputPool, tickSpread, twapLength, auctionLength));
+        pool = address(new CoverPool(params));
 
         coverPools[key] = pool;
 
         emit PoolCreated(
             pool,
-            inputPool,
+            params.inputPool,
             token0,
             token1,
             feeTier,
             tickSpread,
-            twapLength,
-            auctionLength
+            twapLength
         );
     }
 

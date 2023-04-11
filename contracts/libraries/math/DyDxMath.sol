@@ -75,9 +75,9 @@ library DyDxMath {
                     priceUpper - priceLower
                 );
             } else {
+                /// @dev - price should either be priceUpper or priceLower
                 revert PriceOutsideBounds();
-            }
-            /// @dev - price should never be outside of lower and upper
+            }  
         }
     }
 }

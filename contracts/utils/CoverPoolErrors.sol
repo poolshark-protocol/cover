@@ -6,6 +6,7 @@ abstract contract CoverPoolErrors {
     error InvalidToken();
     error InvalidPosition();
     error InvalidSwapFee();
+    error InvalidTokenDecimals();
     error InvalidTickSpread();
     error LiquidityOverflow();
     error Token0Missing();
@@ -15,6 +16,7 @@ abstract contract CoverPoolErrors {
     error LowerNotEvenTick();
     error UpperNotOddTick();
     error MaxTickLiquidity();
+    error CollectToZeroAddress();
     error Overflow();
     error NotEnoughOutputLiquidity();
     error WaitUntilEnoughObservations();

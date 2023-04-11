@@ -85,14 +85,13 @@ interface ICoverPoolStructs {
     }
 
     struct CollectParams {
-        address to; // address(0) should revert
+        address to;
         int24 lower;
         int24 claim;
         int24 upper;
         bool zeroForOne;
     }
 
-    //TODO: should we have a recipient field here?
     struct AddParams {
         address owner;
         int24 lower;
@@ -128,6 +127,16 @@ interface ICoverPoolStructs {
         uint256 auctionDepth;
         uint256 auctionBoost;
         uint256 amountInDelta;
+    }
+
+    struct ValidateCache {
+        int24 requiredStart;
+        uint24 auctionCount;
+        uint256 priceLower;
+        uint256 priceUpper;
+        uint256 priceAverage;
+        uint256 liquidityMinted;
+        bool denomTokenIn;
     }
 
     struct PositionCache {

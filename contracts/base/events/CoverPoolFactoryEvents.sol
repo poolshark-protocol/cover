@@ -9,8 +9,7 @@ abstract contract CoverPoolFactoryEvents {
         address indexed token1,
         uint16 indexed fee,
         int16 tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength
+        uint16 twapLength
     );
 
     event ProtocolFeeCollected(
