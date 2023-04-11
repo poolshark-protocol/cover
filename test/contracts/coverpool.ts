@@ -19,11 +19,6 @@ import {
     getPositionLiquidity,
 } from '../utils/contracts/coverpool'
 
-// TODO: ✔ pool0 - Should handle partial mint (479ms)
-// position before liquidity: BigNumber { _hex: '0x00', _isBigNumber: true }
-//     1) pool0 - Should handle partial range cross w/ unfilled amount
-/// ^this causes infinite tick loop
-
 alice: SignerWithAddress
 describe('CoverPool Tests', function () {
     let tokenAmount: BigNumber
@@ -52,8 +47,6 @@ describe('CoverPool Tests', function () {
     before(async function () {
         await gBefore()
         let currentBlock = await ethers.provider.getBlockNumber()
-        //TODO: maybe just have one view function that grabs all these
-        //TODO: map it to an interface
         const pool0: PoolState = await hre.props.coverPool.pool0()
         const liquidity = pool0.liquidity
         const globalState = await hre.props.coverPool.globalState()
@@ -2240,8 +2233,6 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-40)
 
-        //TODO: precision loss of 2 here
-
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
@@ -2249,7 +2240,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('49815343322651003239'), //TODO: taking 2 extra out
+            balanceInIncrease: BigNumber.from('49815343322651003239'),
             balanceOutIncrease: BigNumber.from('50024998748000306422'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -2268,7 +2259,6 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
         }
@@ -2333,14 +2323,12 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountOutDeltaMax.toString())
         }
     })
 
     it('pool0 - Should process section1 claim on partial previous auction 114', async function () {
-        //TODO: precision loss of 4 in this test
         const liquidityAmount2 = BigNumber.from('49753115595468372952776')
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
         await validateSync(-60)
@@ -2449,9 +2437,7 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountInDeltaMax.toString())
-            //TODO: delta max of 2 left on tick
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountOutDeltaMax.toString())
         }
     })
@@ -2537,7 +2523,6 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountInDeltaMax.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountOutDeltaMax.toString())
         }
@@ -2650,9 +2635,7 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            //TODO: delta max of 2 left on tick
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
         }
     })
@@ -2731,14 +2714,10 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            //TODO: delta max of 2 left on tick
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
         }
     })
-
-    //TODO: add more liquidity after first claim
 
     it('pool0 - Should updateAccumDeltas during sync 26', async function () {
         const liquidityAmount4 = BigNumber.from('99855108194609381495771')
@@ -2828,8 +2807,6 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(0)
-
-        //TODO: precision off by one
 
         await validateBurn({
             signer: hre.props.alice,
@@ -2931,7 +2908,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'), //TODO: precision off by a few
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -3103,9 +3080,7 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            //TODO: delta max of 2 left on tick
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).deltas.amountInDeltaMax.toString())
-            //TODO: delta max of 2 left on tick
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).deltas.amountOutDeltaMax.toString())
         }
     })
@@ -3364,7 +3339,6 @@ describe('CoverPool Tests', function () {
 
     it('pool1 - Should move TWAP in range, partial fill, and burn 80', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-        //TODO: 124905049859212811 leftover from precision loss
 
         await validateSync(0)
 
@@ -3419,7 +3393,7 @@ describe('CoverPool Tests', function () {
 
     it('pool1 - Should revert for liquidity overflow 81', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-        //TODO: 124905049859212811 leftover from precision loss
+        // 124905049859212811 leftover from precision loss
 
         await validateSync(0)
 
@@ -3503,7 +3477,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        //TODO: swap has precision loss of 2278092979 or (6.7e-28) %
+        /// @dev - swap has precision loss of 2278092979 or (6.7e-28) %
 
         await validateBurn({
             signer: hre.props.alice,
@@ -3526,7 +3500,6 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    //TODO: these revert catches no longer work inside a library
     it('pool1 - mint position, move TWAP x2 w/ unfilled amounts, and check amountInDelta carry correctness 111', async function () {
         const liquidityAmount2 = BigNumber.from('49753115595468372952776')
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
@@ -3624,22 +3597,51 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    // TODO: partial mint
-    // TODO: ensure user cannot claim from a lower tick after TWAP moves around
-    // TODO: claim liquidity filled
-    // TODO: empty swap at price limit higher than current price
-    // TODO: move TWAP again and fill remaining
-    // TODO: claim final amount and burn LP position
-    // TODO: mint LP position with priceLower < minPrice
-    // TODO: P1 larger range; P2 smaller range; execute swap and validate amount returned by claiming
-    // TODO: smaller range claims first; larger range claims first
-    // TODO: move TWAP down and allow for new positions to be entered
-    // TODO: no one can mint until observations are sufficient
-    // TODO: fill tick, move TWAP down, claim, move TWAP higher, fill again, claim again
+    it('pool1 - sync multiple ticks at once and process claim 112', async function () {
+        const liquidityAmount2 = BigNumber.from('49753115595468372952776')
+        const liquidityAmount3 = BigNumber.from('99456505428612725961158')
+        await validateSync(20)
+        await validateSync(40)
+        await validateSync(60)
+        
 
-    // mint at different price ranges
-    // mint then burn at different price ranges
-    // mint swap then burn
-    // collect
-    //TODO: for price you can mint position instead of swapping and having a failed transaction
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '80',
+            claim: '80',
+            upper: '120',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount2,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(100)
+
+        await validateSync(60)
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '80',
+            claim: '120',
+            upper: '120',
+            liquidityAmount: liquidityAmount2,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        })
+
+        if (deltaMaxAfterCheck) {
+            console.log('final tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).deltas.amountInDeltaMax.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).deltas.amountOutDeltaMax.toString())
+        }
+    })
 })

@@ -6,6 +6,7 @@ import './RangePoolMock.sol';
 
 contract RangeFactoryMock is IRangeFactory {
     address mockPool;
+    address mockPool2;
     address owner;
 
     mapping(uint24 => int24) public feeTierTickSpacing;
@@ -19,8 +20,12 @@ contract RangeFactoryMock is IRangeFactory {
         feeTierTickSpacing[3000] = 60;
         feeTierTickSpacing[10000] = 200;
 
+        // create mock pool 1
         mockPool = address(new RangePoolMock(tokenA, tokenB, 500, 10));
-
         getPool[tokenA][tokenB][500] = mockPool;
+
+        // create mock pool 2
+        mockPool2 = address(new RangePoolMock(tokenA, tokenB, 3000, 60));
+        getPool[tokenA][tokenB][3000] = mockPool2;
     }
 }
