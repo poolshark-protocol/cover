@@ -184,7 +184,6 @@ library Ticks {
         int24 lower,
         int24 upper,
         uint128 amount,
-        // uint128 amountStashed,
         bool isPool0,
         bool removeLower,
         bool removeUpper
@@ -225,6 +224,11 @@ library Ticks {
             }
             ticks[upper] = tickUpper;
         }
+
+        // if (Deltas.isEmpty(tickLower)) {
+        //     // TickMap.unset
+        //     console.log('able to delete tick');
+        // }
 
         // if (deleteLowerTick) {
         //     // Delete lower tick.
