@@ -4,53 +4,58 @@ pragma solidity ^0.8.13;
 import './interfaces/ICoverPool.sol';
 import './interfaces/IRangePool.sol';
 import './interfaces/ICoverPoolManager.sol';
-import './base/modifiers/CoverPoolModifiers.sol';
 import './base/events/CoverPoolEvents.sol';
+import './base/structs/CoverPoolFactoryStructs.sol';
+import './base/modifiers/CoverPoolModifiers.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
-import './libraries/Ticks.sol';
 import './libraries/Positions.sol';
 import './libraries/Epochs.sol';
-import 'hardhat/console.sol';
 
 /// @notice Poolshark Cover Pool Implementation
 contract CoverPool is
     ICoverPool,
     CoverPoolEvents,
+    CoverPoolFactoryStructs,
     CoverPoolModifiers,
     SafeTransfers
 {
     address public immutable factory;
-    address internal immutable token0;
-    address internal immutable token1;
+    address public immutable token0;
+    address public immutable token1;
+    uint8   internal immutable token0Decimals;
+    uint8   internal immutable token1Decimals;
+    int16   public immutable minPositionWidth;
+    uint128 public immutable minAmountPerAuction;
+    bool    public immutable minLowerPricedToken;
 
     constructor(
-        address _inputPool,
-        int16   _tickSpread,
-        uint16  _twapLength,
-        uint16  _auctionLength
+        CoverPoolParams memory params
     ) {
         // set addresses
         factory   = msg.sender;
-        token0    = IRangePool(_inputPool).token0();
-        token1    = IRangePool(_inputPool).token1();
+        token0    = IRangePool(params.inputPool).token0();
+        token1    = IRangePool(params.inputPool).token1();
+        
+        // set immutables
+        token0Decimals = ERC20(token0).decimals();
+        token1Decimals = ERC20(token1).decimals();
+        if (token0Decimals > 18 || token1Decimals > 18
+          || token0Decimals < 6 || token1Decimals < 6) {
+            revert InvalidTokenDecimals();
+        }
+        minPositionWidth = params.minPositionWidth;
+        minAmountPerAuction = params.minAmountPerAuction;
+        minLowerPricedToken = params.minLowerPricedToken;
 
         // set global state
         GlobalState memory state;
-        state.tickSpread    = _tickSpread;
-        state.twapLength    = _twapLength;
-        state.auctionLength = _auctionLength;
+        state.tickSpread    = params.tickSpread;
+        state.twapLength    = params.twapLength;
+        state.auctionLength = params.auctionLength;
         state.genesisBlock  = uint32(block.number);
-        state.inputPool     = IRangePool(_inputPool);
+        state.inputPool     = IRangePool(params.inputPool);
         state.protocolFees  = ProtocolFees(0,0);
-
-        // set initial ticks
-        state = Ticks.initialize(
-            tickMap,
-            pool0,
-            pool1,
-            state
-        );
 
         globalState = state;
     }
@@ -68,7 +73,15 @@ contract CoverPool is
             state
         );
         uint256 liquidityMinted;
-        (params, liquidityMinted) = Positions.validate(params, state);
+        (params, liquidityMinted) = Positions.validate(
+            params, 
+            state,
+            token0Decimals,
+            token1Decimals,
+            minPositionWidth,
+            minAmountPerAuction,
+            minLowerPricedToken
+        );
 
         if (params.amount > 0)
             _transferIn(params.zeroForOne ? token0 : token1, params.amount);
@@ -127,6 +140,7 @@ contract CoverPool is
     function burn(
         BurnParams memory params
     ) external lock {
+        if (params.to == address(0)) revert CollectToZeroAddress();
         GlobalState memory state = globalState;
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
@@ -295,11 +309,6 @@ contract CoverPool is
         // store amounts for transferOut
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
-
-        // console.log('amountIn:', amountIn);
-        // console.log(params.zeroForOne ? ERC20(token1).balanceOf(address(this)) : ERC20(token0).balanceOf(address(this)));
-        // console.log('amountOut:', amountOut);
-        // console.log(params.zeroForOne ? ERC20(token0).balanceOf(address(this)) : ERC20(token1).balanceOf(address(this)));
 
         /// zero out balances and transfer out
         if (amountIn > 0) {

@@ -16,26 +16,28 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public _factory;
     uint16  public immutable MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
 
-    /// @dev - feeTier => tickSpread => twapLength => auctionLength
-    mapping(uint16 => mapping(int16 => mapping(uint16 => uint16))) public volatilityTiers;
+    /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
+    mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) public volatilityTiers;
     uint16 public protocolFee;
 
     error OwnerOnly();
     error FeeToOnly();
+    error VolatilityTierInvalid();
     error VolatilityTierAlreadyEnabled();
     error TransferredToZeroAddress();
     error ProtocolFeeCeilingExceeded();
-    
+
     constructor() {
         _owner = msg.sender;
         _feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
-        volatilityTiers[500][20][5] = 20;
-        emit VolatilityTierEnabled(500, 20, 5, 20);
+        /// @dev - 1e18 works for pairs with a stablecoin
+        volatilityTiers[500][20][5] = CoverPoolConfig(20, 1, 1e18, true);
+        emit VolatilityTierEnabled(500, 20, 5, 20, 2, 1e18, true);
 
-        volatilityTiers[500][40][40] = 40;
-        emit VolatilityTierEnabled(500, 40, 40, 40);
+        volatilityTiers[500][40][40] = CoverPoolConfig(40, 5, 1e18, false);
+        emit VolatilityTierEnabled(500, 40, 40, 40, 5, 1e18, false);
     }
 
     /**
@@ -118,16 +120,34 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     function enableVolatilityTier(
-        uint16 feeTier,
-        int16  tickSpread,
-        uint16 twapLength,
-        uint16 auctionLength
+        uint16  feeTier,
+        int16   tickSpread,
+        uint16  twapLength,
+        uint16  auctionLength,
+        int16   minPositionWidth,
+        uint128 minAmountPerAuction,
+        bool    minLowerPriced
     ) external onlyOwner {
-        if (volatilityTiers[feeTier][tickSpread][twapLength] != 0) {
+        if (volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
             revert VolatilityTierAlreadyEnabled();
+        } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
+            revert VolatilityTierInvalid();
         }
-        volatilityTiers[feeTier][tickSpread][twapLength] = auctionLength;
-        emit VolatilityTierEnabled(feeTier, tickSpread, twapLength, auctionLength);
+        volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
+            auctionLength,
+            minPositionWidth,
+            minAmountPerAuction,
+            minLowerPriced
+        );
+        emit VolatilityTierEnabled(
+            feeTier,
+            tickSpread,
+            twapLength,
+            auctionLength,
+            minPositionWidth,
+            minAmountPerAuction,
+            minLowerPriced
+        );
     }
 
     function setFactory(
