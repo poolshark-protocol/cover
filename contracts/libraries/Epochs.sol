@@ -43,14 +43,6 @@ library Epochs {
         // increase epoch counter
         state.accumEpoch += 1;
 
-        // Get the next tick number
-        int24 nextTick0 = state.latestTick - state.tickSpread;
-        int24 nextTick1 = state.latestTick + state.tickSpread;
-
-        // Check if the nextTick doesn't exist
-        TickMap.set(tickMap, nextTick0);
-        TickMap.set(tickMap, nextTick1);
-
         // setup cache
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0: state.latestTick, // above
@@ -294,43 +286,48 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
         //TODO: add syncing fee
         if (pool.liquidity == 0) {
-            /// @auditor - deltas should be zeroed out here
             return (cache, pool);
         }
-        //crossPrice based on next tick in direction of swap
-        uint160 crossPrice = TickMath.getSqrtRatioAtTick(
-            isPool0 ? cache.nextTickToCross0 : cache.nextTickToCross1
-        );
-        uint160 accumPrice;
-        {
-            /// @dev - set accum price to either stopTick or nextTickToAccum
-            int24 nextTickToAccum;
-            if (isPool0) {
-                nextTickToAccum = (cache.nextTickToAccum0 < cache.stopTick0)
-                    ? cache.stopTick0
-                    : cache.nextTickToAccum0;
-            } else {
-                nextTickToAccum = (cache.nextTickToAccum1 > cache.stopTick1)
-                    ? cache.stopTick1
-                    : cache.nextTickToAccum1;
-            }
+        uint160 crossPrice; uint160 accumPrice; uint160 currentPrice;
+        if (isPool0) {
+            //TODO: handle if cache.stopTick0 is the nextTickToAccum and is greater than state.tickSpread
+            crossPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0);
+            int24 nextTickToAccum = (cache.nextTickToAccum0 < cache.stopTick0)
+                                        ? cache.stopTick0
+                                        : cache.nextTickToAccum0;
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
-        }
-        uint160 currentPrice = pool.price;
-        // full tick unfilled vs. partial tick unfilled
-        if (isPool0){
-            // if we're outside the bounds set currentPrice to start of auction
-            // this is for skipping multiple auctions in one syncLatest() call
+            // check for multiple auction skips
+            if (cache.nextTickToCross0 - nextTickToAccum > state.tickSpread) {
+                uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0 - state.tickSpread);
+                /// @dev - amountOutDeltaMax accounted for down below
+                cache.deltas0.amountOutDelta   += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
+                cache.deltas0.amountInDeltaMax += uint128(DyDxMath.getDy(pool.liquidity, accumPrice, spreadPrice, false));
+            }
+            currentPrice = pool.price;
+            // if pool.price the bounds set currentPrice to start of auction
             if (!(pool.price > accumPrice && pool.price < crossPrice)) currentPrice = accumPrice;
             // if auction is current and fully filled => set currentPrice to crossPrice
             if (state.latestTick == cache.nextTickToCross0 && crossPrice == pool.price) currentPrice = crossPrice;
-        } else{
+        } else {
+            crossPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1);
+            int24 nextTickToAccum = (cache.nextTickToAccum1 > cache.stopTick1)
+                                        ? cache.stopTick1
+                                        : cache.nextTickToAccum1;
+            accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
+            // check for multiple auction skips
+            if (nextTickToAccum - cache.nextTickToCross1 > state.tickSpread) {
+                uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1 + state.tickSpread);
+                /// @dev - amountOutDeltaMax accounted for down below
+                cache.deltas1.amountOutDelta   += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
+                cache.deltas1.amountInDeltaMax += uint128(DyDxMath.getDx(pool.liquidity, spreadPrice, accumPrice, false));
+            }
+            currentPrice = pool.price;
             if (!(pool.price < accumPrice && pool.price > crossPrice)) currentPrice = accumPrice;
             if (state.latestTick == cache.nextTickToCross1 && crossPrice == pool.price) currentPrice = crossPrice;
         }
@@ -461,12 +458,13 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+    ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         if (deltas.amountInDeltaMax > 0) {
+            // console.log('stashing deltas', deltas.amountOutDelta, deltas.amountInDelta);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
         stashTick.liquidityDelta += int128(currentLiquidity);
