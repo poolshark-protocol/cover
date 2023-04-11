@@ -9,7 +9,6 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
-import 'hardhat/console.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -259,10 +258,11 @@ library Positions {
 
         Ticks.remove(
             ticks,
+            tickMap,
+            state,
             params.lower,
             params.upper,
             params.amount,
-            // 0,
             params.zeroForOne,
             true,
             true
@@ -377,6 +377,8 @@ library Positions {
             }
             Ticks.remove(
                 ticks,
+                tickMap,
+                state,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 params.amount,

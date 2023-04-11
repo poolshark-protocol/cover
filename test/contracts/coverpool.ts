@@ -36,11 +36,11 @@ describe('CoverPool Tests', function () {
     const maxTickIdx = BigNumber.from('887272')
 
     ////////// DEBUG FLAGS //////////
-    const debugMode           = false
-    const balanceCheck        = false
-    const deltaMaxBeforeCheck = false
-    const deltaMaxAfterCheck  = false
-    const latestTickCheck     = false
+    let debugMode           = false
+    let balanceCheck        = false
+    let deltaMaxBeforeCheck = false
+    let deltaMaxAfterCheck  = false
+    let latestTickCheck     = false
 
     //every test should clear out all liquidity
 
@@ -3620,14 +3620,14 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice gets her position back
+            balanceOutIncrease: BigNumber.from('66733307735806479582'), // Notice Alice gets her position back
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
         })
     });
 
-    it("pool1 - multiple tick length jumps should not cause users to lose assets 112 :: GUARDIAN AUDITS", async () => {
+    it("pool1 - multiple tick length jumps should not cause users to lose assets:: GUARDIAN AUDITS", async () => {
         // Note: unused, way to initialize all the ticks in the range manually
         let liquidityAmountBob = hre.ethers.utils.parseUnits("99855108194609381495771", 0);
 
@@ -3695,7 +3695,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice gets her position back
+            balanceOutIncrease: BigNumber.from('66733307735806479582'), // Notice Alice gets her position back
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',

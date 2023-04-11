@@ -176,11 +176,13 @@ library Ticks {
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
 
-        // state.liquidityGlobal += amount;
+        state.liquidityGlobal += amount;
     }
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.GlobalState memory state,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -188,11 +190,6 @@ library Ticks {
         bool removeLower,
         bool removeUpper
     ) external {
-        //TODO: we can only delete is lower != MIN_TICK or latestTick and all values are 0
-        // bool deleteLowerTick = false; bool deleteUpperTick = false;
-
-        //TODO: we can only delete is upper != MAX_TICK or latestTick and all values are 0
-        //TODO: can be handled by using inactiveLiquidity == 0 and activeLiquidity == 0
         {
             ICoverPoolStructs.Tick memory tickLower = ticks[lower];
             if (removeLower) {
@@ -205,13 +202,10 @@ library Ticks {
             }
             /// @dev - not deleting ticks just yet
             ticks[lower] = tickLower;
+            if (lower != state.latestTick && lower != TickMath.MIN_TICK && _empty(tickLower)) {
+                TickMap.unset(tickMap, lower);
+            }
         }
-
-        //TODO: can be handled using inactiveLiquidity and activeLiquidity == 0
-
-        //TODO: we need to know what tick they're claiming from
-        //TODO: that is the tick that should have liquidity values modified
-        //TODO: keep unchecked block?
         {
             ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
             if (removeUpper) {
@@ -223,40 +217,25 @@ library Ticks {
                 }
             }
             ticks[upper] = tickUpper;
+            if (state.latestTick != upper && upper != TickMath.MAX_TICK && _empty(tickUpper)) {
+                TickMap.unset(tickMap, upper);
+            }
         }
+        //TODO: need _empty to also check for amountInDeltaMaxMinus/amountOutDeltaMaxMinus
+    }
 
-        // if (Deltas.isEmpty(tickLower)) {
-        //     // TickMap.unset
-        //     console.log('able to delete tick');
-        // }
-
-        // if (deleteLowerTick) {
-        //     // Delete lower tick.
-        //     int24 previous = tickNodes[lower].previousTick;
-        //     int24 next     = tickNodes[lower].nextTick;
-        //     if(next != upper || !deleteUpperTick) {
-        //         tickNodes[previous].nextTick = next;
-        //         tickNodes[next].previousTick = previous;
-        //     } else {
-        //         int24 upperNextTick = tickNodes[upper].nextTick;
-        //         tickNodes[tickNodes[lower].previousTick].nextTick = upperNextTick;
-        //         tickNodes[upperNextTick].previousTick = previous;
-        //     }
-        // }
-        // if (deleteUpperTick) {
-        //     // Delete upper tick.
-        //     int24 previous = tickNodes[upper].previousTick;
-        //     int24 next     = tickNodes[upper].nextTick;
-
-        //     if(previous != lower || !deleteLowerTick) {
-        //         tickNodes[previous].nextTick = next;
-        //         tickNodes[next].previousTick = previous;
-        //     } else {
-        //         int24 lowerPrevTick = tickNodes[lower].previousTick;
-        //         tickNodes[lowerPrevTick].nextTick = next;
-        //         tickNodes[next].previousTick = lowerPrevTick;
-        //     }
-        // }
-        /// @dev - we can never delete ticks due to amount deltas
+    function _empty(
+        ICoverPoolStructs.Tick memory tick
+    ) internal returns (
+        bool
+    ) {
+        if (tick.amountInDeltaMaxStashed > 0 || tick.amountOutDeltaMaxStashed > 0) {
+            return false;
+        } else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
+            return false;
+        } else if (tick.liquidityDelta > 0) {
+            return false;
+        }
+        return true;
     }
 }

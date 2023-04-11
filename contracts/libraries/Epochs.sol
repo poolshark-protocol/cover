@@ -286,7 +286,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal pure returns (
+    ) internal view returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -302,7 +302,7 @@ library Epochs {
                                         : cache.nextTickToAccum0;
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
             // check for multiple auction skips
-            if (cache.nextTickToCross0 - nextTickToAccum > state.tickSpread) {
+            if (cache.nextTickToCross0 == state.latestTick && cache.nextTickToCross0 - nextTickToAccum > state.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0 - state.tickSpread);
                 /// @dev - amountOutDeltaMax accounted for down below
                 cache.deltas0.amountOutDelta += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
@@ -319,7 +319,7 @@ library Epochs {
                                         : cache.nextTickToAccum1;
             accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
             // check for multiple auction skips
-            if (nextTickToAccum - cache.nextTickToCross1 > state.tickSpread) {
+            if (cache.nextTickToCross1 == state.latestTick && nextTickToAccum - cache.nextTickToCross1 > state.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1 + state.tickSpread);
                 /// @dev - DeltaMax values accounted for down below
                 cache.deltas1.amountOutDelta += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
@@ -363,6 +363,8 @@ library Epochs {
 
             // amountOut pool has leftover
             uint128 amountOutDelta   = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
+            // console.log('measuring from:', uint24(TickMath.getTickAtSqrtRatio(crossPrice)), uint24(TickMath.getTickAtSqrtRatio(currentPrice)));
+            // console.log('ticks:', uint24(cache.nextTickToCross1), uint24(cache.nextTickToAccum1));
             uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
             amountOutDeltaMax -= pool.amountOutDeltaMaxClaimed;
             pool.amountOutDeltaMaxClaimed = 0;
@@ -373,6 +375,7 @@ library Epochs {
             cache.deltas1.amountOutDelta    += amountOutDelta;
             cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
         }
+        // console.log('deltas', cache.deltas1.amountOutDelta, cache.deltas1.amountOutDeltaMax);
         return (cache, pool);
     }
 
@@ -455,7 +458,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+    ) internal view returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas

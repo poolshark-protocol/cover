@@ -158,8 +158,7 @@ library Claims {
             //TODO: take a portion based on the protocol fee
             cache.position.amountIn  += cache.finalDeltas.amountInDelta;
         cache.position.amountOut += cache.finalDeltas.amountOutDelta;
-        // add remaining deltas cached back to claim tick
-        // cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, 1e38, 1e38);
+        // console.log('position amounts:', cache.position.amountIn, cache.position.amountOut);
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
