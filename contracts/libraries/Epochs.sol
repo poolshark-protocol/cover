@@ -9,7 +9,6 @@ import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
-import 'hardhat/console.sol';
 
 library Epochs {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
@@ -287,7 +286,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -457,13 +456,12 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         if (deltas.amountInDeltaMax > 0) {
-            // console.log('stashing deltas', deltas.amountOutDeltaMax, deltas.amountInDeltaMax);
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
         stashTick.liquidityDelta += int128(currentLiquidity);

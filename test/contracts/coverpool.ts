@@ -896,18 +896,6 @@ describe('CoverPool Tests', function () {
 
         if (debugMode) console.log("--------------- Alice #2 Burn -------------");
 
-        // Notice that Alice is able to burn for more than the 25 tokens she has left.
-        // This is because we do not enter the else if in section1 so our claimPriceLast
-        // is never updated. This allows Alice to get the tokens from tick -20 twice.
-        // Alice will burn for ~ 37 tokens but should only be allowed to burn for the
-        // 25 she has left.
-        // Bob will be a victim of this and only receive ~ 87 tokens for burning his 
-        // position of 100 tokens
-        // The fix for this is to allow this case to enter the else if in
-        // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
-
-        // This shows the same issue from https://github.com/GuardianAudits/Poolsharks-Cover/pull/13
-        // In a more critical way.
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',

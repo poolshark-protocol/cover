@@ -41,7 +41,7 @@ library Positions {
         int16   minPositionWidth,
         uint256 minAmountPerAuction,
         bool    minLowerPricedToken
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )
