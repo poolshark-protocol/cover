@@ -176,7 +176,7 @@ library Ticks {
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
 
-        state.liquidityGlobal += amount;
+        // state.liquidityGlobal += amount;
     }
 
     function remove(
@@ -221,6 +221,7 @@ library Ticks {
                 TickMap.unset(tickMap, upper);
             }
         }
+        //TODO: subtract from liquidityGlobal
         //TODO: need _empty to also check for amountInDeltaMaxMinus/amountOutDeltaMaxMinus
     }
 
