@@ -33,20 +33,14 @@ export class MintPosition {
         await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice])
 
         const liquidityAmount = BigNumber.from('199760153929825488153727')
-        const lowerOld = hre.ethers.utils.parseUnits('0', 0)
-        const lower = hre.ethers.utils.parseUnits('20', 0)
-        const upperOld = hre.ethers.utils.parseUnits('887272', 0)
-        const upper = hre.ethers.utils.parseUnits('30', 0)
 
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
-            lowerOld: '0',
             lower: '20',
             claim: '20',
             upper: '40',
-            upperOld: '887272',
-            amount: token1Amount,
+            amount: token1Amount.mul(10),
             zeroForOne: false,
             balanceInDecrease: token1Amount,
             liquidityIncrease: liquidityAmount,
