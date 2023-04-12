@@ -344,12 +344,13 @@ library Epochs {
             uint128 amountInDelta;
             uint128 amountInDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, accumPrice, false));
             amountInDelta       = pool.amountInDelta;
-            amountInDeltaMax   -= pool.amountInDeltaMaxClaimed;
+            amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
+                                                                                    : pool.amountInDeltaMaxClaimed;
             pool.amountInDelta  = 0;
             pool.amountInDeltaMaxClaimed = 0;
 
             // amountOut pool has leftover
-            uint128 amountOutDelta   = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
+            uint128 amountOutDelta    = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
             uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
             amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
                                                                                      : pool.amountOutDeltaMaxClaimed;
