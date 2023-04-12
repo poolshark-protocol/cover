@@ -2,6 +2,7 @@ import { boolean } from 'hardhat/internal/core/params/argumentTypes'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { getNonce } from '../../utils'
 import { VerifyContracts } from './verifyContracts'
+import { getLiquidity, validateSync } from '../../../test/utils/contracts/coverpool'
 
 export class IncreaseSamples {
     private initialSetup: InitialSetup
@@ -32,6 +33,10 @@ export class IncreaseSamples {
         await hre.props.rangePoolMock.setObservationCardinality(5)
 
         console.log(await hre.props.rangePoolMock.slot0())
+
+        await validateSync(20)
+
+        await getLiquidity(false, true)
 
         // verify contracts on block explorer
         // await hre.run('verify-contracts');

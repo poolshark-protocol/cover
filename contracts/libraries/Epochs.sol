@@ -351,7 +351,8 @@ library Epochs {
             // amountOut pool has leftover
             uint128 amountOutDelta   = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
             uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
-            amountOutDeltaMax -= pool.amountOutDeltaMaxClaimed;
+            amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
+                                                                                     : pool.amountOutDeltaMaxClaimed;
             pool.amountOutDeltaMaxClaimed = 0;
 
             // update cache deltas
