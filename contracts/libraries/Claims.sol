@@ -163,9 +163,9 @@ library Claims {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
             // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
+            //TODO: burn delta max minuses if claim != final
             (updateTick.deltas) = Deltas.burnMax(updateTick.deltas, cache.finalDeltas);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
-            //TODO: handle partial stashed and partial on tick
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
             } else {
@@ -277,15 +277,18 @@ library Claims {
             );
             cache.position.amountOut += amountOutRemoved;
             // modify max deltas
-            params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
-                              : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
+            
+            cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
+            // params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
+            //                   : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
             uint128 amountInOmitted = uint128(
                 params.zeroForOne
                     ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, false)
                     : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, false)
             );
-            params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
-                              : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
+            cache.finalDeltas.amountInDeltaMax += amountInOmitted;
+            // params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
+            //                   : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
         }
         // if(debugDeltas) {
         //     console.log('section 3 check');
@@ -400,6 +403,7 @@ library Claims {
                 /// @auditor - we don't add to cache.amountInFilledMax and cache.amountOutUnfilledMax 
                 ///            since this section of the curve is not reflected in the deltas
                 if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+                    //TODO: subtract from delta max minus instead
                     cache.finalDeltas.amountInDeltaMax += amountInOmitted;
                     cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
                 }      
