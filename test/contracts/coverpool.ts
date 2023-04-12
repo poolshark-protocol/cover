@@ -3701,4 +3701,118 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
     });
+
+    it('pool1: locked Liquidity due to rounding on final small burn :: GUARDIAN AUDITS', async function () {
+        const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
+        await validateSync(0)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '20',
+            claim: '20',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmountAlice,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '20',
+            claim: '20',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmountAlice,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(40);
+
+        // Partial burn
+        console.log("===== FIRST ALICE BURN =====");
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '20',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: liquidityAmountAlice,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from("149975001251999693577"),
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+        console.log("===== SECOND ALICE BURN =====");
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: liquidityAmountAlice.sub(1000),
+            zeroForOne: false,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: BigNumber.from("50024998748000306421"),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+        console.log("===== THIRD ALICE BURN =====");
+        // ticks[params.upper].deltas.amountOutDeltaMax < amountOutRemoved by 1 wei in Section 3
+        // As a result, underflow occurs
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: BigNumber.from('1000'),
+            zeroForOne: false,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: BigNumber.from("1"),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+        await validateSync(20);
+        // Alice can't open a position because the previous position is still active.
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: BigNumber.from('99755307984763292988257'),
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: "",
+        })
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: BigNumber.from('99755307984763292988257'),
+            zeroForOne: false,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: BigNumber.from("99999999999999999999"),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+
+    });
 })

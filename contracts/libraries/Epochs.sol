@@ -381,6 +381,7 @@ library Epochs {
         }
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
+            //TODO: burn delta max minuses
             ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
             if (deltas.amountInDeltaMax > 0) {
                 if (accumDeltas.amountInDeltaMax > 0) {
