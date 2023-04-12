@@ -198,8 +198,6 @@ library Positions {
                 revert WrongTickClaimedAt();
             }
         }
-        // Positions.update() called first before additional mints
-        // if (cache.position.claimPriceLast != 0) { revert ClaimPriceLastNonZero(); }
         
         // add liquidity to ticks
         Ticks.insert(
@@ -214,9 +212,9 @@ library Positions {
 
         {
             // update max deltas
-            ICoverPoolStructs.Deltas memory tickDeltas = ticks[params.zeroForOne ? params.lower : params.upper].deltas;
-            tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
-            ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
+            ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            finalTick = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.liquidity += uint128(params.amount);
@@ -270,9 +268,9 @@ library Positions {
 
         {
             // update max deltas
-            ICoverPoolStructs.Deltas memory tickDeltas = ticks[params.zeroForOne ? params.lower : params.upper].deltas;
-            tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
-            ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
+            ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            finalTick = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
+            ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.amountOut += uint128(

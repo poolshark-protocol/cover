@@ -382,17 +382,24 @@ library Epochs {
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
             //TODO: burn delta max minuses
-            ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
-            if (deltas.amountInDeltaMax > 0) {
-                if (accumDeltas.amountInDeltaMax > 0) {
-                    uint256 percentInOnTick  = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax);
-                    uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax);
-                    // transfer 
-                    (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
-                    // burn delta maxes in cache
-                    deltas = Deltas.burnMax(deltas, accumDeltas);
-                    accumTick.deltas = accumDeltas;
-                }
+            ICoverPoolStructs.Deltas memory accumDeltas;
+            if (accumTick.amountInDeltaMaxMinus > 0) {
+                // calculate percent of deltas left on tick
+                uint256 percentInOnTick  = uint256(accumTick.amountInDeltaMaxMinus)  * 1e38 / (deltas.amountInDeltaMax);
+                uint256 percentOutOnTick = uint256(accumTick.amountOutDeltaMaxMinus) * 1e38 / (deltas.amountOutDeltaMax);
+                
+                // transfer deltas to the accum tick
+                (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
+                
+                // burn tick deltas maxes from cache
+                deltas = Deltas.burnMaxCache(deltas, accumTick);
+                
+                // empty delta max minuses into delta max
+                accumDeltas.amountInDeltaMax  += accumTick.amountInDeltaMaxMinus;
+                accumDeltas.amountOutDeltaMax += accumTick.amountOutDeltaMaxMinus;
+                accumTick.amountInDeltaMaxMinus  = 0;
+                accumTick.amountOutDeltaMaxMinus = 0;
+                accumTick.deltas = accumDeltas;
             }
         }
         // remove all liquidity

@@ -3702,7 +3702,7 @@ describe('CoverPool Tests', function () {
         })
     });
 
-    it('pool1: locked Liquidity due to rounding on final small burn :: GUARDIAN AUDITS', async function () {
+    it('pool1: locked liquidity due to rounding on final small burn :: GUARDIAN AUDITS', async function () {
         const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
         await validateSync(0)
 

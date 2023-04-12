@@ -163,8 +163,7 @@ library Claims {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
             // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
-            //TODO: burn delta max minuses if claim != final
-            (updateTick.deltas) = Deltas.burnMax(updateTick.deltas, cache.finalDeltas);
+            updateTick = Deltas.burnMaxMinus(updateTick, cache.finalDeltas);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
@@ -276,19 +275,14 @@ library Claims {
                     : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
             );
             cache.position.amountOut += amountOutRemoved;
-            // modify max deltas
-            
-            cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
-            // params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
-            //                   : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
             uint128 amountInOmitted = uint128(
                 params.zeroForOne
                     ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, false)
                     : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, false)
             );
-            cache.finalDeltas.amountInDeltaMax += amountInOmitted;
-            // params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
-            //                   : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
+            // modify max deltas
+            cache.finalDeltas.amountInDeltaMax  += amountInOmitted;
+            cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
         }
         // if(debugDeltas) {
         //     console.log('section 3 check');

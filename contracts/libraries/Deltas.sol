@@ -211,6 +211,42 @@ library Deltas {
         return fromDeltas;
     }
 
+    function burnMaxCache(
+        ICoverPoolStructs.Deltas memory fromDeltas,
+        ICoverPoolStructs.Tick memory burnTick
+    ) external pure returns (
+        ICoverPoolStructs.Deltas memory
+    ) {
+        fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
+                                         < burnTick.amountInDeltaMaxMinus) ? fromDeltas.amountInDeltaMax
+                                                                           : burnTick.amountInDeltaMaxMinus;
+        if (fromDeltas.amountInDeltaMax == 1) {
+            fromDeltas.amountInDeltaMax = 0; // handle rounding issues
+        }
+        fromDeltas.amountOutDeltaMax -= (fromDeltas.amountOutDeltaMax 
+                                          < burnTick.amountOutDeltaMaxMinus) ? fromDeltas.amountOutDeltaMax
+                                                                             : burnTick.amountOutDeltaMaxMinus;
+        return fromDeltas;
+    }
+
+    function burnMaxMinus(
+        ICoverPoolStructs.Tick memory fromTick,
+        ICoverPoolStructs.Deltas memory burnDeltas
+    ) external pure returns (
+        ICoverPoolStructs.Tick memory
+    ) {
+        fromTick.amountInDeltaMaxMinus -= (fromTick.amountInDeltaMaxMinus
+                                            < burnDeltas.amountInDeltaMax) ? fromTick.amountInDeltaMaxMinus
+                                                                           : burnDeltas.amountInDeltaMax;
+        if (fromTick.amountInDeltaMaxMinus == 1) {
+            fromTick.amountInDeltaMaxMinus = 0; // handle rounding issues
+        }
+        fromTick.amountOutDeltaMaxMinus -= (fromTick.amountOutDeltaMaxMinus 
+                                             < burnDeltas.amountOutDeltaMax) ? fromTick.amountOutDeltaMaxMinus
+                                                                                  : burnDeltas.amountOutDeltaMax;
+        return fromTick;
+    }
+
     function from(
         ICoverPoolStructs.Tick memory fromTick,
         ICoverPoolStructs.Deltas memory toDeltas
@@ -303,14 +339,14 @@ library Deltas {
     }
 
     function update(
-        ICoverPoolStructs.Deltas memory deltas,
+        ICoverPoolStructs.Tick memory tick,
         uint128 amount,
         uint160 priceLower,
         uint160 priceUpper,
         bool   isPool0,
         bool   isAdded
     ) external pure returns (
-        ICoverPoolStructs.Deltas memory
+        ICoverPoolStructs.Tick memory
     ) {
         // update max deltas
         uint128 amountInDeltaMax; uint128 amountOutDeltaMax;
@@ -326,13 +362,13 @@ library Deltas {
             ) = max(amount, priceLower, priceUpper, false);
         }
         if (isAdded) {
-            deltas.amountInDeltaMax  += amountInDeltaMax;
-            deltas.amountOutDeltaMax += amountOutDeltaMax;
+            tick.amountInDeltaMaxMinus  += amountInDeltaMax;
+            tick.amountOutDeltaMaxMinus += amountOutDeltaMax;
         } else {
-            deltas.amountInDeltaMax  -= deltas.amountInDeltaMax  > amountInDeltaMax ? amountInDeltaMax
-                                                                                    : deltas.amountInDeltaMax ;
-            deltas.amountOutDeltaMax -= deltas.amountOutDeltaMax > amountOutDeltaMax ? amountOutDeltaMax                                                                           : deltas.amountOutDeltaMax;
+            tick.amountInDeltaMaxMinus  -= tick.amountInDeltaMaxMinus  > amountInDeltaMax ? amountInDeltaMax
+                                                                                    : tick.amountInDeltaMaxMinus ;
+            tick.amountOutDeltaMaxMinus -= tick.amountOutDeltaMaxMinus > amountOutDeltaMax ? amountOutDeltaMax                                                                           : tick.amountOutDeltaMaxMinus;
         }
-        return deltas;
+        return tick;
     }
 }
