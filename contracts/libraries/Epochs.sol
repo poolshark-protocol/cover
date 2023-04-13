@@ -358,7 +358,6 @@ library Epochs {
         }
         // remove all liquidity
         crossTick.liquidityDelta = 0;
-        crossTick.liquidityDeltaMinus = 0;
 
         // clear out stash
         crossTick.amountInDeltaMaxStashed  = 0;
@@ -416,7 +415,6 @@ library Epochs {
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }
         stashTick.liquidityDelta += int128(currentLiquidity);
-        stashTick.liquidityDelta -= int128(stashTick.liquidityDeltaMinus);
         return (stashTick);
     }
 }

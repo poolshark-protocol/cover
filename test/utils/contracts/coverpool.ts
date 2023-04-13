@@ -21,7 +21,6 @@ export interface PoolState {
 
 export interface Tick {
     liquidityDelta: BigNumber
-    liquidityDeltaMinus: BigNumber
     amountInDeltaMaxStashed: BigNumber
     amountOutDeltaMaxStashed: BigNumber
     deltas: Deltas
@@ -390,46 +389,30 @@ export async function validateMint(params: ValidateMintParams) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 liquidityIncrease
             )
-            expect(
-                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         } else {
             expect(upperTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
-            expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO)
         }
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
-            expect(
-                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(liquidityIncrease)
         } else {
             expect(lowerTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
-            expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
         }
     } else {
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 liquidityIncrease
             )
-            expect(
-                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         } else {
             expect(lowerTickAfter.liquidityDelta).to.be.equal(liquidityIncrease)
-            expect(lowerTickAfter.liquidityDeltaMinus).to.be.equal(BN_ZERO)
         }
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityIncrease)
             )
-            expect(
-                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(liquidityIncrease)
         } else {
             expect(upperTickAfter.liquidityDelta).to.be.equal(BN_ZERO.sub(liquidityIncrease))
-            expect(upperTickAfter.liquidityDeltaMinus).to.be.equal(liquidityIncrease)
         }
     }
     const positionLiquidityChange = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityIncrease
@@ -437,7 +420,6 @@ export async function validateMint(params: ValidateMintParams) {
 }
 
 export async function validateBurn(params: ValidateBurnParams) {
-    //TODO: check liquidityDeltaMinus on lower : upper tick
     const signer = params.signer
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
@@ -544,31 +526,19 @@ export async function validateBurn(params: ValidateBurnParams) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityAmount)
             )
-            expect(
-                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
-            expect(
-                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         }
         if (!lowerTickCleared) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 liquidityAmount
             )
-            expect(
-                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO.sub(liquidityAmount))
         } else {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
-            expect(
-                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         }
     } else {
         //liquidity change for lower should be -liquidityAmount
@@ -576,31 +546,19 @@ export async function validateBurn(params: ValidateBurnParams) {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO.sub(liquidityAmount)
             )
-            expect(
-                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         } else {
             expect(lowerTickAfter.liquidityDelta.sub(lowerTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
-            expect(
-                lowerTickAfter.liquidityDeltaMinus.sub(lowerTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         }
         if (!upperTickCleared) {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 liquidityAmount
             )
-            expect(
-                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO.sub(liquidityAmount))
         } else {
             expect(upperTickAfter.liquidityDelta.sub(upperTickBefore.liquidityDelta)).to.be.equal(
                 BN_ZERO
             )
-            expect(
-                upperTickAfter.liquidityDeltaMinus.sub(upperTickBefore.liquidityDeltaMinus)
-            ).to.be.equal(BN_ZERO)
         }
     }
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(
