@@ -143,16 +143,14 @@ library Ticks {
         uint128 amount,
         bool isPool0
     ) external {
-        /// @auditor - validation of ticks is in Positions.validate
-        // load into memory to reduce storage reads/writes
+        /// @dev - validation of ticks is in Positions.validate
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
         if ((uint128(type(int128).max) - state.liquidityGlobal) < amount)
             revert LiquidityOverflow();
+
+        // load ticks into memory to reduce reads/writes
         ICoverPoolStructs.Tick memory tickLower = ticks[lower];
         ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
-        /// @auditor lower or upper = latestTick -> should not be possible
-        /// @auditor - should we check overflow/underflow of lower and upper ticks?
-        /// @auditor - we need to be able to deprecate pools if necessary; so not much reason to do overflow/underflow check
 
         // sets bit in map
         TickMap.set(tickMap, lower);
@@ -230,8 +228,7 @@ library Ticks {
             return false;
         } else if (tick.amountInDeltaMaxMinus > 0 || tick.amountOutDeltaMaxMinus > 0){
             return false;
-        }    
-        else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
+        } else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
             return false;
         } else if (tick.liquidityDelta != 0) {
             return false;
