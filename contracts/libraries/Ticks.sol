@@ -227,12 +227,15 @@ library Ticks {
 
     function _empty(
         ICoverPoolStructs.Tick memory tick
-    ) internal returns (
+    ) internal pure returns (
         bool
     ) {
         if (tick.amountInDeltaMaxStashed > 0 || tick.amountOutDeltaMaxStashed > 0) {
             return false;
-        } else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
+        } else if (tick.amountInDeltaMaxMinus > 0 || tick.amountOutDeltaMaxMinus > 0){
+            return false;
+        }    
+        else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
             return false;
         } else if (tick.liquidityDelta > 0) {
             return false;

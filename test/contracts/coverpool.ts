@@ -773,26 +773,29 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-
+        await getTick(true, -20, debugMode)
         await validateSync(-40);
+        await getTick(true, -40, debugMode)
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
 
         await validateSync(-60);
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-
+        await getTick(true, -60, debugMode)
+        await getTick(true, -80, debugMode)
         await validateSync(-80);
+        await getTick(true, -80, debugMode)
 
-        // Notice that the following burn reverts -- if the subtraction from the end tick in section2
-        // is removed the double counting no longer occurs -- and the burn can succeed.
+        // // Notice that the following burn reverts -- if the subtraction from the end tick in section2
+        // // is removed the double counting no longer occurs -- and the burn can succeed.
 
-        // Notice that after implementing the suggested fix above, 
-        // during the burn we log a percentInOnTick value that is greater than 100
-        // This is due to section2 counting a larger price range then it ought to.
-        // Currently, the section2 function will include tick -20 in it's calculations.
-        // However tick -20 was already claimed by the user in the previous burn from section4.
-        // The priceClaimLast ought to be updated to tick -40 in section1, but since the previous auction
-        // was fully filled, it was not. The fix for this is to allow this case to enter the else if in
-        // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
+        // // Notice that after implementing the suggested fix above, 
+        // // during the burn we log a percentInOnTick value that is greater than 100
+        // // This is due to section2 counting a larger price range then it ought to.
+        // // Currently, the section2 function will include tick -20 in it's calculations.
+        // // However tick -20 was already claimed by the user in the previous burn from section4.
+        // // The priceClaimLast ought to be updated to tick -40 in section1, but since the previous auction
+        // // was fully filled, it was not. The fix for this is to allow this case to enter the else if in
+        // // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -3702,7 +3705,7 @@ describe('CoverPool Tests', function () {
         })
     });
 
-    it('pool1: locked Liquidity due to rounding on final small burn :: GUARDIAN AUDITS', async function () {
+    it('pool1: locked liquidity due to rounding on final small burn :: GUARDIAN AUDITS', async function () {
         const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
         await validateSync(0)
 
@@ -3739,7 +3742,7 @@ describe('CoverPool Tests', function () {
         await validateSync(40);
 
         // Partial burn
-        console.log("===== FIRST ALICE BURN =====");
+        if (debugMode) console.log("===== FIRST ALICE BURN =====");
         await validateBurn({
             signer: hre.props.alice,
             lower: '20',
@@ -3753,7 +3756,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         });
-        console.log("===== SECOND ALICE BURN =====");
+        if (debugMode) console.log("===== SECOND ALICE BURN =====");
         await validateBurn({
             signer: hre.props.alice,
             lower: '40',
@@ -3767,7 +3770,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         });
-        console.log("===== THIRD ALICE BURN =====");
+        if (debugMode) console.log("===== THIRD ALICE BURN =====");
         // ticks[params.upper].deltas.amountOutDeltaMax < amountOutRemoved by 1 wei in Section 3
         // As a result, underflow occurs
         await validateBurn({
@@ -3814,5 +3817,64 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
+    });
+
+    it('pool1 - Should differentiate between older closed positions and newer opened positions :: GUARDIAN AUDITS', async function () {
+        const liquidityAmount = BigNumber.from("49902591570441687020675");
+        const liquidityAmountAlice = BigNumber.from("99755307984763292988257");
+        await validateSync(0)
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '20',
+            claim: '20',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(20);
+        await validateSync(40);
+        // Bob can claim at upper tick
+        await validateSync(80);
+        await validateSync(20);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmountAlice,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // After Alice mints -> amountOutDeltaMax on tick60 becomes 200
+        // However, amountOutDelta on tick60 is only 100
+        // 100 * (100/200) = 50 tokens out for Bob
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '20',
+            claim: '60',
+            upper: '60',
+            liquidityAmount: liquidityAmount,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from("0"),
+            balanceOutIncrease: BigNumber.from("99999999999999999999"),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
     });
 })

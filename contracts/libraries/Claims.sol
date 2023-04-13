@@ -163,8 +163,7 @@ library Claims {
             // burn deltas on final tick of position
             ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
             // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
-            //TODO: burn delta max minuses if claim != final
-            (updateTick.deltas) = Deltas.burnMax(updateTick.deltas, cache.finalDeltas);
+            updateTick = Deltas.burnMaxMinus(updateTick, cache.finalDeltas);
             ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
@@ -260,11 +259,10 @@ library Claims {
 
     /// @dev - calculate claim from current auction unfilled section
     function section3(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.PoolState storage pool
-    ) external returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 3 - current auction unfilled section
@@ -275,20 +273,16 @@ library Claims {
                     ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
                     : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
             );
-            cache.position.amountOut += amountOutRemoved;
-            // modify max deltas
-            
-            cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
-            // params.zeroForOne ? ticks[params.lower].deltas.amountOutDeltaMax -= amountOutRemoved
-            //                   : ticks[params.upper].deltas.amountOutDeltaMax -= amountOutRemoved;
             uint128 amountInOmitted = uint128(
                 params.zeroForOne
                     ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, false)
                     : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, false)
             );
-            cache.finalDeltas.amountInDeltaMax += amountInOmitted;
-            // params.zeroForOne ? ticks[params.lower].deltas.amountInDeltaMax -= amountInOmitted
-            //                   : ticks[params.upper].deltas.amountInDeltaMax -= amountInOmitted;
+            // add to position
+            cache.position.amountOut += amountOutRemoved;
+            // modify max deltas to be burned
+            cache.finalDeltas.amountInDeltaMax  += amountInOmitted;
+            cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
         }
         // if(debugDeltas) {
         //     console.log('section 3 check');
@@ -403,7 +397,6 @@ library Claims {
                 /// @auditor - we don't add to cache.amountInFilledMax and cache.amountOutUnfilledMax 
                 ///            since this section of the curve is not reflected in the deltas
                 if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                    //TODO: subtract from delta max minus instead
                     cache.finalDeltas.amountInDeltaMax += amountInOmitted;
                     cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
                 }      

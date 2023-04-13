@@ -273,7 +273,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -382,17 +382,23 @@ library Epochs {
         if (updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
             //TODO: burn delta max minuses
-            ICoverPoolStructs.Deltas memory accumDeltas = accumTick.deltas;
-            if (deltas.amountInDeltaMax > 0) {
-                if (accumDeltas.amountInDeltaMax > 0) {
-                    uint256 percentInOnTick  = uint256(accumDeltas.amountInDeltaMax) * 1e38 / (deltas.amountInDeltaMax);
-                    uint256 percentOutOnTick = uint256(accumDeltas.amountOutDeltaMax) * 1e38 / (deltas.amountOutDeltaMax);
-                    // transfer 
-                    (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
-                    // burn delta maxes in cache
-                    deltas = Deltas.burnMax(deltas, accumDeltas);
-                    accumTick.deltas = accumDeltas;
-                }
+            ICoverPoolStructs.Deltas memory accumDeltas;
+            if (accumTick.amountInDeltaMaxMinus > 0) {
+                // calculate percent of deltas left on tick
+                uint256 percentInOnTick  = uint256(accumTick.amountInDeltaMaxMinus)  * 1e38 / (deltas.amountInDeltaMax);
+                uint256 percentOutOnTick = uint256(accumTick.amountOutDeltaMaxMinus) * 1e38 / (deltas.amountOutDeltaMax);
+                // transfer deltas to the accum tick
+                (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
+                
+                // burn tick deltas maxes from cache
+                deltas = Deltas.burnMaxCache(deltas, accumTick);
+                
+                // empty delta max minuses into delta max
+                accumDeltas.amountInDeltaMax  += accumTick.amountInDeltaMaxMinus;
+                accumDeltas.amountOutDeltaMax += accumTick.amountOutDeltaMaxMinus;
+                accumTick.amountInDeltaMaxMinus  = 0;
+                accumTick.amountOutDeltaMaxMinus = 0;
+                accumTick.deltas = accumDeltas;
             }
         }
         // remove all liquidity
@@ -445,7 +451,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas

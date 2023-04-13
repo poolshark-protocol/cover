@@ -198,8 +198,6 @@ library Positions {
                 revert WrongTickClaimedAt();
             }
         }
-        // Positions.update() called first before additional mints
-        // if (cache.position.claimPriceLast != 0) { revert ClaimPriceLastNonZero(); }
         
         // add liquidity to ticks
         Ticks.insert(
@@ -214,9 +212,9 @@ library Positions {
 
         {
             // update max deltas
-            ICoverPoolStructs.Deltas memory tickDeltas = ticks[params.zeroForOne ? params.lower : params.upper].deltas;
-            tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
-            ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
+            ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            finalTick = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.liquidity += uint128(params.amount);
@@ -270,9 +268,9 @@ library Positions {
 
         {
             // update max deltas
-            ICoverPoolStructs.Deltas memory tickDeltas = ticks[params.zeroForOne ? params.lower : params.upper].deltas;
-            tickDeltas = Deltas.update(tickDeltas, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
-            ticks[params.zeroForOne ? params.lower : params.upper].deltas = tickDeltas;
+            ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            finalTick = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
+            ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.amountOut += uint128(
@@ -343,11 +341,10 @@ library Positions {
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             /// @dev - section 3 => claim tick - unfilled section
-            cache = Claims.section3(ticks, cache, params, pool);
+            cache = Claims.section3(cache, params, pool);
             /// @dev - section 4 => claim tick - filled section
             cache = Claims.section4(cache, params, pool);
         }
-
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
         // adjust position amounts based on deltas
