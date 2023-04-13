@@ -63,7 +63,7 @@ library Epochs {
             // get values from current auction
             (cache, pool0) = _rollover(state, cache, pool0, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
-                 && ticks0[cache.nextTickToAccum0].liquidityDeltaMinus > 0) {
+                 && ticks0[cache.nextTickToAccum0].amountInDeltaMaxMinus > 0) {
                 EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
             }
             // accumulate to next tick
@@ -76,12 +76,13 @@ library Epochs {
                     ? cache.nextTickToAccum0 == cache.stopTick0
                     : cache.nextTickToAccum0 >= cache.stopTick0
             );
+            /// @dev - deltas in cache updated after _accumulate
             cache.deltas0 = outputs.deltas;
             ticks0[cache.nextTickToCross0] = outputs.crossTick;
             ticks0[cache.nextTickToAccum0] = outputs.accumTick;
             
             // keep looping until accumulation reaches stopTick0 
-            if (cache.nextTickToAccum0 > cache.stopTick0) {
+            if (cache.nextTickToAccum0 >= cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
                     tickMap,
                     ticks0[cache.nextTickToAccum0].liquidityDelta,
@@ -94,11 +95,9 @@ library Epochs {
         }
         // pool0 checkpoint
         {
-            if (newLatestTick > state.latestTick) {
-                // create stopTick0 if necessary
-                if (cache.nextTickToAccum0 != cache.stopTick0) {
-                    TickMap.set(tickMap, cache.stopTick0);
-                }
+            // create stopTick0 if necessary
+            if (cache.nextTickToAccum0 != cache.stopTick0) {
+                TickMap.set(tickMap, cache.stopTick0);
             }
             ICoverPoolStructs.Tick memory stopTick0 = ticks0[cache.stopTick0];
             // checkpoint at stopTick0
@@ -108,29 +107,6 @@ library Epochs {
                 pool0.liquidity,
                 true
             );
-            if (newLatestTick < state.latestTick) {
-                if (cache.nextTickToAccum0 >= cache.stopTick0) {
-                    // cross in and activate next auction
-                    (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
-                        tickMap,
-                        ticks0[cache.nextTickToAccum0].liquidityDelta,
-                        cache.nextTickToCross0,
-                        cache.nextTickToAccum0,
-                        pool0.liquidity,
-                        true
-                    );
-                }
-                if (cache.nextTickToCross0 != newLatestTick) {
-                    // create newLatestTick
-                    TickMap.set(tickMap, cache.stopTick0);
-                }
-            }
-            // zero out tick liquidity
-            stopTick0.liquidityDelta += int128(
-                stopTick0.liquidityDeltaMinus
-            );
-                    
-            stopTick0.liquidityDeltaMinus = 0;
             EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch);
             ticks0[cache.stopTick0] = stopTick0;
         }
@@ -140,7 +116,7 @@ library Epochs {
             (cache, pool1) = _rollover(state, cache, pool1, false);
             // accumulate deltas pool1
             if (cache.nextTickToAccum1 < cache.stopTick1 
-                 && ticks1[cache.nextTickToAccum1].liquidityDeltaMinus > 0) {
+                 && ticks1[cache.nextTickToAccum1].amountInDeltaMaxMinus > 0) {
                 EpochMap.set(tickMap, cache.nextTickToAccum1, state.accumEpoch);
             }
             {
@@ -153,13 +129,13 @@ library Epochs {
                         ? cache.nextTickToAccum1 <= cache.stopTick1
                         : cache.nextTickToAccum1 == cache.stopTick1
                 );
+                /// @dev - deltas in cache updated after _accumulate
                 cache.deltas1 = outputs.deltas;
                 ticks1[cache.nextTickToCross1] = outputs.crossTick;
                 ticks1[cache.nextTickToAccum1] = outputs.accumTick;
             }
-
             // keep looping until accumulation reaches stopTick1 
-            if (cache.nextTickToAccum1 < cache.stopTick1) {
+            if (cache.nextTickToAccum1 <= cache.stopTick1) {
                 (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
                     tickMap,
                     ticks1[cache.nextTickToAccum1].liquidityDelta,
@@ -170,14 +146,11 @@ library Epochs {
                 );
             } else break;
         }
-        
         // pool1 checkpoint
         {
-            if (newLatestTick < state.latestTick) {
-                // create stopTick1 if necessary
-                if (cache.nextTickToAccum1 != cache.stopTick1) {
-                    TickMap.set(tickMap, cache.stopTick1);
-                }
+            // create stopTick1 if necessary
+            if (cache.nextTickToAccum1 != cache.stopTick1) {
+                TickMap.set(tickMap, cache.stopTick1);
             }
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
             // update deltas on stopTick
@@ -187,44 +160,26 @@ library Epochs {
                 pool1.liquidity,
                 false
             );
-            if (newLatestTick > state.latestTick) {
-                // create newLatestTick
-                if (cache.nextTickToAccum1 != newLatestTick) {
-                    TickMap.set(tickMap, cache.stopTick1);
-                }
-                // is there a tick in between?
-                if (cache.nextTickToAccum1 <= cache.stopTick1) {
-                    (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
-                        tickMap,
-                        ticks1[cache.nextTickToAccum1].liquidityDelta,
-                        cache.nextTickToCross1,
-                        cache.nextTickToAccum1,
-                        pool1.liquidity,
-                        false
-                    );
-                }
-                // clear pool0 liquidity if latestTick increases
-                pool0.liquidity = 0;
-            } else {
-                // clear pool1 liquidity if latestTick decreases
-                pool1.liquidity = 0;
-            }
-            stopTick1.liquidityDelta += int128(
-                stopTick1.liquidityDeltaMinus
-            );
-            stopTick1.liquidityDeltaMinus = 0;
             ticks1[cache.stopTick1] = stopTick1;
             EpochMap.set(tickMap, cache.stopTick1, state.accumEpoch);
         }
-        //TODO: only set price on one side
-        // set pool price based on newLatestTick
-        pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - state.tickSpread);
-        pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + state.tickSpread);
-
+        // update ending pool price for fully filled auction
+        state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
+        
+        // set pool price and liquidity
+        if (newLatestTick > state.latestTick) {
+            pool0.liquidity = 0;
+            pool0.price = state.latestPrice;
+            pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + state.tickSpread);
+        } else {
+            pool1.liquidity = 0;
+            pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - state.tickSpread);
+            pool1.price = state.latestPrice;
+        }
+        
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.number - state.genesisBlock);
         state.latestTick = newLatestTick;
-        state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
     
         return (state, pool0, pool1);
     }
@@ -411,6 +366,7 @@ library Epochs {
 
         return
             ICoverPoolStructs.AccumulateOutputs(
+                /// @dev - deltas are returned here and should be updated in cache
                 deltas,
                 crossTick,
                 accumTick
