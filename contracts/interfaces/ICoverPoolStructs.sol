@@ -37,15 +37,12 @@ interface ICoverPoolStructs {
 
     struct Tick {
         int128  liquidityDelta;
-        uint128 liquidityDeltaMinus;
         uint128 amountInDeltaMaxMinus;
         uint128 amountOutDeltaMaxMinus;
         uint128 amountInDeltaMaxStashed;
         uint128 amountOutDeltaMaxStashed;
         Deltas deltas;
     }
-
-    //TODO: can we just modify amountDeltaMaxStashed on burn/collect
 
     struct Deltas {
         uint128 amountInDelta;     // amt unfilled

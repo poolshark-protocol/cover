@@ -160,7 +160,6 @@ library Ticks {
         // updates liquidity values
         if (isPool0) {
                 tickLower.liquidityDelta -= int128(amount);
-                tickLower.liquidityDeltaMinus += amount;
         } else {
                 tickLower.liquidityDelta += int128(amount);
         }
@@ -171,7 +170,6 @@ library Ticks {
                 tickUpper.liquidityDelta += int128(amount);
         } else {
             tickUpper.liquidityDelta -= int128(amount);
-            tickUpper.liquidityDeltaMinus += amount;
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
@@ -195,7 +193,6 @@ library Ticks {
             if (removeLower) {
                 if (isPool0) {
                     tickLower.liquidityDelta += int128(amount);
-                    tickLower.liquidityDeltaMinus -= amount;
                 } else {
                     tickLower.liquidityDelta -= int128(amount);
                 }
@@ -213,7 +210,6 @@ library Ticks {
                     tickUpper.liquidityDelta -= int128(amount);
                 } else {
                     tickUpper.liquidityDelta += int128(amount);
-                    tickUpper.liquidityDeltaMinus -= amount;
                 }
             }
             ticks[upper] = tickUpper;
@@ -237,7 +233,7 @@ library Ticks {
         }    
         else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
             return false;
-        } else if (tick.liquidityDelta > 0) {
+        } else if (tick.liquidityDelta != 0) {
             return false;
         }
         return true;

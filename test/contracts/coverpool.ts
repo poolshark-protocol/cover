@@ -1070,13 +1070,11 @@ describe('CoverPool Tests', function () {
 
         let upperTick = await hre.props.coverPool.ticks0(0);
         expect(upperTick.liquidityDelta).to.eq("33285024970969944913475");
-        expect(upperTick.liquidityDeltaMinus).to.eq("0");
 
         // After going down to -20, tick 0 will be the cross tick and the liquidityDelta will be cleared
         await validateSync(-20);
         upperTick = await hre.props.coverPool.ticks0(0);
         expect(upperTick.liquidityDelta).to.eq("0");
-        expect(upperTick.liquidityDeltaMinus).to.eq("0");
 
         // Pool has active liquidity once tick0 is crossed.
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("33285024970969944913475");
