@@ -3818,4 +3818,63 @@ describe('CoverPool Tests', function () {
         });
 
     });
+
+    it('pool1 - Should differentiate between older closed positions and newer opened positions :: GUARDIAN AUDITS', async function () {
+        const liquidityAmount = BigNumber.from("49902591570441687020675");
+        const liquidityAmountAlice = BigNumber.from("99755307984763292988257");
+        await validateSync(0)
+
+        await validateMint({
+            signer: hre.props.bob,
+            recipient: hre.props.bob.address,
+            lower: '20',
+            claim: '20',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        await validateSync(20);
+        await validateSync(40);
+        // Bob can claim at upper tick
+        await validateSync(80);
+        await validateSync(20);
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmountAlice,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
+
+        // After Alice mints -> amountOutDeltaMax on tick60 becomes 200
+        // However, amountOutDelta on tick60 is only 100
+        // 100 * (100/200) = 50 tokens out for Bob
+        await validateBurn({
+            signer: hre.props.bob,
+            lower: '20',
+            claim: '60',
+            upper: '60',
+            liquidityAmount: liquidityAmount,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from("0"),
+            balanceOutIncrease: BigNumber.from("99999999999999999999"),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: '',
+        });
+    });
 })
