@@ -94,6 +94,7 @@ type Position @entity {
     txnHash: Bytes!
     createdBy: Bytes!
     createdAtTimestamp: BigInt!
+    epochLast: BigInt!
     owner: Bytes!
     lower: BigInt!
     upper: BigInt!
@@ -109,8 +110,7 @@ type Tick @entity {
     id: ID!
     pool: CoverPool!
     index: BigInt!
-    previousTick: BigInt!
-    nextTick: BigInt!
     price0: BigDecimal!
     price1: BigDecimal!
+    epochLast: BigInt!
 }
