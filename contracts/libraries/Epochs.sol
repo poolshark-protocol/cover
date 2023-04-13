@@ -273,7 +273,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         ICoverPoolStructs.PoolState memory pool,
         bool isPool0
-    ) internal view returns (
+    ) internal pure returns (
         ICoverPoolStructs.AccumulateCache memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -387,7 +387,6 @@ library Epochs {
                 // calculate percent of deltas left on tick
                 uint256 percentInOnTick  = uint256(accumTick.amountInDeltaMaxMinus)  * 1e38 / (deltas.amountInDeltaMax);
                 uint256 percentOutOnTick = uint256(accumTick.amountOutDeltaMaxMinus) * 1e38 / (deltas.amountOutDeltaMax);
-                
                 // transfer deltas to the accum tick
                 (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
                 
@@ -452,7 +451,7 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal view returns (ICoverPoolStructs.Tick memory) {
+    ) internal pure returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas

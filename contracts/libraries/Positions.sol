@@ -341,11 +341,10 @@ library Positions {
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             /// @dev - section 3 => claim tick - unfilled section
-            cache = Claims.section3(ticks, cache, params, pool);
+            cache = Claims.section3(cache, params, pool);
             /// @dev - section 4 => claim tick - filled section
             cache = Claims.section4(cache, params, pool);
         }
-
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
         // adjust position amounts based on deltas

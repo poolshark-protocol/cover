@@ -773,26 +773,29 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-
+        await getTick(true, -20, debugMode)
         await validateSync(-40);
+        await getTick(true, -40, debugMode)
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
 
         await validateSync(-60);
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-
+        await getTick(true, -60, debugMode)
+        await getTick(true, -80, debugMode)
         await validateSync(-80);
+        await getTick(true, -80, debugMode)
 
-        // Notice that the following burn reverts -- if the subtraction from the end tick in section2
-        // is removed the double counting no longer occurs -- and the burn can succeed.
+        // // Notice that the following burn reverts -- if the subtraction from the end tick in section2
+        // // is removed the double counting no longer occurs -- and the burn can succeed.
 
-        // Notice that after implementing the suggested fix above, 
-        // during the burn we log a percentInOnTick value that is greater than 100
-        // This is due to section2 counting a larger price range then it ought to.
-        // Currently, the section2 function will include tick -20 in it's calculations.
-        // However tick -20 was already claimed by the user in the previous burn from section4.
-        // The priceClaimLast ought to be updated to tick -40 in section1, but since the previous auction
-        // was fully filled, it was not. The fix for this is to allow this case to enter the else if in
-        // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
+        // // Notice that after implementing the suggested fix above, 
+        // // during the burn we log a percentInOnTick value that is greater than 100
+        // // This is due to section2 counting a larger price range then it ought to.
+        // // Currently, the section2 function will include tick -20 in it's calculations.
+        // // However tick -20 was already claimed by the user in the previous burn from section4.
+        // // The priceClaimLast ought to be updated to tick -40 in section1, but since the previous auction
+        // // was fully filled, it was not. The fix for this is to allow this case to enter the else if in
+        // // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -3739,7 +3742,7 @@ describe('CoverPool Tests', function () {
         await validateSync(40);
 
         // Partial burn
-        console.log("===== FIRST ALICE BURN =====");
+        if (debugMode) console.log("===== FIRST ALICE BURN =====");
         await validateBurn({
             signer: hre.props.alice,
             lower: '20',
@@ -3753,7 +3756,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         });
-        console.log("===== SECOND ALICE BURN =====");
+        if (debugMode) console.log("===== SECOND ALICE BURN =====");
         await validateBurn({
             signer: hre.props.alice,
             lower: '40',
@@ -3767,7 +3770,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         });
-        console.log("===== THIRD ALICE BURN =====");
+        if (debugMode) console.log("===== THIRD ALICE BURN =====");
         // ticks[params.upper].deltas.amountOutDeltaMax < amountOutRemoved by 1 wei in Section 3
         // As a result, underflow occurs
         await validateBurn({

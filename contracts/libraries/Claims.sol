@@ -259,11 +259,10 @@ library Claims {
 
     /// @dev - calculate claim from current auction unfilled section
     function section3(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.PoolState storage pool
-    ) external returns (
+    ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 3 - current auction unfilled section
