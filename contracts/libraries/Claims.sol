@@ -274,13 +274,14 @@ library Claims {
                     ? DyDxMath.getDx(params.amount, pool.price, cache.priceClaim, false)
                     : DyDxMath.getDy(params.amount, cache.priceClaim, pool.price, false)
             );
-            cache.position.amountOut += amountOutRemoved;
             uint128 amountInOmitted = uint128(
                 params.zeroForOne
                     ? DyDxMath.getDy(params.amount, pool.price, cache.priceClaim, false)
                     : DyDxMath.getDx(params.amount, cache.priceClaim, pool.price, false)
             );
-            // modify max deltas
+            // add to position
+            cache.position.amountOut += amountOutRemoved;
+            // modify max deltas to be burned
             cache.finalDeltas.amountInDeltaMax  += amountInOmitted;
             cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
         }
@@ -397,7 +398,6 @@ library Claims {
                 /// @auditor - we don't add to cache.amountInFilledMax and cache.amountOutUnfilledMax 
                 ///            since this section of the curve is not reflected in the deltas
                 if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-                    //TODO: subtract from delta max minus instead
                     cache.finalDeltas.amountInDeltaMax += amountInOmitted;
                     cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
                 }      
