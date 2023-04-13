@@ -1,6 +1,6 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
 import { CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, Token, VolatilityTier } from '../../../generated/schema'
-import { ONE_BD } from './constants'
+import { ONE_BD, ONE_BI } from './constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -99,8 +99,7 @@ export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
         tickEntity = new Tick(tickId)
         tickEntity.pool = address
         tickEntity.index = index
-        tickEntity.previousTick = index.equals(BigInt.fromString("20")) ? BigInt.fromI32(-887272) : BigInt.fromI32(20)
-        tickEntity.nextTick = index.equals(BigInt.fromString("20")) ? BigInt.fromI32(30) : BigInt.fromI32(887272)
+        tickEntity.epochLast = ONE_BI
         // 1.0001^tick is token1/token0.
         tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
         tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
@@ -177,7 +176,7 @@ export function safeLoadPosition(
 
     if (!positionEntity) {
         positionEntity = new Position(positionId)
-
+        positionEntity.epochLast = ONE_BI
         exists = false
     }
 
