@@ -193,24 +193,6 @@ library Deltas {
         return (fromDeltas, toDeltas);
     }
 
-    function burnMax(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Deltas memory burnDeltas
-    ) external pure returns (
-        ICoverPoolStructs.Deltas memory
-    ) {
-        fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
-                                         < burnDeltas.amountInDeltaMax) ? fromDeltas.amountInDeltaMax
-                                                                        : burnDeltas.amountInDeltaMax;
-        if (fromDeltas.amountInDeltaMax == 1) {
-            fromDeltas.amountInDeltaMax = 0; // handle rounding issues
-        }
-        fromDeltas.amountOutDeltaMax -= (fromDeltas.amountOutDeltaMax 
-                                          < burnDeltas.amountOutDeltaMax) ? fromDeltas.amountOutDeltaMax
-                                                                          : burnDeltas.amountOutDeltaMax;
-        return fromDeltas;
-    }
-
     function burnMaxCache(
         ICoverPoolStructs.Deltas memory fromDeltas,
         ICoverPoolStructs.Tick memory burnTick
