@@ -74,10 +74,10 @@ interface ICoverPoolStructs {
 
     struct MintParams {
         address to;
+        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;
-        uint128 amount;
         bool zeroForOne;
     }
 
@@ -137,12 +137,12 @@ interface ICoverPoolStructs {
     }
 
     struct ValidateCache {
-        int24 requiredStart;
-        uint24 auctionCount;
         uint256 priceLower;
         uint256 priceUpper;
         uint256 priceAverage;
         uint256 liquidityMinted;
+        int24 requiredStart;
+        uint24 auctionCount;
         bool denomTokenIn;
     }
 

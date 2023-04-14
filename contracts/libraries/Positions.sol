@@ -185,9 +185,8 @@ library Positions {
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.RemoveParams memory params
+        ICoverPoolStructs.RemoveParams memory params,
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
-        //TODO: dilute amountDeltas when adding liquidity
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
@@ -197,6 +196,7 @@ library Positions {
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
         } else {
+            _size(params, state, cache, constants);
             /// @dev - validate needed in case user passes in wrong tick
             if (
                 params.zeroForOne
@@ -393,7 +393,7 @@ library Positions {
     }
 
     function _size(
-        ICoverPoolStructs.MintParams memory params,
+        ICoverPoolStructs.SizeParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.ValidateCache memory cache,
         ICoverPoolStructs.Immutables memory constants
@@ -422,6 +422,33 @@ library Positions {
                 // token1 is the higher priced token
                 cache.denomTokenIn = !params.zeroForOne;
                 minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token1Decimals);
+            }
+        }
+        if (params.zeroForOne) {
+            if (!cache.denomTokenIn) {
+                // denominate in incoming token
+                cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
+                uint256 convertedAmount = params.amount * cache.priceAverage / Q96 
+                                                        * cache.priceAverage / Q96; // convert by squaring price
+                if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
+                    revert PositionAuctionAmountTooSmall();
+            } else {
+                if (params.amount / cache.auctionCount < minAmountPerAuction)
+                    revert PositionAuctionAmountTooSmall();
+            }
+        } else {
+            if (cache.denomTokenIn) {
+                // denominate in token1
+                minAmountPerAuction = minAmountPerAuction / 10**(18 - token1Decimals);
+                if (params.amount / cache.auctionCount < minAmountPerAuction) 
+                    revert PositionAuctionAmountTooSmall();
+            } else {
+                // denominate in token0
+                cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
+                uint256 convertedAmount = params.amount * Q96 / cache.priceAverage 
+                                                        * Q96 / cache.priceAverage; // convert by squaring price
+                if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
+                    revert PositionAuctionAmountTooSmall();
             }
         }
     }

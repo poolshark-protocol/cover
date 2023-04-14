@@ -12,12 +12,14 @@ import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
 import { VolatilityTier } from '../../generated/schema'
 
 export function handlePoolCreated(event: PoolCreated): void {
+    // grab event parameters
     let feeTierParam = BigInt.fromI32(event.params.fee)
     let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam = BigInt.fromI32(event.params.twapLength)
     let auctionLengthParam = BigInt.fromI32(event.params.auctionLength)
     let poolAddressParam = event.params.pool.toHex()
 
+    // load from store
     let loadVolatilityTier = safeLoadVolatilityTier(feeTierParam, tickSpreadParam, twapLengthParam, auctionLengthParam)
     let loadCoverPool = safeLoadCoverPool(poolAddressParam)
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS)

@@ -209,7 +209,7 @@ library Epochs {
         }
 
         // rate-limiting tick move
-        int24 maxLatestTickMove =  int24(state.tickSpread * auctionsElapsed);
+        int24 maxLatestTickMove = int24(state.tickSpread * auctionsElapsed);
 
         /// @dev - latestTick can only move based on auctionsElapsed 
         if (newLatestTick > state.latestTick) {
