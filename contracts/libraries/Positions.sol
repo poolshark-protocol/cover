@@ -32,22 +32,20 @@ library Positions {
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
     int24  internal constant MIN_POSITION_WIDTH = 5; //TODO: move to CoverPoolManager
 
-    function validate(
+    function resize(
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
-        uint8   token0Decimals,
-        uint8   token1Decimals,
-        int16   minPositionWidth,
-        uint256 minAmountPerAuction,
-        bool    minLowerPricedToken
+        ICoverPoolStructs.Immutables memory constants
     ) external pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )
     {
+        _validate(params, state);
+
         ICoverPoolStructs.ValidateCache memory cache = ICoverPoolStructs.ValidateCache({
-            requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * minPositionWidth
-                                             : state.latestTick + int24(state.tickSpread) * minPositionWidth,
+            requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * constants.minPositionWidth
+                                             : state.latestTick + int24(state.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / state.tickSpread),
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
@@ -56,14 +54,8 @@ library Positions {
             denomTokenIn: true
         });
 
-        // check for valid position bounds
-        if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
-        if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
-        if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
-        if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
+        // cannot mint empty position
         if (params.amount == 0) revert PositionAmountZero();
-        if (params.lower >= params.upper)
-            revert InvalidPositionBoundsOrder();
 
         // enforce safety window
         if (params.zeroForOne) {    
@@ -80,32 +72,9 @@ library Positions {
             params.zeroForOne ? uint256(params.amount) : 0
         );
 
-        // set minAmountPerAuction based on token decimals
-        if (state.latestTick > 0) {
-            if (minLowerPricedToken) {
-                // token1 is the lower priced token
-                cache.denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - token1Decimals);
-            } else {
-                // token0 is the higher priced token
-                cache.denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - token0Decimals);
-            }
-        } else {
-            if (minLowerPricedToken) {
-                // token0 is the lower priced token
-                cache.denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - token0Decimals);
-            } else {
-                // token1 is the higher priced token
-                cache.denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - token1Decimals);
-            }
-        }
-
         // handle partial mints
         if (params.zeroForOne) {
-            if (params.upper >= state.latestTick) {
+            if (params.upper > cache.requiredStart) {
                 params.upper = cache.requiredStart;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
@@ -117,19 +86,14 @@ library Positions {
             cache.auctionCount = uint24((params.upper - params.lower) / state.tickSpread);
             if (cache.auctionCount == 0) revert InvalidPositionWidth();
             // enforce minimum amount per auction
-            if (!cache.denomTokenIn) {
-                // denominate in incoming token
-                cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
-                uint256 convertedAmount = params.amount * cache.priceAverage / Q96 
-                                                        * cache.priceAverage / Q96; // convert by squaring price
-                if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
-                    revert PositionAuctionAmountTooSmall();
-            } else {
-                if (params.amount / cache.auctionCount < minAmountPerAuction)
-                    revert PositionAuctionAmountTooSmall();
-            }
+            _size(
+                params,
+                state,
+                cache,
+                constants
+            );
         } else {
-            if (params.lower <= state.latestTick) {
+            if (params.lower < cache.requiredStart) {
                 params.lower = cache.requiredStart;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
@@ -141,22 +105,15 @@ library Positions {
             cache.auctionCount = uint24((params.upper - params.lower) / state.tickSpread);
             if (cache.auctionCount == 0) revert InvalidPositionWidth();
             // enforce minimum amount per auction
-            if (cache.denomTokenIn) {
-                // denominate in token1
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - token1Decimals);
-                if (params.amount / cache.auctionCount < minAmountPerAuction) 
-                    revert PositionAuctionAmountTooSmall();
-            } else {
-                // denominate in token0
-                cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
-                uint256 convertedAmount = params.amount * Q96 / cache.priceAverage 
-                                                        * Q96 / cache.priceAverage; // convert by squaring price
-                if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
-                    revert PositionAuctionAmountTooSmall();
-            }
+            _size(
+                params,
+                state,
+                cache,
+                constants
+            );
         }
         // enforce minimum position width
-        if (cache.auctionCount < uint16(minPositionWidth)) revert InvalidPositionWidth();
+        if (cache.auctionCount < uint16(constants.minPositionWidth)) revert InvalidPositionWidth();
         if (cache.liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
  
         return (
@@ -420,5 +377,52 @@ library Positions {
             : positions[params.owner][params.claim][params.upper] = cache.position;
         // return cached position in memory and transfer out
         return (state, params.claim);
+    }
+
+    function _validate(
+        ICoverPoolStructs.MintParams memory params,
+        ICoverPoolStructs.GlobalState memory state
+    ) internal pure {
+        // check for valid position bounds
+        if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
+        if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
+        if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
+        if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
+        if (params.lower >= params.upper)
+            revert InvalidPositionBoundsOrder();
+    }
+
+    function _size(
+        ICoverPoolStructs.MintParams memory params,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.ValidateCache memory cache,
+        ICoverPoolStructs.Immutables memory constants
+    ) internal pure returns (
+        ICoverPoolStructs.ValidateCache memory
+    )    
+    {
+        // set minAmountPerAuction based on token decimals
+        uint256 minAmountPerAuction;
+        if (state.latestTick > 0) {
+            if (constants.minLowerPricedToken) {
+                // token1 is the lower priced token
+                cache.denomTokenIn = !params.zeroForOne;
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
+            } else {
+                // token0 is the higher priced token
+                cache.denomTokenIn = params.zeroForOne;
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
+            }
+        } else {
+            if (constants.minLowerPricedToken) {
+                // token0 is the lower priced token
+                cache.denomTokenIn = params.zeroForOne;
+                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token0Decimals);
+            } else {
+                // token1 is the higher priced token
+                cache.denomTokenIn = !params.zeroForOne;
+                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token1Decimals);
+            }
+        }
     }
 }

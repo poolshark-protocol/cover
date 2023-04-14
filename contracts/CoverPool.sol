@@ -64,6 +64,7 @@ contract CoverPool is
         MintParams memory params
     ) external lock {
         GlobalState memory state = globalState;
+        Immutables memory immutables = _immutables();
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
@@ -73,14 +74,11 @@ contract CoverPool is
             state
         );
         uint256 liquidityMinted;
-        (params, liquidityMinted) = Positions.validate(
+        // resize position if necessary
+        (params, liquidityMinted) = Positions.resize(
             params, 
             state,
-            token0Decimals,
-            token1Decimals,
-            minPositionWidth,
-            minAmountPerAuction,
-            minLowerPricedToken
+            immutables
         );
 
         if (params.amount > 0)
@@ -329,8 +327,20 @@ contract CoverPool is
             );
     }
 
+    function _immutables() internal view returns (
+        Immutables memory
+    ) {
+        return Immutables(
+            token0Decimals,
+            token1Decimals,
+            minPositionWidth,
+            minAmountPerAuction,
+            minLowerPricedToken
+        );
+    }
+
     //TODO: zap into LP position
-    //TODO: use bitmaps to naiively search for the tick closest to the new TWAP
+    //TOD)O: use bitmaps to naiively search for the tick closest to the new TWAP
     //TODO: assume everything will get filled for now
     //TODO: remove old latest tick if necessary
     //TODO: after accumulation, all liquidity below old latest tick is removed

@@ -59,6 +59,14 @@ interface ICoverPoolStructs {
         uint160 claimPriceLast; // highest price claimed at
     }
 
+    struct Immutables {
+        uint8 token0Decimals;
+        uint8 token1Decimals;
+        int16 minPositionWidth;
+        uint256 minAmountPerAuction;
+        bool minLowerPricedToken;
+    }
+
     struct ProtocolFees {
         uint128 token0;
         uint128 token1;
