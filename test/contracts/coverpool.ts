@@ -3024,7 +3024,7 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'InvalidPositionWidth()',
+            revertMessage: 'PositionInsideSafetyWindow()',
         })
 
         // no-op swap
@@ -3871,6 +3871,88 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '60',
+            upper: '60',
+            liquidityAmount: liquidityAmountAlice,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from("0"),
+            balanceOutIncrease: BigNumber.from("99999999999999999999"),
+            lowerTickCleared: true,
+            upperTickCleared: true,
+            revertMessage: 'WrongTickClaimedAt()',
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: liquidityAmountAlice,
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from("0"),
+            balanceOutIncrease: BigNumber.from("99999999999999999999"),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        });
+    });
+
+    it('pool1 - section5 of claim should not round up and cause erc20 balance drift :: GUARDIAN AUDITS', async function () {
+        const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
+        await validateSync(0)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '20',
+            claim: '0',
+            upper: '60',
+            amount: tokenAmount,
+            zeroForOne: false,
+            balanceInDecrease: tokenAmount,
+            liquidityIncrease: liquidityAmountAlice,
+            upperTickCleared: false,
+            lowerTickCleared: true,
+            revertMessage: '',
+        })
+
+        await validateSync(20);
+        await validateSync(0);
+        await validateSync(20);
+
+        expect((await hre.props.coverPool.pool1()).liquidity).to.eq(0);
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '20',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: BigNumber.from('1'),
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from("49975001251999693577"),
+            lowerTickCleared: true,
+            upperTickCleared: false,
+            revertMessage: "",
+        });
+
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '40',
+            claim: '40',
+            upper: '60',
+            liquidityAmount: liquidityAmountAlice.sub(1),
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from("50024998748000306422"),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: "",
         });
     });
 })

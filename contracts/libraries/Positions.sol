@@ -67,9 +67,9 @@ library Positions {
 
         // enforce safety window
         if (params.zeroForOne) {    
-            if (params.lower > cache.requiredStart) revert PositionInsideSafetyWindow(); 
+            if (params.lower >= cache.requiredStart) revert PositionInsideSafetyWindow(); 
         } else {
-            if (params.upper < cache.requiredStart) revert PositionInsideSafetyWindow();
+            if (params.upper <= cache.requiredStart) revert PositionInsideSafetyWindow();
         }
 
         cache.liquidityMinted = DyDxMath.getLiquidityForAmounts(
@@ -106,7 +106,7 @@ library Positions {
         // handle partial mints
         if (params.zeroForOne) {
             if (params.upper >= state.latestTick) {
-                params.upper = state.latestTick - int24(state.tickSpread);
+                params.upper = cache.requiredStart;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
                     DyDxMath.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
@@ -130,7 +130,7 @@ library Positions {
             }
         } else {
             if (params.lower <= state.latestTick) {
-                params.lower = state.latestTick + int24(state.tickSpread);
+                params.lower = cache.requiredStart;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
                     DyDxMath.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
