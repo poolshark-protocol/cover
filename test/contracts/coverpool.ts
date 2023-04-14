@@ -208,8 +208,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxBeforeCheck) {
             console.log('final tick')
-            console.log('deltainmax  before:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax before:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  before:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax before:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
         }
 
         // process two burns
@@ -234,8 +234,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -317,8 +317,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -406,8 +406,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -478,8 +478,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -524,7 +524,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959930249908791288'),
+            balanceOutIncrease: BigNumber.from('89959930249908791287'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -536,8 +536,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
 
         await validateSync(0)
@@ -622,11 +622,11 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -719,8 +719,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -766,7 +766,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24907659208740128447'),
-            balanceOutIncrease: BigNumber.from('49987513124744754072'),
+            balanceOutIncrease: BigNumber.from('49987513124744754071'),
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-40',
@@ -875,7 +875,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24907659208740128448'),
-            balanceOutIncrease: BigNumber.from('49987513124744754072'),
+            balanceOutIncrease: BigNumber.from('49987513124744754071'),
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-40',
@@ -923,7 +923,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('49765555366811364962'),
-            balanceOutIncrease: BigNumber.from('49975001251999693577'),
+            balanceOutIncrease: BigNumber.from('49975001251999693578'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1348,8 +1348,8 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
 
         await validateBurn({
@@ -1360,7 +1360,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24907659208740128448'),
-            balanceOutIncrease: BigNumber.from('75012511866496001009'),
+            balanceOutIncrease: BigNumber.from('75012511866496001008'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1389,8 +1389,8 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
 
     });
@@ -1465,7 +1465,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('33366670549555043973'),
+            balanceOutIncrease: BigNumber.from('33366670549555043972'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '', // Alice cannot claim at -20 when she should be able to
@@ -1530,7 +1530,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('61630471922511652519'),
+            balanceOutIncrease: BigNumber.from('61630471922511652518'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1564,7 +1564,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('61630471922511652519'),
+            balanceOutIncrease: BigNumber.from('61630471922511652518'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: 'UpdatePositionFirstAt(-60, -40)', // Alice cannot claim until she closes her position at (-60, -40)
@@ -1592,7 +1592,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2).add(1),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('28330464695402705205'),
+            balanceOutIncrease: BigNumber.from('28330464695402705204'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '', // Alice cannot claim until she closes her position at (-60, -40)
@@ -1655,7 +1655,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('73277601343136835737'),
+            balanceOutIncrease: BigNumber.from('73277601343136835736'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -1684,7 +1684,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2).add(1).add(aliceLiquidityAmount2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('116683335274777521987'),
+            balanceOutIncrease: BigNumber.from('116683335274777521986'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -1869,8 +1869,8 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
 
         await validateBurn({
@@ -1881,7 +1881,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24907659208740128447'),
-            balanceOutIncrease: BigNumber.from('49987513124744754072'),
+            balanceOutIncrease: BigNumber.from('49987513124744754071'),
             lowerTickCleared: false,
             upperTickCleared: true,
             expectedUpper: '-40',
@@ -1917,7 +1917,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('12428948079035618256'),
-            balanceOutIncrease: BigNumber.from('12506243434503093221'),
+            balanceOutIncrease: BigNumber.from('12506243434503093218'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '', 
@@ -1928,8 +1928,8 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxStashed.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxStashed.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-80')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-80')).amountOutDeltaMaxMinus.toString())
         }
     });
 
@@ -1974,12 +1974,11 @@ describe('CoverPool Tests', function () {
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceOutIncrease: BigNumber.from('99999999999999999997'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
         });
-
     });
 
     it('pool0 - should not have incorrect pool liquidity when final tick of position crossed :: GUARDIAN AUDITS', async function () {
@@ -2118,11 +2117,11 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2185,8 +2184,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2299,8 +2298,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2359,7 +2358,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('44949761991305334886'),
+            balanceOutIncrease: BigNumber.from('44949761991305334885'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -2373,7 +2372,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('44949761991305334886'),
+            balanceOutIncrease: BigNumber.from('44949761991305334885'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -2385,8 +2384,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2484,8 +2483,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2563,8 +2562,8 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2665,7 +2664,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
-            balanceOutIncrease: BigNumber.from('69966961710462894066'),
+            balanceOutIncrease: BigNumber.from('69966961710462894065'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -2693,7 +2692,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4.sub(liquidityAmount5),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('25012499374000153212'),
+            balanceOutIncrease: BigNumber.from('25012499374000153211'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -2707,7 +2706,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
-            balanceOutIncrease: BigNumber.from('94979461084463047278'),
+            balanceOutIncrease: BigNumber.from('94979461084463047277'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -2719,11 +2718,11 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2769,13 +2768,12 @@ describe('CoverPool Tests', function () {
         }
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).deltas.amountOutDeltaMax.toString())
-        }
-        
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+        }        
     })
 
     it('pool0 - Should claim multiple times on the same tick with a swap in between 29', async function () {
@@ -2846,7 +2844,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('20000000000000000000'),
-            balanceOutIncrease: BigNumber.from('79921885206090573760'),
+            balanceOutIncrease: BigNumber.from('79921885206090573759'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -2929,8 +2927,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -2980,8 +2978,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3073,8 +3071,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('20')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('20')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('20')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('20')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3181,8 +3179,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('40')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('40')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3227,7 +3225,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959930249908791288'),
+            balanceOutIncrease: BigNumber.from('89959930249908791287'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -3235,8 +3233,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3282,8 +3280,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('60')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('60')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('60')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3344,8 +3342,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('600020')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('600020')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('600020')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('600020')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3382,7 +3380,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('100000000000000000000'),
+            balanceOutIncrease: BigNumber.from('99999999999999999999'),
             lowerTickCleared: true,
             upperTickCleared: false,
             revertMessage: '',
@@ -3390,11 +3388,11 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('100')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('100')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('100')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('100')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).amountOutDeltaMaxMinus.toString())
         }
     })
 
@@ -3443,8 +3441,8 @@ describe('CoverPool Tests', function () {
 
         if (deltaMaxAfterCheck) {
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).deltas.amountInDeltaMax.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).deltas.amountOutDeltaMax.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks1('120')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks1('120')).amountOutDeltaMaxMinus.toString())
         }
     })
 

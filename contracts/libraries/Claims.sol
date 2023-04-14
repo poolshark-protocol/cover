@@ -387,7 +387,7 @@ library Claims {
                 (
                     amountInOmitted,
                     amountOutRemoved
-                ) = Deltas.maxRoundUp(
+                ) = Deltas.max(
                     params.amount,
                     cache.priceClaim,
                     endPrice,
