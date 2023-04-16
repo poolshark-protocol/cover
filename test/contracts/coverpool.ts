@@ -3761,10 +3761,10 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmountAlice.sub(1000),
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: BigNumber.from("50024998748000306421"),
+            balanceOutIncrease: BN_ZERO,
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: '',
+            revertMessage: 'PositionAuctionAmountTooSmall()',
         });
         if (debugMode) console.log("===== THIRD ALICE BURN =====");
         // ticks[params.upper].deltas.amountOutDeltaMax < amountOutRemoved by 1 wei in Section 3
@@ -3774,16 +3774,16 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '40',
             upper: '60',
-            liquidityAmount: BigNumber.from('1000'),
+            liquidityAmount: liquidityAmountAlice,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: BigNumber.from("1"),
+            balanceOutIncrease: BigNumber.from("50024998748000306422"),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
         });
         await validateSync(20);
-        // Alice can't open a position because the previous position is still active.
+        // // Alice can't open a position because the previous position is still active.
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,

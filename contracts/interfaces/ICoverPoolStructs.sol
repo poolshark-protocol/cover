@@ -100,8 +100,12 @@ interface ICoverPoolStructs {
     }
 
     struct SizeParams {
-        uint128 amount;
+        int24 latestTick;
+        uint24 auctionCount;
         bool zeroForOne;
+        uint128 liquidityAmount;
+        uint256 priceLower;
+        uint256 priceUpper;
     }
 
     struct AddParams {

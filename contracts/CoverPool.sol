@@ -99,7 +99,8 @@ contract CoverPool is
                 params.claim,
                 params.zeroForOne,
                 0
-            )
+            ),
+            _immutables()
         );
         if (params.amount > 0) {
             Positions.add(
@@ -170,7 +171,8 @@ contract CoverPool is
                     params.claim,
                     params.zeroForOne,
                     params.amount
-                )
+                ),
+                _immutables()
             );
         } else {
             // if position hasn't been crossed into
