@@ -57,7 +57,6 @@ library DyDxMath {
         }
     }
 
-    //TODO: debug math for this to validate numbers
     function getLiquidityForAmounts(
         uint256 priceLower,
         uint256 priceUpper,

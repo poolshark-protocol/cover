@@ -64,6 +64,8 @@ contract CoverPool is
         MintParams memory params
     ) external lock {
         GlobalState memory state = globalState;
+        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                                     : positions1[msg.sender][params.lower][params.upper];
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
@@ -73,14 +75,12 @@ contract CoverPool is
             state
         );
         uint256 liquidityMinted;
-        (params, liquidityMinted) = Positions.validate(
+        // resize position if necessary
+        (params, liquidityMinted) = Positions.resize(
+            position,
             params, 
             state,
-            token0Decimals,
-            token1Decimals,
-            minPositionWidth,
-            minAmountPerAuction,
-            minLowerPricedToken
+            _immutables()
         );
 
         if (params.amount > 0)
@@ -99,7 +99,8 @@ contract CoverPool is
                 params.claim,
                 params.zeroForOne,
                 0
-            )
+            ),
+            _immutables()
         );
         if (params.amount > 0) {
             Positions.add(
@@ -170,7 +171,8 @@ contract CoverPool is
                     params.claim,
                     params.zeroForOne,
                     params.amount
-                )
+                ),
+                _immutables()
             );
         } else {
             // if position hasn't been crossed into
@@ -179,7 +181,8 @@ contract CoverPool is
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
                 state,
-                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
+                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount),
+                _immutables()
             );
         }
         // force collection
@@ -329,8 +332,20 @@ contract CoverPool is
             );
     }
 
+    function _immutables() internal view returns (
+        Immutables memory
+    ) {
+        return Immutables(
+            token0Decimals,
+            token1Decimals,
+            minPositionWidth,
+            minAmountPerAuction,
+            minLowerPricedToken
+        );
+    }
+
     //TODO: zap into LP position
-    //TODO: use bitmaps to naiively search for the tick closest to the new TWAP
+    //TOD)O: use bitmaps to naiively search for the tick closest to the new TWAP
     //TODO: assume everything will get filled for now
     //TODO: remove old latest tick if necessary
     //TODO: after accumulation, all liquidity below old latest tick is removed

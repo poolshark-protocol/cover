@@ -142,7 +142,6 @@ export function safeLoadCoverPool(poolAddress: string): LoadCoverPoolRet {
 
     if (!coverPoolEntity) {
         coverPoolEntity = new CoverPool(poolAddress)
-        
         exists = false
     }
 

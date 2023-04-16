@@ -59,6 +59,14 @@ interface ICoverPoolStructs {
         uint160 claimPriceLast; // highest price claimed at
     }
 
+    struct Immutables {
+        uint8 token0Decimals;
+        uint8 token1Decimals;
+        int16 minPositionWidth;
+        uint256 minAmountPerAuction;
+        bool minLowerPricedToken;
+    }
+
     struct ProtocolFees {
         uint128 token0;
         uint128 token1;
@@ -66,10 +74,10 @@ interface ICoverPoolStructs {
 
     struct MintParams {
         address to;
+        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;
-        uint128 amount;
         bool zeroForOne;
     }
 
@@ -89,6 +97,15 @@ interface ICoverPoolStructs {
         int24 claim;
         int24 upper;
         bool zeroForOne;
+    }
+
+    struct SizeParams {
+        int24 latestTick;
+        uint24 auctionCount;
+        bool zeroForOne;
+        uint128 liquidityAmount;
+        uint256 priceLower;
+        uint256 priceUpper;
     }
 
     struct AddParams {
@@ -128,20 +145,15 @@ interface ICoverPoolStructs {
         uint256 amountInDelta;
     }
 
-    struct ValidateCache {
-        int24 requiredStart;
-        uint24 auctionCount;
-        uint256 priceLower;
-        uint256 priceUpper;
-        uint256 priceAverage;
-        uint256 liquidityMinted;
-        bool denomTokenIn;
-    }
-
     struct PositionCache {
+        Position position;
         uint160 priceLower;
         uint160 priceUpper;
-        Position position;
+        uint256 priceAverage;
+        uint256 liquidityMinted;
+        int24 requiredStart;
+        uint24 auctionCount;
+        bool denomTokenIn;
     }
 
     struct UpdatePositionCache {
