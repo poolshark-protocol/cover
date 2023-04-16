@@ -33,6 +33,7 @@ library Positions {
     int24  internal constant MIN_POSITION_WIDTH = 5; //TODO: move to CoverPoolManager
 
     function resize(
+        ICoverPoolStructs.Position memory position,
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
@@ -43,7 +44,8 @@ library Positions {
     {
         _validate(params, state);
 
-        ICoverPoolStructs.ValidateCache memory cache = ICoverPoolStructs.ValidateCache({
+        ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
+            position: position,
             requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(state.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / state.tickSpread),
@@ -80,13 +82,13 @@ library Positions {
                 params.amount -= uint128(
                     DyDxMath.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
                 );
-                cache.priceUpper = priceNewUpper;
+                cache.priceUpper = uint160(priceNewUpper);
             }
             // update auction count
             cache.auctionCount = uint24((params.upper - params.lower) / state.tickSpread);
             if (cache.auctionCount == 0) revert InvalidPositionWidth();
             // enforce minimum amount per auction
-            _size(
+            _sizeMint(
                 params,
                 state,
                 cache,
@@ -99,13 +101,13 @@ library Positions {
                 params.amount -= uint128(
                     DyDxMath.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
                 );
-                cache.priceLower = priceNewLower;
+                cache.priceLower = uint160(priceNewLower);
             }
             // update auction count
             cache.auctionCount = uint24((params.upper - params.lower) / state.tickSpread);
             if (cache.auctionCount == 0) revert InvalidPositionWidth();
             // enforce minimum amount per auction
-            _size(
+            _sizeMint(
                 params,
                 state,
                 cache,
@@ -130,11 +132,15 @@ library Positions {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params
     ) external {
-        //TODO: dilute amountDeltas when adding liquidity
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
+            requiredStart: 0,
+            auctionCount: 0,
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper)
+            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceAverage: 0,
+            liquidityMinted: 0,
+            denomTokenIn: true
         });
         /// call if claim != lower and liquidity being added
         /// initialize new position
@@ -186,17 +192,24 @@ library Positions {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.RemoveParams memory params,
+        ICoverPoolStructs.Immutables memory constants
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
+            requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * constants.minPositionWidth
+                                             : state.latestTick + int24(state.tickSpread) * constants.minPositionWidth,
+            auctionCount: uint24((params.upper - params.lower) / state.tickSpread),
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper)
+            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceAverage: 0,
+            liquidityMinted: 0,
+            denomTokenIn: true
         });
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
         } else {
-            _size(params, state, cache, constants);
+            _sizeBurn(params, state, cache, constants);
             /// @dev - validate needed in case user passes in wrong tick
             if (
                 params.zeroForOne
@@ -392,14 +405,12 @@ library Positions {
             revert InvalidPositionBoundsOrder();
     }
 
-    function _size(
-        ICoverPoolStructs.SizeParams memory params,
+    function _sizeMint(
+        ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.ValidateCache memory cache,
+        ICoverPoolStructs.PositionCache memory cache,
         ICoverPoolStructs.Immutables memory constants
-    ) internal pure returns (
-        ICoverPoolStructs.ValidateCache memory
-    )    
+    ) internal pure  
     {
         // set minAmountPerAuction based on token decimals
         uint256 minAmountPerAuction;
@@ -425,28 +436,115 @@ library Positions {
             }
         }
         if (params.zeroForOne) {
-            if (!cache.denomTokenIn) {
+            // factor in amount in the position currently
+            uint128 amount = uint128(DyDxMath.getDx(
+                cache.position.liquidity,
+                cache.priceLower,
+                cache.priceUpper,
+                false
+            )) + params.amount;
+            if (cache.denomTokenIn) {
+                if (amount / cache.auctionCount < minAmountPerAuction)
+                    revert PositionAuctionAmountTooSmall();
+            } else {
                 // denominate in incoming token
                 cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
-                uint256 convertedAmount = params.amount * cache.priceAverage / Q96 
+                uint256 convertedAmount = amount * cache.priceAverage / Q96 
                                                         * cache.priceAverage / Q96; // convert by squaring price
                 if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
                     revert PositionAuctionAmountTooSmall();
-            } else {
-                if (params.amount / cache.auctionCount < minAmountPerAuction)
-                    revert PositionAuctionAmountTooSmall();
             }
         } else {
+            uint128 amount = uint128(DyDxMath.getDy(
+                cache.position.liquidity,
+                cache.priceLower,
+                cache.priceUpper,
+                false
+            )) + params.amount;
             if (cache.denomTokenIn) {
                 // denominate in token1
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - token1Decimals);
-                if (params.amount / cache.auctionCount < minAmountPerAuction) 
+                // calculate amount in position currently
+                if (amount / cache.auctionCount < minAmountPerAuction) 
                     revert PositionAuctionAmountTooSmall();
             } else {
                 // denominate in token0
                 cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
-                uint256 convertedAmount = params.amount * Q96 / cache.priceAverage 
+                uint256 convertedAmount = amount * Q96 / cache.priceAverage 
                                                         * Q96 / cache.priceAverage; // convert by squaring price
+                if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
+                    revert PositionAuctionAmountTooSmall();
+            }
+        }
+    }
+
+    function _sizeBurn(
+        ICoverPoolStructs.RemoveParams memory params,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.PositionCache memory cache,
+        ICoverPoolStructs.Immutables memory constants
+    ) internal pure  
+    {
+        // early return if 100% of position burned
+        if (params.amount == cache.position.liquidity) return;
+        // set minAmountPerAuction based on token decimals
+        uint256 minAmountPerAuction;
+        if (state.latestTick > 0) {
+            if (constants.minLowerPricedToken) {
+                // token1 is the lower priced token
+                cache.denomTokenIn = !params.zeroForOne;
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
+            } else {
+                // token0 is the higher priced token
+                cache.denomTokenIn = params.zeroForOne;
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
+            }
+        } else {
+            if (constants.minLowerPricedToken) {
+                // token0 is the lower priced token
+                cache.denomTokenIn = params.zeroForOne;
+                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token0Decimals);
+            } else {
+                // token1 is the higher priced token
+                cache.denomTokenIn = !params.zeroForOne;
+                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token1Decimals);
+            }
+        }
+        if (params.zeroForOne) {
+            //calculate amount in the position currently
+            uint128 amount = uint128(DyDxMath.getDx(
+                cache.position.liquidity - params.amount,
+                cache.priceLower,
+                cache.priceUpper,
+                false
+            ));
+            if (cache.denomTokenIn) {
+                if (amount / cache.auctionCount < minAmountPerAuction)
+                    revert PositionAuctionAmountTooSmall();
+            } else {
+                // denominate in incoming token
+                cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
+                uint256 convertedAmount = amount * cache.priceAverage / Q96 
+                                                 * cache.priceAverage / Q96; // convert by squaring price
+                if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
+                    revert PositionAuctionAmountTooSmall();
+            }
+        } else {
+            uint128 amount = uint128(DyDxMath.getDy(
+                cache.position.liquidity - params.amount,
+                cache.priceLower,
+                cache.priceUpper,
+                false
+            ));
+            if (cache.denomTokenIn) {
+                // denominate in token1
+                // calculate amount in position currently
+                if (amount / cache.auctionCount < minAmountPerAuction) 
+                    revert PositionAuctionAmountTooSmall();
+            } else {
+                // denominate in token0
+                cache.priceAverage = (cache.priceUpper + cache.priceLower) / 2;
+                uint256 convertedAmount = amount * Q96 / cache.priceAverage 
+                                                 * Q96 / cache.priceAverage; // convert by squaring price
                 if (convertedAmount / cache.auctionCount < minAmountPerAuction) 
                     revert PositionAuctionAmountTooSmall();
             }

@@ -64,7 +64,8 @@ contract CoverPool is
         MintParams memory params
     ) external lock {
         GlobalState memory state = globalState;
-        Immutables memory immutables = _immutables();
+        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                                     : positions1[msg.sender][params.lower][params.upper];
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
@@ -76,9 +77,10 @@ contract CoverPool is
         uint256 liquidityMinted;
         // resize position if necessary
         (params, liquidityMinted) = Positions.resize(
+            position,
             params, 
             state,
-            immutables
+            _immutables()
         );
 
         if (params.amount > 0)
@@ -177,7 +179,8 @@ contract CoverPool is
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
                 state,
-                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount)
+                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount),
+                _immutables()
             );
         }
         // force collection

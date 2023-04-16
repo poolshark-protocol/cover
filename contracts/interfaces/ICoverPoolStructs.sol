@@ -99,6 +99,11 @@ interface ICoverPoolStructs {
         bool zeroForOne;
     }
 
+    struct SizeParams {
+        uint128 amount;
+        bool zeroForOne;
+    }
+
     struct AddParams {
         address owner;
         int24 lower;
@@ -136,20 +141,15 @@ interface ICoverPoolStructs {
         uint256 amountInDelta;
     }
 
-    struct ValidateCache {
-        uint256 priceLower;
-        uint256 priceUpper;
+    struct PositionCache {
+        Position position;
+        uint160 priceLower;
+        uint160 priceUpper;
         uint256 priceAverage;
         uint256 liquidityMinted;
         int24 requiredStart;
         uint24 auctionCount;
         bool denomTokenIn;
-    }
-
-    struct PositionCache {
-        uint160 priceLower;
-        uint160 priceUpper;
-        Position position;
     }
 
     struct UpdatePositionCache {
