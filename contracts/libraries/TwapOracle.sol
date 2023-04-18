@@ -10,6 +10,7 @@ import './math/TickMath.sol';
 library TwapOracle {
     error WaitUntilBelowMaxTick();
     error WaitUntilAboveMinTick();
+    error SecondsAgoOverflow();
     // @AUDIT - set for Ethereum mainnet; adjust for Arbitrum mainnet
     uint16 public constant blockTime = 12;
     /// @dev - adjust for deployment
@@ -41,6 +42,7 @@ library TwapOracle {
         view
         returns (int24 averageTick)
     {
+        if ((twapLength * blocktime) > type(int32).max) revert SecondsAgoOverflow();
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 0;
         secondsAgos[1] = blockTime * twapLength;

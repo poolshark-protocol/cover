@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers'
-import { validateMint } from '../../../test/utils/contracts/coverpool'
+import { BN_ZERO, getLatestTick, getLiquidity, validateMint, validateSwap } from '../../../test/utils/contracts/coverpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
@@ -8,7 +8,12 @@ export class MintPosition {
     private initialSetup: InitialSetup
     private nonce: number
 
+    private minPrice: BigNumber;
+    private maxPrice: BigNumber;
+
     constructor() {
+        this.minPrice = BigNumber.from('4295128739')
+        this.maxPrice = BigNumber.from('1461446703485210103287273052203988822378723970341')
         this.initialSetup = new InitialSetup()
     }
 
@@ -34,22 +39,31 @@ export class MintPosition {
 
         const liquidityAmount = BigNumber.from('199760153929825488153727')
 
-        await validateMint({
+        // await validateMint({
+        //     signer: hre.props.alice,
+        //     recipient: hre.props.alice.address,
+        //     lower: '20',
+        //     claim: '20',
+        //     upper: '40',
+        //     amount: token1Amount.mul(10),
+        //     zeroForOne: false,
+        //     balanceInDecrease: token1Amount,
+        //     liquidityIncrease: liquidityAmount,
+        //     upperTickCleared: false,
+        //     lowerTickCleared: false,
+        //     revertMessage: '',
+        // })
+
+        await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
-            lower: '20',
-            claim: '20',
-            upper: '40',
-            amount: token1Amount.mul(10),
-            zeroForOne: false,
-            balanceInDecrease: token1Amount,
-            liquidityIncrease: liquidityAmount,
-            upperTickCleared: false,
-            lowerTickCleared: false,
+            zeroForOne: true,
+            amountIn: ethers.utils.parseUnits('1', 18),
+            priceLimit: this.minPrice,
+            balanceInDecrease: BN_ZERO,
+            balanceOutIncrease: BN_ZERO,
             revertMessage: '',
         })
-
-        console.log('position minted')
     }
 
     public async postDeployment() {}

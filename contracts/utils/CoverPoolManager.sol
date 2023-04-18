@@ -15,6 +15,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address private _feeTo;
     address public _factory;
     uint16  public immutable MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
+    uint16 public constant blockTime = 12;
 
     /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
     mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) public volatilityTiers;
@@ -132,7 +133,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierInvalid();
-        }
+        } else if (twapLength * blockTime > type(int32).max) revert VolatilityTierInvalid();
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
             auctionLength,
             minPositionWidth,
