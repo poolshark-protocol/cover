@@ -133,7 +133,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierInvalid();
-        } else if (twapLength * blockTime > type(int32).max) revert VolatilityTierInvalid();
+        }
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
             auctionLength,
             minPositionWidth,

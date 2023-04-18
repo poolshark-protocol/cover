@@ -211,16 +211,12 @@ export async function validateSwap(params: ValidateSwapParams) {
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
 
     // quote pre-swap and validate balance changes match post-swap
-    const quote = await hre.props.coverPool.quote(true, ethers.utils.parseUnits('1', 18), BigNumber.from('4295128739'))
+    const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, priceLimit)
 
     const amountInQuoted = quote[0]
     const amountOutQuoted = quote[1]
 
-    console.log('quoted amounts:', amountInQuoted.toString(), amountOutQuoted.toString())
-
     // await network.provider.send('evm_setAutomine', [false]);
-
-    return;
 
     if (revertMessage == '') {
         let txn = await hre.props.coverPool

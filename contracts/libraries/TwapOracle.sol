@@ -42,7 +42,7 @@ library TwapOracle {
         view
         returns (int24 averageTick)
     {
-        if ((twapLength * blocktime) > type(int32).max) revert SecondsAgoOverflow();
+        // if ((twapLength * blockTime) > type(int32).max) revert SecondsAgoOverflow();
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 0;
         secondsAgos[1] = blockTime * twapLength;
