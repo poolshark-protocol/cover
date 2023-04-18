@@ -143,14 +143,15 @@ contract CoverPool is
     ) external lock {
         if (params.to == address(0)) revert CollectToZeroAddress();
         GlobalState memory state = globalState;
-        (state, pool0, pool1) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
-            tickMap,
-            pool0,
-            pool1,
-            state
-        );
+        if (params.sync)
+            (state, pool0, pool1) = Epochs.syncLatest(
+                ticks0,
+                ticks1,
+                tickMap,
+                pool0,
+                pool1,
+                state
+            );
         Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                                      : positions1[msg.sender][params.lower][params.upper];
         if (position.claimPriceLast > 0

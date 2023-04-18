@@ -82,13 +82,13 @@ interface ICoverPoolStructs {
     }
 
     struct BurnParams {
-        address to; // address(0) should revert
+        address to;
         int24 lower;
         int24 claim;
         int24 upper;
         bool zeroForOne;
         uint128 amount;
-        bool collect;
+        bool sync;
     }
 
     struct CollectParams {
