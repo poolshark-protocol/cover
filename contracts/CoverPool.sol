@@ -186,7 +186,8 @@ contract CoverPool is
             );
         }
         // force collection
-        emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
+        if (params.amount > 0)
+            emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
         _collect(
             CollectParams(
                 params.to, //address(0) goes to msg.sender
