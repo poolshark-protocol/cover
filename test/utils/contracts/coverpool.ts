@@ -471,7 +471,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                 upper: upper,
                 zeroForOne: zeroForOne,
                 amount: liquidityAmount,
-                collect: true
+                sync: true
             })
         await burnTxn.wait()
     } else {
@@ -485,7 +485,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                     upper: upper,
                     zeroForOne: zeroForOne,
                     amount: liquidityAmount,
-                    collect: true
+                    sync: true
                 })
         ).to.be.revertedWith(revertMessage)
         return
