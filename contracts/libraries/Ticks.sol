@@ -107,12 +107,14 @@ library Ticks {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.PoolState storage pool0,
         ICoverPoolStructs.PoolState storage pool1,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants 
     ) external returns (ICoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
                 state.inputPool,
-                state.twapLength
+                state.twapLength,
+                constants
             );
             if (state.unlocked == 1) {
                 // initialize state

@@ -62,6 +62,7 @@ interface ICoverPoolStructs {
     struct Immutables {
         uint8 token0Decimals;
         uint8 token1Decimals;
+        uint16 blockTime;
         int16 minPositionWidth;
         uint256 minAmountPerAuction;
         bool minLowerPricedToken;

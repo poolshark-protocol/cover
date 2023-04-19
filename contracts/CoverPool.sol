@@ -25,9 +25,21 @@ contract CoverPool is
     address public immutable token1;
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
+    uint16  public immutable blockTime;
     int16   public immutable minPositionWidth;
     uint128 public immutable minAmountPerAuction;
     bool    public immutable minLowerPricedToken;
+
+    modifier lock() {
+        if (globalState.unlocked == 0) {
+            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
+        }
+        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
+        if (globalState.unlocked == 2) revert Locked();
+        globalState.unlocked = 2;
+        _;
+        globalState.unlocked = 1;
+    }
 
     constructor(
         CoverPoolParams memory params
@@ -44,6 +56,7 @@ contract CoverPool is
           || token0Decimals < 6 || token1Decimals < 6) {
             revert InvalidTokenDecimals();
         }
+        blockTime = params.blockTime;
         minPositionWidth = params.minPositionWidth;
         minAmountPerAuction = params.minAmountPerAuction;
         minLowerPricedToken = params.minLowerPricedToken;
@@ -72,7 +85,8 @@ contract CoverPool is
             tickMap,
             pool0,
             pool1,
-            state
+            state,
+            _immutables()
         );
         uint256 liquidityMinted;
         // resize position if necessary
@@ -150,7 +164,8 @@ contract CoverPool is
                 tickMap,
                 pool0,
                 pool1,
-                state
+                state,
+                _immutables()
             );
         Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                                      : positions1[msg.sender][params.lower][params.upper];
@@ -220,7 +235,8 @@ contract CoverPool is
             tickMap,
             pool0,
             pool1,
-            state
+            state,
+            _immutables()
         );
         PoolState memory pool = zeroForOne ? pool1 : pool0;
         if (amountIn == 0) {
@@ -340,6 +356,7 @@ contract CoverPool is
         return Immutables(
             token0Decimals,
             token1Decimals,
+            blockTime,
             minPositionWidth,
             minAmountPerAuction,
             minLowerPricedToken

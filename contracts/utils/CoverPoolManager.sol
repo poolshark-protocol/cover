@@ -43,11 +43,11 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(address(0), msg.sender);
 
         /// @dev - 1e18 works for pairs with a stablecoin
-        volatilityTiers[500][20][5] = CoverPoolConfig(20, 1, 1e18, true);
-        emit VolatilityTierEnabled(500, 20, 5, 20, 2, 1e18, true);
+        volatilityTiers[500][20][60] = CoverPoolConfig(60, 250, 1, 1e18, true);
+        emit VolatilityTierEnabled(500, 20, 60, 60, 250, 1, 1e18, true);
 
-        volatilityTiers[500][40][40] = CoverPoolConfig(40, 5, 1e18, false);
-        emit VolatilityTierEnabled(500, 40, 40, 40, 5, 1e18, false);
+        volatilityTiers[500][40][480] = CoverPoolConfig(480, 250, 5, 1e18, false);
+        emit VolatilityTierEnabled(500, 40, 480, 480, 250, 5, 1e18, false);
     }
 
     /**
@@ -116,6 +116,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16   tickSpread,
         uint16  twapLength,
         uint16  auctionLength,
+        uint16  blockTime,
         int16   minPositionWidth,
         uint128 minAmountPerAuction,
         bool    minLowerPriced
@@ -124,7 +125,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierCannotBeZero();
-        } else if (twapLength < 5) {
+        } else if (twapLength < 60) {
             revert VoltatilityTierTwapTooShort();
         }
         {
@@ -141,8 +142,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
                 revert TickSpreadNotAtLeastDoubleTickSpread();
             }
         }
+        // twapLength * blockTime should never overflow uint16
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
             auctionLength,
+            blockTime,
             minPositionWidth,
             minAmountPerAuction,
             minLowerPriced
@@ -152,6 +155,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             tickSpread,
             twapLength,
             auctionLength,
+            blockTime,
             minPositionWidth,
             minAmountPerAuction,
             minLowerPriced

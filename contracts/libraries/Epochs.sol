@@ -23,7 +23,8 @@ library Epochs {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.PoolState memory pool0,
         ICoverPoolStructs.PoolState memory pool1,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants
     ) external returns (
         ICoverPoolStructs.GlobalState memory,
         ICoverPoolStructs.PoolState memory,
@@ -33,7 +34,7 @@ library Epochs {
         int24 newLatestTick;
         {
             bool earlyReturn;
-            (newLatestTick, earlyReturn) = _syncTick(state);
+            (newLatestTick, earlyReturn) = _syncTick(state, constants);
             if (earlyReturn) {
                 return (state, pool0, pool1);
             }
@@ -185,7 +186,8 @@ library Epochs {
     }
 
     function _syncTick(
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants
     ) internal view returns(
         int24 newLatestTick,
         bool
@@ -201,7 +203,7 @@ library Epochs {
             return (0, true);
         }
 
-        newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
+        newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength, constants);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += state.tickSpread / 4;
