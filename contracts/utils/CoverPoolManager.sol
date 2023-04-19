@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import '../interfaces/ICoverPool.sol';
+import '../interfaces/IRangeFactory.sol';
 import '../interfaces/ICoverPoolFactory.sol';
 import '../interfaces/ICoverPoolManager.sol';
 import '../base/events/CoverPoolManagerEvents.sol';
@@ -11,9 +12,10 @@ import '../base/events/CoverPoolManagerEvents.sol';
  * @dev Defines the actions which can be executed by the factory admin.
  */
 contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
-    address public _owner;
-    address private _feeTo;
-    address public _factory;
+    address public owner;
+    address public feeTo;
+    address public factory;
+    address public inputPoolFactory;
     uint16  public immutable MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
 
     /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
@@ -22,14 +24,22 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
     error OwnerOnly();
     error FeeToOnly();
-    error VolatilityTierInvalid();
+    error FactoryAlreadySet();
+    error VolatilityTierCannotBeZero();
     error VolatilityTierAlreadyEnabled();
+    error VoltatilityTierTwapTooShort();
     error TransferredToZeroAddress();
     error ProtocolFeeCeilingExceeded();
+    error FeeTierNotSupported();
+    error VolatilityTierNotSupported();
+    error InvalidTickSpread();
+    error TickSpreadNotMultipleOfTickSpacing();
+    error TickSpreadNotAtLeastDoubleTickSpread();
 
-    constructor() {
-        _owner = msg.sender;
-        _feeTo = msg.sender;
+    constructor(address _inputPoolFactory) {
+        owner = msg.sender;
+        feeTo = msg.sender;
+        inputPoolFactory = _inputPoolFactory;
         emit OwnerTransfer(address(0), msg.sender);
 
         /// @dev - 1e18 works for pairs with a stablecoin
@@ -54,35 +64,17 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view virtual returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function feeTo() public view virtual returns (address) {
-        return _feeTo;
-    }
-
-    function factory() public view virtual returns (address) {
-        return _factory;
-    }
-
-    /**
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() internal view virtual {
-        if (owner() != msg.sender) revert OwnerOnly();
+        if (owner != msg.sender) revert OwnerOnly();
     }
 
     /**
      * @dev Throws if the sender is not the feeTo.
      */
     function _checkFeeTo() internal view virtual {
-        if (feeTo() != msg.sender) revert FeeToOnly();
+        if (feeTo != msg.sender) revert FeeToOnly();
     }
 
     /**
@@ -104,8 +96,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
      * Internal function without access restriction.
      */
     function _transferOwner(address newOwner) internal virtual {
-        address oldOwner = _owner;
-        _owner = newOwner;
+        address oldOwner = owner;
+        owner = newOwner;
         emit OwnerTransfer(oldOwner, newOwner);
     }
 
@@ -114,8 +106,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
      * Internal function without access restriction.
      */
     function _transferFeeTo(address newFeeTo) internal virtual {
-        address oldFeeTo = _feeTo;
-        _feeTo = newFeeTo;
+        address oldFeeTo = feeTo;
+        feeTo = newFeeTo;
         emit OwnerTransfer(oldFeeTo, newFeeTo);
     }
 
@@ -131,7 +123,23 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         if (volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
-            revert VolatilityTierInvalid();
+            revert VolatilityTierCannotBeZero();
+        } else if (twapLength < 5) {
+            revert VoltatilityTierTwapTooShort();
+        }
+        {
+            // check fee tier exists
+            int24 tickSpacing = IRangeFactory(inputPoolFactory).feeTierTickSpacing(feeTier);
+            if (tickSpacing == 0) {
+                revert FeeTierNotSupported();
+            }
+            // check tick multiple
+            int24 tickMultiple = tickSpread / tickSpacing;
+            if (tickMultiple * tickSpacing != tickSpread) {
+                revert TickSpreadNotMultipleOfTickSpacing();
+            } else if (tickMultiple < 2) {
+                revert TickSpreadNotAtLeastDoubleTickSpread();
+            }
         }
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
             auctionLength,
@@ -153,8 +161,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function setFactory(
         address factory_
     ) external onlyOwner {
-        emit FactoryChanged(_factory, factory_);
-        _factory = factory_;
+        if (factory != address(0)) revert FactoryAlreadySet();
+        emit FactoryChanged(factory, factory_);
+        factory = factory_;
     }
 
     function setProtocolFee(
@@ -169,7 +178,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address[] calldata collectPools
     ) external {
         for (uint i; i < collectPools.length; i++) {
-            ICoverPoolFactory(factory()).collectProtocolFees(collectPools[i]);
+            ICoverPoolFactory(factory).collectProtocolFees(collectPools[i]);
         }
     }
 }

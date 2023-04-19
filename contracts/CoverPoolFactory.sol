@@ -22,10 +22,10 @@ contract CoverPoolFactory is
 
     constructor(
         address _owner,
-        address _rangePoolFactory
+        address _inputPoolFactory
     ) {
         owner = _owner;
-        rangePoolFactory = _rangePoolFactory;
+        inputPoolFactory = _inputPoolFactory;
     }
 
     function createCoverPool(
@@ -42,22 +42,6 @@ contract CoverPoolFactory is
         bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength));
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
-        }
-
-        {
-            // check fee tier exists
-            int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(feeTier);
-            if (tickSpacing == 0) {
-                revert FeeTierNotSupported();
-            }
-
-            // check tick multiple
-            int24 tickMultiple = tickSpread / tickSpacing;
-            if (tickMultiple * tickSpacing != tickSpread) {
-                revert TickSpreadNotMultipleOfTickSpacing();
-            } else if (tickMultiple < 2) {
-                revert TickSpreadNotAtLeastDoubleTickSpread();
-            }
         }
 
         // get pool parameters
@@ -86,7 +70,7 @@ contract CoverPoolFactory is
                     );
         }
         // get reference pool
-        params.inputPool  = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
+        params.inputPool  = IRangeFactory(inputPoolFactory).getPool(token0, token1, feeTier);
 
         // launch pool and save address
         pool = address(new CoverPool(params));

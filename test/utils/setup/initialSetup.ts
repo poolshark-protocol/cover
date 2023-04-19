@@ -243,7 +243,9 @@ export class InitialSetup {
             // @ts-ignore
             CoverPoolManager__factory,
             'coverPoolManager',
-            []
+            [
+                hre.props.rangeFactoryMock.address
+            ]
         )
 
         await this.deployAssist.deployContractWithRetry(
