@@ -21,6 +21,7 @@ library Positions {
     error InvalidLowerTick();
     error InvalidUpperTick();
     error InvalidPositionWidth();
+    error InvalidBurnPercentage();
     error PositionAmountZero();
     error PositionAuctionAmountTooSmall();
     error InvalidPositionBoundsOrder();
@@ -193,6 +194,9 @@ library Positions {
         ICoverPoolStructs.RemoveParams memory params,
         ICoverPoolStructs.Immutables memory constants
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
+        // validate burn percentage
+        if (params.amount > 1e38) revert InvalidBurnPercentage();
+        // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * constants.minPositionWidth
@@ -204,6 +208,9 @@ library Positions {
             liquidityMinted: 0,
             denomTokenIn: true
         });
+        // convert percentage to liquidity amount
+        params.amount = _convert(cache.position.liquidity, params.amount);
+        // early return if no liquidity to remove
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
@@ -279,6 +286,7 @@ library Positions {
             int24
         )
     {
+        // initialize cache
         ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
@@ -295,6 +303,8 @@ library Positions {
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
         });
+        // convert percentage amount to liquidity amount
+        params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
         {
@@ -412,6 +422,17 @@ library Positions {
             : positions[params.owner][params.claim][params.upper] = cache.position;
         // return cached position in memory and transfer out
         return (state, params.claim);
+    }
+
+    function _convert(
+        uint128 liquidity,
+        uint128 percent
+    ) internal pure returns (
+        uint128
+    ) {
+        // convert percentage amount to liquidity amount
+        if (percent > 1e38) revert InvalidBurnPercentage();
+        return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
 
     function _validate(

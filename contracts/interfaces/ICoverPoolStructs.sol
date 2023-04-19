@@ -87,7 +87,7 @@ interface ICoverPoolStructs {
         int24 claim;
         int24 upper;
         bool zeroForOne;
-        uint128 amount;
+        uint128 amount; /// @dev - taken in as a percent
         bool sync;
     }
 
