@@ -103,7 +103,7 @@ contract CoverPool is
             _immutables()
         );
         if (params.amount > 0) {
-            Positions.add(
+            state = Positions.add(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
