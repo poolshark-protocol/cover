@@ -130,7 +130,10 @@ library Positions {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params
-    ) external {
+    ) external returns (
+        ICoverPoolStructs.GlobalState memory
+    )    
+    {
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             requiredStart: 0,
@@ -143,7 +146,7 @@ library Positions {
         });
         /// call if claim != lower and liquidity being added
         /// initialize new position
-        if (params.amount == 0) return;
+        if (params.amount == 0) return state;
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
         } else {
@@ -172,6 +175,9 @@ library Positions {
             params.zeroForOne
         );
 
+        // update liquidity global
+        state.liquidityGlobal += params.amount;
+
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
@@ -182,6 +188,8 @@ library Positions {
         cache.position.liquidity += uint128(params.amount);
 
         positions[params.owner][params.lower][params.upper] = cache.position;
+
+        return state;
     }
 
     function remove(
@@ -236,7 +244,6 @@ library Positions {
         Ticks.remove(
             ticks,
             tickMap,
-            state,
             params.lower,
             params.upper,
             params.amount,
@@ -244,6 +251,9 @@ library Positions {
             true,
             true
         );
+
+        // update liquidity global
+        state.liquidityGlobal -= params.amount;
 
         {
             // update max deltas
@@ -367,7 +377,6 @@ library Positions {
             Ticks.remove(
                 ticks,
                 tickMap,
-                state,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 params.amount,
@@ -375,7 +384,10 @@ library Positions {
                 cache.removeLower,
                 cache.removeUpper
             );
+            // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
+            // update global liquidity
+            state.liquidityGlobal -= params.amount;
         }
 
         // update claimPriceLast
@@ -397,9 +409,12 @@ library Positions {
         if (params.zeroForOne ? params.claim != params.upper 
                               : params.claim != params.lower) {
             /// @dev - this also clears out position end claims
+            if (params.zeroForOne ? params.claim == params.lower 
+                                  : params.claim == params.upper) {
+                // subtract remaining position liquidity out from global
+                state.liquidityGlobal -= cache.position.liquidity;
+            }
             delete positions[params.owner][params.lower][params.upper];
-        } else {
-            // save position
         }
         // force collection to the user
         // store cached position in memory

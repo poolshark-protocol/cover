@@ -171,14 +171,11 @@ library Ticks {
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
-
-        // state.liquidityGlobal += amount;
     }
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -215,8 +212,6 @@ library Ticks {
                 TickMap.unset(tickMap, upper);
             }
         }
-        //TODO: subtract from liquidityGlobal
-        //TODO: need _empty to also check for amountInDeltaMaxMinus/amountOutDeltaMaxMinus
     }
 
     function _empty(
