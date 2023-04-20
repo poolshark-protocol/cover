@@ -16,3 +16,4 @@ jobs:
                   name: cover-contract-tests # optional
                   fail_ci_if_error: true # optional (default = false)
                   verbose: true # optional (default = false)
+                  version: "v0.1.15"
