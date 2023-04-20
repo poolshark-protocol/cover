@@ -63,6 +63,7 @@ export interface ValidateSwapParams {
     balanceOutIncrease: BigNumber
     revertMessage: string
     syncRevertMessage?: string
+    splitInto?: number
 }
 
 export interface ValidateBurnParams {
@@ -188,6 +189,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const balanceOutIncrease = params.balanceOutIncrease
     const revertMessage = params.revertMessage
     const syncRevertMessage = params.syncRevertMessage
+    const splitInto = params.splitInto && params.splitInto > 1 ? params.splitInto : 1
 
     let balanceInBefore
     let balanceOutBefore
@@ -218,10 +220,17 @@ export async function validateSwap(params: ValidateSwapParams) {
     // await network.provider.send('evm_setAutomine', [false]);
 
     if (revertMessage == '') {
-        let txn = await hre.props.coverPool
-            .connect(signer)
-            .swap(signer.address, zeroForOne, amountIn, priceLimit)
-        await txn.wait()
+        if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
+        for (let i = 0; i < splitInto; i++) {
+            let txn = await hre.props.coverPool
+                .connect(signer)
+                .swap(signer.address, zeroForOne, amountIn.div(splitInto), priceLimit)
+            if (splitInto == 1) await txn.wait()
+        }
+        if (splitInto > 1){
+            await ethers.provider.send('evm_mine')
+            await ethers.provider.send("evm_setAutomine", [true])
+        } 
     } else {
         await expect(
             hre.props.coverPool

@@ -2434,7 +2434,6 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-20)
 
-        //TODO: precision loss of 1 on each tick sync?
         await validateSync(-60)
 
         await validateBurn({
@@ -2659,6 +2658,7 @@ describe('CoverPool Tests', function () {
             balanceInDecrease: BigNumber.from('10000000000000000000'),
             balanceOutIncrease: BigNumber.from('10047100667933021495'),
             revertMessage: '',
+            splitInto: 2
         })
 
         await validateSync(0)
@@ -2851,11 +2851,24 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('20000000000000000000'),
-            balanceOutIncrease: BigNumber.from('79903827582579819949'), //TODO: check this matches with expectations
+            balanceOutIncrease: BigNumber.from('79903827582579819949'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
         })
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+        }
+        if (deltaMaxAfterCheck) {
+            console.log('claim tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+            console.log('final tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
+        } 
     })
 
     // move TWAP in range; no-op swap; burn immediately
