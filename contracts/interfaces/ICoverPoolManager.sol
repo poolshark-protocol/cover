@@ -4,9 +4,9 @@ pragma solidity 0.8.13;
 /// @notice CoverPoolManager interface
 interface ICoverPoolManager {
     struct CoverPoolConfig {
+        uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
         uint16  auctionLength;
         int16   minPositionWidth;
-        uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
         bool    minLowerPriced;
     }
     function owner() external view returns (address);
