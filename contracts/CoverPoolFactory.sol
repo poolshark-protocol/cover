@@ -50,6 +50,7 @@ contract CoverPoolFactory is
             // get volatility tier config
             (
                 uint16  auctionLength,
+                uint16  blockTime,
                 int16   minPositionWidth,
                 uint128 minAmountPerAuction,
                 bool    minLowerPriced
@@ -63,7 +64,8 @@ contract CoverPoolFactory is
                         address(0),
                         tickSpread,
                         twapLength,
-                        auctionLength, 
+                        auctionLength,
+                        blockTime, 
                         minPositionWidth,
                         minAmountPerAuction,
                         minLowerPriced

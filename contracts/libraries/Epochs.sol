@@ -23,7 +23,8 @@ library Epochs {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.PoolState memory pool0,
         ICoverPoolStructs.PoolState memory pool1,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants
     ) external returns (
         ICoverPoolStructs.GlobalState memory,
         ICoverPoolStructs.PoolState memory,
@@ -33,7 +34,7 @@ library Epochs {
         int24 newLatestTick;
         {
             bool earlyReturn;
-            (newLatestTick, earlyReturn) = _syncTick(state);
+            (newLatestTick, earlyReturn) = _syncTick(state, constants);
             if (earlyReturn) {
                 return (state, pool0, pool1);
             }
@@ -178,38 +179,39 @@ library Epochs {
         }
         
         // set auction start as an offset of the pool genesis block
-        state.auctionStart = uint32(block.number - state.genesisBlock);
+        state.auctionStart = uint32(block.timestamp) - state.genesisTime;
         state.latestTick = newLatestTick;
     
         return (state, pool0, pool1);
     }
 
     function _syncTick(
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants
     ) internal view returns(
         int24 newLatestTick,
         bool
     ) {
         // update last block checked
-        if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
-            return (0, true);
+        if(state.lastTime == uint32(block.timestamp) - state.genesisTime) {
+            return (state.latestTick, true);
         }
-        state.lastBlock = uint32(block.number) - state.genesisBlock;
+        state.lastTime = uint32(block.timestamp) - state.genesisTime;
         // check auctions elapsed
-        int32 auctionsElapsed = int32((state.lastBlock - state.auctionStart) / state.auctionLength);
-        if (auctionsElapsed == 0) {
-            return (0, true);
-        }
+        int32 auctionsElapsed = int32((uint32(block.timestamp) - state.genesisTime - state.auctionStart) / state.auctionLength);
 
+        if (auctionsElapsed == 0) {
+            return (state.latestTick, true);
+        }
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += state.tickSpread / 4;
-        else newLatestTick -= state.tickSpread / 4;
+        else if (newLatestTick <= state.latestTick - 3 * state.tickSpread / 4)
+             newLatestTick -= state.tickSpread / 4;
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
-
         if (newLatestTick == state.latestTick) {
-            return (0, true);
+            return (state.latestTick, true);
         }
 
         // rate-limiting tick move

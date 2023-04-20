@@ -22,8 +22,6 @@ describe('CoverPoolManager Tests', function () {
   const minTickIdx = BigNumber.from('-887272')
   const maxTickIdx = BigNumber.from('887272')
 
-  //TODO: mint position and burn as if there were 100
-
   before(async function () {
     await gBefore()
   })
@@ -207,7 +205,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("1000", "40", "40", "40", "4", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("1000", "40", "40", "40", "1000", "4",  ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('FeeTierNotSupported()')
   })
 
@@ -215,7 +213,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "10", "20", "20", "1", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "10", "20", "20", "1000", "1", ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('TickSpreadNotAtLeastDoubleTickSpread()')
   })
 
@@ -223,38 +221,38 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "25", "20", "20", "1", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "25", "20", "20", "1000", "1", ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('TickSpreadNotMultipleOfTickSpacing()')
   })
 
   it('Should enable volatility tier', async function () {
-    // check initial protocol fees
+    // should revert when non-admin calls
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enableVolatilityTier("100", "20", "20", "20", "1", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("100", "20", "20", "20", "1000", "1", ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('OwnerOnly()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "40", "40", "40", "5", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "20", "5", "10", "1000", "5", ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "40", "40", "40", "4", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "40", "10", "40", "1000", "4",  ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
-    // should revert when non-admin calls
     let volatilityTierConfig = await
       hre.props.coverPoolManager
-        .volatilityTiers("500", "40", "40");
-    expect(volatilityTierConfig[0]).to.be.equal(40)
-    expect(volatilityTierConfig[1]).to.be.equal(5)
-    expect(volatilityTierConfig[2]).to.be.equal(ethers.utils.parseUnits("1", 18))
-    expect(volatilityTierConfig[3]).to.be.equal(false)
+        .volatilityTiers("500", "40", "10");
+    expect(volatilityTierConfig[0]).to.be.equal(10)
+    expect(volatilityTierConfig[1]).to.be.equal(1000)
+    expect(volatilityTierConfig[2]).to.be.equal(5)
+    expect(volatilityTierConfig[3]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[4]).to.be.equal(false)
 
     expect((await
         hre.props.coverPoolManager
@@ -264,25 +262,26 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "4", "30", "4", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "30", "4", "4", "1000", "4",  ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('VoltatilityTierTwapTooShort()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "0", "30", "4", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "30", "0", "30", "1000", "4",  ethers.utils.parseUnits("1", 18), true)
     ).to.be.revertedWith('VoltatilityTierTwapTooShort()')
 
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "30", "30", "5", ethers.utils.parseUnits("1", 18), true)
+        .enableVolatilityTier("500", "30", "30", "30", "1000", "5", ethers.utils.parseUnits("1", 18), true)
 
     volatilityTierConfig = await
         hre.props.coverPoolManager
         .volatilityTiers("500", "30", "30");
-    expect(volatilityTierConfig[0]).to.be.equal(30)
-    expect(volatilityTierConfig[1]).to.be.equal(5)
-    expect(volatilityTierConfig[2]).to.be.equal(ethers.utils.parseUnits("1", 18))
-    expect(volatilityTierConfig[3]).to.be.equal(true)
+        expect(volatilityTierConfig[0]).to.be.equal(30)
+        expect(volatilityTierConfig[1]).to.be.equal(1000)
+        expect(volatilityTierConfig[2]).to.be.equal(5)
+        expect(volatilityTierConfig[3]).to.be.equal(ethers.utils.parseUnits("1", 18))
+        expect(volatilityTierConfig[4]).to.be.equal(true)
   })
 })

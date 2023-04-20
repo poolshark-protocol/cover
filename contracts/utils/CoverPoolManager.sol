@@ -16,8 +16,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public feeTo;
     address public factory;
     address public inputPoolFactory;
-    uint16  public immutable MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
-
+    uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
+    uint16  public constant oneSecond = 1000;
     /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
     mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) public volatilityTiers;
     uint16 public protocolFee;
@@ -43,11 +43,11 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(address(0), msg.sender);
 
         /// @dev - 1e18 works for pairs with a stablecoin
-        volatilityTiers[500][20][5] = CoverPoolConfig(20, 1, 1e18, true);
-        emit VolatilityTierEnabled(500, 20, 5, 20, 2, 1e18, true);
+        volatilityTiers[500][20][5] = CoverPoolConfig(5, 1000, 1, 1e18, true);
+        emit VolatilityTierEnabled(500, 20, 5, 5, 1000, 1, 1e18, true);
 
-        volatilityTiers[500][40][40] = CoverPoolConfig(40, 5, 1e18, false);
-        emit VolatilityTierEnabled(500, 40, 40, 40, 5, 1e18, false);
+        volatilityTiers[500][40][10] = CoverPoolConfig(10, 1000, 5, 1e18, false);
+        emit VolatilityTierEnabled(500, 40, 10, 10, 1000, 5, 1e18, false);
     }
 
     /**
@@ -116,6 +116,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16   tickSpread,
         uint16  twapLength,
         uint16  auctionLength,
+        uint16  blockTime,
         int16   minPositionWidth,
         uint128 minAmountPerAuction,
         bool    minLowerPriced
@@ -124,7 +125,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierCannotBeZero();
-        } else if (twapLength < 5) {
+        } else if (twapLength < 5 * blockTime / oneSecond) {
             revert VoltatilityTierTwapTooShort();
         }
         {
@@ -141,8 +142,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
                 revert TickSpreadNotAtLeastDoubleTickSpread();
             }
         }
+        // twapLength * blockTime should never overflow uint16
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
             auctionLength,
+            blockTime,
             minPositionWidth,
             minAmountPerAuction,
             minLowerPriced
@@ -152,6 +155,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             tickSpread,
             twapLength,
             auctionLength,
+            blockTime,
             minPositionWidth,
             minAmountPerAuction,
             minLowerPriced

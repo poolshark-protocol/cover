@@ -7,6 +7,7 @@ abstract contract CoverPoolFactoryStructs {
         int16   tickSpread;
         uint16  twapLength;
         uint16  auctionLength;
+        uint16  blockTime;
         int16   minPositionWidth;
         uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
         bool    minLowerPricedToken;

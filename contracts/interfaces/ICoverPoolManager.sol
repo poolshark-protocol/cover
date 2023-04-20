@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 /// @notice CoverPoolManager interface
 interface ICoverPoolManager {
     struct CoverPoolConfig {
+        uint16  blockTime; // average block time where 1e3 is 1 second
         uint16  auctionLength;
         int16   minPositionWidth;
         uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
@@ -17,6 +18,7 @@ interface ICoverPoolManager {
         int16  tickSpread,
         uint16 twapLength
     ) external view returns (
+        uint16,
         uint16,
         int16,
         uint128,
