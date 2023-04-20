@@ -194,25 +194,24 @@ library Epochs {
     ) {
         // update last block checked
         if(state.lastTime == uint32(block.timestamp) - state.genesisTime) {
-            return (0, true);
+            return (state.latestTick, true);
         }
         state.lastTime = uint32(block.timestamp) - state.genesisTime;
         // check auctions elapsed
         int32 auctionsElapsed = int32((uint32(block.timestamp) - state.genesisTime - state.auctionStart) / state.auctionLength);
 
         if (auctionsElapsed == 0) {
-            return (0, true);
+            return (state.latestTick, true);
         }
         newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
-
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += state.tickSpread / 4;
-        else newLatestTick -= state.tickSpread / 4;
+        else if (newLatestTick < state.latestTick - 3 * state.tickSpread / 4)
+             newLatestTick -= state.tickSpread / 4;
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
-
         if (newLatestTick == state.latestTick) {
-            return (0, true);
+            return (state.latestTick, true);
         }
 
         // rate-limiting tick move

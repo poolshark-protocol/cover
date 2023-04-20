@@ -93,7 +93,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool isPool0
-    ) external pure returns (
+    ) public pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -227,6 +227,27 @@ library Deltas {
                                              < burnDeltas.amountOutDeltaMax) ? fromTick.amountOutDeltaMaxMinus
                                                                                   : burnDeltas.amountOutDeltaMax;
         return fromTick;
+    }
+
+    function burnMaxPool(
+        ICoverPoolStructs.PoolState storage pool,
+        ICoverPoolStructs.UpdatePositionCache memory cache,
+        ICoverPoolStructs.UpdateParams memory params
+    ) external {
+        uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
+        (
+            amountInMaxClaimedBefore,
+            amountOutMaxClaimedBefore
+        ) = maxAuction(
+            params.amount,
+            cache.priceSpread,
+            cache.position.claimPriceLast,
+            params.zeroForOne
+        );
+        pool.amountInDeltaMaxClaimed  -= pool.amountInDeltaMaxClaimed > amountInMaxClaimedBefore ? amountInMaxClaimedBefore
+                                                                                                 : pool.amountInDeltaMaxClaimed;
+        pool.amountOutDeltaMaxClaimed -= pool.amountOutDeltaMaxClaimed > amountOutMaxClaimedBefore ? amountOutMaxClaimedBefore
+                                                                                                   : pool.amountOutDeltaMaxClaimed;
     }
 
     function from(
