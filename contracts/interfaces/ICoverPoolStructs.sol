@@ -7,16 +7,16 @@ interface ICoverPoolStructs {
     struct GlobalState {
         ProtocolFees protocolFees;
         IRangePool inputPool;
-        uint160  latestPrice; /// @dev price of latestTick
+        uint160  latestPrice;      /// @dev price of latestTick
         uint128  liquidityGlobal;
-        uint32   genesisBlock; /// @dev reference block for which auctionStart is an offset of
-        uint32   lastBlock;    /// @dev last block checked
-        uint32   auctionStart; /// @dev last block price reference was updated
+        uint32   genesisTime;      /// @dev reference time for which auctionStart is an offset of
+        uint32   lastTime;         /// @dev last block checked
+        uint32   auctionStart;     /// @dev last block price reference was updated
         uint32   accumEpoch;
-        int24    latestTick;   /// @dev latest updated inputPool price tick
-        int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
-        uint16   twapLength; /// @dev number of blocks used for TWAP sampling
-        uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
+        int24    latestTick;       /// @dev latest updated inputPool price tick
+        int16    tickSpread;       /// @dev this is a integer multiple of the inputPool tickSpacing
+        uint16   twapLength;       /// @dev number of blocks used for TWAP sampling
+        uint16   auctionLength;    /// @dev number of seconds to improve price by tickSpread
         uint8    unlocked;
     }
 
@@ -63,6 +63,7 @@ interface ICoverPoolStructs {
         uint256 minAmountPerAuction;
         uint8 token0Decimals;
         uint8 token1Decimals;
+        uint16 blockTime;
         int16 minPositionWidth;
         bool minLowerPricedToken;
     }

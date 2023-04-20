@@ -345,18 +345,7 @@ library Claims {
             && (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
                                     : cache.position.claimPriceLast > cache.priceClaim)) {
                 // reduce delta max claimed based on liquidity removed
-                uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
-                (
-                    amountInMaxClaimedBefore,
-                    amountOutMaxClaimedBefore
-                ) = Deltas.maxAuction(
-                    params.amount,
-                    cache.priceSpread,
-                    cache.position.claimPriceLast,
-                    params.zeroForOne
-                );
-                pool.amountInDeltaMaxClaimed  -= amountInMaxClaimedBefore;
-                pool.amountOutDeltaMaxClaimed -= amountOutMaxClaimedBefore;
+                Deltas.burnMaxPool(pool, cache, params);
         }
         // modify claim price for section 5
         cache.priceClaim = cache.priceSpread;

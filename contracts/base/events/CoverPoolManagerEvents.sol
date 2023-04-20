@@ -8,6 +8,7 @@ abstract contract CoverPoolManagerEvents {
         int16   tickSpread,
         uint16  twapLength,
         uint16  auctionLength,
+        uint16  blockTime,
         int16   minPositionWidth,
         uint128 minAmountPerAuction,
         bool    minLowerPriced
