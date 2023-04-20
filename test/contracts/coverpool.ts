@@ -47,16 +47,18 @@ describe('CoverPool Tests', function () {
     before(async function () {
         await gBefore()
         let currentBlock = await ethers.provider.getBlockNumber()
+        let currentTime = (await ethers.provider.getBlock(currentBlock)).timestamp
+        let lastTime = (await ethers.provider.getBlock(currentBlock - 1)).timestamp
         const pool0: PoolState = await hre.props.coverPool.pool0()
         const liquidity = pool0.liquidity
         const globalState = await hre.props.coverPool.globalState()
-        const genesisBlock = globalState.genesisBlock
+        const genesisTime = globalState.genesisTime
         const amountInDelta = pool0.amountInDelta
         const price = pool0.price
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(genesisBlock).to.be.equal(currentBlock - 2)
+        expect(genesisTime).to.be.equal(currentTime - 2)
         expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
@@ -259,13 +261,15 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-20)
 
+        await getLatestTick(true)
+
         await validateSwap({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             zeroForOne: false,
             amountIn: tokenAmount.mul(2),
             priceLimit: maxPrice,
-            balanceInDecrease: BigNumber.from('99680524411508040121'),
+            balanceInDecrease: BigNumber.from('99620704132805394768'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -291,7 +295,7 @@ describe('CoverPool Tests', function () {
             upper: '-20',
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('99680524411508040121'),
+            balanceInIncrease: BigNumber.from('99620704132805394768'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
@@ -512,7 +516,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             priceLimit: BigNumber.from('79148977909814923576066331264'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10040069750091208712'),
+            balanceOutIncrease: BigNumber.from('10046091377314633368'),
             revertMessage: '',
         })
 
@@ -524,7 +528,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959930249908791287'),
+            balanceOutIncrease: BigNumber.from('89953908622685366631'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: '',
@@ -584,7 +588,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             priceLimit: maxPrice,
             balanceInDecrease: tokenAmount.div(10),
-            balanceOutIncrease: BigNumber.from('10040071764942830081'),
+            balanceOutIncrease: BigNumber.from('10046093394583832551'),
             revertMessage: '',
         })
 
@@ -610,7 +614,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959928235057169918'),
+            balanceOutIncrease: BigNumber.from('89953906605416167448'),
             lowerTickCleared: false,
             upperTickCleared: true,
             revertMessage: '',
@@ -660,7 +664,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             priceLimit: BigNumber.from('79148977909814923576066331265'),
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10040069750091208712'),
+            balanceOutIncrease: BigNumber.from('10046091377314633368'),
             revertMessage: '',
         })
 
@@ -674,7 +678,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959930249908791288'),
+            balanceOutIncrease: BigNumber.from('89953906605416167448'),
             lowerTickCleared: false,
             upperTickCleared: false,
             revertMessage: 'WrongTickClaimedAt()',
@@ -704,7 +708,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959930249908791287'),
+            balanceOutIncrease: BigNumber.from('89953908622685366631'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -753,7 +757,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount,
             priceLimit: maxPrice,
-            balanceInDecrease: BigNumber.from('24907659208740128447'),
+            balanceInDecrease: BigNumber.from('24892711623697875920'),
             balanceOutIncrease: BigNumber.from('24987488133503998990'),
             revertMessage: '',
         })
@@ -765,7 +769,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('24907659208740128447'),
+            balanceInIncrease: BigNumber.from('24892711623697875920'),
             balanceOutIncrease: BigNumber.from('49987513124744754071'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -860,7 +864,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount,
             priceLimit: maxPrice,
-            balanceInDecrease: BigNumber.from('49815318417480256896'),
+            balanceInDecrease: BigNumber.from('49785423247395751841'),
             balanceOutIncrease: BigNumber.from('49974976267007997981'),
             revertMessage: '',
         })
@@ -874,7 +878,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('24907659208740128448'),
+            balanceInIncrease: BigNumber.from('24892711623697875920'),
             balanceOutIncrease: BigNumber.from('49987513124744754071'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -891,7 +895,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount,
             priceLimit: maxPrice,
-            balanceInDecrease: BigNumber.from('37286844237106854770'),
+            balanceInDecrease: BigNumber.from('37264467655248218930'),
             balanceOutIncrease: BigNumber.from('37556265921744461147'),
             revertMessage: '',
         });
@@ -906,7 +910,7 @@ describe('CoverPool Tests', function () {
             upper: '-40',
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('12428948079035618256'),
+            balanceInIncrease: BigNumber.from('12421489218416072976'),
             balanceOutIncrease: BigNumber.from('12506243434503093221'),
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -922,7 +926,7 @@ describe('CoverPool Tests', function () {
             upper: '-0',
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('49765555366811364962'),
+            balanceInIncrease: BigNumber.from('49735690060530021875'),
             balanceOutIncrease: BigNumber.from('49975001251999693578'),
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -1243,7 +1247,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10), // Swap in 10 tokens
             priceLimit: maxPrice,
             balanceInDecrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('10021521111719305613'),
+            balanceOutIncrease: BigNumber.from('10027532520796879175'),
             revertMessage: '',
         });
 
@@ -1258,7 +1262,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from("99955008249587388643769"),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from("5000000000000000000"), // Get half of the 10 tokens swapped in
-            balanceOutIncrease: BigNumber.from("94989239444140347193"), // ~(100 - 5)
+            balanceOutIncrease: BigNumber.from("94986233739601560412"), // ~(100 - 5)
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -1278,7 +1282,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from("1"),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from("5000000000000000000"),
-            balanceOutIncrease: BigNumber.from("94989239444140347192"), // This is the increase it ought to be it is actually 99999999999999999999
+            balanceOutIncrease: BigNumber.from("94986233739601560411"), // This is the increase it ought to be it is actually 99999999999999999999
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: "",
@@ -1329,7 +1333,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount,
             priceLimit: maxPrice,
-            balanceInDecrease: BigNumber.from('74772840297597165330'),
+            balanceInDecrease: BigNumber.from('74727967618882864170'),
             balanceOutIncrease: BigNumber.from('75012486881504305413'),
             revertMessage: '',
         });
@@ -1359,7 +1363,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('24907659208740128448'),
+            balanceInIncrease: BigNumber.from('24892711623697875920'),
             balanceOutIncrease: BigNumber.from('75012511866496001008'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -1373,7 +1377,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             liquidityAmount: aliceLiquidityAmount,
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('49865181088857036882'),
+            balanceInIncrease: BigNumber.from('49835255995184988250'),
             balanceOutIncrease: BigNumber.from('49975001251999693578'),
             lowerTickCleared: false,
             upperTickCleared: true,
@@ -1425,7 +1429,7 @@ describe('CoverPool Tests', function () {
             amountIn: tokenAmount.div(10),
             priceLimit: maxPrice,
             balanceInDecrease: tokenAmount.div(10),
-            balanceOutIncrease: BigNumber.from('10039063382085642276'),
+            balanceOutIncrease: BigNumber.from('10045083801850091530'),
             revertMessage: '',
         })
 
@@ -1448,7 +1452,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             amount: tokenAmount,
             zeroForOne: true,
-            balanceInDecrease: BigNumber.from('43405733931640686250'), // alice gets amounOut back
+            balanceInDecrease: BigNumber.from('43411754351405135504'), // alice gets amounOut back
             balanceOutIncrease: BigNumber.from('10000000000000000000'),
             liquidityIncrease: aliceLiquidityAmount,
             positionLiquidityChange: BigNumber.from('0'),
@@ -1490,6 +1494,7 @@ describe('CoverPool Tests', function () {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
         const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
+        await getLatestTick(true)
 
         await validateMint({
             signer: hre.props.alice,
@@ -1902,7 +1907,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: false,
             amountIn: tokenAmount,
             priceLimit: maxPrice,
-            balanceInDecrease: BigNumber.from('12428948079035618256'),
+            balanceInDecrease: BigNumber.from('12421489218416072976'),
             balanceOutIncrease: BigNumber.from('12518755307248153715'),
             revertMessage: '',
         });
@@ -1916,7 +1921,7 @@ describe('CoverPool Tests', function () {
             upper: '-40',
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
-            balanceInIncrease: BigNumber.from('12428948079035618256'),
+            balanceInIncrease: BigNumber.from('12421489218416072976'),
             balanceOutIncrease: BigNumber.from('12506243434503093218'),
             lowerTickCleared: true,
             upperTickCleared: true,
@@ -3130,7 +3135,7 @@ describe('CoverPool Tests', function () {
             zeroForOne: true,
             amountIn: tokenAmount.mul(2),
             priceLimit: minPrice,
-            balanceInDecrease: BigNumber.from('99680524411508040121'),
+            balanceInDecrease: BigNumber.from('99620704132805394768'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
         })
@@ -3156,7 +3161,7 @@ describe('CoverPool Tests', function () {
             upper: '40',
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
-            balanceInIncrease: BigNumber.from('99680524411508040121'),
+            balanceInIncrease: BigNumber.from('99620704132805394768'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,

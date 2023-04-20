@@ -179,7 +179,7 @@ library Epochs {
         }
         
         // set auction start as an offset of the pool genesis block
-        state.auctionStart = uint32(block.number - state.genesisBlock);
+        state.auctionStart = uint32(block.timestamp) - state.genesisTime;
         state.latestTick = newLatestTick;
     
         return (state, pool0, pool1);
@@ -193,17 +193,18 @@ library Epochs {
         bool
     ) {
         // update last block checked
-        if(state.lastBlock == uint32(block.number) - state.genesisBlock) {
+        if(state.lastTime == uint32(block.timestamp) - state.genesisTime) {
             return (0, true);
         }
-        state.lastBlock = uint32(block.number) - state.genesisBlock;
+        state.lastTime = uint32(block.timestamp) - state.genesisTime;
         // check auctions elapsed
-        int32 auctionsElapsed = int32((state.lastBlock - state.auctionStart) / state.auctionLength);
+        int32 auctionsElapsed = int32((uint32(block.timestamp) - state.genesisTime - state.auctionStart) / state.auctionLength);
+
         if (auctionsElapsed == 0) {
             return (0, true);
         }
+        newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength);
 
-        newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, state.twapLength, constants);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += state.tickSpread / 4;

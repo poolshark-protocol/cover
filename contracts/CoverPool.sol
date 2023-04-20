@@ -66,7 +66,7 @@ contract CoverPool is
         state.tickSpread    = params.tickSpread;
         state.twapLength    = params.twapLength;
         state.auctionLength = params.auctionLength;
-        state.genesisBlock  = uint32(block.number);
+        state.genesisTime   = uint32(block.timestamp);
         state.inputPool     = IRangePool(params.inputPool);
         state.protocolFees  = ProtocolFees(0,0);
 
@@ -251,7 +251,7 @@ contract CoverPool is
             price: pool.price,
             liquidity: pool.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.number - state.genesisBlock - state.auctionStart,
+            auctionDepth: block.timestamp - state.genesisTime - state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
             inputBoosted: 0,
@@ -296,7 +296,7 @@ contract CoverPool is
             price: zeroForOne ? pool1.price : pool0.price,
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.number - state.genesisBlock - state.auctionStart,
+            auctionDepth: block.timestamp - state.genesisTime - state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
             inputBoosted: 0,

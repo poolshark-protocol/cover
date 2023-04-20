@@ -137,13 +137,12 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
         // mine until end of auction
         const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
-        // console.log('auction length:', auctionLength)
         await mine(auctionLength)
     }
 
     let txn = await hre.props.rangePoolMock.setTickCumulatives(
-        BigNumber.from(newLatestTick).mul(120),
-        BigNumber.from(newLatestTick).mul(60)
+        BigNumber.from(newLatestTick).mul(10),
+        BigNumber.from(newLatestTick).mul(5)
     )
     await txn.wait();
 
