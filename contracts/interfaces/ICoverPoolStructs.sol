@@ -6,7 +6,6 @@ import "./IRangePool.sol";
 interface ICoverPoolStructs {
     struct GlobalState {
         ProtocolFees protocolFees;
-        IRangePool inputPool;
         uint160  latestPrice;      /// @dev price of latestTick
         uint128  liquidityGlobal;
         //uint32   genesisTime;      /// @dev reference time for which auctionStart is an offset of
@@ -60,6 +59,7 @@ interface ICoverPoolStructs {
     }
 
     struct Immutables {
+        address inputPool;
         uint256 minAmountPerAuction;
         uint32 genesisTime;
         int16  minPositionWidth;

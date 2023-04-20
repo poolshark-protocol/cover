@@ -16,8 +16,7 @@ library TwapOracle {
 
     // @dev increase pool observations if not sufficient
     // @dev must be deterministic since called externally
-    function initializePoolObservations(
-        IRangePool pool,
+    function initialize(
         ICoverPoolStructs.Immutables memory constants
     ) external returns (
         uint8 initializable,
@@ -26,15 +25,19 @@ library TwapOracle {
     {
         // get the number of blocks covered by the twapLength
         uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.blockTime;
-        if (!_isPoolObservationsEnough(pool, blockCount)) {
-            _increaseV3Observations(address(pool), blockCount);
+        if (!_isPoolObservationsEnough(
+                constants.inputPool,
+                blockCount
+            )
+        ) {
+            _increaseV3Observations(constants.inputPool, blockCount);
             return (0, 0);
         }
-        return (1, _calculateAverageTick(pool, constants.twapLength));
+        return (1, _calculateAverageTick(constants.inputPool, constants.twapLength));
     }
 
     function calculateAverageTick(
-        IRangePool pool,
+        address pool,
         uint16 twapLength
     ) external view returns (
         int24 averageTick
@@ -44,7 +47,7 @@ library TwapOracle {
     }
 
     function _calculateAverageTick(
-        IRangePool pool,
+        address pool,
         uint16 twapLength
     ) internal view returns (
         int24 averageTick
@@ -53,7 +56,7 @@ library TwapOracle {
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 0;
         secondsAgos[1] = twapLength;
-        (int56[] memory tickCumulatives, ) = pool.observe(secondsAgos);
+        (int56[] memory tickCumulatives, ) = IRangePool(pool).observe(secondsAgos);
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
         if (averageTick == TickMath.MAX_TICK) revert WaitUntilBelowMaxTick();
         if (averageTick == TickMath.MIN_TICK) revert WaitUntilAboveMinTick();
@@ -64,15 +67,15 @@ library TwapOracle {
         view
         returns (bool)
     {
-        return _isPoolObservationsEnough(IRangePool(pool), blockCount);
+        return _isPoolObservationsEnough(pool, blockCount);
     }
 
-    function _isPoolObservationsEnough(IRangePool pool, uint32 blockCount)
+    function _isPoolObservationsEnough(address pool, uint32 blockCount)
         internal
         view
         returns (bool)
     {
-        (, , , uint16 observationsCount, , , ) = pool.slot0();
+        (, , , uint16 observationsCount, , , ) = IRangePool(pool).slot0();
         return observationsCount >= blockCount;
     }
 

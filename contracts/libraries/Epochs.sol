@@ -203,7 +203,7 @@ library Epochs {
         if (auctionsElapsed == 0) {
             return (state.latestTick, true);
         }
-        newLatestTick = TwapOracle.calculateAverageTick(state.inputPool, constants.twapLength);
+        newLatestTick = TwapOracle.calculateAverageTick(constants.inputPool, constants.twapLength);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;

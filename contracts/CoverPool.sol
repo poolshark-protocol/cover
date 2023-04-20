@@ -23,6 +23,7 @@ contract CoverPool is
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
+    address public immutable inputPool; 
     uint128 public immutable minAmountPerAuction;
     uint32  public immutable genesisTime;
     int16   public immutable minPositionWidth;
@@ -50,8 +51,9 @@ contract CoverPool is
     ) {
         // set addresses
         factory   = msg.sender;
-        token0    = IRangePool(params.inputPool).token0();
-        token1    = IRangePool(params.inputPool).token1();
+        inputPool = params.inputPool;
+        token0    = IRangePool(inputPool).token0();
+        token1    = IRangePool(inputPool).token1();
         
         // set token decimals
         token0Decimals = ERC20(token0).decimals();
@@ -70,13 +72,6 @@ contract CoverPool is
         genesisTime   = uint32(block.timestamp);
         minAmountPerAuction = params.minAmountPerAuction;
         minLowerPricedToken = params.minLowerPricedToken;
-
-        // set global state
-        GlobalState memory state;
-        state.inputPool     = IRangePool(params.inputPool);
-        state.protocolFees  = ProtocolFees(0,0);
-
-        globalState = state;
     }
 
     function mint(
@@ -360,6 +355,7 @@ contract CoverPool is
         Immutables memory
     ) {
         return Immutables(
+            inputPool,
             minAmountPerAuction,
             genesisTime,
             minPositionWidth,

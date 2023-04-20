@@ -111,10 +111,7 @@ library Ticks {
         ICoverPoolStructs.Immutables memory constants 
     ) external returns (ICoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
-            (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
-                state.inputPool,
-                constants
-            );
+            (state.unlocked, state.latestTick) = TwapOracle.initialize(constants);
             if (state.unlocked == 1) {
                 // initialize state
                 state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
