@@ -131,12 +131,12 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     const globalState = (await hre.props.coverPool.globalState())
     const oldLatestTick: number = globalState.latestTick
-    const tickSpread: number = globalState.tickSpread
+    const tickSpread: number = await hre.props.coverPool.tickSpread()
 
     //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
         // mine until end of auction
-        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
+        const auctionLength: number = await hre.props.coverPool.auctionLength()
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         await mine(auctionLength)
     }

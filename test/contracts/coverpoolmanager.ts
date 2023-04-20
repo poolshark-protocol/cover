@@ -248,10 +248,10 @@ describe('CoverPoolManager Tests', function () {
     let volatilityTierConfig = await
       hre.props.coverPoolManager
         .volatilityTiers("500", "40", "10");
-    expect(volatilityTierConfig[0]).to.be.equal(10)
-    expect(volatilityTierConfig[1]).to.be.equal(1000)
-    expect(volatilityTierConfig[2]).to.be.equal(5)
-    expect(volatilityTierConfig[3]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[0]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[1]).to.be.equal(10)
+    expect(volatilityTierConfig[2]).to.be.equal(1000)
+    expect(volatilityTierConfig[3]).to.be.equal(5)
     expect(volatilityTierConfig[4]).to.be.equal(false)
 
     expect((await
@@ -278,10 +278,10 @@ describe('CoverPoolManager Tests', function () {
     volatilityTierConfig = await
         hre.props.coverPoolManager
         .volatilityTiers("500", "30", "30");
-        expect(volatilityTierConfig[0]).to.be.equal(30)
-        expect(volatilityTierConfig[1]).to.be.equal(1000)
-        expect(volatilityTierConfig[2]).to.be.equal(5)
-        expect(volatilityTierConfig[3]).to.be.equal(ethers.utils.parseUnits("1", 18))
+        expect(volatilityTierConfig[0]).to.be.equal(ethers.utils.parseUnits("1", 18))
+        expect(volatilityTierConfig[1]).to.be.equal(30)
+        expect(volatilityTierConfig[2]).to.be.equal(1000)
+        expect(volatilityTierConfig[3]).to.be.equal(5)
         expect(volatilityTierConfig[4]).to.be.equal(true)
   })
 })
