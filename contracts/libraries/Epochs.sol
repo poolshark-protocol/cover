@@ -207,7 +207,7 @@ library Epochs {
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += state.tickSpread / 4;
-        else if (newLatestTick < state.latestTick - 3 * state.tickSpread / 4)
+        else if (newLatestTick <= state.latestTick - 3 * state.tickSpread / 4)
              newLatestTick -= state.tickSpread / 4;
         newLatestTick = newLatestTick / state.tickSpread * state.tickSpread; // even multiple of tickSpread
         if (newLatestTick == state.latestTick) {
