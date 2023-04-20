@@ -9,6 +9,7 @@ abstract contract CoverPoolFactoryStructs {
         int16   minPositionWidth;
         uint16  twapLength;
         uint16  auctionLength;
+        uint16  blockTime;
         bool    minLowerPricedToken;
     }
 }

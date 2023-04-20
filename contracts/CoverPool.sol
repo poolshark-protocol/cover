@@ -23,11 +23,15 @@ contract CoverPool is
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
+    uint128 public immutable minAmountPerAuction;
+    uint32  public immutable genesisTime;
+    int16   public immutable minPositionWidth;
+    int16   public immutable tickSpread;
+    uint16  public immutable twapLength;
+    uint16  public immutable auctionLength;
+    uint16  public immutable blockTime;
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
-    uint16  public immutable blockTime;
-    int16   public immutable minPositionWidth;
-    uint128 public immutable minAmountPerAuction;
     bool    public immutable minLowerPricedToken;
 
     modifier lock() {
@@ -49,24 +53,26 @@ contract CoverPool is
         token0    = IRangePool(params.inputPool).token0();
         token1    = IRangePool(params.inputPool).token1();
         
-        // set immutables
+        // set token decimals
         token0Decimals = ERC20(token0).decimals();
         token1Decimals = ERC20(token1).decimals();
         if (token0Decimals > 18 || token1Decimals > 18
           || token0Decimals < 6 || token1Decimals < 6) {
             revert InvalidTokenDecimals();
         }
+
+        // set other immutables
+        auctionLength = params.auctionLength;
         blockTime = params.blockTime;
         minPositionWidth = params.minPositionWidth;
+        tickSpread    = params.tickSpread;
+        twapLength    = params.twapLength;
+        genesisTime   = uint32(block.timestamp);
         minAmountPerAuction = params.minAmountPerAuction;
         minLowerPricedToken = params.minLowerPricedToken;
 
         // set global state
         GlobalState memory state;
-        state.tickSpread    = params.tickSpread;
-        state.twapLength    = params.twapLength;
-        state.auctionLength = params.auctionLength;
-        state.genesisTime   = uint32(block.timestamp);
         state.inputPool     = IRangePool(params.inputPool);
         state.protocolFees  = ProtocolFees(0,0);
 
@@ -108,11 +114,11 @@ contract CoverPool is
             params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
                 params.to,
+                0,
                 params.lower,
                 params.upper,
                 params.claim,
-                params.zeroForOne,
-                0
+                params.zeroForOne
             ),
             _immutables()
         );
@@ -124,11 +130,11 @@ contract CoverPool is
                 state,
                 AddParams(
                     params.to,
+                    uint128(liquidityMinted),
                     params.lower,
                     params.claim,
                     params.upper,
-                    params.zeroForOne,
-                    uint128(liquidityMinted)
+                    params.zeroForOne
                 )
             );
             emit Mint(
@@ -182,11 +188,11 @@ contract CoverPool is
                 params.zeroForOne ? pool0 : pool1,
                 UpdateParams(
                     msg.sender,
+                    params.amount,
                     params.lower,
                     params.upper,
                     params.claim,
-                    params.zeroForOne,
-                    params.amount
+                    params.zeroForOne
                 ),
                 _immutables()
             );
@@ -197,7 +203,7 @@ contract CoverPool is
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
                 state,
-                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount),
+                RemoveParams(msg.sender, params.amount, params.lower, params.upper, params.zeroForOne),
                 _immutables()
             );
         }
@@ -251,14 +257,14 @@ contract CoverPool is
             price: pool.price,
             liquidity: pool.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.timestamp - state.genesisTime - state.auctionStart,
+            auctionDepth: block.timestamp - genesisTime - state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
             inputBoosted: 0,
             amountInDelta: 0
         });
         /// @dev - liquidity range is limited to one tick
-        (cache, amountOut) = Ticks.quote(zeroForOne, priceLimit, state, cache);
+        (cache, amountOut) = Ticks.quote(zeroForOne, priceLimit, state, cache, _immutables());
 
         if (zeroForOne) {
             pool1.price = uint160(cache.price);
@@ -296,7 +302,7 @@ contract CoverPool is
             price: zeroForOne ? pool1.price : pool0.price,
             liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.timestamp - state.genesisTime - state.auctionStart,
+            auctionDepth: block.timestamp - genesisTime - state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
             inputBoosted: 0,
@@ -305,7 +311,7 @@ contract CoverPool is
         /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
         /// @dev not sure whether to handle greater than tickSpacing range
         /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache);
+        (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache, _immutables());
         inAmount = amountIn - cache.input;
 
         return (inAmount, outAmount);
@@ -354,22 +360,19 @@ contract CoverPool is
         Immutables memory
     ) {
         return Immutables(
+            minAmountPerAuction,
+            genesisTime,
+            minPositionWidth,
+            tickSpread,
+            twapLength,
+            auctionLength,
+            blockTime,
             token0Decimals,
             token1Decimals,
-            blockTime,
-            minPositionWidth,
-            minAmountPerAuction,
             minLowerPricedToken
         );
     }
 
     //TODO: zap into LP position
-    //TOD)O: use bitmaps to naiively search for the tick closest to the new TWAP
-    //TODO: assume everything will get filled for now
     //TODO: remove old latest tick if necessary
-    //TODO: after accumulation, all liquidity below old latest tick is removed
-    //TODO: don't update state.latestTick until TWAP has moved +/- tickSpacing
-    //TODO: state.latestTick needs to be a multiple of tickSpacing
-    //TODO: consider partial fills and how that impacts claims
-    //TODO: consider current price...we might have to skip claims/burns from current tick
 }

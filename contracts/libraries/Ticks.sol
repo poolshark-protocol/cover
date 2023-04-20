@@ -32,8 +32,9 @@ library Ticks {
         bool zeroForOne,
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.SwapCache memory cache
-    ) external view returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
+        ICoverPoolStructs.SwapCache memory cache,
+        ICoverPoolStructs.Immutables memory constants
+    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
         if (zeroForOne ? priceLimit >= cache.price 
                        : priceLimit <= cache.price 
             || cache.price == 0 
@@ -43,9 +44,9 @@ library Ticks {
         uint256 nextTickPrice = state.latestPrice;
         uint256 nextPrice = nextTickPrice;
         // determine input boost from tick auction
-        cache.auctionBoost = ((cache.auctionDepth <= state.auctionLength) ? cache.auctionDepth
-                                                                          : state.auctionLength
-                             ) * 1e14 / state.auctionLength * uint16(state.tickSpread);
+        cache.auctionBoost = ((cache.auctionDepth <= constants.auctionLength) ? cache.auctionDepth
+                                                                          : constants.auctionLength
+                             ) * 1e14 / constants.auctionLength * uint16(constants.tickSpread);
         cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
         if (zeroForOne) {
             // trade token 0 (x) for token 1 (y)
@@ -112,14 +113,13 @@ library Ticks {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
                 state.inputPool,
-                state.twapLength,
                 constants
             );
             if (state.unlocked == 1) {
                 // initialize state
-                state.latestTick = (state.latestTick / int24(state.tickSpread)) * int24(state.tickSpread);
+                state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
                 state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
-                state.auctionStart = uint32(block.timestamp - state.genesisTime);
+                state.auctionStart = uint32(block.timestamp - constants.genesisTime);
                 state.accumEpoch = 1;
 
                 // initialize ticks
@@ -128,8 +128,8 @@ library Ticks {
                 TickMap.set(tickMap, state.latestTick);
 
                 // initialize price
-                pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread);
-                pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
+                pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - constants.tickSpread);
+                pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + constants.tickSpread);
             }
         }
         return state;

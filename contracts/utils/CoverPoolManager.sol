@@ -43,10 +43,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(address(0), msg.sender);
 
         /// @dev - 1e18 works for pairs with a stablecoin
-        volatilityTiers[500][20][5] = CoverPoolConfig(5, 1000, 1, 1e18, true);
+        volatilityTiers[500][20][5] = CoverPoolConfig(1e18, 5, 1000, 1, true);
         emit VolatilityTierEnabled(500, 20, 5, 5, 1000, 1, 1e18, true);
 
-        volatilityTiers[500][40][10] = CoverPoolConfig(10, 1000, 5, 1e18, false);
+        volatilityTiers[500][40][10] = CoverPoolConfig(1e18, 10, 1000, 5, false);
         emit VolatilityTierEnabled(500, 40, 10, 10, 1000, 5, 1e18, false);
     }
 
@@ -144,10 +144,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         }
         // twapLength * blockTime should never overflow uint16
         volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
+            minAmountPerAuction,
             auctionLength,
             blockTime,
             minPositionWidth,
-            minAmountPerAuction,
             minLowerPriced
         );
         emit VolatilityTierEnabled(

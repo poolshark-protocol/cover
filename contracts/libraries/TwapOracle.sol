@@ -18,7 +18,6 @@ library TwapOracle {
     // @dev must be deterministic since called externally
     function initializePoolObservations(
         IRangePool pool,
-        uint16 twapLength,
         ICoverPoolStructs.Immutables memory constants
     ) external returns (
         uint8 initializable,
@@ -26,12 +25,12 @@ library TwapOracle {
     )
     {
         // get the number of blocks covered by the twapLength
-        uint32 blockCount = uint32(twapLength) * oneSecond / constants.blockTime;
+        uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.blockTime;
         if (!_isPoolObservationsEnough(pool, blockCount)) {
             _increaseV3Observations(address(pool), blockCount);
             return (0, 0);
         }
-        return (1, _calculateAverageTick(pool, twapLength));
+        return (1, _calculateAverageTick(pool, constants.twapLength));
     }
 
     function calculateAverageTick(

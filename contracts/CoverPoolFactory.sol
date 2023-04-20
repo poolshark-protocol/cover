@@ -49,27 +49,24 @@ contract CoverPoolFactory is
         {
             // get volatility tier config
             (
+                uint128 minAmountPerAuction,
                 uint16  auctionLength,
                 uint16  blockTime,
                 int16   minPositionWidth,
-                uint128 minAmountPerAuction,
-                bool    minLowerPriced
+                bool    minLowerPricedToken
             ) = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
 
             if (auctionLength == 0) {
                 revert VolatilityTierNotSupported();
             }
-
-            params = CoverPoolParams(
-                        address(0),
-                        tickSpread,
-                        twapLength,
-                        auctionLength,
-                        blockTime, 
-                        minPositionWidth,
-                        minAmountPerAuction,
-                        minLowerPriced
-                    );
+            // set pool params
+            params.tickSpread = tickSpread;
+            params.twapLength = twapLength;
+            params.auctionLength = auctionLength;
+            params.blockTime = blockTime;
+            params.minPositionWidth = minPositionWidth;
+            params.minAmountPerAuction = minAmountPerAuction;
+            params.minLowerPricedToken = minLowerPricedToken;
         }
         // get reference pool
         params.inputPool  = IRangeFactory(inputPoolFactory).getPool(token0, token1, feeTier);

@@ -52,7 +52,7 @@ describe('CoverPool Tests', function () {
         const pool0: PoolState = await hre.props.coverPool.pool0()
         const liquidity = pool0.liquidity
         const globalState = await hre.props.coverPool.globalState()
-        const genesisTime = globalState.genesisTime
+        const genesisTime = await hre.props.coverPool.genesisTime()
         const amountInDelta = pool0.amountInDelta
         const price = pool0.price
         const latestTick = globalState.latestTick

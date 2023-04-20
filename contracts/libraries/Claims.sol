@@ -180,7 +180,7 @@ library Claims {
     function section1(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.Immutables memory constants
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -212,8 +212,8 @@ library Claims {
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
-                                                               : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
+            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - constants.tickSpread)
+                                                               : TickMath.getSqrtRatioAtTick(params.lower + constants.tickSpread);
         }
         // if(debugDeltas) {
         //     console.log('section 1 check');

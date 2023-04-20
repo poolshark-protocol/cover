@@ -42,13 +42,13 @@ library Positions {
         uint256
     )
     {
-        _validate(params, state);
+        _validate(params, constants);
 
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: position,
-            requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * constants.minPositionWidth
-                                             : state.latestTick + int24(state.tickSpread) * constants.minPositionWidth,
-            auctionCount: uint24((params.upper - params.lower) / state.tickSpread),
+            requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
+                                             : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
+            auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
             priceAverage: 0,
@@ -85,7 +85,7 @@ library Positions {
                 cache.priceUpper = uint160(priceNewUpper);
             }
             // update auction count
-            cache.auctionCount = uint24((params.upper - params.lower) / state.tickSpread);
+            cache.auctionCount = uint24((params.upper - params.lower) / constants.tickSpread);
             if (cache.auctionCount == 0) revert InvalidPositionWidth();
         } else {
             if (params.lower < cache.requiredStart) {
@@ -97,7 +97,7 @@ library Positions {
                 cache.priceLower = uint160(priceNewLower);
             }
             // update auction count
-            cache.auctionCount = uint24((params.upper - params.lower) / state.tickSpread);
+            cache.auctionCount = uint24((params.upper - params.lower) / constants.tickSpread);
             if (cache.auctionCount == 0) revert InvalidPositionWidth();
         }
         // enforce minimum position width
@@ -107,12 +107,12 @@ library Positions {
         // enforce minimum amount per auction
         _size(
             ICoverPoolStructs.SizeParams(
-                state.latestTick,
-                cache.auctionCount,
-                params.zeroForOne,
-                uint128(position.liquidity + cache.liquidityMinted),
                 cache.priceLower,
-                cache.priceUpper
+                cache.priceUpper,
+                uint128(position.liquidity + cache.liquidityMinted),
+                params.zeroForOne,
+                state.latestTick,
+                cache.auctionCount
             ),
             constants
         );
@@ -203,9 +203,9 @@ library Positions {
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
-            requiredStart: params.zeroForOne ? state.latestTick - int24(state.tickSpread) * constants.minPositionWidth
-                                             : state.latestTick + int24(state.tickSpread) * constants.minPositionWidth,
-            auctionCount: uint24((params.upper - params.lower) / state.tickSpread),
+            requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
+                                             : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
+            auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
             priceAverage: 0,
@@ -218,12 +218,12 @@ library Positions {
         } else {
             _size(
                 ICoverPoolStructs.SizeParams(
-                    state.latestTick,
-                    cache.auctionCount,
-                    params.zeroForOne,
-                    cache.position.liquidity - params.amount,
                     cache.priceLower,
-                    cache.priceUpper
+                    cache.priceUpper,
+                    cache.position.liquidity - params.amount,
+                    params.zeroForOne,
+                    state.latestTick,
+                    cache.auctionCount
                 ),
                 constants
             );
@@ -294,8 +294,8 @@ library Positions {
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
             priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
             priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - state.tickSpread 
-                                                                       : params.claim + state.tickSpread),
+            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
+                                                                       : params.claim + constants.tickSpread),
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
@@ -324,19 +324,19 @@ library Positions {
         if (params.amount > 0)
             _size(
                 ICoverPoolStructs.SizeParams(
-                    state.latestTick,
-                    uint24((params.upper - params.lower) / state.tickSpread),
-                    params.zeroForOne,
-                    cache.position.liquidity - params.amount,
                     cache.priceLower,
-                    cache.priceUpper
+                    cache.priceUpper,
+                    cache.position.liquidity - params.amount,
+                    params.zeroForOne,
+                    state.latestTick,
+                    uint24((params.upper - params.lower) / constants.tickSpread)
                 ),
                 constants
             );
         // get deltas from claim tick
         cache = Claims.getDeltas(cache, params);
         /// @dev - section 1 => position start - previous auction
-        cache = Claims.section1(cache, params, state);
+        cache = Claims.section1(cache, params, constants);
         /// @dev - section 2 => position start -> claim tick
         cache = Claims.section2(cache, params);
         // check if auction in progress 
@@ -401,8 +401,8 @@ library Positions {
         if (pool.price == cache.priceClaim && params.claim == state.latestTick){
             cache.position.claimPriceLast = cache.priceSpread;
             // set claim tick to claim + tickSpread
-            params.claim = params.zeroForOne ? params.claim - state.tickSpread
-                                             : params.claim + state.tickSpread;
+            params.claim = params.zeroForOne ? params.claim - constants.tickSpread
+                                             : params.claim + constants.tickSpread;
         }
 
         // clear out old position
@@ -431,13 +431,13 @@ library Positions {
 
     function _validate(
         ICoverPoolStructs.MintParams memory params,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.Immutables memory constants
     ) internal pure {
         // check for valid position bounds
         if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
         if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
-        if (params.lower % int24(state.tickSpread) != 0) revert InvalidLowerTick();
-        if (params.upper % int24(state.tickSpread) != 0) revert InvalidUpperTick();
+        if (params.lower % int24(constants.tickSpread) != 0) revert InvalidLowerTick();
+        if (params.upper % int24(constants.tickSpread) != 0) revert InvalidUpperTick();
         if (params.lower >= params.upper)
             revert InvalidPositionBoundsOrder();
     }
