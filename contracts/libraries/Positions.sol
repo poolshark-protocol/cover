@@ -292,7 +292,7 @@ library Positions {
         (
             cache,
             state
-        ) = deltas(
+        ) = _deltas(
             positions,
             ticks,
             tickMap,
@@ -319,7 +319,7 @@ library Positions {
             && params.claim != (params.zeroForOne ? params.lower : params.upper)
         ) pool.liquidity -= params.amount;
         
-        if ((params.amount > 0)) {
+        if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
                 // only remove once if final tick of position
                 cache.removeLower = false;
@@ -344,20 +344,10 @@ library Positions {
             state.liquidityGlobal -= params.amount;
         }
 
-        // update claimPriceLast
-        cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
-        cache.position.claimPriceLast = (params.claim == state.latestTick)
-            ? pool.price
-            : cache.priceClaim;
-        /// @dev - if tick 0% filled, set CPL to latestTick
-        if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
-        /// @dev - if tick 100% filled, set CPL to next tick to unlock
-        if (pool.price == cache.priceClaim && params.claim == state.latestTick){
-            cache.position.claimPriceLast = cache.priceSpread;
-            // set claim tick to claim + tickSpread
-            params.claim = params.zeroForOne ? params.claim - constants.tickSpread
-                                             : params.claim + constants.tickSpread;
-        }
+        (
+            cache,
+            params
+        ) = _checkpoint(state, pool, params, constants, cache);
 
         // clear out old position
         if (params.zeroForOne ? params.claim != params.upper 
@@ -383,7 +373,7 @@ library Positions {
         return (state, params.claim);
     }
 
-    function deltas(
+    function snapshot(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
@@ -392,7 +382,60 @@ library Positions {
         ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) public view returns (
+    ) external view returns (
+        ICoverPoolStructs.Position memory
+    ) {
+        ICoverPoolStructs.UpdatePositionCache memory cache;
+        (
+            cache,
+            state
+        ) = _deltas(
+            positions,
+            ticks,
+            tickMap,
+            state,
+            pool,
+            params,
+            constants
+        );
+
+        if (cache.earlyReturn) {
+            if (params.amount > 0)
+                cache.position.amountOut += uint128(
+                    params.zeroForOne
+                        ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
+                        : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
+                );
+            return cache.position;
+        }
+
+        if (params.amount > 0) {
+            cache.position.liquidity -= uint128(params.amount);
+        }
+        // checkpoint claimPriceLast
+        (
+            cache,
+            params
+        ) = _checkpoint(state, pool, params, constants, cache);
+        
+        // clear position values if empty
+        if (cache.position.liquidity == 0) {
+            cache.position.accumEpochLast = 0;
+            cache.position.claimPriceLast = 0;
+        }    
+        return cache.position;
+    }
+
+    function _deltas(
+        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
+            storage positions,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.PoolState memory pool,
+        ICoverPoolStructs.UpdateParams memory params,
+        ICoverPoolStructs.Immutables memory constants
+    ) internal view returns (
         ICoverPoolStructs.UpdatePositionCache memory,
         ICoverPoolStructs.GlobalState memory
     ) {
@@ -544,5 +587,32 @@ library Positions {
                     revert PositionAuctionAmountTooSmall();
             }
         }
+    }
+
+    function _checkpoint(
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.PoolState memory pool,
+        ICoverPoolStructs.UpdateParams memory params,
+        ICoverPoolStructs.Immutables memory constants,
+        ICoverPoolStructs.UpdatePositionCache memory cache
+    ) internal pure returns (
+        ICoverPoolStructs.UpdatePositionCache memory,
+        ICoverPoolStructs.UpdateParams memory
+    ) {
+        // update claimPriceLast
+        cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
+        cache.position.claimPriceLast = (params.claim == state.latestTick)
+            ? pool.price
+            : cache.priceClaim;
+        /// @dev - if tick 0% filled, set CPL to latestTick
+        if (pool.price == cache.priceSpread) cache.position.claimPriceLast = cache.priceClaim;
+        /// @dev - if tick 100% filled, set CPL to next tick to unlock
+        if (pool.price == cache.priceClaim && params.claim == state.latestTick){
+            cache.position.claimPriceLast = cache.priceSpread;
+            // set claim tick to claim + tickSpread
+            params.claim = params.zeroForOne ? params.claim - constants.tickSpread
+                                             : params.claim + constants.tickSpread;
+        }
+        return (cache, params);
     }
 }

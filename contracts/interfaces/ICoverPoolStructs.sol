@@ -55,7 +55,7 @@ interface ICoverPoolStructs {
         uint128 liquidity; // expected amount to be used not actual
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
-        uint32  accumEpochLast; // last epoch this position was updated at
+        uint32  accumEpochLast;  // last epoch this position was updated at
     }
 
     struct Immutables {
