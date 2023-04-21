@@ -79,6 +79,7 @@ export interface ValidateBurnParams {
     upperTickCleared: boolean
     expectedLower?: string
     expectedUpper?: string
+    compareSnapshot?: boolean
     revertMessage: string
 }
 
@@ -441,6 +442,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const revertMessage = params.revertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
+    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
 
     let balanceInBefore
     let balanceOutBefore
@@ -459,6 +461,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
     let positionBefore: Position
+    let positionSnapshot: Position
     if (zeroForOne) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(upper)
@@ -469,7 +472,16 @@ export async function validateBurn(params: ValidateBurnParams) {
         positionBefore = await hre.props.coverPool.positions1(signer.address, lower, upper)
     }
 
+
     if (revertMessage == '') {
+        positionSnapshot = await hre.props.coverPool.snapshot({
+            owner: signer.address,
+            amount: liquidityAmount,
+            lower: lower,
+            claim: claim,
+            upper: upper,
+            zeroForOne: zeroForOne
+        })
         const burnTxn = await hre.props.coverPool
             .connect(signer)
             .burn({
@@ -498,7 +510,6 @@ export async function validateBurn(params: ValidateBurnParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    // console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -508,12 +519,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         balanceInAfter = await hre.props.token0.balanceOf(signer.address)
         balanceOutAfter = await hre.props.token1.balanceOf(signer.address)
     }
-    // console.log('pool balance after')
-    // console.log((await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-    // console.log((await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
 
     expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease)
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
+
+    if (compareSnapshot) {
+        expect(positionSnapshot.amountIn).to.be.equal(balanceInIncrease)
+        expect(positionSnapshot.amountOut).to.be.equal(balanceOutIncrease)
+    }
 
     let lowerTickAfter: Tick
     let upperTickAfter: Tick

@@ -230,10 +230,13 @@ library Deltas {
     }
 
     function burnMaxPool(
-        ICoverPoolStructs.PoolState storage pool,
+        ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external {
+    ) external pure returns (
+        ICoverPoolStructs.PoolState memory
+    )
+    {
         uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
         (
             amountInMaxClaimedBefore,
@@ -248,6 +251,7 @@ library Deltas {
                                                                                                  : pool.amountInDeltaMaxClaimed;
         pool.amountOutDeltaMaxClaimed -= pool.amountOutDeltaMaxClaimed > amountOutMaxClaimedBefore ? amountOutMaxClaimedBefore
                                                                                                    : pool.amountOutDeltaMaxClaimed;
+        return pool;
     }
 
     function from(

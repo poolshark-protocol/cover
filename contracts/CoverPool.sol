@@ -321,7 +321,26 @@ contract CoverPool is
         return (inAmount, outAmount);
     }
 
-    function collectFees() public returns (uint128 token0Fees, uint128 token1Fees) {
+    function snapshot(
+       UpdateParams memory params 
+    ) external view returns (
+        Position memory
+    ) {
+        return Positions.snapshot(
+            params.zeroForOne ? positions0 : positions1,
+            params.zeroForOne ? ticks0 : ticks1,
+            tickMap,
+            globalState,
+            params.zeroForOne ? pool0 : pool1,
+            params,
+            _immutables()
+        );
+    }
+
+    function collectFees() public returns (
+        uint128 token0Fees,
+        uint128 token1Fees
+    ) {
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();

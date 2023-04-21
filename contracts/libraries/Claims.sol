@@ -22,18 +22,17 @@ library Claims {
             storage positions,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState storage pool,
+        ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.UpdatePositionCache memory cache
     ) external view returns (
-        ICoverPoolStructs.UpdatePositionCache memory,
-        bool
+        ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
-
-            return (cache, true);
+            cache.earlyReturn = true;
+            return cache;
         }
         // if the position has not been crossed into at all
         else if (params.zeroForOne ? params.claim == params.upper 
@@ -41,7 +40,8 @@ library Claims {
                                      : params.claim == params.lower 
                                         && EpochMap.get(tickMap, params.lower) <= cache.position.accumEpochLast
         ) {
-            return (cache, true);
+            cache.earlyReturn = true;
+            return cache;
         }
         // early return if no update and amount burned is 0
         if (
@@ -50,7 +50,11 @@ library Claims {
                     ? params.claim == params.upper && cache.priceUpper != pool.price
                     : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
             ) && params.claim == state.latestTick
-        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {return (cache, true);} } /// @dev - nothing to update if pool price hasn't moved
+        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
+                cache.earlyReturn = true;
+                return cache;
+            } 
+        } /// @dev - nothing to update if pool price hasn't moved
         
         // claim tick sanity checks
         else if (
@@ -97,7 +101,7 @@ library Claims {
             }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
-        return (cache, false);
+        return cache;
     }
 
     function getDeltas(
@@ -130,10 +134,9 @@ library Claims {
     }
 
     function applyDeltas(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         uint256 percentInDelta; uint256 percentOutDelta;
@@ -161,10 +164,9 @@ library Claims {
         // console.log('position amounts:', cache.position.amountIn, cache.position.amountOut);
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
-            ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            //  = ticks[params.zeroForOne ? params.lower : params.upper];
             // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
-            updateTick = Deltas.burnMaxMinus(updateTick, cache.finalDeltas);
-            ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
+            cache.finalTick = Deltas.burnMaxMinus(cache.finalTick, cache.finalDeltas);
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
             } else {
@@ -261,8 +263,8 @@ library Claims {
     function section3(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState storage pool
-    ) external view returns (
+        ICoverPoolStructs.PoolState memory pool
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 3 - current auction unfilled section
@@ -296,8 +298,8 @@ library Claims {
     function section4(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState storage pool
-    ) external returns (
+        ICoverPoolStructs.PoolState memory pool
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 4 - current auction filled section
@@ -320,7 +322,7 @@ library Claims {
                                                 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
             
             cache.position.amountIn += uint128(poolAmountInDeltaChange);
-            pool.amountInDelta -= uint128(poolAmountInDeltaChange);
+            pool.amountInDelta -= uint128(poolAmountInDeltaChange); //CHANGE POOL TO MEMORY
             cache.finalDeltas.amountInDeltaMax += amountInFilledMax;
             cache.finalDeltas.amountOutDeltaMax += amountOutUnfilledMax;
             /// @dev - record how much delta max was claimed
@@ -345,16 +347,18 @@ library Claims {
             && (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
                                     : cache.position.claimPriceLast > cache.priceClaim)) {
                 // reduce delta max claimed based on liquidity removed
-                Deltas.burnMaxPool(pool, cache, params);
+                pool = Deltas.burnMaxPool(pool, cache, params);
         }
         // modify claim price for section 5
         cache.priceClaim = cache.priceSpread;
+        // save pool changes to cache
+        cache.pool = pool;
         // if(debugDeltas) {
         //     console.log('section 4 check');
         //     console.log(cache.amountInFilledMax);
         //     console.log(cache.amountOutUnfilledMax);
         // }
-        return cache;
+        return cache; //RETURN POOL IN MEMORY
     }
 
     /// @dev - calculate claim from position start up to claim tick

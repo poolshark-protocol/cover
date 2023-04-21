@@ -55,7 +55,7 @@ interface ICoverPoolStructs {
         uint128 liquidity; // expected amount to be used not actual
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
-        uint32  accumEpochLast; // last epoch this position was updated at
+        uint32  accumEpochLast;  // last epoch this position was updated at
     }
 
     struct Immutables {
@@ -165,6 +165,7 @@ interface ICoverPoolStructs {
     struct UpdatePositionCache {
         Deltas deltas;
         Deltas finalDeltas;
+        PoolState pool;
         uint256 amountInFilledMax;    // considers the range covered by each update
         uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
@@ -174,6 +175,7 @@ interface ICoverPoolStructs {
         uint160 priceClaim;
         uint160 priceUpper;
         uint160 priceSpread;
+        bool earlyReturn;
         bool removeLower;
         bool removeUpper;
     }
