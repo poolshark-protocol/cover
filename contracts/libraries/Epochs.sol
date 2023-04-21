@@ -17,6 +17,94 @@ library Epochs {
     error InfiniteTickLoop0(int24);
     error InfiniteTickLoop1(int24);
 
+    function simulateSync(
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks0,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks1,
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.PoolState memory pool0,
+        ICoverPoolStructs.PoolState memory pool1,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants
+    ) external view returns (
+        ICoverPoolStructs.GlobalState memory,
+        ICoverPoolStructs.PoolState memory,
+        ICoverPoolStructs.PoolState memory
+    ) {
+        int24 newLatestTick;
+        {
+            bool earlyReturn;
+            (newLatestTick, earlyReturn) = _syncTick(state, constants);
+            if (earlyReturn) {
+                return (state, pool0, pool1);
+            }
+            // else we have a TWAP update
+        }
+
+        // setup cache
+        ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
+            nextTickToCross0: state.latestTick, // above
+            nextTickToCross1: state.latestTick, // below
+            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick), // below
+            nextTickToAccum1: TickMap.next(tickMap, state.latestTick),     // above
+            stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
+                ? state.latestTick - constants.tickSpread
+                : newLatestTick, 
+            stopTick1: (newLatestTick > state.latestTick) // where we do stop for pool1 sync
+                ? newLatestTick
+                : state.latestTick + constants.tickSpread,
+            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
+            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
+        });
+
+        while (true) {            
+            // keep looping until accumulation reaches stopTick0 
+            if (cache.nextTickToAccum0 >= cache.stopTick0) {
+                (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
+                    tickMap,
+                    ticks0[cache.nextTickToAccum0].liquidityDelta,
+                    cache.nextTickToCross0,
+                    cache.nextTickToAccum0,
+                    pool0.liquidity,
+                    true
+                );
+            } else break;
+        }
+
+        while (true) {
+            // keep looping until accumulation reaches stopTick1 
+            if (cache.nextTickToAccum1 <= cache.stopTick1) {
+                (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
+                    tickMap,
+                    ticks1[cache.nextTickToAccum1].liquidityDelta,
+                    cache.nextTickToCross1,
+                    cache.nextTickToAccum1,
+                    pool1.liquidity,
+                    false
+                );
+            } else break;
+        }
+
+        // update ending pool price for fully filled auction
+        state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
+        
+        // set pool price and liquidity
+        if (newLatestTick > state.latestTick) {
+            pool0.liquidity = 0;
+            pool0.price = state.latestPrice;
+            pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + constants.tickSpread);
+        } else {
+            pool1.liquidity = 0;
+            pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - constants.tickSpread);
+            pool1.price = state.latestPrice;
+        }
+        
+        // set auction start as an offset of the pool genesis block
+        state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
+        state.latestTick = newLatestTick;
+    
+        return (state, pool0, pool1);
+    }
+
     function syncLatest(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks0,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks1,
