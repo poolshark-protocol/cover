@@ -130,10 +130,9 @@ library Claims {
     }
 
     function applyDeltas(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params
-    ) external returns (
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         uint256 percentInDelta; uint256 percentOutDelta;
@@ -161,10 +160,9 @@ library Claims {
         // console.log('position amounts:', cache.position.amountIn, cache.position.amountOut);
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
-            ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            //  = ticks[params.zeroForOne ? params.lower : params.upper];
             // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
-            updateTick = Deltas.burnMaxMinus(updateTick, cache.finalDeltas);
-            ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
+            cache.finalTick = Deltas.burnMaxMinus(cache.finalTick, cache.finalDeltas);
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
             } else {
@@ -320,7 +318,7 @@ library Claims {
                                                 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
             
             cache.position.amountIn += uint128(poolAmountInDeltaChange);
-            pool.amountInDelta -= uint128(poolAmountInDeltaChange);
+            pool.amountInDelta -= uint128(poolAmountInDeltaChange); //CHANGE POOL TO MEMORY
             cache.finalDeltas.amountInDeltaMax += amountInFilledMax;
             cache.finalDeltas.amountOutDeltaMax += amountOutUnfilledMax;
             /// @dev - record how much delta max was claimed
@@ -354,7 +352,7 @@ library Claims {
         //     console.log(cache.amountInFilledMax);
         //     console.log(cache.amountOutUnfilledMax);
         // }
-        return cache;
+        return cache; //RETURN POOL IN MEMORY
     }
 
     /// @dev - calculate claim from position start up to claim tick

@@ -350,20 +350,16 @@ library Positions {
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
         // adjust position amounts based on deltas
-        cache = Claims.applyDeltas(ticks, cache, params);
+        cache = Claims.applyDeltas(cache, params);
         // save claim tick
         ticks[params.claim] = cache.claimTick;
+        if (params.claim != (params.zeroForOne ? params.lower : params.upper))
+            ticks[params.zeroForOne ? params.lower : params.upper] = cache.finalTick;
         
         // update pool liquidity
         if (state.latestTick == params.claim
             && params.claim != (params.zeroForOne ? params.lower : params.upper)
         ) pool.liquidity -= params.amount;
-        
-        /// @dev - mark last claim price
-
-        /// @dev - prior to Ticks.remove() so we don't overwrite liquidity delta changes
-        // if burn or second mint
-        //TODO: handle claim of current auction and second mint
         
         if ((params.amount > 0)) {
             if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
