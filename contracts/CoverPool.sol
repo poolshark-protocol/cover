@@ -144,6 +144,7 @@ contract CoverPool is
         _collect(
             CollectParams(
                 params.to, //address(0) goes to msg.sender
+                0,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -202,12 +203,10 @@ contract CoverPool is
                 _immutables()
             );
         }
-        // force collection
-        if (params.amount > 0)
-            emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
         _collect(
             CollectParams(
                 params.to, //address(0) goes to msg.sender
+                params.amount,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -335,20 +334,16 @@ contract CoverPool is
         /// zero out balances and transfer out
         if (amountIn > 0) {
             positions[msg.sender][params.lower][params.upper].amountIn = 0;
-            _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
+            _transferOut(params.to, params.zeroForOne ? token1 : token0, amountIn);
         } 
         if (amountOut > 0) {
             positions[msg.sender][params.lower][params.upper].amountOut = 0;
-            _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
+            _transferOut(params.to, params.zeroForOne ? token0 : token1, amountOut);
         } 
 
         // emit event
-        if (amountIn > 0 || amountOut > 0) 
-            emit Collect(
-                msg.sender,
-                params.zeroForOne ? amountIn : amountOut,
-                params.zeroForOne ? amountOut : amountIn
-            );
+        if (amountIn > 0 || amountOut > 0)
+            emit Burn(msg.sender, params.to, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
     }
 
     function _immutables() internal view returns (

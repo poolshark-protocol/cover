@@ -13,17 +13,12 @@ abstract contract CoverPoolEvents {
 
     event Burn(
         address indexed owner,
+        address to,
         int24 indexed lower,
         int24 indexed upper,
         int24 claim,
         bool zeroForOne,
         uint128 liquidityBurned
-    );
-
-    event Collect(
-        address indexed sender,
-        uint256 amount0,
-        uint256 amount1
     );
 
     event Swap(
