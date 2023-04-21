@@ -294,9 +294,20 @@ contract CoverPool is
         uint256 outAmount
     ) {
         GlobalState memory state = globalState;
+        PoolState memory pool0State;
+        PoolState memory pool1State;
+        (state, pool0State, pool1State) = Epochs.simulateSync(
+            ticks0,
+            ticks1,
+            tickMap,
+            pool0,
+            pool1,
+            state,
+            _immutables()
+        );
         SwapCache memory cache = SwapCache({
-            price: zeroForOne ? pool1.price : pool0.price,
-            liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
+            price: zeroForOne ? pool1State.price : pool0State.price,
+            liquidity: zeroForOne ? pool1State.liquidity : pool0State.liquidity,
             amountIn: amountIn,
             auctionDepth: block.timestamp - genesisTime - state.auctionStart,
             auctionBoost: 0,
