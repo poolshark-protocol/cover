@@ -98,6 +98,7 @@ interface ICoverPoolStructs {
 
     struct CollectParams {
         address to;
+        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;
