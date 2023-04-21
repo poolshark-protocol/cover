@@ -141,6 +141,7 @@ contract CoverPool is
                 uint128(liquidityMinted)
             );
         }
+        globalState = state;
         _collect(
             CollectParams(
                 params.to, //address(0) goes to msg.sender
@@ -151,7 +152,6 @@ contract CoverPool is
                 params.zeroForOne
             )
         );
-        globalState = state;
     }
 
     function burn(
@@ -203,6 +203,7 @@ contract CoverPool is
                 _immutables()
             );
         }
+        globalState = state;
         _collect(
             CollectParams(
                 params.to, //address(0) goes to msg.sender
@@ -213,7 +214,6 @@ contract CoverPool is
                 params.zeroForOne
             )
         );
-        globalState = state;
     }
 
     function swap(
@@ -268,6 +268,8 @@ contract CoverPool is
             pool0.amountInDelta += uint128(cache.amountInDelta);
         }
 
+        globalState = state;
+
         if (zeroForOne) {
             if (cache.input > 0) {
                 _transferOut(recipient, token0, cache.input);
@@ -281,16 +283,16 @@ contract CoverPool is
             _transferOut(recipient, token0, amountOut);
             emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
         }
-        globalState = state;
     }
 
-    //TODO: handle quoteAmountIn and quoteAmountOut
     function quote(
         bool zeroForOne,
-        uint256 amountIn,
+        uint128 amountIn,
         uint160 priceLimit
-    ) external view returns (uint256 inAmount, uint256 outAmount) {
-        // TODO: make override
+    ) external view override returns (
+        uint256 inAmount,
+        uint256 outAmount
+    ) {
         GlobalState memory state = globalState;
         SwapCache memory cache = SwapCache({
             price: zeroForOne ? pool1.price : pool0.price,
@@ -302,9 +304,6 @@ contract CoverPool is
             inputBoosted: 0,
             amountInDelta: 0
         });
-        /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
-        /// @dev not sure whether to handle greater than tickSpacing range
-        /// @dev everything will always be cleared out except for the closest tick to state.latestTick
         (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache, _immutables());
         inAmount = amountIn - cache.input;
 
@@ -315,10 +314,10 @@ contract CoverPool is
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
-        _transferOut(feeTo, token0, token0Fees);
-        _transferOut(feeTo, token1, token1Fees);
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
+        _transferOut(feeTo, token0, token0Fees);
+        _transferOut(feeTo, token1, token1Fees);
     }
 
     function _collect(
