@@ -274,7 +274,6 @@ library Positions {
         return (params.amount, state);
     }
 
-    //TODO: pass pool as memory and save pool changes using return value
     function update(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
@@ -289,68 +288,27 @@ library Positions {
             int24
         )
     {
-        ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
-            position: positions[params.owner][params.lower][params.upper],
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
-                                                                       : params.claim + constants.tickSpread),
-            amountInFilledMax: 0,
-            amountOutUnfilledMax: 0,
-            claimTick: ticks[params.claim],
-            finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
-            removeLower: true,
-            removeUpper: true,
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
-            finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
-        });
+        ICoverPoolStructs.UpdatePositionCache memory cache;
+        (
+            cache,
+            state
+        ) = deltas(
+            positions,
+            ticks,
+            tickMap,
+            state,
+            pool,
+            params,
+            constants
+        );
 
-        // check claim is valid
-        {
-            bool earlyReturn;
-            (cache, earlyReturn) = Claims.validate(
-                positions,
-                tickMap,
-                state,
-                pool,
-                params,
-                cache
-            );
-            if (earlyReturn) {
-                return (state, params.claim);
-            }
-        }
-        if (params.amount > 0)
-            _size(
-                ICoverPoolStructs.SizeParams(
-                    cache.priceLower,
-                    cache.priceUpper,
-                    cache.position.liquidity - params.amount,
-                    params.zeroForOne,
-                    state.latestTick,
-                    uint24((params.upper - params.lower) / constants.tickSpread)
-                ),
-                constants
-            );
-        // get deltas from claim tick
-        cache = Claims.getDeltas(cache, params);
-        /// @dev - section 1 => position start - previous auction
-        cache = Claims.section1(cache, params, constants);
-        /// @dev - section 2 => position start -> claim tick
-        cache = Claims.section2(cache, params);
-        // check if auction in progress 
-        if (params.claim == state.latestTick 
-            && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
-            /// @dev - section 3 => claim tick - unfilled section
-            cache = Claims.section3(cache, params, pool);
-            /// @dev - section 4 => claim tick - filled section
-            cache = Claims.section4(cache, params, pool);
-        }
-        /// @dev - section 5 => claim tick -> position end
-        cache = Claims.section5(cache, params);
-        // adjust position amounts based on deltas
-        cache = Claims.applyDeltas(cache, params);
+        if (cache.earlyReturn)
+            return (state, params.claim);
+
+        pool.amountInDelta = cache.pool.amountInDelta;
+        pool.amountInDeltaMaxClaimed  = cache.pool.amountInDeltaMaxClaimed;
+        pool.amountOutDeltaMaxClaimed = cache.pool.amountOutDeltaMaxClaimed;
+
         // save claim tick
         ticks[params.claim] = cache.claimTick;
         if (params.claim != (params.zeroForOne ? params.lower : params.upper))
@@ -423,6 +381,84 @@ library Positions {
             : positions[params.owner][params.claim][params.upper] = cache.position;
         // return cached position in memory and transfer out
         return (state, params.claim);
+    }
+
+    function deltas(
+        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
+            storage positions,
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.PoolState memory pool,
+        ICoverPoolStructs.UpdateParams memory params,
+        ICoverPoolStructs.Immutables memory constants
+    ) public view returns (
+        ICoverPoolStructs.UpdatePositionCache memory,
+        ICoverPoolStructs.GlobalState memory
+    ) {
+       ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
+            position: positions[params.owner][params.lower][params.upper],
+            pool: pool,
+            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
+            priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
+            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
+                                                                       : params.claim + constants.tickSpread),
+            amountInFilledMax: 0,
+            amountOutUnfilledMax: 0,
+            claimTick: ticks[params.claim],
+            finalTick: ticks[params.zeroForOne ? params.lower : params.upper],
+            earlyReturn: false,
+            removeLower: true,
+            removeUpper: true,
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
+        });
+
+        // check claim is valid
+        cache = Claims.validate(
+            positions,
+            tickMap,
+            state,
+            cache.pool,
+            params,
+            cache
+        );
+        if (cache.earlyReturn) {
+            return (cache, state);
+        }
+        if (params.amount > 0)
+            _size(
+                ICoverPoolStructs.SizeParams(
+                    cache.priceLower,
+                    cache.priceUpper,
+                    cache.position.liquidity - params.amount,
+                    params.zeroForOne,
+                    state.latestTick,
+                    uint24((params.upper - params.lower) / constants.tickSpread)
+                ),
+                constants
+            );
+        // get deltas from claim tick
+        cache = Claims.getDeltas(cache, params);
+        /// @dev - section 1 => position start - previous auction
+        cache = Claims.section1(cache, params, constants);
+        /// @dev - section 2 => position start -> claim tick
+        cache = Claims.section2(cache, params);
+        // check if auction in progress 
+        if (params.claim == state.latestTick 
+            && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
+            /// @dev - section 3 => claim tick - unfilled section
+            cache = Claims.section3(cache, params, cache.pool);
+            /// @dev - section 4 => claim tick - filled section
+            cache = Claims.section4(cache, params, cache.pool);
+        }
+        /// @dev - section 5 => claim tick -> position end
+        cache = Claims.section5(cache, params);
+        // adjust position amounts based on deltas
+        cache = Claims.applyDeltas(cache, params);
+
+        return (cache, state);
     }
 
     function _validate(

@@ -165,6 +165,7 @@ interface ICoverPoolStructs {
     struct UpdatePositionCache {
         Deltas deltas;
         Deltas finalDeltas;
+        PoolState pool;
         uint256 amountInFilledMax;    // considers the range covered by each update
         uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
@@ -174,6 +175,7 @@ interface ICoverPoolStructs {
         uint160 priceClaim;
         uint160 priceUpper;
         uint160 priceSpread;
+        bool earlyReturn;
         bool removeLower;
         bool removeUpper;
     }
