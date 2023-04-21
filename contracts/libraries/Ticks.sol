@@ -189,9 +189,8 @@ library Ticks {
                 } else {
                     tickLower.liquidityDelta -= int128(amount);
                 }
+                ticks[lower] = tickLower;
             }
-            /// @dev - not deleting ticks just yet
-            ticks[lower] = tickLower;
             if (lower != TickMath.MIN_TICK && _empty(tickLower)) {
                 TickMap.unset(tickMap, lower);
             }
@@ -204,8 +203,8 @@ library Ticks {
                 } else {
                     tickUpper.liquidityDelta += int128(amount);
                 }
+                ticks[upper] = tickUpper;
             }
-            ticks[upper] = tickUpper;
             if (upper != TickMath.MAX_TICK && _empty(tickUpper)) {
                 TickMap.unset(tickMap, upper);
             }
