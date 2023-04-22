@@ -37,9 +37,9 @@ library Claims {
         }
         // if the position has not been crossed into at all
         else if (params.zeroForOne ? params.claim == params.upper 
-                                        && EpochMap.get(tickMap, params.upper) <= cache.position.accumEpochLast
+                                        && EpochMap.get(tickMap, params.upper, constants.tickSpread) <= cache.position.accumEpochLast
                                      : params.claim == params.lower 
-                                        && EpochMap.get(tickMap, params.lower) <= cache.position.accumEpochLast
+                                        && EpochMap.get(tickMap, params.lower, constants.tickSpread) <= cache.position.accumEpochLast
         ) {
             cache.earlyReturn = true;
             return cache;
@@ -68,7 +68,7 @@ library Claims {
         ) revert InvalidClaimTick(); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
-        uint32 claimTickEpoch = EpochMap.get(tickMap, params.claim);
+        uint32 claimTickEpoch = EpochMap.get(tickMap, params.claim, constants.tickSpread);
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -77,8 +77,8 @@ library Claims {
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim, constants.tickSpread))
-                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim, constants.tickSpread));
+                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim, constants.tickSpread), constants.tickSpread)
+                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim, constants.tickSpread), constants.tickSpread);
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 //TODO: search for claim tick if necessary

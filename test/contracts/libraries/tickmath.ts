@@ -25,7 +25,6 @@ describe('TickMath Library Tests', function () {
 
     it('validatePrice - Should revert below min sqrt price', async function () {
         let minPrice = BigNumber.from('4297706460')
-        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
         await expect(
             hre.props.coverPool.swap(
                 hre.props.admin.address,
@@ -34,7 +33,10 @@ describe('TickMath Library Tests', function () {
                 minPrice.sub(1)
             )
         ).to.be.revertedWith('PriceOutOfBounds()')
+    })
 
+    it('validatePrice - Should revert at or above max sqrt price', async function () {
+        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
         await expect(
             hre.props.coverPool.swap(
                 hre.props.admin.address,
