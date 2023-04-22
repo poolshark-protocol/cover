@@ -132,14 +132,6 @@ contract CoverPool is
                     params.zeroForOne
                 )
             );
-            emit Mint(
-                params.to,
-                params.lower,
-                params.upper,
-                params.claim,
-                params.zeroForOne,
-                uint128(liquidityMinted)
-            );
         }
         globalState = state;
         _collect(

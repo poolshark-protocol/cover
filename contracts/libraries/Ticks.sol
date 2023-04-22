@@ -56,10 +56,7 @@ library Ticks {
                 nextPrice = priceLimit;
             }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
-            // check if we can increase input to account for auction
-            // if we can't, subtract amount inputted at the end
-            // store amountInDelta in pool either way
-            // putting in less either way
+            // check if all input is used
             if (cache.inputBoosted <= maxDx) {
                 uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
