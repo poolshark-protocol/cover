@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-import 'hardhat/console.sol';
 
 library TickMap {
 
@@ -123,17 +122,16 @@ library TickMap {
     function getIndices(
         int24 tick,
         int16 tickSpread
-    ) public view returns (
+    ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex
         )
     {
         unchecked {
-            if (tick > TickMath.MAX_TICK) revert TickIndexOverflow();
-            if (tick < TickMath.MIN_TICK) revert TickIndexUnderflow();
+            if (tick > TickMath.MAX_TICK / tickSpread * tickSpread) revert TickIndexOverflow();
+            if (tick < TickMath.MIN_TICK / tickSpread * tickSpread) revert TickIndexUnderflow();
             tickIndex = uint256(int256((tick - TickMath.MIN_TICK / tickSpread * tickSpread)) / tickSpread);
-            // console.log('tick index:', tickIndex);
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
             if (blockIndex > 255) revert BlockIndexOverflow();
@@ -147,7 +145,7 @@ library TickMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(TickMath.MAX_TICK * 2)) revert TickIndexOverflow();
+            if (tickIndex > uint24(TickMath.MAX_TICK / tickSpread * tickSpread * 2)) revert TickIndexOverflow();
             tick = int24(int256(tickIndex) * int256(tickSpread) + TickMath.MIN_TICK / tickSpread * tickSpread);
         }
     }
