@@ -23,6 +23,28 @@ describe('TickMath Library Tests', function () {
 
     this.beforeEach(async function () {})
 
+    it('validatePrice - Should revert below min sqrt price', async function () {
+        let minPrice = BigNumber.from('4297706460')
+        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
+        await expect(
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                minPrice.sub(1)
+            )
+        ).to.be.revertedWith('PriceOutOfBounds()')
+
+        await expect(
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                maxPrice.add(1)
+            )
+        ).to.be.revertedWith('PriceOutOfBounds()')
+    })
+
     it('getSqrtRatioAtTick - Should get tick near min sqrt price', async function () {
         expect(
             await hre.props.tickMathLib.getSqrtRatioAtTick(BigNumber.from('-887272'))
