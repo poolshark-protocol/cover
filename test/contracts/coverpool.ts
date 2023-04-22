@@ -62,8 +62,8 @@ describe('CoverPool Tests', function () {
         expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
-        minPrice = BigNumber.from('4295128739')
-        maxPrice = BigNumber.from('1461446703485210103287273052203988822378723970341')
+        minPrice = BigNumber.from('4297706460')
+        maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
         token0Decimals = await hre.props.token0.decimals()
         token1Decimals = await hre.props.token1.decimals()
         tokenAmount = ethers.utils.parseUnits('100', token0Decimals)

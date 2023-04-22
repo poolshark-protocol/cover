@@ -24,6 +24,8 @@ contract CoverPool is
     address public immutable token0;
     address public immutable token1;
     address public immutable inputPool; 
+    uint160 public immutable MIN_PRICE;
+    uint160 public immutable MAX_PRICE;
     uint128 public immutable minAmountPerAuction;
     uint32  public immutable genesisTime;
     int16   public immutable minPositionWidth;
@@ -34,6 +36,8 @@ contract CoverPool is
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
     bool    public immutable minLowerPricedToken;
+
+    error PriceOutOfBounds();
 
     modifier lock() {
         if (globalState.unlocked == 0) {
@@ -72,6 +76,10 @@ contract CoverPool is
         genesisTime   = uint32(block.timestamp);
         minAmountPerAuction = params.minAmountPerAuction;
         minLowerPricedToken = params.minLowerPricedToken;
+
+        // set price boundaries
+        MIN_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MIN_TICK / tickSpread * tickSpread);
+        MAX_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MAX_TICK / tickSpread * tickSpread);
     }
 
     function mint(
@@ -130,7 +138,8 @@ contract CoverPool is
                     params.claim,
                     params.upper,
                     params.zeroForOne
-                )
+                ),
+                tickSpread
             );
         }
         globalState = state;
@@ -226,7 +235,7 @@ contract CoverPool is
         returns (uint256 amountOut)
     {
         GlobalState memory state = globalState;
-        TickMath.validatePrice(priceLimit);
+        _validatePrice(priceLimit);
         (state, pool0, pool1) = Epochs.syncLatest(
             ticks0,
             ticks1,
@@ -389,6 +398,12 @@ contract CoverPool is
             token1Decimals,
             minLowerPricedToken
         );
+    }
+
+    function _validatePrice(uint160 price) internal view {
+        if (price < MIN_PRICE || price >= MAX_PRICE) {
+            revert PriceOutOfBounds();
+        }
     }
 
     //TODO: zap into LP position

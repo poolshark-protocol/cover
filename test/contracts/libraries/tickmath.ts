@@ -24,17 +24,25 @@ describe('TickMath Library Tests', function () {
     this.beforeEach(async function () {})
 
     it('validatePrice - Should revert below min sqrt price', async function () {
+        let minPrice = BigNumber.from('4297706460')
+        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
         await expect(
-            hre.props.tickMathLib.validatePrice(BigNumber.from('4295128738'))
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
-    })
-
-    it('validatePrice - Should revert at max sqrt price', async function () {
-        await expect(
-            hre.props.tickMathLib.validatePrice(
-                BigNumber.from('1461446703485210103287273052203988822378723970342')
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                minPrice.sub(1)
             )
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+        ).to.be.revertedWith('PriceOutOfBounds()')
+
+        await expect(
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                maxPrice.add(1)
+            )
+        ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
     it('getSqrtRatioAtTick - Should get tick near min sqrt price', async function () {

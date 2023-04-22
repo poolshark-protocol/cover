@@ -44,8 +44,8 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
-            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick), // below
-            nextTickToAccum1: TickMap.next(tickMap, state.latestTick),     // above
+            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick, constants.tickSpread), // below
+            nextTickToAccum1: TickMap.next(tickMap, state.latestTick, constants.tickSpread),     // above
             stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - constants.tickSpread
                 : newLatestTick, 
@@ -65,7 +65,8 @@ library Epochs {
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
                     pool0.liquidity,
-                    true
+                    true,
+                    constants.tickSpread
                 );
             } else break;
         }
@@ -79,7 +80,8 @@ library Epochs {
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
                     pool1.liquidity,
-                    false
+                    false,
+                    constants.tickSpread
                 );
             } else break;
         }
@@ -136,8 +138,8 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
-            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick), // below
-            nextTickToAccum1: TickMap.next(tickMap, state.latestTick),     // above
+            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick, constants.tickSpread), // below
+            nextTickToAccum1: TickMap.next(tickMap, state.latestTick, constants.tickSpread),     // above
             stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - constants.tickSpread
                 : newLatestTick, 
@@ -178,7 +180,8 @@ library Epochs {
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
                     pool0.liquidity,
-                    true
+                    true,
+                    constants.tickSpread
                 );
             } else break;
         }
@@ -186,7 +189,7 @@ library Epochs {
         {
             // create stopTick0 if necessary
             if (cache.nextTickToAccum0 != cache.stopTick0) {
-                TickMap.set(tickMap, cache.stopTick0);
+                TickMap.set(tickMap, cache.stopTick0, constants.tickSpread);
             }
             ICoverPoolStructs.Tick memory stopTick0 = ticks0[cache.stopTick0];
             // checkpoint at stopTick0
@@ -231,7 +234,8 @@ library Epochs {
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
                     pool1.liquidity,
-                    false
+                    false,
+                    constants.tickSpread
                 );
             } else break;
         }
@@ -239,7 +243,7 @@ library Epochs {
         {
             // create stopTick1 if necessary
             if (cache.nextTickToAccum1 != cache.stopTick1) {
-                TickMap.set(tickMap, cache.stopTick1);
+                TickMap.set(tickMap, cache.stopTick1, constants.tickSpread);
             }
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
             // update deltas on stopTick
@@ -474,7 +478,8 @@ library Epochs {
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
-        bool zeroForOne
+        bool zeroForOne,
+        int16 tickSpread
     ) internal view returns (
         uint128,
         int24,
@@ -489,9 +494,9 @@ library Epochs {
             currentLiquidity -= uint128(-liquidityDelta);
         }
         if (zeroForOne) {
-            nextTickToAccum = TickMap.previous(tickMap, nextTickToAccum);
+            nextTickToAccum = TickMap.previous(tickMap, nextTickToAccum, tickSpread);
         } else {
-            nextTickToAccum = TickMap.next(tickMap, nextTickToAccum);
+            nextTickToAccum = TickMap.next(tickMap, nextTickToAccum, tickSpread);
         }
         return (currentLiquidity, nextTickToCross, nextTickToAccum);
     }

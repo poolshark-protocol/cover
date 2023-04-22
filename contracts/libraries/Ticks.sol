@@ -117,9 +117,9 @@ library Ticks {
                 state.accumEpoch = 1;
 
                 // initialize ticks
-                TickMap.set(tickMap, TickMath.MIN_TICK);
-                TickMap.set(tickMap, TickMath.MAX_TICK);
-                TickMap.set(tickMap, state.latestTick);
+                TickMap.set(tickMap, TickMath.MIN_TICK / constants.tickSpread * constants.tickSpread, constants.tickSpread);
+                TickMap.set(tickMap, TickMath.MAX_TICK / constants.tickSpread * constants.tickSpread, constants.tickSpread);
+                TickMap.set(tickMap, state.latestTick, constants.tickSpread);
 
                 // initialize price
                 pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - constants.tickSpread);
@@ -136,7 +136,8 @@ library Ticks {
         int24 lower,
         int24 upper,
         uint128 amount,
-        bool isPool0
+        bool isPool0,
+        int16 tickSpread
     ) external {
         /// @dev - validation of ticks is in Positions.validate
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
@@ -148,7 +149,7 @@ library Ticks {
         ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
 
         // sets bit in map
-        TickMap.set(tickMap, lower);
+        TickMap.set(tickMap, lower, tickSpread);
 
         // updates liquidity values
         if (isPool0) {
@@ -157,7 +158,7 @@ library Ticks {
                 tickLower.liquidityDelta += int128(amount);
         }
 
-        TickMap.set(tickMap, upper);
+        TickMap.set(tickMap, upper, tickSpread);
 
         if (isPool0) {
                 tickUpper.liquidityDelta += int128(amount);
@@ -176,7 +177,8 @@ library Ticks {
         uint128 amount,
         bool isPool0,
         bool removeLower,
-        bool removeUpper
+        bool removeUpper,
+        int16 tickSpread
     ) external {
         {
             ICoverPoolStructs.Tick memory tickLower = ticks[lower];
@@ -189,7 +191,7 @@ library Ticks {
                 ticks[lower] = tickLower;
             }
             if (lower != TickMath.MIN_TICK && _empty(tickLower)) {
-                TickMap.unset(tickMap, lower);
+                TickMap.unset(tickMap, lower, tickSpread);
             }
         }
         {
@@ -203,7 +205,7 @@ library Ticks {
                 ticks[upper] = tickUpper;
             }
             if (upper != TickMath.MAX_TICK && _empty(tickUpper)) {
-                TickMap.unset(tickMap, upper);
+                TickMap.unset(tickMap, upper, tickSpread);
             }
         }
     }

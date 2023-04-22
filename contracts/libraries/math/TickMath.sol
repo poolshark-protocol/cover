@@ -66,12 +66,6 @@ library TickMath {
         }
     }
 
-    function validatePrice(uint160 price) external pure {
-        if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) {
-            revert PriceOutOfBounds();
-        }
-    }
-
     /// @notice Calculates the greatest tick value such that getRatioAtTick(tick) <= ratio.
     /// @dev Throws in case sqrtPriceX96 < MIN_SQRT_RATIO, as MIN_SQRT_RATIO is the lowest value getRatioAtTick may
     /// ever return.
