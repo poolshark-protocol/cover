@@ -108,7 +108,7 @@ contract CoverPool is
             state,
             params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
-                params.to,
+                msg.sender,
                 0,
                 params.lower,
                 params.upper,
@@ -191,7 +191,13 @@ contract CoverPool is
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
                 state,
-                RemoveParams(msg.sender, params.amount, params.lower, params.upper, params.zeroForOne),
+                RemoveParams(
+                    msg.sender,
+                    params.amount,
+                    params.lower,
+                    params.upper,
+                    params.zeroForOne
+                ),
                 _immutables()
             );
         }
