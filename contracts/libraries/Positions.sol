@@ -29,8 +29,15 @@ library Positions {
     error NotImplementedYet();
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
-    uint256 internal constant Q128 = 0x100000000000000000000000000000000;
-    int24  internal constant MIN_POSITION_WIDTH = 5; //TODO: move to CoverPoolManager
+
+    event Mint(
+        address indexed owner,
+        int24 indexed lower,
+        int24 indexed upper,
+        int24 claim,
+        bool zeroForOne,
+        uint128 liquidityMinted
+    );
 
     function resize(
         ICoverPoolStructs.Position memory position,
@@ -189,6 +196,15 @@ library Positions {
 
         positions[params.owner][params.lower][params.upper] = cache.position;
 
+        emit Mint(
+                params.owner,
+                params.lower,
+                params.upper,
+                params.claim,
+                params.zeroForOne,
+                uint128(params.amount)
+        );
+
         return state;
     }
 
@@ -270,8 +286,8 @@ library Positions {
 
         cache.position.liquidity -= uint128(params.amount);
         positions[params.owner][params.lower][params.upper] = cache.position;
-        //TODO: emit Burn event here
-        return (params.amount, state);
+        
+         return (params.amount, state);
     }
 
     function update(
