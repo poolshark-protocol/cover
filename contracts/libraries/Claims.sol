@@ -24,7 +24,8 @@ library Claims {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.UpdatePositionCache memory cache
+        ICoverPoolStructs.UpdatePositionCache memory cache,
+        ICoverPoolStructs.Immutables memory constants
     ) external view returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -76,8 +77,8 @@ library Claims {
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim))
-                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim));
+                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim, constants.tickSpread))
+                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim, constants.tickSpread));
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 //TODO: search for claim tick if necessary

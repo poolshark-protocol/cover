@@ -130,7 +130,8 @@ contract CoverPool is
                     params.claim,
                     params.upper,
                     params.zeroForOne
-                )
+                ),
+                tickSpread
             );
         }
         globalState = state;

@@ -136,7 +136,8 @@ library Positions {
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.AddParams memory params
+        ICoverPoolStructs.AddParams memory params,
+        int16 tickSpread
     ) external returns (
         ICoverPoolStructs.GlobalState memory
     )    
@@ -161,10 +162,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper))
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, tickSpread))
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower))
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, tickSpread))
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -179,7 +180,8 @@ library Positions {
             params.lower,
             params.upper,
             uint128(params.amount),
-            params.zeroForOne
+            params.zeroForOne,
+            tickSpread
         );
 
         // update liquidity global
@@ -247,10 +249,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper))
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread))
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower))
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread))
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -265,7 +267,8 @@ library Positions {
             params.amount,
             params.zeroForOne,
             true,
-            true
+            true,
+            constants.tickSpread
         );
 
         // update liquidity global
@@ -352,7 +355,8 @@ library Positions {
                 params.amount,
                 params.zeroForOne,
                 cache.removeLower,
-                cache.removeUpper
+                cache.removeUpper,
+                constants.tickSpread
             );
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
@@ -481,7 +485,8 @@ library Positions {
             state,
             cache.pool,
             params,
-            cache
+            cache,
+            constants
         );
         if (cache.earlyReturn) {
             return (cache, state);
@@ -525,8 +530,8 @@ library Positions {
         ICoverPoolStructs.Immutables memory constants
     ) internal pure {
         // check for valid position bounds
-        if (params.lower < TickMath.MIN_TICK) revert InvalidLowerTick();
-        if (params.upper > TickMath.MAX_TICK) revert InvalidUpperTick();
+        if (params.lower < TickMath.MIN_TICK / constants.tickSpread * constants.tickSpread) revert InvalidLowerTick();
+        if (params.upper > TickMath.MAX_TICK / constants.tickSpread * constants.tickSpread) revert InvalidUpperTick();
         if (params.lower % int24(constants.tickSpread) != 0) revert InvalidLowerTick();
         if (params.upper % int24(constants.tickSpread) != 0) revert InvalidUpperTick();
         if (params.lower >= params.upper)
