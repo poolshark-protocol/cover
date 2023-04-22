@@ -160,7 +160,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
                 hre.props.admin.address,
                 true,
                 BigNumber.from('0'),
-                BigNumber.from('4295128739')
+                BigNumber.from('4297706460')
             )
             await txn.wait()
         } else {
@@ -169,7 +169,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
                     hre.props.admin.address,
                     true,
                     BigNumber.from('0'),
-                    BigNumber.from('4295128739')
+                    BigNumber.from('4297706460')
                 )
             ).to.be.revertedWith(revertMessage)
             return
