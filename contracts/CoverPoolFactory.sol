@@ -7,6 +7,7 @@ import './interfaces/ICoverPoolFactory.sol';
 import './interfaces/IRangeFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
+import './base/structs/CoverPoolManagerStructs.sol';
 import './utils/CoverPoolErrors.sol';
 
 contract CoverPoolFactory is 
@@ -48,25 +49,13 @@ contract CoverPoolFactory is
         CoverPoolParams memory params;
         {
             // get volatility tier config
-            (
-                uint128 minAmountPerAuction,
-                uint16  auctionLength,
-                uint16  blockTime,
-                int16   minPositionWidth,
-                bool    minLowerPricedToken
-            ) = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
+            params.config = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
 
-            if (auctionLength == 0) {
+            if (params.config.auctionLength == 0) {
                 revert VolatilityTierNotSupported();
             }
-            // set pool params
             params.tickSpread = tickSpread;
             params.twapLength = twapLength;
-            params.auctionLength = auctionLength;
-            params.blockTime = blockTime;
-            params.minPositionWidth = minPositionWidth;
-            params.minAmountPerAuction = minAmountPerAuction;
-            params.minLowerPricedToken = minLowerPricedToken;
         }
         // get reference pool
         params.inputPool  = IRangeFactory(inputPoolFactory).getPool(token0, token1, feeTier);

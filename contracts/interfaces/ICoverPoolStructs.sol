@@ -67,12 +67,19 @@ interface ICoverPoolStructs {
         uint16 twapLength;
         uint16 auctionLength;
         uint16 blockTime;
+        uint16 syncFee;
+        uint16 fillFee;
         uint8 token0Decimals;
         uint8 token1Decimals;
-        bool minLowerPricedToken;
+        bool minAmountLowerPriced;
     }
 
     struct ProtocolFees {
+        uint128 token0;
+        uint128 token1;
+    }
+
+    struct SyncFees {
         uint128 token0;
         uint128 token1;
     }
@@ -97,6 +104,7 @@ interface ICoverPoolStructs {
     }
 
     struct CollectParams {
+        SyncFees syncFees;
         address to;
         uint128 amount;
         int24 lower;
@@ -140,11 +148,30 @@ interface ICoverPoolStructs {
         bool zeroForOne;
     }
 
+    struct MintCache {
+        GlobalState state;
+        Position position;
+        Immutables constants;
+        SyncFees syncFees;
+        uint256 liquidityMinted;
+    }
+
+    struct BurnCache {
+        GlobalState state;
+        Position position;
+        Immutables constants;
+        SyncFees syncFees;
+    }
+
     struct SwapCache {
+        GlobalState state;
+        SyncFees syncFees;
+        Immutables constants;
         uint256 price;
         uint256 liquidity;
         uint256 amountIn;
         uint256 input;
+        uint256 output;
         uint256 inputBoosted;
         uint256 auctionDepth;
         uint256 auctionBoost;
@@ -183,6 +210,7 @@ interface ICoverPoolStructs {
     struct AccumulateCache {
         Deltas deltas0;
         Deltas deltas1;
+        SyncFees syncFees;
         int24 nextTickToCross0;
         int24 nextTickToCross1;
         int24 nextTickToAccum0;

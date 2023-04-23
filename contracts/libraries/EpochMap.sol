@@ -4,9 +4,6 @@ pragma solidity ^0.8.13;
 import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
-//TODO: EpochMap and TickMap can be the same thing
-//TODO: helper functions for TickMap/EpochMap
-
 library EpochMap {
 
     error TickIndexInvalid();

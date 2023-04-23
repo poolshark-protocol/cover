@@ -27,6 +27,7 @@ library Epochs {
         ICoverPoolStructs.Immutables memory constants
     ) external view returns (
         ICoverPoolStructs.GlobalState memory,
+        ICoverPoolStructs.SyncFees memory,
         ICoverPoolStructs.PoolState memory,
         ICoverPoolStructs.PoolState memory
     ) {
@@ -35,13 +36,16 @@ library Epochs {
             bool earlyReturn;
             (newLatestTick, earlyReturn) = _syncTick(state, constants);
             if (earlyReturn) {
-                return (state, pool0, pool1);
+                return (state, ICoverPoolStructs.SyncFees(0, 0), pool0, pool1);
             }
             // else we have a TWAP update
         }
 
         // setup cache
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
+            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
+            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
+            syncFees: ICoverPoolStructs.SyncFees(0, 0),
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
             nextTickToAccum0: TickMap.previous(tickMap, state.latestTick, constants.tickSpread), // below
@@ -51,12 +55,12 @@ library Epochs {
                 : newLatestTick, 
             stopTick1: (newLatestTick > state.latestTick) // where we do stop for pool1 sync
                 ? newLatestTick
-                : state.latestTick + constants.tickSpread,
-            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
-            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
+                : state.latestTick + constants.tickSpread
         });
 
-        while (true) {            
+        while (true) {
+            // rollover and calculate sync fees
+            (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 >= cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
@@ -72,6 +76,7 @@ library Epochs {
         }
 
         while (true) {
+            (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {
                 (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
@@ -104,7 +109,7 @@ library Epochs {
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
         state.latestTick = newLatestTick;
     
-        return (state, pool0, pool1);
+        return (state, cache.syncFees, pool0, pool1);
     }
 
     function syncLatest(
@@ -117,6 +122,7 @@ library Epochs {
         ICoverPoolStructs.Immutables memory constants
     ) external returns (
         ICoverPoolStructs.GlobalState memory,
+        ICoverPoolStructs.SyncFees memory,
         ICoverPoolStructs.PoolState memory,
         ICoverPoolStructs.PoolState memory
     )
@@ -126,7 +132,7 @@ library Epochs {
             bool earlyReturn;
             (newLatestTick, earlyReturn) = _syncTick(state, constants);
             if (earlyReturn) {
-                return (state, pool0, pool1);
+                return (state, ICoverPoolStructs.SyncFees(0,0), pool0, pool1);
             }
             // else we have a TWAP update
         }
@@ -136,6 +142,9 @@ library Epochs {
 
         // setup cache
         ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
+            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
+            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
+            syncFees: ICoverPoolStructs.SyncFees(0,0),
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
             nextTickToAccum0: TickMap.previous(tickMap, state.latestTick, constants.tickSpread), // below
@@ -145,9 +154,7 @@ library Epochs {
                 : newLatestTick, 
             stopTick1: (newLatestTick > state.latestTick) // where we do stop for pool1 sync
                 ? newLatestTick
-                : state.latestTick + constants.tickSpread,
-            deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
-            deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0)  // deltas for pool1
+                : state.latestTick + constants.tickSpread
         });
 
         while (true) {
@@ -274,7 +281,7 @@ library Epochs {
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
         state.latestTick = newLatestTick;
     
-        return (state, pool0, pool1);
+        return (state, cache.syncFees, pool0, pool1);
     }
 
     function _syncTick(
@@ -388,9 +395,16 @@ library Epochs {
                                                                                      : pool.amountOutDeltaMaxClaimed;
             pool.amountOutDeltaMaxClaimed = 0;
 
-            // update cache deltas
+            // update cache in deltas
             cache.deltas0.amountInDelta     += amountInDelta;
             cache.deltas0.amountInDeltaMax  += amountInDeltaMax;
+
+            // calculate sync fee
+            uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
+            cache.syncFees.token0 += syncFeeAmount;
+            amountOutDelta -= syncFeeAmount;
+
+            // update cache out deltas
             cache.deltas0.amountOutDelta    += amountOutDelta;
             cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
         } else {
@@ -410,9 +424,16 @@ library Epochs {
                                                                                      : pool.amountOutDeltaMaxClaimed;
             pool.amountOutDeltaMaxClaimed = 0;
 
-            // update cache deltas
+            // update cache in deltas
             cache.deltas1.amountInDelta     += amountInDelta;
             cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
+
+            // calculate sync fee
+            uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
+            cache.syncFees.token1 += syncFeeAmount;
+            amountOutDelta -= syncFeeAmount;
+
+            // update cache out deltas
             cache.deltas1.amountOutDelta    += amountOutDelta;
             cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
         }

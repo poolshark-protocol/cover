@@ -135,8 +135,10 @@ library Claims {
     }
 
     function applyDeltas(
+        ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
+        ICoverPoolStructs.UpdateParams memory params,
+        ICoverPoolStructs.Immutables memory constants
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -158,9 +160,16 @@ library Claims {
 
         // apply deltas and add to position
         //TODO: this shouldn't be needed; we apply what is present
-        if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
+        // if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
             //TODO: take a portion based on the protocol fee
-            cache.position.amountIn  += cache.finalDeltas.amountInDelta;
+        uint128 fillFeeAmount = cache.finalDeltas.amountInDelta * constants.fillFee / 1e6;
+        if (params.zeroForOne) {
+            state.protocolFees.token1 += fillFeeAmount;
+        } else {
+            state.protocolFees.token0 += fillFeeAmount;
+        }
+        cache.finalDeltas.amountInDelta -= fillFeeAmount;
+        cache.position.amountIn  += cache.finalDeltas.amountInDelta;
         cache.position.amountOut += cache.finalDeltas.amountOutDelta;
         // console.log('position amounts:', cache.position.amountIn, cache.position.amountOut);
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {

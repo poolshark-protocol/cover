@@ -54,4 +54,18 @@ describe('CoverPoolFactory Tests', function () {
                 )
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
+
+    it('Should not create pool if volatility tier does not exist', async function () {
+        await expect(
+            hre.props.coverPoolFactory
+                .connect(hre.props.admin)
+                .createCoverPool(
+                    hre.props.token1.address,
+                    hre.props.token0.address,
+                    '2000',
+                    '20',
+                    '5'
+                )
+        ).to.be.revertedWith('VolatilityTierNotSupported()')
+    })
 })
