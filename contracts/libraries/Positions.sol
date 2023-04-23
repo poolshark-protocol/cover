@@ -520,7 +520,7 @@ library Positions {
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
         // adjust position amounts based on deltas
-        cache = Claims.applyDeltas(cache, params);
+        cache = Claims.applyDeltas(state, cache, params, constants);
 
         return (cache, state);
     }

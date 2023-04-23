@@ -67,6 +67,8 @@ interface ICoverPoolStructs {
         uint16 twapLength;
         uint16 auctionLength;
         uint16 blockTime;
+        uint16 syncFee;
+        uint16 fillFee;
         uint8 token0Decimals;
         uint8 token1Decimals;
         bool minAmountLowerPriced;

@@ -33,6 +33,8 @@ contract CoverPool is
     uint16  public immutable twapLength;
     uint16  public immutable auctionLength;
     uint16  public immutable blockTime;
+    uint16  public immutable syncFee;
+    uint16  public immutable fillFee;
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
     bool    public immutable minAmountLowerPriced;
@@ -70,6 +72,8 @@ contract CoverPool is
         // set other immutables
         auctionLength = params.config.auctionLength;
         blockTime = params.config.blockTime;
+        syncFee = params.config.syncFee;
+        fillFee = params.config.fillFee;
         minPositionWidth = params.config.minPositionWidth;
         tickSpread    = params.tickSpread;
         twapLength    = params.twapLength;
@@ -394,6 +398,8 @@ contract CoverPool is
             twapLength,
             auctionLength,
             blockTime,
+            syncFee,
+            fillFee,
             token0Decimals,
             token1Decimals,
             minAmountLowerPriced
