@@ -69,7 +69,7 @@ interface ICoverPoolStructs {
         uint16 blockTime;
         uint8 token0Decimals;
         uint8 token1Decimals;
-        bool minLowerPricedToken;
+        bool minAmountLowerPriced;
     }
 
     struct ProtocolFees {

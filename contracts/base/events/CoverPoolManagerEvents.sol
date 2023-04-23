@@ -7,10 +7,12 @@ abstract contract CoverPoolManagerEvents {
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
+        uint128 minAmountPerAuction,
         uint16  auctionLength,
         uint16  blockTime,
+        uint16  syncFee,
+        uint16  fillFee,
         int16   minPositionWidth,
-        uint128 minAmountPerAuction,
         bool    minLowerPriced
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);

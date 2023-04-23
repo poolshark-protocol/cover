@@ -35,7 +35,7 @@ contract CoverPool is
     uint16  public immutable blockTime;
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
-    bool    public immutable minLowerPricedToken;
+    bool    public immutable minAmountLowerPriced;
 
     error PriceOutOfBounds();
 
@@ -68,14 +68,14 @@ contract CoverPool is
         }
 
         // set other immutables
-        auctionLength = params.auctionLength;
-        blockTime = params.blockTime;
-        minPositionWidth = params.minPositionWidth;
+        auctionLength = params.config.auctionLength;
+        blockTime = params.config.blockTime;
+        minPositionWidth = params.config.minPositionWidth;
         tickSpread    = params.tickSpread;
         twapLength    = params.twapLength;
         genesisTime   = uint32(block.timestamp);
-        minAmountPerAuction = params.minAmountPerAuction;
-        minLowerPricedToken = params.minLowerPricedToken;
+        minAmountPerAuction = params.config.minAmountPerAuction;
+        minAmountLowerPriced = params.config.minAmountLowerPriced;
 
         // set price boundaries
         MIN_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MIN_TICK / tickSpread * tickSpread);
@@ -396,7 +396,7 @@ contract CoverPool is
             blockTime,
             token0Decimals,
             token1Decimals,
-            minLowerPricedToken
+            minAmountLowerPriced
         );
     }
 

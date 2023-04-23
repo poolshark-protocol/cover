@@ -548,7 +548,7 @@ library Positions {
         // set minAmountPerAuction based on token decimals
         uint256 minAmountPerAuction; bool denomTokenIn;
         if (params.latestTick > 0) {
-            if (constants.minLowerPricedToken) {
+            if (constants.minAmountLowerPriced) {
                 // token1 is the lower priced token
                 denomTokenIn = !params.zeroForOne;
                 minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
@@ -558,7 +558,7 @@ library Positions {
                 minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
             }
         } else {
-            if (constants.minLowerPricedToken) {
+            if (constants.minAmountLowerPriced) {
                 // token0 is the lower priced token
                 denomTokenIn = params.zeroForOne;
                 minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token0Decimals);

@@ -19,7 +19,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
     /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
-    mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) public volatilityTiers;
+    mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) internal _volatilityTiers;
     uint16 public protocolFee;
 
     error OwnerOnly();
@@ -28,6 +28,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     error VolatilityTierCannotBeZero();
     error VolatilityTierAlreadyEnabled();
     error VoltatilityTierTwapTooShort();
+    error VolatilityTierFeeLimitExceeded();
     error TransferredToZeroAddress();
     error ProtocolFeeCeilingExceeded();
     error FeeTierNotSupported();
@@ -43,11 +44,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(address(0), msg.sender);
 
         /// @dev - 1e18 works for pairs with a stablecoin
-        volatilityTiers[500][20][5] = CoverPoolConfig(1e18, 5, 1000, 1, true);
-        emit VolatilityTierEnabled(500, 20, 5, 5, 1000, 1, 1e18, true);
+        //TODO: use object so CoverPoolConfig fields are easily visible
+        _volatilityTiers[500][20][5] = CoverPoolConfig(1e18, 5, 1000, 0, 0, 1, true);
+        emit VolatilityTierEnabled(500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
 
-        volatilityTiers[500][40][10] = CoverPoolConfig(1e18, 10, 1000, 5, false);
-        emit VolatilityTierEnabled(500, 40, 10, 10, 1000, 5, 1e18, false);
+        _volatilityTiers[500][40][10] = CoverPoolConfig(1e18, 10, 1000, 500, 5000, 5, false);
+        emit VolatilityTierEnabled(500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
     }
 
     /**
@@ -61,20 +63,6 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     modifier onlyFeeTo() {
         _checkFeeTo();
         _;
-    }
-
-    /**
-     * @dev Throws if the sender is not the owner.
-     */
-    function _checkOwner() internal view virtual {
-        if (owner != msg.sender) revert OwnerOnly();
-    }
-
-    /**
-     * @dev Throws if the sender is not the feeTo.
-     */
-    function _checkFeeTo() internal view virtual {
-        if (feeTo != msg.sender) revert FeeToOnly();
     }
 
     /**
@@ -115,18 +103,22 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
+        uint128 minAmountPerAuction,
         uint16  auctionLength,
         uint16  blockTime,
+        uint16  syncFee,
+        uint16  fillFee,
         int16   minPositionWidth,
-        uint128 minAmountPerAuction,
         bool    minLowerPriced
     ) external onlyOwner {
-        if (volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
+        if (_volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierCannotBeZero();
         } else if (twapLength < 5 * blockTime / oneSecond) {
             revert VoltatilityTierTwapTooShort();
+        } else if (syncFee > 10000 || fillFee > 10000) {
+            revert VolatilityTierFeeLimitExceeded();
         }
         {
             // check fee tier exists
@@ -143,10 +135,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             }
         }
         // twapLength * blockTime should never overflow uint16
-        volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
+        _volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
             minAmountPerAuction,
             auctionLength,
             blockTime,
+            syncFee,
+            fillFee,
             minPositionWidth,
             minLowerPriced
         );
@@ -154,10 +148,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             feeTier,
             tickSpread,
             twapLength,
+            minAmountPerAuction,
             auctionLength,
             blockTime,
+            syncFee,
+            fillFee,
             minPositionWidth,
-            minAmountPerAuction,
             minLowerPriced
         );
     }
@@ -184,5 +180,30 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         for (uint i; i < collectPools.length; i++) {
             ICoverPoolFactory(factory).collectProtocolFees(collectPools[i]);
         }
+    }
+
+    function volatilityTiers(
+        uint16 feeTier,
+        int16 tickSpread,
+        uint16 twapLength
+    ) external view returns (
+        CoverPoolConfig memory
+    ) {
+        return _volatilityTiers[feeTier][tickSpread][twapLength];
+    }
+
+    
+    /**
+     * @dev Throws if the sender is not the owner.
+     */
+    function _checkOwner() internal view {
+        if (owner != msg.sender) revert OwnerOnly();
+    }
+
+    /**
+     * @dev Throws if the sender is not the feeTo.
+     */
+    function _checkFeeTo() internal view {
+        if (feeTo != msg.sender) revert FeeToOnly();
     }
 }
