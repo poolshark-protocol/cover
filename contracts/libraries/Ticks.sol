@@ -8,6 +8,7 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './TwapOracle.sol';
 import './TickMap.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -34,15 +35,14 @@ library Ticks {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache,
         ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
-        if (zeroForOne ? priceLimit >= cache.price 
-                       : priceLimit <= cache.price 
-            || cache.price == 0 
+    ) external pure returns (ICoverPoolStructs.SwapCache memory) {
+        if ((zeroForOne ? priceLimit >= cache.price 
+                        : priceLimit <= cache.price) 
+            || cache.liquidity == 0 
             || cache.input == 0
         )
-            return (cache, 0);
-        uint256 nextTickPrice = state.latestPrice;
-        uint256 nextPrice = nextTickPrice;
+            return cache;
+        uint256 nextPrice = state.latestPrice;
         // determine input boost from tick auction
         cache.auctionBoost = ((cache.auctionDepth <= constants.auctionLength) ? cache.auctionDepth
                                                                           : constants.auctionLength
@@ -65,12 +65,12 @@ library Ticks {
                     cache.price,
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
-                amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
+                cache.output += DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDx > 0) {
-                amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+                cache.output += DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
                 cache.price = nextPrice;
                 cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
                 cache.amountInDelta = cache.amountIn - cache.input;
@@ -86,18 +86,18 @@ library Ticks {
                 // calculate price after swap
                 uint256 newPrice = cache.price +
                     FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
+                cache.output += DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDy > 0) {
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
+                cache.output += DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
                 cache.price = nextPrice;
                 cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
                 cache.amountInDelta = cache.amountIn - cache.input;
             }
         }
-        return (cache, amountOut);
+        return (cache);
     }
 
     function initialize(

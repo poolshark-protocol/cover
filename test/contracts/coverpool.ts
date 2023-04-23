@@ -242,7 +242,9 @@ describe('CoverPool Tests', function () {
     })
 
     it('pool0 - Should mint, swap, and then claim entire range', async function () {
+        if (debugMode) await getPrice(true, true)
         await validateSync(0)
+        if (debugMode) await getPrice(true, true)
 
         await validateMint({
             signer: hre.props.alice,
@@ -260,8 +262,6 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(-20)
-
-        await getLatestTick(debugMode)
 
         await validateSwap({
             signer: hre.props.alice,
@@ -777,17 +777,17 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-        await getTick(true, -20, debugMode)
+        if (debugMode) await getTick(true, -20, debugMode)
         await validateSync(-40);
-        await getTick(true, -40, debugMode)
+        if (debugMode) await getTick(true, -40, debugMode)
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
 
         await validateSync(-60);
         expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
-        await getTick(true, -60, debugMode)
-        await getTick(true, -80, debugMode)
+        if (debugMode) await getTick(true, -60, debugMode)
+        if (debugMode) await getTick(true, -80, debugMode)
         await validateSync(-80);
-        await getTick(true, -80, debugMode)
+        if (debugMode) await getTick(true, -80, debugMode)
 
         // // Notice that the following burn reverts -- if the subtraction from the end tick in section2
         // // is removed the double counting no longer occurs -- and the burn can succeed.
@@ -1433,15 +1433,17 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(true, -20, debugMode)
+        if (debugMode) await getTick(true, -20, debugMode)
 
         await validateSync(20)
-        await getTick(true, -20, debugMode)
-        await getLiquidity(true, debugMode)
-        await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
-        await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
 
-        getTick(true, 0, debugMode)
+        if (debugMode) {
+            await getTick(true, -20, debugMode)
+            await getLiquidity(true, debugMode)
+            await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
+            await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+            await getTick(true, 0, debugMode)
+        }
 
         // minting with claim is the same outcome as burning with claim
         await validateMint({
@@ -1488,15 +1490,15 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '', // Alice cannot claim at -20 when she should be able to
         })
-        await getLatestTick(debugMode)
+        if (debugMode) await getLatestTick(debugMode)
     });
 
     it("pool0 - Claim on stash tick; Mint after sync; Block overlapping position claim 312", async () => {
-        await getLatestTick(debugMode)
+        if (debugMode) await getLatestTick(debugMode)
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
         const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
-        await getLatestTick(debugMode)
+        if (debugMode) await getLatestTick(debugMode)
 
         await validateMint({
             signer: hre.props.alice,
@@ -1527,7 +1529,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(true, -20, debugMode)
+        if (debugMode) await getTick(true, -20, debugMode)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -1543,10 +1545,10 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
         await validateSync(0)
-        await getTick(true, -20, debugMode)
-        await getLiquidity(true, debugMode)
-        await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
-        await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+        if (debugMode) await getTick(true, -20, debugMode)
+        if (debugMode) await getLiquidity(true, debugMode)
+        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
+        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
 
         await validateMint({
             signer: hre.props.alice,
@@ -1562,7 +1564,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getTick(true, -40, debugMode)
+        if (debugMode) await getTick(true, -40, debugMode)
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
@@ -1646,13 +1648,13 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await getTick(true, -20, debugMode)
+        if (debugMode) await getTick(true, -20, debugMode)
 
         await validateSync(0)
-        await getTick(true, -20, debugMode)
-        await getLiquidity(true, debugMode)
-        await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
-        await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+        if (debugMode) await getTick(true, -20, debugMode)
+        if (debugMode) await getLiquidity(true, debugMode)
+        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
+        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
 
         await validateBurn({
             signer: hre.props.alice,
@@ -1682,7 +1684,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getTick(true, -40, debugMode)
+        if (debugMode) await getTick(true, -40, debugMode)
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',

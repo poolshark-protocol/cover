@@ -89,35 +89,45 @@ contract CoverPool is
     function mint(
         MintParams memory params
     ) external lock {
-        GlobalState memory state = globalState;
-        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                                     : positions1[msg.sender][params.lower][params.upper];
-        (state, pool0, pool1) = Epochs.syncLatest(
+        MintCache memory cache = MintCache({
+            state: globalState,
+            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                        : positions1[msg.sender][params.lower][params.upper],
+            constants: _immutables(),
+            syncFees: SyncFees(0,0),
+            liquidityMinted: 0
+        });
+        (
+            cache.state,
+            cache.syncFees,
+            pool0, 
+            pool1
+        ) = Epochs.syncLatest(
             ticks0,
             ticks1,
             tickMap,
             pool0,
             pool1,
-            state,
-            _immutables()
+            cache.state,
+            cache.constants
         );
         uint256 liquidityMinted;
         // resize position if necessary
         (params, liquidityMinted) = Positions.resize(
-            position,
+            cache.position,
             params, 
-            state,
-            _immutables()
+            cache.state,
+            cache.constants
         );
 
         if (params.amount > 0)
             _transferIn(params.zeroForOne ? token0 : token1, params.amount);
         // recreates position if required
-        (state,) = Positions.update(
+        (cache.state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1, //TODO: start and end; one mapping
             params.zeroForOne ? ticks0 : ticks1, //TODO: mappings of mappings; pass params.zeroForOne
             tickMap, //TODO: merge epoch and tick map
-            state,
+            cache.state,
             params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
                 msg.sender,
@@ -127,14 +137,14 @@ contract CoverPool is
                 params.claim,
                 params.zeroForOne
             ),
-            _immutables()
+            cache.constants
         );
         if (params.amount > 0) {
-            state = Positions.add(
+            cache.state = Positions.add(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
-                state,
+                cache.state,
                 AddParams(
                     params.to,
                     uint128(liquidityMinted),
@@ -146,9 +156,10 @@ contract CoverPool is
                 tickSpread
             );
         }
-        globalState = state;
+        globalState = cache.state;
         _collect(
             CollectParams(
+                cache.syncFees,
                 params.to, //address(0) goes to msg.sender
                 0,
                 params.lower,
@@ -163,29 +174,36 @@ contract CoverPool is
         BurnParams memory params
     ) external lock {
         if (params.to == address(0)) revert CollectToZeroAddress();
-        GlobalState memory state = globalState;
+        BurnCache memory cache = BurnCache({
+            state: globalState,
+            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                        : positions1[msg.sender][params.lower][params.upper],
+            constants: _immutables(),
+            syncFees: SyncFees(0,0)
+        });
+        // GlobalState memory state = globalState;
         if (params.sync)
-            (state, pool0, pool1) = Epochs.syncLatest(
+            (cache.state, cache.syncFees, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickMap,
                 pool0,
                 pool1,
-                state,
-                _immutables()
+                cache.state,
+                cache.constants
             );
-        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                                     : positions1[msg.sender][params.lower][params.upper];
-        if (position.claimPriceLast > 0
+        // Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+        //                                              : positions1[msg.sender][params.lower][params.upper];
+        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
-            || params.claim == state.latestTick)
+            || params.claim == cache.state.latestTick)
         {
             // if position has been crossed into
-            (state, params.claim) = Positions.update(
+            (cache.state, params.claim) = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
-                state,
+                cache.state,
                 params.zeroForOne ? pool0 : pool1,
                 UpdateParams(
                     msg.sender,
@@ -199,11 +217,11 @@ contract CoverPool is
             );
         } else {
             // if position hasn't been crossed into
-            (, state) = Positions.remove(
+            (, cache.state) = Positions.remove(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
-                state,
+                cache.state,
                 RemoveParams(
                     msg.sender,
                     params.amount,
@@ -214,9 +232,10 @@ contract CoverPool is
                 _immutables()
             );
         }
-        globalState = state;
+        globalState = cache.state;
         _collect(
             CollectParams(
+                cache.syncFees,
                 params.to, //address(0) goes to msg.sender
                 params.amount,
                 params.lower,
@@ -232,44 +251,50 @@ contract CoverPool is
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
+    ) external override lock returns (
+        uint256,
+        uint256
     )
-        external
-        override
-        lock
-        returns (uint256 amountOut)
     {
-        GlobalState memory state = globalState;
         _validatePrice(priceLimit);
-        (state, pool0, pool1) = Epochs.syncLatest(
+        SwapCache memory cache;
+        cache.state = globalState;
+        cache.constants = _immutables();
+        (
+            cache.state,
+            cache.syncFees,
+            pool0,
+            pool1
+        ) = Epochs.syncLatest(
             ticks0,
             ticks1,
             tickMap,
             pool0,
             pool1,
-            state,
+            cache.state,
             _immutables()
         );
         PoolState memory pool = zeroForOne ? pool1 : pool0;
-        if (amountIn == 0) {
-            // transfer out syncing fee here
-            globalState = state;
-            return 0;
-        }
-
-        _transferIn(zeroForOne ? token0 : token1, amountIn);
-
-        SwapCache memory cache = SwapCache({
+        cache = SwapCache({
+            state: cache.state,
+            syncFees: cache.syncFees,
+            constants: cache.constants,
             price: pool.price,
             liquidity: pool.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.timestamp - genesisTime - state.auctionStart,
+            auctionDepth: block.timestamp - genesisTime - cache.state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
+            output: 0,
             inputBoosted: 0,
             amountInDelta: 0
         });
+
+        if (amountIn > 0)
+            _transferIn(zeroForOne ? token0 : token1, amountIn);
+
         /// @dev - liquidity range is limited to one tick
-        (cache, amountOut) = Ticks.quote(zeroForOne, priceLimit, state, cache, _immutables());
+        cache = Ticks.quote(zeroForOne, priceLimit, cache.state, cache, _immutables());
 
         if (zeroForOne) {
             pool1.price = uint160(cache.price);
@@ -279,20 +304,32 @@ contract CoverPool is
             pool0.amountInDelta += uint128(cache.amountInDelta);
         }
 
-        globalState = state;
+        globalState = cache.state;
 
         if (zeroForOne) {
             if (cache.input > 0) {
-                _transferOut(recipient, token0, cache.input);
+                _transferOut(recipient, token0, cache.input + cache.syncFees.token0);
             }
-            _transferOut(recipient, token1, amountOut);
-            emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
+            if (cache.output > 0) {
+                _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
+                emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
+            }
+            return (
+                cache.input  + cache.syncFees.token0,
+                cache.output + cache.syncFees.token1
+            );
         } else {
             if (cache.input > 0) {
-                _transferOut(recipient, token1, cache.input);
+                _transferOut(recipient, token1, cache.input + cache.syncFees.token1);
             }
-            _transferOut(recipient, token0, amountOut);
-            emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
+            if (cache.output > 0) {
+                _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
+                emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
+            }
+            return (
+                cache.input  + cache.syncFees.token1,
+                cache.output + cache.syncFees.token0
+            );
         }
     }
 
@@ -301,34 +338,50 @@ contract CoverPool is
         uint128 amountIn,
         uint160 priceLimit
     ) external view override returns (
-        uint256 inAmount,
-        uint256 outAmount
+        uint256  inAmount,
+        uint256  outAmount
     ) {
-        GlobalState memory state = globalState;
         PoolState memory pool0State;
         PoolState memory pool1State;
-        (state, pool0State, pool1State) = Epochs.simulateSync(
+        SwapCache memory cache;
+        cache.state = globalState;
+        cache.constants = _immutables();
+        (
+            cache.state,
+            cache.syncFees,
+            pool0State,
+            pool1State
+        ) = Epochs.simulateSync(
             ticks0,
             ticks1,
             tickMap,
             pool0,
             pool1,
-            state,
-            _immutables()
+            cache.state,
+            cache.constants
         );
-        SwapCache memory cache = SwapCache({
+        cache = SwapCache({
+            state: cache.state,
+            syncFees: cache.syncFees,
+            constants: cache.constants,
             price: zeroForOne ? pool1State.price : pool0State.price,
             liquidity: zeroForOne ? pool1State.liquidity : pool0State.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.timestamp - genesisTime - state.auctionStart,
+            auctionDepth: block.timestamp - genesisTime - cache.state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
+            output: 0,
             inputBoosted: 0,
             amountInDelta: 0
         });
-        (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache, _immutables());
-        inAmount = amountIn - cache.input;
-
+        cache = Ticks.quote(zeroForOne, priceLimit, cache.state, cache, _immutables());
+        if (zeroForOne) {
+            inAmount  = cache.input  + cache.syncFees.token0;
+            outAmount = cache.output + cache.syncFees.token1;
+        } else {
+            inAmount  = cache.input  + cache.syncFees.token1;
+            outAmount = cache.output + cache.syncFees.token0;
+        }
         return (inAmount, outAmount);
     }
 
@@ -370,6 +423,15 @@ contract CoverPool is
         // store amounts for transferOut
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
+
+        // factor in sync fees
+        if (params.zeroForOne) {
+            amountIn  += params.syncFees.token1;
+            amountOut += params.syncFees.token0;
+        } else {
+            amountIn  += params.syncFees.token0;
+            amountOut += params.syncFees.token1;
+        }
 
         /// zero out balances and transfer out
         if (amountIn > 0) {
