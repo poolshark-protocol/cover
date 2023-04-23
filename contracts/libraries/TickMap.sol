@@ -6,6 +6,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 
 library TickMap {
 
+    error TickIndexInvalid();
     error TickIndexOverflow();
     error TickIndexUnderflow();
     error BlockIndexOverflow();
@@ -131,6 +132,7 @@ library TickMap {
         unchecked {
             if (tick > TickMath.MAX_TICK / tickSpread * tickSpread) revert TickIndexOverflow();
             if (tick < TickMath.MIN_TICK / tickSpread * tickSpread) revert TickIndexUnderflow();
+            if (tick % tickSpread != 0) revert TickIndexInvalid();
             tickIndex = uint256(int256((tick - TickMath.MIN_TICK / tickSpread * tickSpread)) / tickSpread);
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block

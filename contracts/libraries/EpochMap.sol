@@ -9,6 +9,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 
 library EpochMap {
 
+    error TickIndexInvalid();
     error TickIndexOverflow();
     error TickIndexUnderflow();
     error BlockIndexOverflow();
@@ -89,6 +90,7 @@ library EpochMap {
         unchecked {
             if (tick > TickMath.MAX_TICK / tickSpread * tickSpread) revert TickIndexOverflow();
             if (tick < TickMath.MIN_TICK / tickSpread * tickSpread) revert TickIndexUnderflow();
+            if (tick % tickSpread != 0) revert TickIndexInvalid();
             tickIndex = uint256(int256((tick - TickMath.MIN_TICK / tickSpread * tickSpread)) / tickSpread);
             wordIndex = tickIndex >> 3;        // 2^3 epochs per word
             blockIndex = tickIndex >> 11;      // 2^8 words per block
