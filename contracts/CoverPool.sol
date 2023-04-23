@@ -111,9 +111,8 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-        uint256 liquidityMinted;
         // resize position if necessary
-        (params, liquidityMinted) = Positions.resize(
+        (params, cache.liquidityMinted) = Positions.resize(
             cache.position,
             params, 
             cache.state,
@@ -147,7 +146,7 @@ contract CoverPool is
                 cache.state,
                 AddParams(
                     params.to,
-                    uint128(liquidityMinted),
+                    uint128(cache.liquidityMinted),
                     params.lower,
                     params.claim,
                     params.upper,
@@ -181,7 +180,6 @@ contract CoverPool is
             constants: _immutables(),
             syncFees: SyncFees(0,0)
         });
-        // GlobalState memory state = globalState;
         if (params.sync)
             (cache.state, cache.syncFees, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
@@ -192,8 +190,6 @@ contract CoverPool is
                 cache.state,
                 cache.constants
             );
-        // Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-        //                                              : positions1[msg.sender][params.lower][params.upper];
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
             || params.claim == cache.state.latestTick)
@@ -338,8 +334,8 @@ contract CoverPool is
         uint128 amountIn,
         uint160 priceLimit
     ) external view override returns (
-        uint256  inAmount,
-        uint256  outAmount
+        uint256 inAmount,
+        uint256 outAmount
     ) {
         PoolState memory pool0State;
         PoolState memory pool1State;
