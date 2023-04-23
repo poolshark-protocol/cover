@@ -162,10 +162,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, tickSpread))
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, tickSpread), tickSpread)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, tickSpread))
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, tickSpread), tickSpread)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -249,10 +249,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread))
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread), constants.tickSpread)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread))
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread), constants.tickSpread)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();

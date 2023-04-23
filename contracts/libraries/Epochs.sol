@@ -155,7 +155,7 @@ library Epochs {
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
                  && ticks0[cache.nextTickToAccum0].amountInDeltaMaxMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch);
+                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch, constants.tickSpread);
             }
             // accumulate to next tick
             ICoverPoolStructs.AccumulateOutputs memory outputs;
@@ -199,7 +199,7 @@ library Epochs {
                 pool0.liquidity,
                 true
             );
-            EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch);
+            EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch, constants.tickSpread);
             ticks0[cache.stopTick0] = stopTick0;
         }
 
@@ -209,7 +209,7 @@ library Epochs {
             // accumulate deltas pool1
             if (cache.nextTickToAccum1 < cache.stopTick1 
                  && ticks1[cache.nextTickToAccum1].amountInDeltaMaxMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum1, state.accumEpoch);
+                EpochMap.set(tickMap, cache.nextTickToAccum1, state.accumEpoch, constants.tickSpread);
             }
             {
                 ICoverPoolStructs.AccumulateOutputs memory outputs;
@@ -254,7 +254,7 @@ library Epochs {
                 false
             );
             ticks1[cache.stopTick1] = stopTick1;
-            EpochMap.set(tickMap, cache.stopTick1, state.accumEpoch);
+            EpochMap.set(tickMap, cache.stopTick1, state.accumEpoch, constants.tickSpread);
         }
         // update ending pool price for fully filled auction
         state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
