@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import '../../interfaces/ITwapSource.sol';
-import '../../interfaces/IRangeFactory.sol';
 
 interface CoverPoolManagerStructs {
     struct CoverPoolConfig {

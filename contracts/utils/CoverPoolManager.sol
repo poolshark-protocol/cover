@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import '../interfaces/ICoverPool.sol';
-import '../interfaces/IRangeFactory.sol';
 import '../interfaces/ICoverPoolFactory.sol';
 import '../interfaces/ICoverPoolManager.sol';
 import '../base/events/CoverPoolManagerEvents.sol';

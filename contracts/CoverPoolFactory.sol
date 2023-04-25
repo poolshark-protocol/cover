@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import './CoverPool.sol';
 import './interfaces/ICoverPoolFactory.sol';
-import './interfaces/IRangeFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
 import './base/structs/CoverPoolManagerStructs.sol';
@@ -46,9 +45,7 @@ contract CoverPoolFactory is
         }
         // get volatility tier config
         params.config = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
-        if (params.config.auctionLength == 0) {
-            revert VolatilityTierNotSupported();
-        }
+        if (params.config.auctionLength == 0) revert VolatilityTierNotSupported();
         // get twap source
         params.twapSource = ICoverPoolManager(owner).twapSources(sourceName);
         if (params.twapSource == address(0)) revert TwapSourceNotFound();
@@ -64,6 +61,7 @@ contract CoverPoolFactory is
 
         emit PoolCreated(
             pool,
+            params.twapSource,
             params.inputPool,
             params.token0,
             params.token1,
