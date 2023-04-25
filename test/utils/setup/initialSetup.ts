@@ -27,7 +27,7 @@ import {
 export class InitialSetup {
     private token0Decimals = 18
     private token1Decimals = 18
-    private this.uniV3String = ethers.utils.formatBytes32String('UNI-V3')
+    private uniV3String = ethers.utils.formatBytes32String('UNI-V3')
     private deployAssist: DeployAssist
     private contractDeploymentsJson: ContractDeploymentsJson
     private contractDeploymentsKeys: ContractDeploymentsKeys
@@ -261,8 +261,7 @@ export class InitialSetup {
             CoverPoolFactory__factory,
             'coverPoolFactory',
             [   
-                hre.props.coverPoolManager.address,
-                hre.props.uniswapV3FactoryMock.address
+                hre.props.coverPoolManager.address
             ],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,

@@ -309,23 +309,23 @@ export async function validateMint(params: ValidateMintParams) {
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
     let positionBefore: Position
-    // if (zeroForOne) {
-    //     lowerTickBefore = await hre.props.coverPool.ticks0(lower)
-    //     upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-    //     positionBefore  = await hre.props.coverPool.positions0(
-    //         recipient,
-    //         lower,
-    //         expectedUpper ? expectedUpper : upper
-    //     )
-    // } else {
-    //     lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-    //     upperTickBefore = await hre.props.coverPool.ticks1(upper)
-    //     positionBefore  = await hre.props.coverPool.positions1(
-    //         recipient,
-    //         expectedLower ? expectedLower : lower,
-    //         upper
-    //     )
-    // }
+    if (zeroForOne) {
+        lowerTickBefore = await hre.props.coverPool.ticks0(lower)
+        upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
+        positionBefore  = await hre.props.coverPool.positions0(
+            recipient,
+            lower,
+            expectedUpper ? expectedUpper : upper
+        )
+    } else {
+        lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
+        upperTickBefore = await hre.props.coverPool.ticks1(upper)
+        positionBefore  = await hre.props.coverPool.positions1(
+            recipient,
+            expectedLower ? expectedLower : lower,
+            upper
+        )
+    }
     if (revertMessage == '') {
         const txn = await hre.props.coverPool
             .connect(params.signer)
@@ -372,23 +372,23 @@ export async function validateMint(params: ValidateMintParams) {
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
     let positionAfter: Position
-    // if (zeroForOne) {
-    //     lowerTickAfter = await hre.props.coverPool.ticks0(lower)
-    //     upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
-    //     positionAfter = await hre.props.coverPool.positions0(
-    //         recipient,
-    //         lower,
-    //         expectedUpper ? expectedUpper : upper
-    //     )
-    // } else {
-    //     lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-    //     upperTickAfter = await hre.props.coverPool.ticks1(upper)
-    //     positionAfter = await hre.props.coverPool.positions1(
-    //         recipient,
-    //         expectedLower ? expectedLower : lower,
-    //         upper
-    //     )
-    // }
+    if (zeroForOne) {
+        lowerTickAfter = await hre.props.coverPool.ticks0(lower)
+        upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
+        positionAfter = await hre.props.coverPool.positions0(
+            recipient,
+            lower,
+            expectedUpper ? expectedUpper : upper
+        )
+    } else {
+        lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
+        upperTickAfter = await hre.props.coverPool.ticks1(upper)
+        positionAfter = await hre.props.coverPool.positions1(
+            recipient,
+            expectedLower ? expectedLower : lower,
+            upper
+        )
+    }
 
     //TODO: handle lower and/or upper below TWAP
     //TODO: does this handle negative values okay?

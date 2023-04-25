@@ -126,8 +126,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function enableTwapSource(
         bytes32 sourceName,
         address sourceAddress
-    ) external {
-        if (sourceName.length < 3) revert TwapSourceNameInvalid();
+    ) external onlyOwner {
+        if (sourceName[0] == bytes32("")) revert TwapSourceNameInvalid();
         if (twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
         twapSources[sourceName] = sourceAddress;
         emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
@@ -157,7 +157,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         }
         {
             // check fee tier exists
-            int24 tickSpacing = ITwapSource(twapSources[sourceName]).feeTierTickSpacing(feeTier);
+            address twapSource = twapSources[sourceName];
+            if (twapSource == address(0)) revert TwapSourceNotFound();
+            int24 tickSpacing = ITwapSource(twapSource).feeTierTickSpacing(feeTier);
             if (tickSpacing == 0) {
                 revert FeeTierNotSupported();
             }

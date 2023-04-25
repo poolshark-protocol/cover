@@ -51,6 +51,7 @@ contract CoverPoolFactory is
         }
         // get twap source
         params.twapSource = ICoverPoolManager(owner).twapSources(sourceName);
+        if (params.twapSource == address(0)) revert TwapSourceNotFound();
         params.tickSpread = tickSpread;
         params.twapLength = twapLength;
         // get reference pool
@@ -85,7 +86,7 @@ contract CoverPoolFactory is
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(sourceName, token0, token1, feeTier, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encodePacked(sourceName, token0, token1, feeTier, tickSpread, twapLength));
 
         return coverPools[key];
     }
