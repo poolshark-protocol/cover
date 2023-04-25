@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import './interfaces/ICoverPool.sol';
-import './interfaces/IRangePool.sol';
 import './interfaces/ICoverPoolManager.sol';
 import './base/events/CoverPoolEvents.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
@@ -23,6 +22,7 @@ contract CoverPool is
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
+    address public immutable twapSource;
     address public immutable inputPool; 
     uint160 public immutable MIN_PRICE;
     uint160 public immutable MAX_PRICE;
@@ -57,9 +57,10 @@ contract CoverPool is
     ) {
         // set addresses
         factory   = msg.sender;
+        twapSource = params.twapSource;
         inputPool = params.inputPool;
-        token0    = IRangePool(inputPool).token0();
-        token1    = IRangePool(inputPool).token1();
+        token0    = params.token0;
+        token1    = params.token1;
         
         // set token decimals
         token0Decimals = ERC20(token0).decimals();
@@ -448,6 +449,7 @@ contract CoverPool is
         Immutables memory
     ) {
         return Immutables(
+            twapSource,
             inputPool,
             minAmountPerAuction,
             genesisTime,

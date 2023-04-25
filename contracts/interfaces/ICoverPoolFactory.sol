@@ -5,16 +5,18 @@ import '../base/storage/CoverPoolFactoryStorage.sol';
 abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
 
     function createCoverPool(
-        address fromToken,
-        address destToken,
+        bytes32 sourceName,
+        address tokenIn,
+        address tokenOut,
         uint16 fee,
         int16  tickSpread,
         uint16 twapLength
     ) external virtual returns (address book);
 
     function getCoverPool(
-        address fromToken,
-        address destToken,
+        bytes32 sourceName,
+        address tokenIn,
+        address tokenOut,
         uint16 fee,
         int16 tickSpread,
         uint16 twapLength

@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import '../interfaces/IRangePool.sol';
-import './RangePoolMock.sol';
+import '../interfaces/external/IUniswapV3Pool.sol';
+import './UniswapV3PoolMock.sol';
 
-contract RangePoolMock is IRangePool {
+contract UniswapV3PoolMock is IUniswapV3Pool {
     address internal admin;
     address public token0;
     address public token1;

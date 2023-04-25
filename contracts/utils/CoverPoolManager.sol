@@ -15,11 +15,13 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public owner;
     address public feeTo;
     address public factory;
-    address public inputPoolFactory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
-    /// @dev - feeTier => tickSpread => twapLength => CoverPoolConfig
+    // source name => source address
+    mapping(bytes32 => address) public twapSources;
+    // feeTier => tickSpread => twapLength => CoverPoolConfig
     mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) internal _volatilityTiers;
+
     uint16 public protocolFee;
 
     error OwnerOnly();
@@ -34,22 +36,44 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     error FeeTierNotSupported();
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
+    error TwapSourceNameInvalid();
+    error TwapSourceAlreadyExists();
+    error TwapSourceNotFound();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();
 
-    constructor(address _inputPoolFactory) {
+    constructor(
+        bytes32 sourceName,
+        address sourceAddress
+    ) {
         owner = msg.sender;
         feeTo = msg.sender;
-        inputPoolFactory = _inputPoolFactory;
         emit OwnerTransfer(address(0), msg.sender);
 
-        /// @dev - 1e18 works for pairs with a stablecoin
-        //TODO: use object so CoverPoolConfig fields are easily visible
-        _volatilityTiers[500][20][5] = CoverPoolConfig(1e18, 5, 1000, 0, 0, 1, true);
+        // create initial volatility tiers
+        _volatilityTiers[500][20][5] = CoverPoolConfig({
+           minAmountPerAuction: 1e18,
+           auctionLength: 5,
+           blockTime: 1000,
+           syncFee: 0,
+           fillFee: 0,
+           minPositionWidth: 1,
+           minAmountLowerPriced: true
+        });
+        _volatilityTiers[500][40][10] = CoverPoolConfig({
+           minAmountPerAuction: 1e18,
+           auctionLength: 10,
+           blockTime: 1000,
+           syncFee: 500,
+           fillFee: 5000,
+           minPositionWidth: 5,
+           minAmountLowerPriced: false
+        });
         emit VolatilityTierEnabled(500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
-
-        _volatilityTiers[500][40][10] = CoverPoolConfig(1e18, 10, 1000, 500, 5000, 5, false);
         emit VolatilityTierEnabled(500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
+    
+        twapSources[sourceName] = sourceAddress;
+        emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
     }
 
     /**
@@ -99,7 +123,18 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(oldFeeTo, newFeeTo);
     }
 
+    function enableTwapSource(
+        bytes32 sourceName,
+        address sourceAddress
+    ) external {
+        if (sourceName.length < 3) revert TwapSourceNameInvalid();
+        if (twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
+        twapSources[sourceName] = sourceAddress;
+        emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
+    }
+
     function enableVolatilityTier(
+        bytes32 sourceName,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
@@ -122,7 +157,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         }
         {
             // check fee tier exists
-            int24 tickSpacing = IRangeFactory(inputPoolFactory).feeTierTickSpacing(feeTier);
+            int24 tickSpacing = ITwapSource(twapSources[sourceName]).feeTierTickSpacing(feeTier);
             if (tickSpacing == 0) {
                 revert FeeTierNotSupported();
             }
@@ -187,11 +222,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16 tickSpread,
         uint16 twapLength
     ) external view returns (
-        CoverPoolConfig memory
+        CoverPoolConfig memory config
     ) {
-        return _volatilityTiers[feeTier][tickSpread][twapLength];
+        config = _volatilityTiers[feeTier][tickSpread][twapLength];
     }
-
     
     /**
      * @dev Throws if the sender is not the owner.

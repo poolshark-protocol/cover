@@ -3,8 +3,7 @@ pragma solidity ^0.8.13;
 
 import './math/TickMath.sol';
 import './math/DyDxMath.sol';
-import './TwapOracle.sol';
-import '../interfaces/IRangePool.sol';
+import '../interfaces/ITwapSource.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
@@ -302,7 +301,7 @@ library Epochs {
         if (auctionsElapsed == 0) {
             return (state.latestTick, true);
         }
-        newLatestTick = TwapOracle.calculateAverageTick(constants.inputPool, constants.twapLength);
+        newLatestTick = ITwapSource(constants.twapSource).calculateAverageTick(constants.inputPool, constants.twapLength);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;

@@ -32,6 +32,7 @@ describe('CoverPoolFactory Tests', function () {
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
+                    'UNI-V3',
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
                     '500',
@@ -46,6 +47,7 @@ describe('CoverPoolFactory Tests', function () {
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
+                    'UNI-V3',
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '500',
@@ -60,6 +62,7 @@ describe('CoverPoolFactory Tests', function () {
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
+                    'UNI-V3',
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '2000',

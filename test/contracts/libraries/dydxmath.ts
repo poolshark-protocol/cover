@@ -1,10 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
-import { IRangePool } from '../../../typechain'
-import { PoolState, BN_ZERO } from '../../utils/contracts/coverpool'
 import { gBefore } from '../../utils/hooks.test'
-import { mintSigners20 } from '../../utils/token'
 
 describe('DyDxMath Library Tests', function () {
     let token0Amount: BigNumber

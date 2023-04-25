@@ -6,7 +6,7 @@ import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
-import './TwapOracle.sol';
+import '../interfaces/ITwapSource.sol';
 import './TickMap.sol';
 import 'hardhat/console.sol';
 
@@ -108,7 +108,7 @@ library Ticks {
         ICoverPoolStructs.Immutables memory constants 
     ) external returns (ICoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
-            (state.unlocked, state.latestTick) = TwapOracle.initialize(constants);
+            (state.unlocked, state.latestTick) = ITwapSource(constants.twapSource).initialize(constants);
             if (state.unlocked == 1) {
                 // initialize state
                 state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);

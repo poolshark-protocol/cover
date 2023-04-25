@@ -6,7 +6,10 @@ import './CoverPoolManagerStructs.sol';
 abstract contract CoverPoolFactoryStructs is CoverPoolManagerStructs {
     struct CoverPoolParams {
         CoverPoolConfig config;
+        address twapSource;
         address inputPool;
+        address token0;
+        address token1;
         int16   tickSpread;
         uint16  twapLength;
     }
