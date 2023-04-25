@@ -15,6 +15,11 @@ abstract contract CoverPoolManagerEvents {
         int16   minPositionWidth,
         bool    minLowerPriced
     );
+    event TwapSourceEnabled(
+        bytes32  sourceName,
+        address sourceAddress,
+        address factoryAddress
+    );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
     event ProtocolFeeUpdated(uint16 oldProtocolFee, uint16 newProtocolFee);

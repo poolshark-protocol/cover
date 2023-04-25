@@ -21,6 +21,8 @@ describe('CoverPoolManager Tests', function () {
   const liquidityAmount = BigNumber.from('99855108194609381495771')
   const minTickIdx = BigNumber.from('-887272')
   const maxTickIdx = BigNumber.from('887272')
+  const uniV3String = ethers.utils.formatBytes32String('UNI-V3')
+  const psharkString = ethers.utils.formatBytes32String('PSHARK-RANGE')
 
   before(async function () {
     await gBefore()
@@ -205,7 +207,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("1000", "40", "40", ethers.utils.parseUnits("1", 18), "40", "1000", "0", "0", "4", true)
+        .enableVolatilityTier(uniV3String, "1000", "40", "40", ethers.utils.parseUnits("1", 18), "40", "1000", "0", "0", "4", true)
     ).to.be.revertedWith('FeeTierNotSupported()')
   })
 
@@ -213,7 +215,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "10", "20", ethers.utils.parseUnits("1", 18), "20", "1000", "0", "0", "1",  true)
+        .enableVolatilityTier(uniV3String, "500", "10", "20", ethers.utils.parseUnits("1", 18), "20", "1000", "0", "0", "1",  true)
     ).to.be.revertedWith('TickSpreadNotAtLeastDoubleTickSpread()')
   })
 
@@ -221,8 +223,35 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "25", "20", ethers.utils.parseUnits("1", 18), "20", "1000", "0", "0", "1", true)
+        .enableVolatilityTier(uniV3String, "500", "25", "20", ethers.utils.parseUnits("1", 18), "20", "1000", "0", "0", "1", true)
     ).to.be.revertedWith('TickSpreadNotMultipleOfTickSpacing()')
+  })
+
+  it('Should enable new twap source', async function () {
+    await hre.props.coverPoolManager
+        .connect(hre.props.admin)
+        .enableTwapSource(psharkString, hre.props.uniswapV3Source.address)
+    
+    expect(await hre.props.coverPoolManager
+      .twapSources(psharkString))
+      .to.be.equal(hre.props.uniswapV3Source.address)
+  })
+
+
+  it('Should not enable twap source with OwnerOnly()', async function () {
+    await expect(
+      hre.props.coverPoolManager
+        .connect(hre.props.bob)
+        .enableTwapSource(psharkString, hre.props.uniswapV3Source.address)
+    ).to.be.revertedWith('OwnerOnly()')
+  })
+
+  it('Should not enable twap source with invalid string', async function () {
+    await expect(
+      hre.props.coverPoolManager
+        .connect(hre.props.admin)
+        .enableTwapSource(ethers.utils.formatBytes32String(''), hre.props.uniswapV3Source.address)
+    ).to.be.revertedWith('TwapSourceNameInvalid()')
   })
 
   it('Should enable volatility tier', async function () {
@@ -230,19 +259,19 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enableVolatilityTier("100", "20", "20", ethers.utils.parseUnits("1", 18), "20", "1000", "0", "0", "1", true)
+        .enableVolatilityTier(uniV3String, "100", "20", "20", ethers.utils.parseUnits("1", 18), "20", "1000", "0", "0", "1", true)
     ).to.be.revertedWith('OwnerOnly()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "20", "5", ethers.utils.parseUnits("1", 18), "10", "1000", "0", "0", "5", true)
+        .enableVolatilityTier(uniV3String, "500", "20", "5", ethers.utils.parseUnits("1", 18), "10", "1000", "0", "0", "5", true)
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "40", "10", ethers.utils.parseUnits("1", 18), "40", "1000", "0", "0", "4", true)
+        .enableVolatilityTier(uniV3String, "500", "40", "10", ethers.utils.parseUnits("1", 18), "40", "1000", "0", "0", "4", true)
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     let volatilityTierConfig = await
@@ -264,18 +293,18 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "4", ethers.utils.parseUnits("1", 18), "4", "1000", "0", "0", "4", true)
+        .enableVolatilityTier(uniV3String, "500", "30", "4", ethers.utils.parseUnits("1", 18), "4", "1000", "0", "0", "4", true)
     ).to.be.revertedWith('VoltatilityTierTwapTooShort()')
 
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "0", ethers.utils.parseUnits("1", 18), "30", "1000", "0", "0", "4", true)
+        .enableVolatilityTier(uniV3String, "500", "30", "0", ethers.utils.parseUnits("1", 18), "30", "1000", "0", "0", "4", true)
     ).to.be.revertedWith('VoltatilityTierTwapTooShort()')
 
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableVolatilityTier("500", "30", "30", ethers.utils.parseUnits("1", 18), "30", "1000", "50", "500", "5", true)
+        .enableVolatilityTier(uniV3String, "500", "30", "30", ethers.utils.parseUnits("1", 18), "30", "1000", "50", "500", "5", true)
 
     volatilityTierConfig = await
         hre.props.coverPoolManager

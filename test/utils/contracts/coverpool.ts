@@ -142,7 +142,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
         await mine(auctionLength)
     }
 
-    let txn = await hre.props.rangePoolMock.setTickCumulatives(
+    let txn = await hre.props.uniswapV3PoolMock.setTickCumulatives(
         BigNumber.from(newLatestTick).mul(10),
         BigNumber.from(newLatestTick).mul(5)
     )
