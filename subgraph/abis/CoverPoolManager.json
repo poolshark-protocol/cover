@@ -105,6 +105,31 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "sourceName",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sourceAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "factoryAddress",
+        "type": "address"
+      }
+    ],
+    "name": "TwapSourceEnabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint16",
         "name": "feeTier",
         "type": "uint16"
@@ -123,9 +148,45 @@
       },
       {
         "indexed": false,
+        "internalType": "uint128",
+        "name": "minAmountPerAuction",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
         "internalType": "uint16",
         "name": "auctionLength",
         "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "blockTime",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "syncFee",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "fillFee",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16",
+        "name": "minPositionWidth",
+        "type": "int16"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "minLowerPriced",
+        "type": "bool"
       }
     ],
     "name": "VolatilityTierEnabled",

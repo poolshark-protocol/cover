@@ -11,6 +11,12 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "twapSource",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "inputPool",
         "type": "address"
       },
@@ -27,13 +33,13 @@
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint16",
         "name": "fee",
         "type": "uint16"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "int16",
         "name": "tickSpread",
         "type": "int16"
@@ -42,12 +48,6 @@
         "indexed": false,
         "internalType": "uint16",
         "name": "twapLength",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "auctionLength",
         "type": "uint16"
       }
     ],

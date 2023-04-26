@@ -9,6 +9,12 @@
         "type": "address"
       },
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
         "indexed": true,
         "internalType": "int24",
         "name": "lower",
@@ -37,6 +43,42 @@
         "internalType": "uint128",
         "name": "liquidityBurned",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "token0Amount",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "token1Amount",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountInDeltaMaxStashedBurned",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDeltaMaxStashedBurned",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountInDeltaMaxBurned",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDeltaMaxBurned",
+        "type": "uint128"
       }
     ],
     "name": "Burn",
@@ -46,25 +88,37 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amount0",
-        "type": "uint256"
+        "internalType": "int24",
+        "name": "accumTick",
+        "type": "int24"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amount1",
-        "type": "uint256"
+        "internalType": "int24",
+        "name": "crossTick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountInDelta",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDelta",
+        "type": "uint128"
       }
     ],
-    "name": "Collect",
+    "name": "FinalDeltasAccumulated",
     "type": "event"
   },
   {
@@ -105,9 +159,83 @@
         "internalType": "uint128",
         "name": "liquidityMinted",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountInDeltaMaxMinted",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDeltaMaxMinted",
+        "type": "uint128"
       }
     ],
     "name": "Mint",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "feeTo",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "token0Fees",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "token1Fees",
+        "type": "uint128"
+      }
+    ],
+    "name": "ProtocolFeesCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountInDelta",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDelta",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountInDeltaMaxStashed",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDeltaMaxStashed",
+        "type": "uint128"
+      }
+    ],
+    "name": "StashDeltasAccumulated",
     "type": "event"
   },
   {
@@ -145,6 +273,31 @@
       }
     ],
     "name": "Swap",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "collector",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "token0Amount",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "token1Amount",
+        "type": "uint128"
+      }
+    ],
+    "name": "SyncFeesCollected",
     "type": "event"
   }
 ]
