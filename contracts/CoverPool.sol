@@ -412,8 +412,7 @@ contract CoverPool is
         globalState.protocolFees.token1 = 0;
         _transferOut(feeTo, token0, token0Fees);
         _transferOut(feeTo, token1, token1Fees);
-        if (token0Fees > 0 || token1Fees > 0)
-            emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
+        emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
     }
 
     function _collect(
