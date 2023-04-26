@@ -20,6 +20,7 @@ abstract contract SafeTransfers is CoverTransferErrors {
             if (msg.value < amount) revert TransferFailed(msg.sender, address(this));
             return amount;
         }
+        if (amount == 0) return 0;
         IERC20 erc20Token = IERC20(token);
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
@@ -73,6 +74,7 @@ abstract contract SafeTransfers is CoverTransferErrors {
             payable(to).transfer(amount);
             return;
         }
+        if (amount == 0) return;
         IERC20 erc20Token = IERC20(token);
         // ? We are checking the transfer, but since we are doing so in an assembly block
         // ? Slither does not pick up on that and results in a hit

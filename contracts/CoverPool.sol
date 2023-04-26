@@ -33,8 +33,6 @@ contract CoverPool is
     uint16  public immutable twapLength;
     uint16  public immutable auctionLength;
     uint16  public immutable blockTime;
-    uint16  public immutable syncFee;
-    uint16  public immutable fillFee;
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
     bool    public immutable minAmountLowerPriced;
@@ -73,8 +71,6 @@ contract CoverPool is
         // set other immutables
         auctionLength = params.config.auctionLength;
         blockTime = params.config.blockTime;
-        syncFee = params.config.syncFee;
-        fillFee = params.config.fillFee;
         minPositionWidth = params.config.minPositionWidth;
         tickSpread    = params.tickSpread;
         twapLength    = params.twapLength;
@@ -119,14 +115,13 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-
-        if (params.amount > 0)
-            _transferIn(params.zeroForOne ? token0 : token1, params.amount);
+        // params.amount must be > 0 here
+        _transferIn(params.zeroForOne ? token0 : token1, params.amount);
         // recreates position if required
         (cache.state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1, //TODO: start and end; one mapping
             params.zeroForOne ? ticks0 : ticks1, //TODO: mappings of mappings; pass params.zeroForOne
-            tickMap, //TODO: merge epoch and tick map
+            tickMap,
             cache.state,
             params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
@@ -140,23 +135,21 @@ contract CoverPool is
             ),
             cache.constants
         );
-        if (params.amount > 0) {
-            cache.state = Positions.add(
-                params.zeroForOne ? positions0 : positions1,
-                params.zeroForOne ? ticks0 : ticks1,
-                tickMap,
-                cache.state,
-                AddParams(
-                    params.to,
-                    uint128(cache.liquidityMinted),
-                    params.lower,
-                    params.claim,
-                    params.upper,
-                    params.zeroForOne
-                ),
-                tickSpread
-            );
-        }
+        cache.state = Positions.add(
+            params.zeroForOne ? positions0 : positions1,
+            params.zeroForOne ? ticks0 : ticks1,
+            tickMap,
+            cache.state,
+            AddParams(
+                params.to,
+                uint128(cache.liquidityMinted),
+                params.lower,
+                params.claim,
+                params.upper,
+                params.zeroForOne
+            ),
+            tickSpread
+        );
         globalState = cache.state;
         _collect(
             CollectParams(
@@ -290,8 +283,7 @@ contract CoverPool is
             amountInDelta: 0
         });
 
-        if (amountIn > 0)
-            _transferIn(zeroForOne ? token0 : token1, amountIn);
+        _transferIn(zeroForOne ? token0 : token1, amountIn);
 
         /// @dev - liquidity range is limited to one tick
         cache = Ticks.quote(zeroForOne, priceLimit, cache.state, cache, _immutables());
@@ -418,8 +410,8 @@ contract CoverPool is
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
-        if (token0Fees > 0) _transferOut(feeTo, token0, token0Fees);
-        if (token1Fees > 0) _transferOut(feeTo, token1, token1Fees);
+        _transferOut(feeTo, token0, token0Fees);
+        _transferOut(feeTo, token1, token1Fees);
         if (token0Fees > 0 || token1Fees > 0)
             emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
     }
@@ -467,8 +459,8 @@ contract CoverPool is
             twapLength,
             auctionLength,
             blockTime,
-            syncFee,
-            fillFee,
+            0,
+            0,
             token0Decimals,
             token1Decimals,
             minAmountLowerPriced
