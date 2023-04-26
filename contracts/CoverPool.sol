@@ -418,8 +418,10 @@ contract CoverPool is
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
-        _transferOut(feeTo, token0, token0Fees);
-        _transferOut(feeTo, token1, token1Fees);
+        if (token0Fees > 0) _transferOut(feeTo, token0, token0Fees);
+        if (token1Fees > 0) _transferOut(feeTo, token1, token1Fees);
+        if (token0Fees > 0 || token1Fees > 0)
+            emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
     }
 
     function _collect(
