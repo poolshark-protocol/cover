@@ -182,14 +182,15 @@ library Epochs {
                 EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch, constants.tickSpread);
             }
             // accumulate to next tick
-            ICoverPoolStructs.AccumulateParams memory params;
-            params.deltas = cache.deltas0;
-            params.crossTick = ticks0[cache.nextTickToCross0];
-            params.accumTick = ticks0[cache.nextTickToAccum0];
-            params.updateAccumDeltas = newLatestTick > state.latestTick
+            ICoverPoolStructs.AccumulateParams memory params = ICoverPoolStructs.AccumulateParams({
+                deltas: cache.deltas0,
+                crossTick: ticks0[cache.nextTickToCross0],
+                accumTick: ticks0[cache.nextTickToAccum0],
+                updateAccumDeltas: newLatestTick > state.latestTick
                                             ? cache.nextTickToAccum0 == cache.stopTick0
-                                            : cache.nextTickToAccum0 >= cache.stopTick0;
-            params.isPool0 = true;
+                                            : cache.nextTickToAccum0 >= cache.stopTick0,
+                isPool0: true
+            });
             params = _accumulate(
                 cache,
                 params
@@ -460,9 +461,7 @@ library Epochs {
             //TODO: only take syncFee if auctionLength expired
             uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
             cache.syncFees.token1 += syncFeeAmount;
-            amountOutDelta -= syncFeeAmount;
-
-            // if sync fee taken emit event saying how much amountOutDelta was taken
+            amountOutDelta -= syncFeeAmount;    
 
             // update cache out deltas
             cache.deltas1.amountOutDelta    += amountOutDelta;
