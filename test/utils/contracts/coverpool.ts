@@ -134,7 +134,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
     const oldLatestTick: number = globalState.latestTick
     const tickSpread: number = await hre.props.coverPool.tickSpread()
 
-    //TODO: wait number of blocks equal to (twapMove * auctionLength)
+    // //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
         // mine until end of auction
         const auctionLength: number = await hre.props.coverPool.auctionLength()
@@ -159,7 +159,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
             txn = await hre.props.coverPool.swap(
                 hre.props.admin.address,
                 true,
-                BigNumber.from('0'),
+                BN_ZERO,
                 BigNumber.from('4297706460')
             )
             await txn.wait()
@@ -336,8 +336,6 @@ export async function validateMint(params: ValidateMintParams) {
                 upper: upper,
                 amount: amountDesired,
                 zeroForOne: zeroForOne
-              }, {
-                gasLimit: 1000000,
               })
         await txn.wait()
     } else {

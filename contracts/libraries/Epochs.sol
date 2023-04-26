@@ -10,11 +10,29 @@ import './TickMap.sol';
 import './EpochMap.sol';
 
 library Epochs {
-    uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    error InfiniteTickLoop0(int24);
-    error InfiniteTickLoop1(int24);
+    event SyncFeesCollected(
+        address collector,
+        uint128 token0Amount,
+        uint128 token1Amount
+    );
+
+    event FinalDeltasAccumulated(
+        bool isPool0,
+        int24 accumTick,
+        int24 crossTick,
+        uint128 amountInDelta,
+        uint128 amountOutDelta
+    );
+
+    event StashDeltasAccumulated(
+        bool isPool0,
+        uint128 amountInDelta,
+        uint128 amountOutDelta,
+        uint128 amountInDeltaMaxStashed,
+        uint128 amountOutDeltaMaxStashed
+    );
 
     function simulateSync(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks0,
@@ -164,19 +182,22 @@ library Epochs {
                 EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch, constants.tickSpread);
             }
             // accumulate to next tick
-            ICoverPoolStructs.AccumulateOutputs memory outputs;
-            outputs = _accumulate(
-                ticks0[cache.nextTickToCross0],
-                ticks0[cache.nextTickToAccum0],
-                cache.deltas0,
-                newLatestTick > state.latestTick
-                    ? cache.nextTickToAccum0 == cache.stopTick0
-                    : cache.nextTickToAccum0 >= cache.stopTick0
+            ICoverPoolStructs.AccumulateParams memory params;
+            params.deltas = cache.deltas0;
+            params.crossTick = ticks0[cache.nextTickToCross0];
+            params.accumTick = ticks0[cache.nextTickToAccum0];
+            params.updateAccumDeltas = newLatestTick > state.latestTick
+                                            ? cache.nextTickToAccum0 == cache.stopTick0
+                                            : cache.nextTickToAccum0 >= cache.stopTick0;
+            params.isPool0 = true;
+            params = _accumulate(
+                cache,
+                params
             );
             /// @dev - deltas in cache updated after _accumulate
-            cache.deltas0 = outputs.deltas;
-            ticks0[cache.nextTickToCross0] = outputs.crossTick;
-            ticks0[cache.nextTickToAccum0] = outputs.accumTick;
+            cache.deltas0 = params.deltas;
+            ticks0[cache.nextTickToCross0] = params.crossTick;
+            ticks0[cache.nextTickToAccum0] = params.accumTick;
             
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 >= cache.stopTick0) {
@@ -218,19 +239,23 @@ library Epochs {
                 EpochMap.set(tickMap, cache.nextTickToAccum1, state.accumEpoch, constants.tickSpread);
             }
             {
-                ICoverPoolStructs.AccumulateOutputs memory outputs;
-                outputs = _accumulate(
-                    ticks1[cache.nextTickToCross1],
-                    ticks1[cache.nextTickToAccum1],
-                    cache.deltas1,
-                    newLatestTick > state.latestTick
-                        ? cache.nextTickToAccum1 <= cache.stopTick1
-                        : cache.nextTickToAccum1 == cache.stopTick1
+                ICoverPoolStructs.AccumulateParams memory params = ICoverPoolStructs.AccumulateParams({
+                    deltas: cache.deltas1,
+                    crossTick: ticks1[cache.nextTickToCross1],
+                    accumTick: ticks1[cache.nextTickToAccum1],
+                    updateAccumDeltas: newLatestTick > state.latestTick
+                                                ? cache.nextTickToAccum1 <= cache.stopTick1
+                                                : cache.nextTickToAccum1 == cache.stopTick1,
+                    isPool0: false
+                });
+                params = _accumulate(
+                    cache,
+                    params
                 );
                 /// @dev - deltas in cache updated after _accumulate
-                cache.deltas1 = outputs.deltas;
-                ticks1[cache.nextTickToCross1] = outputs.crossTick;
-                ticks1[cache.nextTickToAccum1] = outputs.accumTick;
+                cache.deltas1 = params.deltas;
+                ticks1[cache.nextTickToCross1] = params.crossTick;
+                ticks1[cache.nextTickToAccum1] = params.accumTick;
             }
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {
@@ -279,6 +304,10 @@ library Epochs {
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
         state.latestTick = newLatestTick;
+
+        if (cache.syncFees.token0 > 0 || cache.syncFees.token1 > 0) {
+            emit SyncFeesCollected(msg.sender, cache.syncFees.token0, cache.syncFees.token1);
+        }
     
         return (state, cache.syncFees, pool0, pool1);
     }
@@ -428,9 +457,12 @@ library Epochs {
             cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
 
             // calculate sync fee
+            //TODO: only take syncFee if auctionLength expired
             uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
             cache.syncFees.token1 += syncFeeAmount;
             amountOutDelta -= syncFeeAmount;
+
+            // if sync fee taken emit event saying how much amountOutDelta was taken
 
             // update cache out deltas
             cache.deltas1.amountOutDelta    += amountOutDelta;
@@ -440,55 +472,63 @@ library Epochs {
     }
 
     function _accumulate(
-        ICoverPoolStructs.Tick memory crossTick,
-        ICoverPoolStructs.Tick memory accumTick,
-        ICoverPoolStructs.Deltas memory deltas,
-        bool updateAccumDeltas
-    ) internal pure returns (
-        ICoverPoolStructs.AccumulateOutputs memory
+        ICoverPoolStructs.AccumulateCache memory cache,
+        ICoverPoolStructs.AccumulateParams memory params
+    ) internal returns (
+        ICoverPoolStructs.AccumulateParams memory
     ) {
-
-        if (crossTick.amountInDeltaMaxStashed > 0) {
+        if (params.crossTick.amountInDeltaMaxStashed > 0) {
             /// @dev - else we migrate carry deltas onto cache
             // add carry amounts to cache
-            (crossTick, deltas) = Deltas.unstash(crossTick, deltas);
+            (params.crossTick, params.deltas) = Deltas.unstash(params.crossTick, params.deltas);
         }
-        if (updateAccumDeltas) {
+        if (params.updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
-            //TODO: burn delta max minuses
             ICoverPoolStructs.Deltas memory accumDeltas;
-            if (accumTick.amountInDeltaMaxMinus > 0) {
+            if (params.accumTick.amountInDeltaMaxMinus > 0) {
                 // calculate percent of deltas left on tick
-                uint256 percentInOnTick  = uint256(accumTick.amountInDeltaMaxMinus)  * 1e38 / (deltas.amountInDeltaMax);
-                uint256 percentOutOnTick = uint256(accumTick.amountOutDeltaMaxMinus) * 1e38 / (deltas.amountOutDeltaMax);
+                uint256 percentInOnTick  = uint256(params.accumTick.amountInDeltaMaxMinus)  * 1e38 / (params.deltas.amountInDeltaMax);
+                uint256 percentOutOnTick = uint256(params.accumTick.amountOutDeltaMaxMinus) * 1e38 / (params.deltas.amountOutDeltaMax);
                 // transfer deltas to the accum tick
-                (deltas, accumDeltas) = Deltas.transfer(deltas, accumDeltas, percentInOnTick, percentOutOnTick);
+                (params.deltas, accumDeltas) = Deltas.transfer(params.deltas, accumDeltas, percentInOnTick, percentOutOnTick);
                 
                 // burn tick deltas maxes from cache
-                deltas = Deltas.burnMaxCache(deltas, accumTick);
+                params.deltas = Deltas.burnMaxCache(params.deltas, params.accumTick);
                 
                 // empty delta max minuses into delta max
-                accumDeltas.amountInDeltaMax  += accumTick.amountInDeltaMaxMinus;
-                accumDeltas.amountOutDeltaMax += accumTick.amountOutDeltaMaxMinus;
-                accumTick.amountInDeltaMaxMinus  = 0;
-                accumTick.amountOutDeltaMaxMinus = 0;
-                accumTick.deltas = accumDeltas;
+                accumDeltas.amountInDeltaMax  += params.accumTick.amountInDeltaMaxMinus;
+                accumDeltas.amountOutDeltaMax += params.accumTick.amountOutDeltaMaxMinus;
+
+                if (params.isPool0) {
+                    emit FinalDeltasAccumulated(
+                        params.isPool0,
+                        cache.nextTickToCross0,
+                        cache.nextTickToAccum0,
+                        accumDeltas.amountInDelta,
+                        accumDeltas.amountOutDelta
+                    );
+                } else {
+                    emit FinalDeltasAccumulated(
+                        params.isPool0,
+                        cache.nextTickToCross1,
+                        cache.nextTickToAccum1,
+                        accumDeltas.amountInDelta,
+                        accumDeltas.amountOutDelta
+                    );
+                }
+                params.accumTick.amountInDeltaMaxMinus  = 0;
+                params.accumTick.amountOutDeltaMaxMinus = 0;
+                params.accumTick.deltas = accumDeltas;
             }
         }
         // remove all liquidity
-        crossTick.liquidityDelta = 0;
+        params.crossTick.liquidityDelta = 0;
 
         // clear out stash
-        crossTick.amountInDeltaMaxStashed  = 0;
-        crossTick.amountOutDeltaMaxStashed = 0;
+        params.crossTick.amountInDeltaMaxStashed  = 0;
+        params.crossTick.amountOutDeltaMaxStashed = 0;
 
-        return
-            ICoverPoolStructs.AccumulateOutputs(
-                /// @dev - deltas are returned here and should be updated in cache
-                deltas,
-                crossTick,
-                accumTick
-            );
+        return params;
     }
 
     //maybe call ticks on msg.sender to get tick
@@ -526,11 +566,19 @@ library Epochs {
         ICoverPoolStructs.AccumulateCache memory cache,
         uint128 currentLiquidity,
         bool isPool0
-    ) internal pure returns (ICoverPoolStructs.Tick memory) {
+    ) internal returns (ICoverPoolStructs.Tick memory) {
         // return since there is nothing to update
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
+        //TODO: event emit specifying amounts stashed
+        emit StashDeltasAccumulated(
+            isPool0,
+            deltas.amountInDelta,
+            deltas.amountOutDelta,
+            deltas.amountInDeltaMax,
+            deltas.amountOutDeltaMax
+        );
         if (deltas.amountInDeltaMax > 0) {
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);
         }

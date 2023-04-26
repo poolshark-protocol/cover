@@ -36,7 +36,25 @@ library Positions {
         int24 indexed upper,
         int24 claim,
         bool zeroForOne,
-        uint128 liquidityMinted
+        uint128 liquidityMinted,
+        uint128 amountInDeltaMaxMinted,
+        uint128 amountOutDeltaMaxMinted
+    );
+
+    event Burn(
+        address indexed owner,
+        address to,
+        int24 indexed lower,
+        int24 indexed upper,
+        int24 claim,
+        bool zeroForOne,
+        uint128 liquidityBurned,
+        uint128 token0Amount,
+        uint128 token1Amount,
+        uint128 amountInDeltaMaxStashedBurned,
+        uint128 amountOutDeltaMaxStashedBurned,
+        uint128 amountInDeltaMaxBurned,
+        uint128 amountOutDeltaMaxBurned
     );
 
     function resize(
@@ -187,10 +205,11 @@ library Positions {
         // update liquidity global
         state.liquidityGlobal += params.amount;
 
+        ICoverPoolStructs.Deltas memory mintDeltas;
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            finalTick = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            (finalTick, mintDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
@@ -204,7 +223,9 @@ library Positions {
                 params.upper,
                 params.claim,
                 params.zeroForOne,
-                uint128(params.amount)
+                uint128(params.amount),
+                mintDeltas.amountInDeltaMax,
+                mintDeltas.amountOutDeltaMax
         );
 
         return state;
@@ -274,10 +295,11 @@ library Positions {
         // update liquidity global
         state.liquidityGlobal -= params.amount;
 
+        ICoverPoolStructs.Deltas memory burnDeltas;
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            finalTick = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
+            (finalTick, burnDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
@@ -289,8 +311,24 @@ library Positions {
 
         cache.position.liquidity -= uint128(params.amount);
         positions[params.owner][params.lower][params.upper] = cache.position;
-        
-         return (params.amount, state);
+
+        if (params.amount > 0) {
+            emit Burn(
+                    params.owner,
+                    params.to,
+                    params.lower,
+                    params.upper,
+                    params.zeroForOne ? params.upper : params.lower,
+                    params.zeroForOne,
+                    params.amount,
+                    params.zeroForOne ? cache.position.amountOut : 0,
+                    params.zeroForOne ? 0 : cache.position.amountOut,
+                    0, 0,
+                    burnDeltas.amountInDeltaMax,
+                    burnDeltas.amountOutDeltaMax
+            );
+        }
+        return (params.amount, state);
     }
 
     function update(
@@ -389,6 +427,22 @@ library Positions {
         params.zeroForOne
             ? positions[params.owner][params.lower][params.claim] = cache.position
             : positions[params.owner][params.claim][params.upper] = cache.position;
+        
+        emit Burn(
+            params.owner,
+            params.to,
+            params.lower,
+            params.upper,
+            params.claim,
+            params.zeroForOne,
+            params.amount,
+            params.zeroForOne ? cache.position.amountOut : cache.position.amountIn,
+            params.zeroForOne ? cache.position.amountIn  : cache.position.amountOut,
+            uint128(cache.amountInFilledMax),
+            uint128(cache.amountOutUnfilledMax),
+            cache.finalDeltas.amountInDeltaMax,
+            cache.finalDeltas.amountOutDeltaMax
+        );
         // return cached position in memory and transfer out
         return (state, params.claim);
     }
