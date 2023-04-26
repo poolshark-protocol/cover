@@ -82,7 +82,7 @@ library Claims {
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 //TODO: search for claim tick if necessary
-                //TODO: limit search to within 10 closest words
+                //TODO: limit search to within 1 closest word
                 revert WrongTickClaimedAt();
             }
         }
@@ -118,7 +118,6 @@ library Claims {
             /// @dev - deltas are applied once per each tick claimed at
             /// @dev - deltas should never be applied if position is not crossed into
             // check if tick already claimed at
-
             bool transferDeltas = (cache.position.claimPriceLast == 0
                                && (params.claim != (params.zeroForOne ? params.upper : params.lower)))
                                || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
@@ -126,10 +125,6 @@ library Claims {
             if (transferDeltas) {
                 (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
             }
-            // if (debugDeltas) {
-            //     console.log('initial deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-            // }
-
         } /// @dev - deltas transfer from claim tick are replaced after applying changes
         return cache;
     }
@@ -151,17 +146,9 @@ library Claims {
                 percentOutDelta = percentOutDelta > 1e38 ? 1e38 : percentOutDelta;
             }
         }
-        // if (debugDeltas) {
-        //     console.log('final deltas:', cache.deltas.amountInDelta, cache.deltas.amountInDeltaMax);
-        //     console.log(cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-        // }  
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
 
-        // apply deltas and add to position
-        //TODO: this shouldn't be needed; we apply what is present
-        // if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
-            //TODO: take a portion based on the protocol fee
         uint128 fillFeeAmount = cache.finalDeltas.amountInDelta * constants.fillFee / 1e6;
         if (params.zeroForOne) {
             state.protocolFees.token1 += fillFeeAmount;
@@ -171,11 +158,9 @@ library Claims {
         cache.finalDeltas.amountInDelta -= fillFeeAmount;
         cache.position.amountIn  += cache.finalDeltas.amountInDelta;
         cache.position.amountOut += cache.finalDeltas.amountOutDelta;
-        // console.log('position amounts:', cache.position.amountIn, cache.position.amountOut);
+
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
-            //  = ticks[params.zeroForOne ? params.lower : params.upper];
-            // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
             cache.finalTick = Deltas.burnMaxMinus(cache.finalTick, cache.finalDeltas);
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
@@ -227,11 +212,6 @@ library Claims {
             cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - constants.tickSpread)
                                                                : TickMath.getSqrtRatioAtTick(params.lower + constants.tickSpread);
         }
-        // if(debugDeltas) {
-        //     console.log('section 1 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 
@@ -261,11 +241,6 @@ library Claims {
             cache.amountInFilledMax += amountInFilledMax;
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
         }
-        // if(debugDeltas) {
-        //     console.log('section 2 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 
@@ -296,11 +271,6 @@ library Claims {
             cache.finalDeltas.amountInDeltaMax  += amountInOmitted;
             cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
         }
-        // if(debugDeltas) {
-        //     console.log('section 3 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 
@@ -363,12 +333,7 @@ library Claims {
         cache.priceClaim = cache.priceSpread;
         // save pool changes to cache
         cache.pool = pool;
-        // if(debugDeltas) {
-        //     console.log('section 4 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
-        return cache; //RETURN POOL IN MEMORY
+        return cache;
     }
 
     /// @dev - calculate claim from position start up to claim tick
@@ -380,12 +345,10 @@ library Claims {
     ) {
         // section 5 - burned liquidity past claim tick
         {
-            // console.log('price claim check:', cache.priceClaim);
             uint160 endPrice = params.zeroForOne ? cache.priceLower
                                                  : cache.priceUpper;
             if (params.amount > 0 && cache.priceClaim != endPrice) {
                 // update max deltas based on liquidity removed
-                //TODO: remove maxRoundUp
                 uint128 amountInOmitted; uint128 amountOutRemoved;
                 (
                     amountInOmitted,
@@ -405,11 +368,6 @@ library Claims {
                 }      
             }
         }
-        // if(debugDeltas) {
-        //     console.log('section 5 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 }

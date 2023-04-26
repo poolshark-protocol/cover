@@ -383,7 +383,7 @@ export class InitialSetup {
             await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                 {
                     networkName: hre.network.name,
-                    objectName: 'uniswapV3PoolMock',
+                    objectName: 'rangePoolMock',
                 },
                 'readCoverPoolSetup'
             )

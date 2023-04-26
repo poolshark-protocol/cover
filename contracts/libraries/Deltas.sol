@@ -353,7 +353,8 @@ library Deltas {
         bool   isPool0,
         bool   isAdded
     ) external pure returns (
-        ICoverPoolStructs.Tick memory
+        ICoverPoolStructs.Tick memory,
+        ICoverPoolStructs.Deltas memory
     ) {
         // update max deltas
         uint128 amountInDeltaMax; uint128 amountOutDeltaMax;
@@ -373,9 +374,9 @@ library Deltas {
             tick.amountOutDeltaMaxMinus += amountOutDeltaMax;
         } else {
             tick.amountInDeltaMaxMinus  -= tick.amountInDeltaMaxMinus  > amountInDeltaMax ? amountInDeltaMax
-                                                                                    : tick.amountInDeltaMaxMinus ;
+                                                                                          : tick.amountInDeltaMaxMinus;
             tick.amountOutDeltaMaxMinus -= tick.amountOutDeltaMaxMinus > amountOutDeltaMax ? amountOutDeltaMax                                                                           : tick.amountOutDeltaMaxMinus;
         }
-        return tick;
+        return (tick, ICoverPoolStructs.Deltas(0,0,amountInDeltaMax, amountOutDeltaMax));
     }
 }

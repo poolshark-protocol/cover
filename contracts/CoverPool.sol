@@ -131,6 +131,7 @@ contract CoverPool is
             params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
                 msg.sender,
+                params.to,
                 0,
                 params.lower,
                 params.upper,
@@ -204,6 +205,7 @@ contract CoverPool is
                 params.zeroForOne ? pool0 : pool1,
                 UpdateParams(
                     msg.sender,
+                    params.to,
                     params.amount,
                     params.lower,
                     params.upper,
@@ -221,6 +223,7 @@ contract CoverPool is
                 cache.state,
                 RemoveParams(
                     msg.sender,
+                    params.to,
                     params.amount,
                     params.lower,
                     params.upper,
@@ -383,7 +386,7 @@ contract CoverPool is
     }
 
     function snapshot(
-       UpdateParams memory params 
+       SnapshotParams memory params 
     ) external view returns (
         Position memory
     ) {
@@ -393,7 +396,15 @@ contract CoverPool is
             tickMap,
             globalState,
             params.zeroForOne ? pool0 : pool1,
-            params,
+            UpdateParams(
+                params.owner,
+                params.owner,
+                params.amount,
+                params.lower,
+                params.upper,
+                params.claim,
+                params.zeroForOne
+            ),
             _immutables()
         );
     }
@@ -438,11 +449,7 @@ contract CoverPool is
         if (amountOut > 0) {
             positions[msg.sender][params.lower][params.upper].amountOut = 0;
             _transferOut(params.to, params.zeroForOne ? token0 : token1, amountOut);
-        } 
-
-        // emit event
-        if (amountIn > 0 || amountOut > 0)
-            emit Burn(msg.sender, params.to, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
+        }
     }
 
     function _immutables() internal view returns (

@@ -102,6 +102,15 @@ interface ICoverPoolStructs {
         bool sync;
     }
 
+    struct SnapshotParams {
+        address owner;
+        uint128 amount;
+        int24 lower;
+        int24 upper;
+        int24 claim;
+        bool zeroForOne;
+    }
+
     struct CollectParams {
         SyncFees syncFees;
         address to;
@@ -132,6 +141,7 @@ interface ICoverPoolStructs {
 
     struct RemoveParams {
         address owner;
+        address to;
         uint128 amount;
         int24 lower;
         int24 upper;
@@ -140,6 +150,7 @@ interface ICoverPoolStructs {
 
     struct UpdateParams {
         address owner;
+        address to;
         uint128 amount;
         int24 lower;
         int24 upper;
@@ -218,9 +229,11 @@ interface ICoverPoolStructs {
         int24 stopTick1;
     }
 
-    struct AccumulateOutputs {
+    struct AccumulateParams {
         Deltas deltas;
         Tick crossTick;
         Tick accumTick;
+        bool updateAccumDeltas;
+        bool isPool0;
     }
 }
