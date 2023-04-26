@@ -22,8 +22,8 @@ library TickMath {
         return _getSqrtRatioAtTick(tick);
     }
 
-    function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24 tick) {
-        return _getTickAtSqrtRatio(sqrtPriceX96);
+    function getTickAtSqrtRatio(uint160 price) external pure returns (int24 tick) {
+        return _getTickAtSqrtRatio(price);
     }
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96.
