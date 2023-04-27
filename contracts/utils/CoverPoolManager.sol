@@ -24,20 +24,21 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     uint16 public protocolFee;
 
     error OwnerOnly();
+    error EmptyPoolsArray();
     error FeeToOnly();
     error FactoryAlreadySet();
     error VolatilityTierCannotBeZero();
     error VolatilityTierAlreadyEnabled();
     error VoltatilityTierTwapTooShort();
-    error VolatilityTierFeeLimitExceeded();
-    error TransferredToZeroAddress();
     error ProtocolFeeCeilingExceeded();
+    error TransferredToZeroAddress();
     error FeeTierNotSupported();
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
     error TwapSourceNameInvalid();
     error TwapSourceAlreadyExists();
     error TwapSourceNotFound();
+    error MismatchedArrayLengths();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();
 
@@ -152,7 +153,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         } else if (twapLength < 5 * blockTime / oneSecond) {
             revert VoltatilityTierTwapTooShort();
         } else if (syncFee > 10000 || fillFee > 10000) {
-            revert VolatilityTierFeeLimitExceeded();
+            revert ProtocolFeeCeilingExceeded();
         }
         {
             // check fee tier exists
@@ -204,7 +205,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         uint16 fillFee
     ) external onlyOwner {
         if (syncFee > 10000 || fillFee > 10000) {
-            revert VolatilityTierFeeLimitExceeded();
+            revert ProtocolFeeCeilingExceeded();
         }
         _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].syncFee = syncFee;
         _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].fillFee = fillFee;
@@ -218,20 +219,45 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         factory = factory_;
     }
 
-    function setProtocolFee(
-        uint16 protocolFee_
-    ) external onlyOwner {
-        if (protocolFee_ > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
-        emit ProtocolFeeUpdated(protocolFee, protocolFee_);
-        protocolFee = protocolFee_;
-    }
-
     function collectProtocolFees(
         address[] calldata collectPools
     ) external {
+        if (collectPools.length == 0) revert EmptyPoolsArray();
+        uint128[] memory token0Fees = new uint128[](collectPools.length);
+        uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length; i++) {
-            ICoverPool(collectPools[i]).protocolFees(0,0, false);
+            (token0Fees[i], token1Fees[i]) = ICoverPool(collectPools[i]).protocolFees(0,0,false);
         }
+        emit ProtocolFeesCollected(collectPools, token0Fees, token1Fees);
+    }
+
+    function modifyProtocolFees(
+        address[] calldata modifyPools,
+        uint16[] calldata syncFees,
+        uint16[] calldata fillFees,
+        bool[] calldata setFees
+    ) external onlyOwner {
+        if (modifyPools.length == 0) revert EmptyPoolsArray();
+        if (modifyPools.length != syncFees.length
+            || syncFees.length != fillFees.length
+            || fillFees.length != setFees.length) {
+            revert MismatchedArrayLengths();
+        }
+        uint128[] memory token0Fees = new uint128[](modifyPools.length);
+        uint128[] memory token1Fees = new uint128[](modifyPools.length);
+        for (uint i; i < modifyPools.length; i++) {
+            if (syncFees[i] > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
+            if (fillFees[i] > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
+            (
+                token0Fees[i],
+                token1Fees[i]
+            ) =ICoverPool(modifyPools[i]).protocolFees(
+                syncFees[i],
+                fillFees[i],
+                setFees[i]
+            );
+        }
+        emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
     }
 
     function volatilityTiers(

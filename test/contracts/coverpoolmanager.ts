@@ -119,49 +119,6 @@ describe('CoverPoolManager Tests', function () {
     ).to.be.equal(hre.props.admin.address)
   })
 
-  it('Should set protocol fees on cover pools', async function () {
-    // check initial protocol fees
-    expect(await
-      hre.props.coverPoolManager
-        .protocolFee()
-    ).to.be.equal(BN_ZERO)
-
-    // should revert when non-admin calls
-    await expect(
-        hre.props.coverPoolManager
-          .connect(hre.props.bob)
-          .setProtocolFee("500")
-    ).to.be.revertedWith('OwnerOnly()')
-
-    // set protocol fees on top pools
-    await hre.props.coverPoolManager.connect(hre.props.admin).setProtocolFee("500")
-    // check new fee set
-    expect(await
-        hre.props.coverPoolManager
-          .protocolFee()
-      ).to.be.equal(500)
-    
-    await hre.props.coverPoolManager.connect(hre.props.admin).transferOwner(hre.props.bob.address)
-
-    // remove protocol fees on top pools
-    await hre.props.coverPoolManager.connect(hre.props.bob).setProtocolFee("0")
-
-    // check new fee set
-    expect(await
-        hre.props.coverPoolManager
-            .protocolFee()
-        ).to.be.equal(0)
-
-    // should revert when non-admin calls
-    await expect(
-        hre.props.coverPoolManager
-            .connect(hre.props.admin)
-            .setProtocolFee("500")
-    ).to.be.revertedWith('OwnerOnly()')
-  
-    await hre.props.coverPoolManager.connect(hre.props.bob).transferOwner(hre.props.admin.address)
-  })
-
   it('Should collect fees from cover pools', async function () {
     // check initial protocol fees
     await
@@ -255,14 +212,23 @@ describe('CoverPoolManager Tests', function () {
   })
 
   it('Should update sync and fill fees on pool', async function () {
+    await expect(
+      hre.props.coverPool
+        .connect(hre.props.bob)
+        .protocolFees(500, 500, true)
+    ).to.be.revertedWith('OwnerOnly()')
     let globalStateBefore = await hre.props.coverPool.globalState();
     expect(globalStateBefore.syncFee).to.be.equal(BN_ZERO)
     expect(globalStateBefore.fillFee).to.be.equal(BN_ZERO)
-    await hre.props.coverPool.protocolFees(50, 500, true);
+    await hre.props.coverPoolManager.connect(hre.props.admin).modifyProtocolFees(
+      [hre.props.coverPool.address],
+      [50], [500], [true]);
     let globalStateAfter = await hre.props.coverPool.globalState();
     expect(globalStateAfter.syncFee).to.be.equal(50)
     expect(globalStateAfter.fillFee).to.be.equal(500)
-    await hre.props.coverPool.protocolFees(0, 0, true);
+    await hre.props.coverPoolManager.connect(hre.props.admin).modifyProtocolFees(
+      [hre.props.coverPool.address],
+      [0], [0], [true]);
     globalStateAfter = await hre.props.coverPool.globalState();
     expect(globalStateAfter.syncFee).to.be.equal(0)
     expect(globalStateAfter.fillFee).to.be.equal(0)
@@ -289,12 +255,12 @@ describe('CoverPoolManager Tests', function () {
       hre.props.coverPoolManager
         .connect(hre.props.admin)
         .modifyVolatilityTierFees(uniV3String, 500, 20, 5, 10001, 0)
-    ).to.be.revertedWith('VolatilityTierFeeLimitExceeded()')
+    ).to.be.revertedWith('ProtocolFeeCeilingExceeded()')
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
         .modifyVolatilityTierFees(uniV3String, 500, 20, 5, 0, 10001)
-    ).to.be.revertedWith('VolatilityTierFeeLimitExceeded()')
+    ).to.be.revertedWith('ProtocolFeeCeilingExceeded()')
   })
 
   it('Should enable volatility tier', async function () {

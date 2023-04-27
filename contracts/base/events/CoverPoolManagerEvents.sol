@@ -23,6 +23,17 @@ abstract contract CoverPoolManagerEvents {
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);
-    event ProtocolFeeUpdated(uint16 oldProtocolFee, uint16 newProtocolFee);
-    event ProtocolFeeCollected(address indexed pool, uint128 token0Fees, uint128 token1Fees);
+    event ProtocolFeesModified(
+        address[] modifyPools,
+        uint16[] syncFees,
+        uint16[] fillFees,
+        bool[] setFees,
+        uint128[] token0Fees,
+        uint128[] token1Fees
+    );
+    event ProtocolFeesCollected(
+        address[] collectPools,
+        uint128[] token0Fees,
+        uint128[] token1Fees
+    );
 }

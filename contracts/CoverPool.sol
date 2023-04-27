@@ -39,6 +39,11 @@ contract CoverPool is
 
     error PriceOutOfBounds();
 
+    modifier ownerOnly() {
+        if (owner != msg.sender) revert OwnerOnly();
+        _;
+    }
+
     modifier lock() {
         if (globalState.unlocked == 0) {
             globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
@@ -403,7 +408,7 @@ contract CoverPool is
         uint16 syncFee,
         uint16 fillFee,
         bool setFees
-    ) external returns (
+    ) external ownerOnly returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
@@ -418,13 +423,6 @@ contract CoverPool is
         globalState.protocolFees.token1 = 0;
         _transferOut(feeTo, token0, token0Fees);
         _transferOut(feeTo, token1, token1Fees);
-        emit ProtocolFeesCollected(
-            feeTo,
-            token0Fees,
-            token1Fees,
-            globalState.syncFee,
-            globalState.fillFee
-        );
     }
 
     function _collect(
