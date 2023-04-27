@@ -63,7 +63,7 @@ library Positions {
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )

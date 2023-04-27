@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 abstract contract CoverPoolManagerEvents {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event VolatilityTierEnabled(
+        bytes32 sourceName,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,

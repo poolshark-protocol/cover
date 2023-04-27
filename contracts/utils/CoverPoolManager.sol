@@ -16,10 +16,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
-    // source name => source address
+    // sourceName => sourceAddress
     mapping(bytes32 => address) public twapSources;
-    // feeTier => tickSpread => twapLength => CoverPoolConfig
-    mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) internal _volatilityTiers;
+    // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
+    mapping(bytes32 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
     uint16 public protocolFee;
 
@@ -50,7 +50,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(address(0), msg.sender);
 
         // create initial volatility tiers
-        _volatilityTiers[500][20][5] = CoverPoolConfig({
+        _volatilityTiers[sourceName][500][20][5] = VolatilityTier({
            minAmountPerAuction: 1e18,
            auctionLength: 5,
            blockTime: 1000,
@@ -59,7 +59,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minPositionWidth: 1,
            minAmountLowerPriced: true
         });
-        _volatilityTiers[500][40][10] = CoverPoolConfig({
+        _volatilityTiers[sourceName][500][40][10] = VolatilityTier({
            minAmountPerAuction: 1e18,
            auctionLength: 10,
            blockTime: 1000,
@@ -68,8 +68,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minPositionWidth: 5,
            minAmountLowerPriced: false
         });
-        emit VolatilityTierEnabled(500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
-        emit VolatilityTierEnabled(500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
+        emit VolatilityTierEnabled(sourceName, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
+        emit VolatilityTierEnabled(sourceName, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
     
         twapSources[sourceName] = sourceAddress;
         emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
@@ -145,7 +145,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16   minPositionWidth,
         bool    minLowerPriced
     ) external onlyOwner {
-        if (_volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
+        if (_volatilityTiers[sourceName][feeTier][tickSpread][twapLength].auctionLength != 0) {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierCannotBeZero();
@@ -171,7 +171,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             }
         }
         // twapLength * blockTime should never overflow uint16
-        _volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
+        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength] = VolatilityTier(
             minAmountPerAuction,
             auctionLength,
             blockTime,
@@ -181,6 +181,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             minLowerPriced
         );
         emit VolatilityTierEnabled(
+            sourceName,
             feeTier,
             tickSpread,
             twapLength,
@@ -192,6 +193,16 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             minPositionWidth,
             minLowerPriced
         );
+    }
+
+    function modifyVolatilityTierFees(
+        uint16 syncFee,
+        uint16 fillFee
+    ) external onlyOwner {
+        if (syncFee > 10000 || fillFee > 10000) {
+            revert VolatilityTierFeeLimitExceeded();
+        }
+        
     }
 
     function setFactory(
@@ -219,13 +230,14 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     function volatilityTiers(
+        bytes32 sourceName,
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength
     ) external view returns (
-        CoverPoolConfig memory config
+        VolatilityTier memory config
     ) {
-        config = _volatilityTiers[feeTier][tickSpread][twapLength];
+        config = _volatilityTiers[sourceName][feeTier][tickSpread][twapLength];
     }
     
     /**

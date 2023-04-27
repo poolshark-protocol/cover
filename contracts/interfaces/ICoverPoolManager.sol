@@ -14,10 +14,11 @@ interface ICoverPoolManager is CoverPoolManagerStructs {
         address sourceAddress
     );
     function volatilityTiers(
+        bytes32 sourceName,
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength
     ) external view returns (
-        CoverPoolConfig memory
+        VolatilityTier memory
     );
 }

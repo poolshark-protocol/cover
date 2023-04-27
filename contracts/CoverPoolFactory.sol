@@ -45,13 +45,13 @@ contract CoverPoolFactory is
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
-        // get volatility tier config
-        params.manager = owner;
-        params.config = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
-        if (params.config.auctionLength == 0) revert VolatilityTierNotSupported();
         // get twap source
         params.twapSource = ICoverPoolManager(owner).twapSources(sourceName);
         if (params.twapSource == address(0)) revert TwapSourceNotFound();
+        // get volatility tier config
+        params.manager = owner;
+        params.config = ICoverPoolManager(owner).volatilityTiers(sourceName, feeTier, tickSpread, twapLength);
+        if (params.config.auctionLength == 0) revert VolatilityTierNotSupported();
         params.tickSpread = tickSpread;
         params.twapLength = twapLength;
         // get reference pool
