@@ -254,6 +254,20 @@ describe('CoverPoolManager Tests', function () {
     ).to.be.revertedWith('TwapSourceNameInvalid()')
   })
 
+  it('Should update sync and fill fees', async function () {
+    let globalStateBefore = await hre.props.coverPool.globalState();
+    expect(globalStateBefore.syncFee).to.be.equal(BN_ZERO)
+    expect(globalStateBefore.fillFee).to.be.equal(BN_ZERO)
+    await hre.props.coverPool.protocolFees(50, 500, true);
+    let globalStateAfter = await hre.props.coverPool.globalState();
+    expect(globalStateAfter.syncFee).to.be.equal(50)
+    expect(globalStateAfter.fillFee).to.be.equal(500)
+    await hre.props.coverPool.protocolFees(0, 0, true);
+    globalStateAfter = await hre.props.coverPool.globalState();
+    expect(globalStateAfter.syncFee).to.be.equal(0)
+    expect(globalStateAfter.fillFee).to.be.equal(0)
+  })
+
   it('Should enable volatility tier', async function () {
     // should revert when non-admin calls
     await expect(
