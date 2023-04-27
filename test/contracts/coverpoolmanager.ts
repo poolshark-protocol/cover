@@ -280,6 +280,21 @@ describe('CoverPoolManager Tests', function () {
     volatilityTierAfter = await hre.props.coverPoolManager.volatilityTiers(uniV3String, 500, 20, 5);
     expect(volatilityTierAfter.syncFee).to.be.equal(0)
     expect(volatilityTierAfter.fillFee).to.be.equal(0)
+    await expect(
+      hre.props.coverPoolManager
+        .connect(hre.props.bob)
+        .modifyVolatilityTierFees(uniV3String, 500, 20, 5, 10001, 0)
+    ).to.be.revertedWith('OwnerOnly()')
+    await expect(
+      hre.props.coverPoolManager
+        .connect(hre.props.admin)
+        .modifyVolatilityTierFees(uniV3String, 500, 20, 5, 10001, 0)
+    ).to.be.revertedWith('VolatilityTierFeeLimitExceeded()')
+    await expect(
+      hre.props.coverPoolManager
+        .connect(hre.props.admin)
+        .modifyVolatilityTierFees(uniV3String, 500, 20, 5, 0, 10001)
+    ).to.be.revertedWith('VolatilityTierFeeLimitExceeded()')
   })
 
   it('Should enable volatility tier', async function () {
