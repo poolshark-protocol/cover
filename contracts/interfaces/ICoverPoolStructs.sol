@@ -11,6 +11,8 @@ interface ICoverPoolStructs {
         uint32   auctionStart;     /// @dev last block price reference was updated
         uint32   accumEpoch;       /// @dev number of times this pool has been synced
         int24    latestTick;       /// @dev latest updated inputPool price tick
+        uint16   syncFee;
+        uint16   fillFee;
         //int16    tickSpread;       /// @dev this is a integer multiple of the inputPool tickSpacing
         //uint16   twapLength;       /// @dev number of blocks used for TWAP sampling
         //uint16   auctionLength;    /// @dev number of seconds to improve price by tickSpread
@@ -66,8 +68,6 @@ interface ICoverPoolStructs {
         uint16 twapLength;
         uint16 auctionLength;
         uint16 blockTime;
-        uint16 syncFee;
-        uint16 fillFee;
         uint8 token0Decimals;
         uint8 token1Decimals;
         bool minAmountLowerPriced;

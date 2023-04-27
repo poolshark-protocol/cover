@@ -40,7 +40,9 @@ abstract contract CoverPoolEvents {
     event ProtocolFeesCollected(
         address feeTo,
         uint128 token0Fees,
-        uint128 token1Fees
+        uint128 token1Fees,
+        uint16 syncFee,
+        uint16 fillFee
     );
 
     event SyncFeesCollected(

@@ -32,7 +32,11 @@ interface ICoverPool is ICoverPoolStructs {
         uint256 outAmount
     );
 
-    function collectFees() external returns (
+    function protocolFees(
+        uint16 syncFee,
+        uint16 fillFee,
+        bool setFees
+    ) external returns (
         uint128 token0Fees,
         uint128 token1Fees
     );

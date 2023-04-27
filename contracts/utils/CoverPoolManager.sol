@@ -214,7 +214,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address[] calldata collectPools
     ) external {
         for (uint i; i < collectPools.length; i++) {
-            ICoverPoolFactory(factory).collectProtocolFees(collectPools[i]);
+            ICoverPool(collectPools[i]).protocolFees(0,0, false);
         }
     }
 

@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import './interfaces/ICoverPool.sol';
 import './interfaces/ICoverPoolManager.sol';
 import './base/events/CoverPoolEvents.sol';
+import './base/storage/CoverPoolStorage.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
-import './base/modifiers/CoverPoolModifiers.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Positions.sol';
@@ -16,10 +16,10 @@ contract CoverPool is
     ICoverPool,
     CoverPoolEvents,
     CoverPoolFactoryStructs,
-    CoverPoolModifiers,
+    CoverPoolStorage,
     SafeTransfers
 {
-    address public immutable factory;
+    address public immutable owner;
     address public immutable token0;
     address public immutable token1;
     address public immutable twapSource;
@@ -54,11 +54,11 @@ contract CoverPool is
         CoverPoolParams memory params
     ) {
         // set addresses
-        factory   = msg.sender;
+        owner    = params.manager;
         twapSource = params.twapSource;
-        inputPool = params.inputPool;
-        token0    = params.token0;
-        token1    = params.token1;
+        inputPool  = params.inputPool;
+        token0     = params.token0;
+        token1     = params.token1;
         
         // set token decimals
         token0Decimals = ERC20(token0).decimals();
@@ -302,7 +302,7 @@ contract CoverPool is
             }
             if (cache.output > 0) {
                 _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
-                emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
+                // emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
             }
             return (
                 cache.input  + cache.syncFees.token0,
@@ -314,7 +314,7 @@ contract CoverPool is
             }
             if (cache.output > 0) {
                 _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
-                emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
+                // emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
             }
             return (
                 cache.input  + cache.syncFees.token1,
@@ -399,18 +399,32 @@ contract CoverPool is
         );
     }
 
-    function collectFees() public returns (
+    function protocolFees(
+        uint16 syncFee,
+        uint16 fillFee,
+        bool setFees
+    ) external returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
+        if (setFees) {
+            globalState.syncFee = syncFee;
+            globalState.fillFee = fillFee;
+        }
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
-        address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
+        address feeTo = ICoverPoolManager(owner).feeTo();
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
         _transferOut(feeTo, token0, token0Fees);
         _transferOut(feeTo, token1, token1Fees);
-        emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
+        emit ProtocolFeesCollected(
+            feeTo,
+            token0Fees,
+            token1Fees,
+            globalState.syncFee,
+            globalState.fillFee
+        );
     }
 
     function _collect(
@@ -456,8 +470,6 @@ contract CoverPool is
             twapLength,
             auctionLength,
             blockTime,
-            0,
-            0,
             token0Decimals,
             token1Decimals,
             minAmountLowerPriced
@@ -469,7 +481,4 @@ contract CoverPool is
             revert PriceOutOfBounds();
         }
     }
-
-    //TODO: zap into LP position
-    //TODO: remove old latest tick if necessary
 }

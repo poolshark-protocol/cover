@@ -15,6 +15,8 @@ contract CoverPoolFactory is
     CoverPoolFactoryEvents,
     CoverPoolFactoryErrors
 {
+    address immutable public owner;
+
     modifier onlyOwner() {
         if (owner != msg.sender) revert OwnerOnly();
         _;
@@ -44,6 +46,7 @@ contract CoverPoolFactory is
             revert PoolAlreadyExists();
         }
         // get volatility tier config
+        params.manager = owner;
         params.config = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
         if (params.config.auctionLength == 0) revert VolatilityTierNotSupported();
         // get twap source
@@ -87,13 +90,5 @@ contract CoverPoolFactory is
         bytes32 key = keccak256(abi.encodePacked(sourceName, token0, token1, feeTier, tickSpread, twapLength));
 
         return coverPools[key];
-    }
-
-    function collectProtocolFees(
-        address collectPool
-    ) external override onlyOwner {
-        uint128 token0Fees; uint128 token1Fees;
-        (token0Fees, token1Fees) = ICoverPool(collectPool).collectFees();
-        emit ProtocolFeeCollected(collectPool, token0Fees, token1Fees);
     }
 }

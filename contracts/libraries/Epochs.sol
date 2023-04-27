@@ -408,64 +408,69 @@ library Epochs {
 
         //handle liquidity rollover
         if (isPool0) {
-            // amountIn pool did not receive
-            uint128 amountInDelta;
-            uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
-            amountInDelta       = pool.amountInDelta;
-            amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
-                                                                                    : pool.amountInDeltaMaxClaimed;
-            pool.amountInDelta  = 0;
-            pool.amountInDeltaMaxClaimed = 0;
+            {
+                // amountIn pool did not receive
+                uint128 amountInDelta;
+                uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
+                amountInDelta       = pool.amountInDelta;
+                amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
+                                                                                        : pool.amountInDeltaMaxClaimed;
+                pool.amountInDelta  = 0;
+                pool.amountInDeltaMaxClaimed = 0;
 
-            // amountOut pool has leftover
-            uint128 amountOutDelta    = uint128(DyDxMath.getDx(pool.liquidity, currentPrice, crossPrice, false));
-            uint128 amountOutDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, accumPrice, crossPrice, false));
-            amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
-                                                                                     : pool.amountOutDeltaMaxClaimed;
-            pool.amountOutDeltaMaxClaimed = 0;
+                // update cache in deltas
+                cache.deltas0.amountInDelta     += amountInDelta;
+                cache.deltas0.amountInDeltaMax  += amountInDeltaMax;
+            }
+            {
+                // amountOut pool has leftover
+                uint128 amountOutDelta    = uint128(DyDxMath.getDx(pool.liquidity, currentPrice, crossPrice, false));
+                uint128 amountOutDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, accumPrice, crossPrice, false));
+                amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
+                                                                                        : pool.amountOutDeltaMaxClaimed;
+                pool.amountOutDeltaMaxClaimed = 0;
 
-            // update cache in deltas
-            cache.deltas0.amountInDelta     += amountInDelta;
-            cache.deltas0.amountInDeltaMax  += amountInDeltaMax;
+                // calculate sync fee
+                uint128 syncFeeAmount = state.syncFee * amountOutDelta / 1e6;
+                cache.syncFees.token0 += syncFeeAmount;
+                amountOutDelta -= syncFeeAmount;
 
-            // calculate sync fee
-            uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
-            cache.syncFees.token0 += syncFeeAmount;
-            amountOutDelta -= syncFeeAmount;
-
-            // update cache out deltas
-            cache.deltas0.amountOutDelta    += amountOutDelta;
-            cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
+                // update cache out deltas
+                cache.deltas0.amountOutDelta    += amountOutDelta;
+                cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
+            }
         } else {
-            // amountIn pool did not receive
-            uint128 amountInDelta;
-            uint128 amountInDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, accumPrice, false));
-            amountInDelta       = pool.amountInDelta;
-            amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
-                                                                                    : pool.amountInDeltaMaxClaimed;
-            pool.amountInDelta  = 0;
-            pool.amountInDeltaMaxClaimed = 0;
+            {
+                // amountIn pool did not receive
+                uint128 amountInDelta;
+                uint128 amountInDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, accumPrice, false));
+                amountInDelta       = pool.amountInDelta;
+                amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
+                                                                                        : pool.amountInDeltaMaxClaimed;
+                pool.amountInDelta  = 0;
+                pool.amountInDeltaMaxClaimed = 0;
 
-            // amountOut pool has leftover
-            uint128 amountOutDelta    = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
-            uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
-            amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
-                                                                                     : pool.amountOutDeltaMaxClaimed;
-            pool.amountOutDeltaMaxClaimed = 0;
+                // update cache in deltas
+                cache.deltas1.amountInDelta     += amountInDelta;
+                cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
+            }
+            {
+                // amountOut pool has leftover
+                uint128 amountOutDelta    = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
+                uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
+                amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
+                                                                                        : pool.amountOutDeltaMaxClaimed;
+                pool.amountOutDeltaMaxClaimed = 0;
 
-            // update cache in deltas
-            cache.deltas1.amountInDelta     += amountInDelta;
-            cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
+                // calculate sync fee
+                uint128 syncFeeAmount = state.syncFee * amountOutDelta / 1e6;
+                cache.syncFees.token1 += syncFeeAmount;
+                amountOutDelta -= syncFeeAmount;    
 
-            // calculate sync fee
-            //TODO: only take syncFee if auctionLength expired
-            uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
-            cache.syncFees.token1 += syncFeeAmount;
-            amountOutDelta -= syncFeeAmount;    
-
-            // update cache out deltas
-            cache.deltas1.amountOutDelta    += amountOutDelta;
-            cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
+                // update cache out deltas
+                cache.deltas1.amountOutDelta    += amountOutDelta;
+                cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
+            }
         }
         return (cache, pool);
     }
@@ -570,7 +575,6 @@ library Epochs {
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
-        //TODO: event emit specifying amounts stashed
         emit StashDeltasAccumulated(
             isPool0,
             deltas.amountInDelta,
