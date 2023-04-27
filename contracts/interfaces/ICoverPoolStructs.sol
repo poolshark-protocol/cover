@@ -94,7 +94,7 @@ interface ICoverPoolStructs {
 
     struct BurnParams {
         address to;
-        uint128 percent;
+        uint128 burnPercent;
         int24 lower;
         int24 claim;
         int24 upper;
@@ -104,7 +104,7 @@ interface ICoverPoolStructs {
 
     struct SnapshotParams {
         address owner;
-        uint128 amount;
+        uint128 burnPercent;
         int24 lower;
         int24 upper;
         int24 claim;
@@ -114,7 +114,6 @@ interface ICoverPoolStructs {
     struct CollectParams {
         SyncFees syncFees;
         address to;
-        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;

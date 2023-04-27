@@ -452,8 +452,7 @@ export async function validateBurn(params: ValidateBurnParams) {
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
     }
 
-    // console.log('pool balance before')
-    // console.log((await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+
     // console.log((await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
 
     let lowerTickBefore: Tick
@@ -472,11 +471,12 @@ export async function validateBurn(params: ValidateBurnParams) {
     let liquidityPercent: BigNumber = BN_ZERO
     if (positionBefore.liquidity.gt(BN_ZERO))
         liquidityPercent = liquidityAmount.mul(ethers.utils.parseUnits("1",38)).div(positionBefore.liquidity)
-
+    else if (liquidityAmount.gt(BN_ZERO))
+        liquidityPercent = ethers.utils.parseUnits("1", 38);
     if (revertMessage == '') {
         positionSnapshot = await hre.props.coverPool.snapshot({
             owner: signer.address,
-            amount: liquidityAmount,
+            burnPercent: liquidityPercent,
             lower: lower,
             claim: claim,
             upper: upper,
@@ -490,7 +490,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                 claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne,
-                percent: liquidityPercent,
+                burnPercent: liquidityPercent,
                 sync: true
             })
         await burnTxn.wait()
@@ -504,7 +504,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                     claim: claim,
                     upper: upper,
                     zeroForOne: zeroForOne,
-                    percent: liquidityPercent,
+                    burnPercent: liquidityPercent,
                     sync: true
                 })
         ).to.be.revertedWith(revertMessage)
@@ -523,10 +523,10 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease)
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
 
-    // if (compareSnapshot) {
-    //     expect(positionSnapshot.amountIn).to.be.equal(balanceInIncrease)
-    //     expect(positionSnapshot.amountOut).to.be.equal(balanceOutIncrease)
-    // }
+    if (compareSnapshot) {
+        expect(positionSnapshot.amountIn).to.be.equal(balanceInIncrease)
+        expect(positionSnapshot.amountOut).to.be.equal(balanceOutIncrease)
+    }
 
     let lowerTickAfter: Tick
     let upperTickAfter: Tick

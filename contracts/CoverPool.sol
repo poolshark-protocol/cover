@@ -155,7 +155,6 @@ contract CoverPool is
             CollectParams(
                 cache.syncFees,
                 params.to, //address(0) goes to msg.sender
-                0,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -184,7 +183,7 @@ contract CoverPool is
                 pool1,
                 cache.state,
                 cache.constants
-            );
+        );
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
             || params.claim == cache.state.latestTick)
@@ -199,7 +198,7 @@ contract CoverPool is
                 UpdateParams(
                     msg.sender,
                     params.to,
-                    params.percent,
+                    params.burnPercent,
                     params.lower,
                     params.upper,
                     params.claim,
@@ -217,7 +216,7 @@ contract CoverPool is
                 RemoveParams(
                     msg.sender,
                     params.to,
-                    params.percent,
+                    params.burnPercent,
                     params.lower,
                     params.upper,
                     params.zeroForOne
@@ -230,7 +229,6 @@ contract CoverPool is
             CollectParams(
                 cache.syncFees,
                 params.to, //address(0) goes to msg.sender
-                params.percent,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -391,7 +389,7 @@ contract CoverPool is
             UpdateParams(
                 params.owner,
                 params.owner,
-                params.amount,
+                params.burnPercent,
                 params.lower,
                 params.upper,
                 params.claim,

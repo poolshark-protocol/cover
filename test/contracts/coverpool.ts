@@ -285,7 +285,7 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: tokenAmount,
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'WrongTickClaimedAt()',g
+            revertMessage: 'WrongTickClaimedAt()',
         })
 
         await validateBurn({

@@ -9,7 +9,7 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
-import 'hardhat/console.sol';
+
 /// @notice Position management library for ranged liquidity.
 library Positions {
     error InvalidClaimTick();
@@ -510,12 +510,12 @@ library Positions {
     function _convert(
         uint128 liquidity,
         uint128 percent
-    ) internal view returns (
+    ) internal pure returns (
         uint128
     ) {
         // convert percentage amount to liquidity amount
         if (percent > 1e38) revert InvalidBurnPercentage();
-        // console.log(liquidity, percent);
+        if (liquidity == 0 && percent > 0) revert NotEnoughPositionLiquidity();
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
         // return percent;
     }
