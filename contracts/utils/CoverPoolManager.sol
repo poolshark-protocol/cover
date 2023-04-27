@@ -196,13 +196,18 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     function modifyVolatilityTierFees(
+        bytes32 sourceName,
+        uint16 feeTier,
+        int16 tickSpread,
+        uint16 twapLength,
         uint16 syncFee,
         uint16 fillFee
     ) external onlyOwner {
         if (syncFee > 10000 || fillFee > 10000) {
             revert VolatilityTierFeeLimitExceeded();
         }
-        
+        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].syncFee = syncFee;
+        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].fillFee = fillFee;
     }
 
     function setFactory(

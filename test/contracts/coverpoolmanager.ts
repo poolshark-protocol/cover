@@ -254,7 +254,7 @@ describe('CoverPoolManager Tests', function () {
     ).to.be.revertedWith('TwapSourceNameInvalid()')
   })
 
-  it('Should update sync and fill fees', async function () {
+  it('Should update sync and fill fees on pool', async function () {
     let globalStateBefore = await hre.props.coverPool.globalState();
     expect(globalStateBefore.syncFee).to.be.equal(BN_ZERO)
     expect(globalStateBefore.fillFee).to.be.equal(BN_ZERO)
@@ -266,6 +266,20 @@ describe('CoverPoolManager Tests', function () {
     globalStateAfter = await hre.props.coverPool.globalState();
     expect(globalStateAfter.syncFee).to.be.equal(0)
     expect(globalStateAfter.fillFee).to.be.equal(0)
+  })
+
+  it('Should update sync and fill fees on volatility tier', async function () {
+    let volatilityTierBefore = await hre.props.coverPoolManager.volatilityTiers(uniV3String, 500, 20, 5);
+    expect(volatilityTierBefore.syncFee).to.be.equal(BN_ZERO)
+    expect(volatilityTierBefore.fillFee).to.be.equal(BN_ZERO)
+    await hre.props.coverPoolManager.modifyVolatilityTierFees(uniV3String, 500, 20, 5, 50, 500);
+    let volatilityTierAfter = await hre.props.coverPoolManager.volatilityTiers(uniV3String, 500, 20, 5);
+    expect(volatilityTierAfter.syncFee).to.be.equal(50)
+    expect(volatilityTierAfter.fillFee).to.be.equal(500)
+    await hre.props.coverPoolManager.modifyVolatilityTierFees(uniV3String, 500, 20, 5, 0, 0);
+    volatilityTierAfter = await hre.props.coverPoolManager.volatilityTiers(uniV3String, 500, 20, 5);
+    expect(volatilityTierAfter.syncFee).to.be.equal(0)
+    expect(volatilityTierAfter.fillFee).to.be.equal(0)
   })
 
   it('Should enable volatility tier', async function () {
