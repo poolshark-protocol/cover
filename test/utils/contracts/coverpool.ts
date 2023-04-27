@@ -71,7 +71,8 @@ export interface ValidateBurnParams {
     lower: string
     upper: string
     claim: string
-    liquidityAmount: BigNumber
+    liquidityAmount?: BigNumber
+    liquidityPercent?: BigNumber
     zeroForOne: boolean
     balanceInIncrease: BigNumber
     balanceOutIncrease: BigNumber
@@ -431,7 +432,8 @@ export async function validateBurn(params: ValidateBurnParams) {
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
     const claim = BigNumber.from(params.claim)
-    const liquidityAmount = params.liquidityAmount
+    let liquidityAmount = params.liquidityAmount ? params.liquidityAmount : null
+    let liquidityPercent = params.liquidityPercent ? params.liquidityPercent : null
     const zeroForOne = params.zeroForOne
     const balanceInIncrease = params.balanceInIncrease
     const balanceOutIncrease = params.balanceOutIncrease
@@ -452,9 +454,6 @@ export async function validateBurn(params: ValidateBurnParams) {
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
     }
 
-
-    // console.log((await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
-
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
     let positionBefore: Position
@@ -468,11 +467,18 @@ export async function validateBurn(params: ValidateBurnParams) {
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
         positionBefore = await hre.props.coverPool.positions1(signer.address, lower, upper)
     }
-    let liquidityPercent: BigNumber = BN_ZERO
-    if (positionBefore.liquidity.gt(BN_ZERO))
-        liquidityPercent = liquidityAmount.mul(ethers.utils.parseUnits("1",38)).div(positionBefore.liquidity)
-    else if (liquidityAmount.gt(BN_ZERO))
-        liquidityPercent = ethers.utils.parseUnits("1", 38);
+    if (liquidityAmount) {
+        if (positionBefore.liquidity.gt(BN_ZERO)) {
+            liquidityPercent = liquidityAmount.mul(ethers.utils.parseUnits("1",38)).div(positionBefore.liquidity)
+            liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
+        }
+        else if (liquidityAmount.gt(BN_ZERO))
+            liquidityPercent = ethers.utils.parseUnits("1", 38);
+        else
+            liquidityPercent = BN_ZERO
+    } else {
+        liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
+    }
     if (revertMessage == '') {
         positionSnapshot = await hre.props.coverPool.snapshot({
             owner: signer.address,

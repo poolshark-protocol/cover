@@ -728,7 +728,7 @@ describe('CoverPool Tests', function () {
         }
     })
 
-    it("pool0 - fully filled auction should push claim to next tick :: GUARDIAN AUDITS", async () => {
+    it("pool0 - fully filled auction should push claim to next tick :: GUARDIAN AUDITS 21", async () => {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
 
@@ -776,19 +776,19 @@ describe('CoverPool Tests', function () {
             expectedUpper: '-40',
             revertMessage: '',
         });
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
         if (debugMode) await getTick(true, -20, debugMode)
         await validateSync(-40);
         if (debugMode) await getTick(true, -40, debugMode)
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSync(-60);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
         if (debugMode) await getTick(true, -60, debugMode)
         if (debugMode) await getTick(true, -80, debugMode)
         await validateSync(-80);
         if (debugMode) await getTick(true, -80, debugMode)
-
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("0");
         // // Notice that the following burn reverts -- if the subtraction from the end tick in section2
         // // is removed the double counting no longer occurs -- and the burn can succeed.
 
@@ -805,7 +805,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-40',
-            liquidityAmount: aliceLiquidityAmount.div(2),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('25024998741751246936'),
@@ -908,7 +908,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-40',
-            liquidityAmount: aliceLiquidityAmount.div(2),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('12421489218416072976'),
             balanceOutIncrease: BigNumber.from('12506243434503093221'),
@@ -932,7 +932,6 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         });
-
     });
 
     it("pool0 - outdated price does not perturb the pool accounting :: GUARDIAN AUDITS", async function () {
@@ -1037,7 +1036,7 @@ describe('CoverPool Tests', function () {
             lower: '-100',
             claim: '-80',
             upper: '-80',
-            liquidityAmount: liquidityAmountBob.sub(liquidityAmount),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
             balanceOutIncrease: tokenAmount.mul(5).sub(1).sub(balanceOutIncrease1),
@@ -1598,7 +1597,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
-            liquidityAmount: aliceLiquidityAmount.div(2).add(1),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('28327454485520480577'),
@@ -1691,6 +1690,19 @@ describe('CoverPool Tests', function () {
             claim: '-40',
             upper: '-40',
             liquidityAmount: aliceLiquidityAmount.div(2).add(1).add(aliceLiquidityAmount2),
+            zeroForOne: true,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('116683335274777521986'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: 'PositionAuctionAmountTooSmall()',
+        })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '-60',
+            claim: '-40',
+            upper: '-40',
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('116683335274777521986'),
@@ -1897,13 +1909,13 @@ describe('CoverPool Tests', function () {
             revertMessage: '', 
         });
 
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSync(-40);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSync(-60);
-        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242243");
+        expect((await hre.props.coverPool.pool0()).liquidity).to.eq("12475641655412799242244");
 
         await validateSwap({
             signer: hre.props.alice,
@@ -1923,7 +1935,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-40',
-            liquidityAmount: aliceLiquidityAmount.div(2),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('12421489218416072976'),
             balanceOutIncrease: BigNumber.from('12506243434503093218'),
@@ -2698,7 +2710,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-40',
-            liquidityAmount: liquidityAmount4.sub(liquidityAmount5),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('25012499374000153211'),
@@ -3968,7 +3980,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '40',
             upper: '60',
-            liquidityAmount: liquidityAmountAlice.sub(1),
+            liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from("50024998748000306422"),

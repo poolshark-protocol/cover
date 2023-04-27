@@ -63,7 +63,7 @@ library Positions {
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )
@@ -617,7 +617,7 @@ library Positions {
     function _size(
         ICoverPoolStructs.SizeParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) internal pure  
+    ) internal view  
     {
         // early return if 100% of position burned
         if (params.liquidityAmount == 0 || params.auctionCount == 0) return;
@@ -637,11 +637,11 @@ library Positions {
             if (constants.minAmountLowerPriced) {
                 // token0 is the lower priced token
                 denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token0Decimals);
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
             } else {
                 // token1 is the higher priced token
                 denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token1Decimals);
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
             }
         }
         if (params.zeroForOne) {
