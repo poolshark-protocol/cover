@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 abstract contract CoverPoolErrors {
     error Locked();
+    error OwnerOnly();
     error InvalidToken();
     error InvalidPosition();
     error InvalidSwapFee();

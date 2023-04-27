@@ -21,8 +21,4 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
         int16 tickSpread,
         uint16 twapLength
     ) external view virtual returns (address);
-
-    function collectProtocolFees(
-        address collectPool
-    ) external virtual;
 }

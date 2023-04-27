@@ -132,8 +132,7 @@ library Claims {
     function applyDeltas(
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+        ICoverPoolStructs.UpdateParams memory params
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -149,7 +148,7 @@ library Claims {
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
 
-        uint128 fillFeeAmount = cache.finalDeltas.amountInDelta * constants.fillFee / 1e6;
+        uint128 fillFeeAmount = cache.finalDeltas.amountInDelta * state.fillFee / 1e6;
         if (params.zeroForOne) {
             state.protocolFees.token1 += fillFeeAmount;
         } else {

@@ -63,7 +63,7 @@ library Positions {
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) external pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )
@@ -513,11 +513,10 @@ library Positions {
     ) internal pure returns (
         uint128
     ) {
-        // convert percentage amount to liquidity amount
+        // convert percentage to liquidity amount
         if (percent > 1e38) revert InvalidBurnPercentage();
         if (liquidity == 0 && percent > 0) revert NotEnoughPositionLiquidity();
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
-        // return percent;
     }
 
     function _deltas(
@@ -596,7 +595,7 @@ library Positions {
         /// @dev - section 5 => claim tick -> position end
         cache = Claims.section5(cache, params);
         // adjust position amounts based on deltas
-        cache = Claims.applyDeltas(state, cache, params, constants);
+        cache = Claims.applyDeltas(state, cache, params);
 
         return (cache, state);
     }
@@ -617,7 +616,7 @@ library Positions {
     function _size(
         ICoverPoolStructs.SizeParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) internal view  
+    ) internal pure  
     {
         // early return if 100% of position burned
         if (params.liquidityAmount == 0 || params.auctionCount == 0) return;
