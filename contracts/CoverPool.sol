@@ -247,10 +247,7 @@ contract CoverPool is
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
-    ) external override lock returns (
-        uint256,
-        uint256
-    )
+    ) external override lock
     {
         _validatePrice(priceLimit);
         SwapCache memory cache;
@@ -307,24 +304,16 @@ contract CoverPool is
             }
             if (cache.output > 0) {
                 _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
-                // emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
+                emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
             }
-            return (
-                cache.input  + cache.syncFees.token0,
-                cache.output + cache.syncFees.token1
-            );
         } else {
             if (cache.input > 0) {
                 _transferOut(recipient, token1, cache.input + cache.syncFees.token1);
             }
             if (cache.output > 0) {
                 _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
-                // emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
+                emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
             }
-            return (
-                cache.input  + cache.syncFees.token1,
-                cache.output + cache.syncFees.token0
-            );
         }
     }
 

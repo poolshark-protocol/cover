@@ -18,10 +18,7 @@ interface ICoverPool is ICoverPoolStructs {
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
-    ) external returns (
-        uint256 inAmount,
-        uint256 outAmount
-    );
+    ) external;
 
     function quote(
         bool zeroForOne,
