@@ -8,7 +8,7 @@ abstract contract CoverPoolFactoryStructs is CoverPoolManagerStructs {
         VolatilityTier config;
         address twapSource;
         address inputPool;
-        address manager;
+        address owner;
         address token0;
         address token1;
         int16   tickSpread;

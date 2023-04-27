@@ -59,7 +59,7 @@ contract CoverPool is
         CoverPoolParams memory params
     ) {
         // set addresses
-        owner    = params.manager;
+        owner      = params.owner;
         twapSource = params.twapSource;
         inputPool  = params.inputPool;
         token0     = params.token0;
