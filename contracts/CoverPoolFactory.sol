@@ -17,11 +17,6 @@ contract CoverPoolFactory is
 {
     address immutable public owner;
 
-    modifier onlyOwner() {
-        if (owner != msg.sender) revert OwnerOnly();
-        _;
-    }
-
     constructor(
         address _owner
     ) {
