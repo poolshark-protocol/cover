@@ -21,6 +21,7 @@ library Positions {
     error InvalidLowerTick();
     error InvalidUpperTick();
     error InvalidPositionWidth();
+    error InvalidBurnPercentage();
     error PositionAmountZero();
     error PositionAuctionAmountTooSmall();
     error InvalidPositionBoundsOrder();
@@ -62,7 +63,7 @@ library Positions {
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (
+    ) external view returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )
@@ -240,6 +241,9 @@ library Positions {
         ICoverPoolStructs.RemoveParams memory params,
         ICoverPoolStructs.Immutables memory constants
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
+        // validate burn percentage
+        if (params.amount > 1e38) revert InvalidBurnPercentage();
+        // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
@@ -251,6 +255,9 @@ library Positions {
             liquidityMinted: 0,
             denomTokenIn: true
         });
+        // convert percentage to liquidity amount
+        params.amount = _convert(cache.position.liquidity, params.amount);
+        // early return if no liquidity to remove
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
@@ -500,6 +507,19 @@ library Positions {
         return cache.position;
     }
 
+    function _convert(
+        uint128 liquidity,
+        uint128 percent
+    ) internal pure returns (
+        uint128
+    ) {
+        // convert percentage amount to liquidity amount
+        if (percent > 1e38) revert InvalidBurnPercentage();
+        if (liquidity == 0 && percent > 0) revert NotEnoughPositionLiquidity();
+        return uint128(uint256(liquidity) * uint256(percent) / 1e38);
+        // return percent;
+    }
+
     function _deltas(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
@@ -513,7 +533,7 @@ library Positions {
         ICoverPoolStructs.UpdatePositionCache memory,
         ICoverPoolStructs.GlobalState memory
     ) {
-       ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
+        ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             pool: pool,
             priceLower: TickMath.getSqrtRatioAtTick(params.lower),
@@ -531,6 +551,8 @@ library Positions {
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
         });
+
+        params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
         cache = Claims.validate(
@@ -595,7 +617,7 @@ library Positions {
     function _size(
         ICoverPoolStructs.SizeParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) internal pure  
+    ) internal view  
     {
         // early return if 100% of position burned
         if (params.liquidityAmount == 0 || params.auctionCount == 0) return;
@@ -615,11 +637,11 @@ library Positions {
             if (constants.minAmountLowerPriced) {
                 // token0 is the lower priced token
                 denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token0Decimals);
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
             } else {
                 // token1 is the higher priced token
                 denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token1Decimals);
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
             }
         }
         if (params.zeroForOne) {

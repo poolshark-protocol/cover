@@ -223,8 +223,6 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
-        // console.log(cache.position.claimPriceLast);
-        // console.log(cache.priceClaim);
         if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
                               : cache.priceClaim > cache.position.claimPriceLast) {
             // calculate if we at least cover one full tick

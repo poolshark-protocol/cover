@@ -8,7 +8,6 @@ import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
 import '../interfaces/ITwapSource.sol';
 import './TickMap.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
