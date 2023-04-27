@@ -93,7 +93,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool isPool0
-    ) external pure returns (
+    ) public pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -229,6 +229,31 @@ library Deltas {
         return fromTick;
     }
 
+    function burnMaxPool(
+        ICoverPoolStructs.PoolState memory pool,
+        ICoverPoolStructs.UpdatePositionCache memory cache,
+        ICoverPoolStructs.UpdateParams memory params
+    ) external pure returns (
+        ICoverPoolStructs.PoolState memory
+    )
+    {
+        uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
+        (
+            amountInMaxClaimedBefore,
+            amountOutMaxClaimedBefore
+        ) = maxAuction(
+            params.amount,
+            cache.priceSpread,
+            cache.position.claimPriceLast,
+            params.zeroForOne
+        );
+        pool.amountInDeltaMaxClaimed  -= pool.amountInDeltaMaxClaimed > amountInMaxClaimedBefore ? amountInMaxClaimedBefore
+                                                                                                 : pool.amountInDeltaMaxClaimed;
+        pool.amountOutDeltaMaxClaimed -= pool.amountOutDeltaMaxClaimed > amountOutMaxClaimedBefore ? amountOutMaxClaimedBefore
+                                                                                                   : pool.amountOutDeltaMaxClaimed;
+        return pool;
+    }
+
     function from(
         ICoverPoolStructs.Tick memory fromTick,
         ICoverPoolStructs.Deltas memory toDeltas
@@ -328,7 +353,8 @@ library Deltas {
         bool   isPool0,
         bool   isAdded
     ) external pure returns (
-        ICoverPoolStructs.Tick memory
+        ICoverPoolStructs.Tick memory,
+        ICoverPoolStructs.Deltas memory
     ) {
         // update max deltas
         uint128 amountInDeltaMax; uint128 amountOutDeltaMax;
@@ -348,9 +374,9 @@ library Deltas {
             tick.amountOutDeltaMaxMinus += amountOutDeltaMax;
         } else {
             tick.amountInDeltaMaxMinus  -= tick.amountInDeltaMaxMinus  > amountInDeltaMax ? amountInDeltaMax
-                                                                                    : tick.amountInDeltaMaxMinus ;
+                                                                                          : tick.amountInDeltaMaxMinus;
             tick.amountOutDeltaMaxMinus -= tick.amountOutDeltaMaxMinus > amountOutDeltaMax ? amountOutDeltaMax                                                                           : tick.amountOutDeltaMaxMinus;
         }
-        return tick;
+        return (tick, ICoverPoolStructs.Deltas(0,0,amountInDeltaMax, amountOutDeltaMax));
     }
 }

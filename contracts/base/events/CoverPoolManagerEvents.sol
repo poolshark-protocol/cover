@@ -7,10 +7,18 @@ abstract contract CoverPoolManagerEvents {
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
-        uint16  auctionLength,
-        int16   minPositionWidth,
         uint128 minAmountPerAuction,
+        uint16  auctionLength,
+        uint16  blockTime,
+        uint16  syncFee,
+        uint16  fillFee,
+        int16   minPositionWidth,
         bool    minLowerPriced
+    );
+    event TwapSourceEnabled(
+        bytes32  sourceName,
+        address sourceAddress,
+        address factoryAddress
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);

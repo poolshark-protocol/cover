@@ -30,13 +30,13 @@ export class IncreaseSamples {
         // deploy contracts onto network
         await this.initialSetup.readCoverPoolSetup(hre.nonce)
 
-        await hre.props.rangePoolMock.setObservationCardinality(5)
+        await hre.props.uniswapV3PoolMock.setObservationCardinality(5)
 
-        console.log(await hre.props.rangePoolMock.slot0())
+        console.log(await hre.props.uniswapV3PoolMock.slot0())
 
         await validateSync(20)
 
-        await getLiquidity(false, true)
+        // await getLiquidity(false, true)
 
         // verify contracts on block explorer
         // await hre.run('verify-contracts');

@@ -4,9 +4,9 @@ pragma solidity ^0.8.13;
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import './CoverPool.sol';
 import './interfaces/ICoverPoolFactory.sol';
-import './interfaces/IRangeFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
+import './base/structs/CoverPoolManagerStructs.sol';
 import './utils/CoverPoolErrors.sol';
 
 contract CoverPoolFactory is 
@@ -21,72 +21,38 @@ contract CoverPoolFactory is
     }
 
     constructor(
-        address _owner,
-        address _rangePoolFactory
+        address _owner
     ) {
         owner = _owner;
-        rangePoolFactory = _rangePoolFactory;
     }
 
     function createCoverPool(
-        address fromToken,
-        address destToken,
+        bytes32 sourceName,
+        address tokenIn,
+        address tokenOut,
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength
     ) external override returns (address pool) {
-        address token0 = fromToken < destToken ? fromToken : destToken;
-        address token1 = fromToken < destToken ? destToken : fromToken;
-
+        CoverPoolParams memory params;
+        // sort tokens by address
+        params.token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
+        params.token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encodePacked(sourceName, params.token0, params.token1, feeTier, tickSpread, twapLength));
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
-
-        {
-            // check fee tier exists
-            int24 tickSpacing = IRangeFactory(rangePoolFactory).feeTierTickSpacing(feeTier);
-            if (tickSpacing == 0) {
-                revert FeeTierNotSupported();
-            }
-
-            // check tick multiple
-            int24 tickMultiple = tickSpread / tickSpacing;
-            if (tickMultiple * tickSpacing != tickSpread) {
-                revert TickSpreadNotMultipleOfTickSpacing();
-            } else if (tickMultiple < 2) {
-                revert TickSpreadNotAtLeastDoubleTickSpread();
-            }
-        }
-
-        // get pool parameters
-        CoverPoolParams memory params;
-        {
-            // get volatility tier config
-            (
-                uint16  auctionLength,
-                int16   minPositionWidth,
-                uint128 minAmountPerAuction,
-                bool    minLowerPriced
-            ) = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
-
-            if (auctionLength == 0) {
-                revert VolatilityTierNotSupported();
-            }
-
-            params = CoverPoolParams(
-                        address(0),
-                        tickSpread,
-                        twapLength,
-                        auctionLength, 
-                        minPositionWidth,
-                        minAmountPerAuction,
-                        minLowerPriced
-                    );
-        }
+        // get volatility tier config
+        params.config = ICoverPoolManager(owner).volatilityTiers(feeTier, tickSpread, twapLength);
+        if (params.config.auctionLength == 0) revert VolatilityTierNotSupported();
+        // get twap source
+        params.twapSource = ICoverPoolManager(owner).twapSources(sourceName);
+        if (params.twapSource == address(0)) revert TwapSourceNotFound();
+        params.tickSpread = tickSpread;
+        params.twapLength = twapLength;
         // get reference pool
-        params.inputPool  = IRangeFactory(rangePoolFactory).getPool(token0, token1, feeTier);
+        params.inputPool  = ITwapSource(params.twapSource).getPool(params.token0, params.token1, feeTier);
 
         // launch pool and save address
         pool = address(new CoverPool(params));
@@ -95,9 +61,10 @@ contract CoverPoolFactory is
 
         emit PoolCreated(
             pool,
+            params.twapSource,
             params.inputPool,
-            token0,
-            token1,
+            params.token0,
+            params.token1,
             feeTier,
             tickSpread,
             twapLength
@@ -105,18 +72,19 @@ contract CoverPoolFactory is
     }
 
     function getCoverPool(
-        address fromToken,
-        address destToken,
+        bytes32 sourceName,
+        address tokenIn,
+        address tokenOut,
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength
     ) public view override returns (address) {
         // set lexographical token address ordering
-        address token0 = fromToken < destToken ? fromToken : destToken;
-        address token1 = fromToken < destToken ? destToken : fromToken;
+        address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
+        address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encode(token0, token1, feeTier, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encodePacked(sourceName, token0, token1, feeTier, tickSpread, twapLength));
 
         return coverPools[key];
     }

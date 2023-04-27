@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers'
-import { validateMint } from '../../../test/utils/contracts/coverpool'
+import { getLatestTick, getPrice, validateMint, validateSync } from '../../../test/utils/contracts/coverpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
@@ -34,20 +34,26 @@ export class MintPosition {
 
         const liquidityAmount = BigNumber.from('199760153929825488153727')
 
-        await validateMint({
-            signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            lower: '20',
-            claim: '20',
-            upper: '40',
-            amount: token1Amount.mul(10),
-            zeroForOne: false,
-            balanceInDecrease: token1Amount,
-            liquidityIncrease: liquidityAmount,
-            upperTickCleared: false,
-            lowerTickCleared: false,
-            revertMessage: '',
-        })
+        await getLatestTick(true)
+
+        await validateSync(87628)
+
+        // await getPrice(true)
+
+        // await validateMint({
+        //     signer: hre.props.alice,
+        //     recipient: '0x34e800D1456d87A5F62B774AD98cea54a3A40048',
+        //     lower: '0',
+        //     claim: '0',
+        //     upper: '100',
+        //     amount: token1Amount,
+        //     zeroForOne: true,
+        //     balanceInDecrease: token1Amount,
+        //     liquidityIncrease: liquidityAmount,
+        //     upperTickCleared: false,
+        //     lowerTickCleared: false,
+        //     revertMessage: '',
+        // })
 
         console.log('position minted')
     }

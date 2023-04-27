@@ -1,10 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
-import { IRangePool } from '../../../typechain'
-import { PoolState, BN_ZERO } from '../../utils/contracts/coverpool'
 import { gBefore } from '../../utils/hooks.test'
-import { mintSigners20 } from '../../utils/token'
 
 describe('TickMath Library Tests', function () {
     let token0Amount: BigNumber
@@ -17,61 +14,34 @@ describe('TickMath Library Tests', function () {
     let bob: SignerWithAddress
     let carol: SignerWithAddress
 
-    //TODO: mint position and burn as if there were 100
-
     before(async function () {
         await gBefore()
-        let currentBlock = await ethers.provider.getBlockNumber()
-        //TODO: maybe just have one view function that grabs all these
-        //TODO: map it to an interface
-        const pool0: PoolState = await hre.props.coverPool.pool0()
-        const liquidity = pool0.liquidity
-        const globalState = await hre.props.coverPool.globalState()
-        const genesisBlock = globalState.genesisBlock
-        const amountInDelta = pool0.amountInDelta
-        const price = pool0.price
-        const latestTick = globalState.latestTick
-
-        expect(liquidity).to.be.equal(BN_ZERO)
-        expect(genesisBlock).to.be.equal(currentBlock - 2)
-        expect(amountInDelta).to.be.equal(BN_ZERO)
-        expect(latestTick).to.be.equal(BN_ZERO)
-
-        // console.log("sqrt price:", await (await hre.props.coverPool.sqrtPrice()).toString());
-        currentPrice = BigNumber.from('2').pow(96)
-        token0Decimals = await hre.props.token0.decimals()
-        token1Decimals = await hre.props.token1.decimals()
-        token0Amount = ethers.utils.parseUnits('100', token0Decimals)
-        token1Amount = ethers.utils.parseUnits('100', token1Decimals)
-        alice = hre.props.alice
-        bob = hre.props.bob
-        carol = hre.props.carol
-
-        await mintSigners20(hre.props.token0, token0Amount.mul(10), [
-            hre.props.alice,
-            hre.props.bob,
-        ])
-
-        await mintSigners20(hre.props.token1, token1Amount.mul(10), [
-            hre.props.alice,
-            hre.props.bob,
-        ])
     })
 
     this.beforeEach(async function () {})
 
     it('validatePrice - Should revert below min sqrt price', async function () {
+        let minPrice = BigNumber.from('4297706460')
         await expect(
-            hre.props.tickMathLib.validatePrice(BigNumber.from('4295128738'))
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                minPrice.sub(1)
+            )
+        ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
-    it('validatePrice - Should revert at max sqrt price', async function () {
+    it('validatePrice - Should revert at or above max sqrt price', async function () {
+        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
         await expect(
-            hre.props.tickMathLib.validatePrice(
-                BigNumber.from('1461446703485210103287273052203988822378723970342')
+            hre.props.coverPool.swap(
+                hre.props.admin.address,
+                true,
+                BigNumber.from('0'),
+                maxPrice.add(1)
             )
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+        ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
     it('getSqrtRatioAtTick - Should get tick near min sqrt price', async function () {

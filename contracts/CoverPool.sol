@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import './interfaces/ICoverPool.sol';
-import './interfaces/IRangePool.sol';
 import './interfaces/ICoverPoolManager.sol';
 import './base/events/CoverPoolEvents.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
@@ -23,182 +22,221 @@ contract CoverPool is
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
+    address public immutable twapSource;
+    address public immutable inputPool; 
+    uint160 public immutable MIN_PRICE;
+    uint160 public immutable MAX_PRICE;
+    uint128 public immutable minAmountPerAuction;
+    uint32  public immutable genesisTime;
+    int16   public immutable minPositionWidth;
+    int16   public immutable tickSpread;
+    uint16  public immutable twapLength;
+    uint16  public immutable auctionLength;
+    uint16  public immutable blockTime;
     uint8   internal immutable token0Decimals;
     uint8   internal immutable token1Decimals;
-    int16   public immutable minPositionWidth;
-    uint128 public immutable minAmountPerAuction;
-    bool    public immutable minLowerPricedToken;
+    bool    public immutable minAmountLowerPriced;
+
+    error PriceOutOfBounds();
+
+    modifier lock() {
+        if (globalState.unlocked == 0) {
+            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
+        }
+        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
+        if (globalState.unlocked == 2) revert Locked();
+        globalState.unlocked = 2;
+        _;
+        globalState.unlocked = 1;
+    }
 
     constructor(
         CoverPoolParams memory params
     ) {
         // set addresses
         factory   = msg.sender;
-        token0    = IRangePool(params.inputPool).token0();
-        token1    = IRangePool(params.inputPool).token1();
+        twapSource = params.twapSource;
+        inputPool = params.inputPool;
+        token0    = params.token0;
+        token1    = params.token1;
         
-        // set immutables
+        // set token decimals
         token0Decimals = ERC20(token0).decimals();
         token1Decimals = ERC20(token1).decimals();
         if (token0Decimals > 18 || token1Decimals > 18
           || token0Decimals < 6 || token1Decimals < 6) {
             revert InvalidTokenDecimals();
         }
-        minPositionWidth = params.minPositionWidth;
-        minAmountPerAuction = params.minAmountPerAuction;
-        minLowerPricedToken = params.minLowerPricedToken;
 
-        // set global state
-        GlobalState memory state;
-        state.tickSpread    = params.tickSpread;
-        state.twapLength    = params.twapLength;
-        state.auctionLength = params.auctionLength;
-        state.genesisBlock  = uint32(block.number);
-        state.inputPool     = IRangePool(params.inputPool);
-        state.protocolFees  = ProtocolFees(0,0);
+        // set other immutables
+        auctionLength = params.config.auctionLength;
+        blockTime = params.config.blockTime;
+        minPositionWidth = params.config.minPositionWidth;
+        tickSpread    = params.tickSpread;
+        twapLength    = params.twapLength;
+        genesisTime   = uint32(block.timestamp);
+        minAmountPerAuction = params.config.minAmountPerAuction;
+        minAmountLowerPriced = params.config.minAmountLowerPriced;
 
-        globalState = state;
+        // set price boundaries
+        MIN_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MIN_TICK / tickSpread * tickSpread);
+        MAX_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MAX_TICK / tickSpread * tickSpread);
     }
 
     function mint(
         MintParams memory params
     ) external lock {
-        GlobalState memory state = globalState;
-        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                                     : positions1[msg.sender][params.lower][params.upper];
-        (state, pool0, pool1) = Epochs.syncLatest(
+        MintCache memory cache = MintCache({
+            state: globalState,
+            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                        : positions1[msg.sender][params.lower][params.upper],
+            constants: _immutables(),
+            syncFees: SyncFees(0,0),
+            liquidityMinted: 0
+        });
+        (
+            cache.state,
+            cache.syncFees,
+            pool0, 
+            pool1
+        ) = Epochs.syncLatest(
             ticks0,
             ticks1,
             tickMap,
             pool0,
             pool1,
-            state
+            cache.state,
+            cache.constants
         );
-        uint256 liquidityMinted;
         // resize position if necessary
-        (params, liquidityMinted) = Positions.resize(
-            position,
+        (params, cache.liquidityMinted) = Positions.resize(
+            cache.position,
             params, 
-            state,
-            _immutables()
+            cache.state,
+            cache.constants
         );
-
-        if (params.amount > 0)
-            _transferIn(params.zeroForOne ? token0 : token1, params.amount);
+        // params.amount must be > 0 here
+        _transferIn(params.zeroForOne ? token0 : token1, params.amount);
         // recreates position if required
-        (state,) = Positions.update(
+        (cache.state,) = Positions.update(
             params.zeroForOne ? positions0 : positions1, //TODO: start and end; one mapping
             params.zeroForOne ? ticks0 : ticks1, //TODO: mappings of mappings; pass params.zeroForOne
-            tickMap, //TODO: merge epoch and tick map
-            state,
+            tickMap,
+            cache.state,
             params.zeroForOne ? pool0 : pool1, //TODO: mapping and pass params.zeroForOne
             UpdateParams(
+                msg.sender,
                 params.to,
+                0,
                 params.lower,
                 params.upper,
                 params.claim,
-                params.zeroForOne,
-                0
+                params.zeroForOne
             ),
-            _immutables()
+            cache.constants
         );
-        if (params.amount > 0) {
-            Positions.add(
-                params.zeroForOne ? positions0 : positions1,
-                params.zeroForOne ? ticks0 : ticks1,
-                tickMap,
-                state,
-                AddParams(
-                    params.to,
-                    params.lower,
-                    params.claim,
-                    params.upper,
-                    params.zeroForOne,
-                    uint128(liquidityMinted)
-                )
-            );
-            emit Mint(
+        cache.state = Positions.add(
+            params.zeroForOne ? positions0 : positions1,
+            params.zeroForOne ? ticks0 : ticks1,
+            tickMap,
+            cache.state,
+            AddParams(
                 params.to,
+                uint128(cache.liquidityMinted),
                 params.lower,
-                params.upper,
                 params.claim,
-                params.zeroForOne,
-                uint128(liquidityMinted)
-            );
-        }
+                params.upper,
+                params.zeroForOne
+            ),
+            tickSpread
+        );
+        globalState = cache.state;
         _collect(
             CollectParams(
+                cache.syncFees,
                 params.to, //address(0) goes to msg.sender
+                0,
                 params.lower,
                 params.claim,
                 params.upper,
                 params.zeroForOne
             )
         );
-        globalState = state;
     }
 
     function burn(
         BurnParams memory params
     ) external lock {
         if (params.to == address(0)) revert CollectToZeroAddress();
-        GlobalState memory state = globalState;
+        BurnCache memory cache = BurnCache({
+            state: globalState,
+            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
+                                        : positions1[msg.sender][params.lower][params.upper],
+            constants: _immutables(),
+            syncFees: SyncFees(0,0)
+        });
         if (params.sync)
-            (state, pool0, pool1) = Epochs.syncLatest(
+            (cache.state, cache.syncFees, pool0, pool1) = Epochs.syncLatest(
                 ticks0,
                 ticks1,
                 tickMap,
                 pool0,
                 pool1,
-                state
+                cache.state,
+                cache.constants
             );
-        Position memory position = params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                                     : positions1[msg.sender][params.lower][params.upper];
-        if (position.claimPriceLast > 0
+        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
-            || params.claim == state.latestTick)
+            || params.claim == cache.state.latestTick)
         {
             // if position has been crossed into
-            (state, params.claim) = Positions.update(
+            (cache.state, params.claim) = Positions.update(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
-                state,
+                cache.state,
                 params.zeroForOne ? pool0 : pool1,
                 UpdateParams(
                     msg.sender,
+                    params.to,
+                    params.percent,
                     params.lower,
                     params.upper,
                     params.claim,
-                    params.zeroForOne,
-                    params.amount
+                    params.zeroForOne
                 ),
                 _immutables()
             );
         } else {
             // if position hasn't been crossed into
-            (, state) = Positions.remove(
+            (, cache.state) = Positions.remove(
                 params.zeroForOne ? positions0 : positions1,
                 params.zeroForOne ? ticks0 : ticks1,
                 tickMap,
-                state,
-                RemoveParams(msg.sender, params.lower, params.upper, params.zeroForOne, params.amount),
+                cache.state,
+                RemoveParams(
+                    msg.sender,
+                    params.to,
+                    params.percent,
+                    params.lower,
+                    params.upper,
+                    params.zeroForOne
+                ),
                 _immutables()
             );
         }
-        // force collection
-        if (params.amount > 0)
-            emit Burn(msg.sender, params.lower, params.upper, params.claim, params.zeroForOne, params.amount);
+        globalState = cache.state;
         _collect(
             CollectParams(
+                cache.syncFees,
                 params.to, //address(0) goes to msg.sender
+                params.percent,
                 params.lower,
                 params.claim,
                 params.upper,
                 params.zeroForOne
             )
         );
-        globalState = state;
     }
 
     function swap(
@@ -206,43 +244,49 @@ contract CoverPool is
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
+    ) external override lock returns (
+        uint256,
+        uint256
     )
-        external
-        override
-        lock
-        returns (uint256 amountOut)
     {
-        GlobalState memory state = globalState;
-        TickMath.validatePrice(priceLimit);
-        (state, pool0, pool1) = Epochs.syncLatest(
+        _validatePrice(priceLimit);
+        SwapCache memory cache;
+        cache.state = globalState;
+        cache.constants = _immutables();
+        (
+            cache.state,
+            cache.syncFees,
+            pool0,
+            pool1
+        ) = Epochs.syncLatest(
             ticks0,
             ticks1,
             tickMap,
             pool0,
             pool1,
-            state
+            cache.state,
+            _immutables()
         );
         PoolState memory pool = zeroForOne ? pool1 : pool0;
-        if (amountIn == 0) {
-            // transfer out syncing fee here
-            globalState = state;
-            return 0;
-        }
-
-        _transferIn(zeroForOne ? token0 : token1, amountIn);
-
-        SwapCache memory cache = SwapCache({
+        cache = SwapCache({
+            state: cache.state,
+            syncFees: cache.syncFees,
+            constants: cache.constants,
             price: pool.price,
             liquidity: pool.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.number - state.genesisBlock - state.auctionStart,
+            auctionDepth: block.timestamp - genesisTime - cache.state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
+            output: 0,
             inputBoosted: 0,
             amountInDelta: 0
         });
+
+        _transferIn(zeroForOne ? token0 : token1, amountIn);
+
         /// @dev - liquidity range is limited to one tick
-        (cache, amountOut) = Ticks.quote(zeroForOne, priceLimit, state, cache);
+        cache = Ticks.quote(zeroForOne, priceLimit, cache.state, cache, _immutables());
 
         if (zeroForOne) {
             pool1.price = uint160(cache.price);
@@ -252,57 +296,123 @@ contract CoverPool is
             pool0.amountInDelta += uint128(cache.amountInDelta);
         }
 
+        globalState = cache.state;
+
         if (zeroForOne) {
             if (cache.input > 0) {
-                _transferOut(recipient, token0, cache.input);
+                _transferOut(recipient, token0, cache.input + cache.syncFees.token0);
             }
-            _transferOut(recipient, token1, amountOut);
-            emit Swap(recipient, token0, token1, amountIn - cache.input, amountOut);
+            if (cache.output > 0) {
+                _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
+                emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
+            }
+            return (
+                cache.input  + cache.syncFees.token0,
+                cache.output + cache.syncFees.token1
+            );
         } else {
             if (cache.input > 0) {
-                _transferOut(recipient, token1, cache.input);
+                _transferOut(recipient, token1, cache.input + cache.syncFees.token1);
             }
-            _transferOut(recipient, token0, amountOut);
-            emit Swap(recipient, token1, token0, amountIn - cache.input, amountOut);
+            if (cache.output > 0) {
+                _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
+                emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
+            }
+            return (
+                cache.input  + cache.syncFees.token1,
+                cache.output + cache.syncFees.token0
+            );
         }
-        globalState = state;
     }
 
-    //TODO: handle quoteAmountIn and quoteAmountOut
     function quote(
         bool zeroForOne,
-        uint256 amountIn,
+        uint128 amountIn,
         uint160 priceLimit
-    ) external view returns (uint256 inAmount, uint256 outAmount) {
-        // TODO: make override
-        GlobalState memory state = globalState;
-        SwapCache memory cache = SwapCache({
-            price: zeroForOne ? pool1.price : pool0.price,
-            liquidity: zeroForOne ? pool1.liquidity : pool0.liquidity,
+    ) external view override returns (
+        uint256 inAmount,
+        uint256 outAmount
+    ) {
+        PoolState memory pool0State;
+        PoolState memory pool1State;
+        SwapCache memory cache;
+        cache.state = globalState;
+        cache.constants = _immutables();
+        (
+            cache.state,
+            cache.syncFees,
+            pool0State,
+            pool1State
+        ) = Epochs.simulateSync(
+            ticks0,
+            ticks1,
+            tickMap,
+            pool0,
+            pool1,
+            cache.state,
+            cache.constants
+        );
+        cache = SwapCache({
+            state: cache.state,
+            syncFees: cache.syncFees,
+            constants: cache.constants,
+            price: zeroForOne ? pool1State.price : pool0State.price,
+            liquidity: zeroForOne ? pool1State.liquidity : pool0State.liquidity,
             amountIn: amountIn,
-            auctionDepth: block.number - state.genesisBlock - state.auctionStart,
+            auctionDepth: block.timestamp - genesisTime - cache.state.auctionStart,
             auctionBoost: 0,
             input: amountIn,
+            output: 0,
             inputBoosted: 0,
             amountInDelta: 0
         });
-        /// @dev - liquidity range is limited to one tick within state.latestTick - should we add tick crossing?
-        /// @dev not sure whether to handle greater than tickSpacing range
-        /// @dev everything will always be cleared out except for the closest tick to state.latestTick
-        (cache, outAmount) = Ticks.quote(zeroForOne, priceLimit, state, cache);
-        inAmount = amountIn - cache.input;
-
+        cache = Ticks.quote(zeroForOne, priceLimit, cache.state, cache, _immutables());
+        if (zeroForOne) {
+            inAmount  = cache.input  + cache.syncFees.token0;
+            outAmount = cache.output + cache.syncFees.token1;
+        } else {
+            inAmount  = cache.input  + cache.syncFees.token1;
+            outAmount = cache.output + cache.syncFees.token0;
+        }
         return (inAmount, outAmount);
     }
 
-    function collectFees() public returns (uint128 token0Fees, uint128 token1Fees) {
+    function snapshot(
+       SnapshotParams memory params 
+    ) external view returns (
+        Position memory
+    ) {
+        return Positions.snapshot(
+            params.zeroForOne ? positions0 : positions1,
+            params.zeroForOne ? ticks0 : ticks1,
+            tickMap,
+            globalState,
+            params.zeroForOne ? pool0 : pool1,
+            UpdateParams(
+                params.owner,
+                params.owner,
+                params.amount,
+                params.lower,
+                params.upper,
+                params.claim,
+                params.zeroForOne
+            ),
+            _immutables()
+        );
+    }
+
+    function collectFees() public returns (
+        uint128 token0Fees,
+        uint128 token1Fees
+    ) {
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
         address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
-        _transferOut(feeTo, token0, token0Fees);
-        _transferOut(feeTo, token1, token1Fees);
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
+        _transferOut(feeTo, token0, token0Fees);
+        _transferOut(feeTo, token1, token1Fees);
+        emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
     }
 
     function _collect(
@@ -315,44 +425,53 @@ contract CoverPool is
         uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
         uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
 
+        // factor in sync fees
+        if (params.zeroForOne) {
+            amountIn  += params.syncFees.token1;
+            amountOut += params.syncFees.token0;
+        } else {
+            amountIn  += params.syncFees.token0;
+            amountOut += params.syncFees.token1;
+        }
+
         /// zero out balances and transfer out
         if (amountIn > 0) {
             positions[msg.sender][params.lower][params.upper].amountIn = 0;
-            _transferOut(msg.sender, params.zeroForOne ? token1 : token0, amountIn);
+            _transferOut(params.to, params.zeroForOne ? token1 : token0, amountIn);
         } 
         if (amountOut > 0) {
             positions[msg.sender][params.lower][params.upper].amountOut = 0;
-            _transferOut(msg.sender, params.zeroForOne ? token0 : token1, amountOut);
-        } 
-
-        // emit event
-        if (amountIn > 0 || amountOut > 0) 
-            emit Collect(
-                msg.sender,
-                params.zeroForOne ? amountIn : amountOut,
-                params.zeroForOne ? amountOut : amountIn
-            );
+            _transferOut(params.to, params.zeroForOne ? token0 : token1, amountOut);
+        }
     }
 
     function _immutables() internal view returns (
         Immutables memory
     ) {
         return Immutables(
+            twapSource,
+            inputPool,
+            minAmountPerAuction,
+            genesisTime,
+            minPositionWidth,
+            tickSpread,
+            twapLength,
+            auctionLength,
+            blockTime,
+            0,
+            0,
             token0Decimals,
             token1Decimals,
-            minPositionWidth,
-            minAmountPerAuction,
-            minLowerPricedToken
+            minAmountLowerPriced
         );
     }
 
+    function _validatePrice(uint160 price) internal view {
+        if (price < MIN_PRICE || price >= MAX_PRICE) {
+            revert PriceOutOfBounds();
+        }
+    }
+
     //TODO: zap into LP position
-    //TOD)O: use bitmaps to naiively search for the tick closest to the new TWAP
-    //TODO: assume everything will get filled for now
     //TODO: remove old latest tick if necessary
-    //TODO: after accumulation, all liquidity below old latest tick is removed
-    //TODO: don't update state.latestTick until TWAP has moved +/- tickSpacing
-    //TODO: state.latestTick needs to be a multiple of tickSpacing
-    //TODO: consider partial fills and how that impacts claims
-    //TODO: consider current price...we might have to skip claims/burns from current tick
 }

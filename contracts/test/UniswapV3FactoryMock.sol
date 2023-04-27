@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import '../interfaces/IRangeFactory.sol';
-import './RangePoolMock.sol';
+import '../interfaces/external/IUniswapV3Factory.sol';
+import './UniswapV3PoolMock.sol';
 
-contract RangeFactoryMock is IRangeFactory {
+contract UniswapV3FactoryMock is IUniswapV3Factory {
     address mockPool;
     address mockPool2;
     address owner;
@@ -21,11 +21,11 @@ contract RangeFactoryMock is IRangeFactory {
         feeTierTickSpacing[10000] = 200;
 
         // create mock pool 1
-        mockPool = address(new RangePoolMock(tokenA, tokenB, 500, 10));
+        mockPool = address(new UniswapV3PoolMock(tokenA, tokenB, 500, 10));
         getPool[tokenA][tokenB][500] = mockPool;
 
         // create mock pool 2
-        mockPool2 = address(new RangePoolMock(tokenA, tokenB, 3000, 60));
+        mockPool2 = address(new UniswapV3PoolMock(tokenA, tokenB, 3000, 60));
         getPool[tokenA][tokenB][3000] = mockPool2;
     }
 }

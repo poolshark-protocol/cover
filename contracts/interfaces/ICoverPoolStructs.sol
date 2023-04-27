@@ -1,31 +1,28 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import "./IRangePool.sol";
-
 interface ICoverPoolStructs {
     struct GlobalState {
-        uint8    unlocked;
-        int16    tickSpread; /// @dev this is a integer multiple of the inputPool tickSpacing
-        uint16   twapLength; /// @dev number of blocks used for TWAP sampling
-        uint16   auctionLength; /// @dev number of blocks to improve price by tickSpread
-        int24    latestTick;   /// @dev latest updated inputPool price tick
-        uint32   genesisBlock; /// @dev reference block for which auctionStart is an offset of
-        uint32   lastBlock;    /// @dev last block checked
-        uint32   auctionStart; /// @dev last block price reference was updated
-        uint32   accumEpoch;
-        uint128  liquidityGlobal;
-        uint160  latestPrice; /// @dev price of latestTick
-        IRangePool inputPool;
         ProtocolFees protocolFees;
+        uint160  latestPrice;      /// @dev price of latestTick
+        uint128  liquidityGlobal;
+        //uint32   genesisTime;      /// @dev reference time for which auctionStart is an offset of
+        uint32   lastTime;         /// @dev last block checked
+        uint32   auctionStart;     /// @dev last block price reference was updated
+        uint32   accumEpoch;       /// @dev number of times this pool has been synced
+        int24    latestTick;       /// @dev latest updated inputPool price tick
+        //int16    tickSpread;       /// @dev this is a integer multiple of the inputPool tickSpacing
+        //uint16   twapLength;       /// @dev number of blocks used for TWAP sampling
+        //uint16   auctionLength;    /// @dev number of seconds to improve price by tickSpread
+        uint8    unlocked;
     }
 
     struct PoolState {
+        uint160 price; /// @dev Starting price current
         uint128 liquidity; /// @dev Liquidity currently active
         uint128 amountInDelta; /// @dev Delta for the current tick auction
         uint128 amountInDeltaMaxClaimed;  /// @dev - needed when users claim and don't burn; should be cleared when users burn liquidity
         uint128 amountOutDeltaMaxClaimed; /// @dev - needed when users claim and don't burn; should be cleared when users burn liquidity
-        uint160 price; /// @dev Starting price current
     }
 
     struct TickMap {
@@ -36,12 +33,12 @@ interface ICoverPoolStructs {
     }
 
     struct Tick {
+        Deltas deltas;
         int128  liquidityDelta;
         uint128 amountInDeltaMaxMinus;
         uint128 amountOutDeltaMaxMinus;
         uint128 amountInDeltaMaxStashed;
         uint128 amountOutDeltaMaxStashed;
-        Deltas deltas;
     }
 
     struct Deltas {
@@ -52,22 +49,36 @@ interface ICoverPoolStructs {
     }
 
     struct Position {
+        uint160 claimPriceLast; // highest price claimed at
         uint128 liquidity; // expected amount to be used not actual
         uint128 amountIn; // token amount already claimed; balance
         uint128 amountOut; // necessary for non-custodial positions
-        uint32  accumEpochLast; // last epoch this position was updated at
-        uint160 claimPriceLast; // highest price claimed at
+        uint32  accumEpochLast;  // last epoch this position was updated at
     }
 
     struct Immutables {
+        address twapSource;
+        address inputPool;
+        uint256 minAmountPerAuction;
+        uint32 genesisTime;
+        int16  minPositionWidth;
+        int16  tickSpread;
+        uint16 twapLength;
+        uint16 auctionLength;
+        uint16 blockTime;
+        uint16 syncFee;
+        uint16 fillFee;
         uint8 token0Decimals;
         uint8 token1Decimals;
-        int16 minPositionWidth;
-        uint256 minAmountPerAuction;
-        bool minLowerPricedToken;
+        bool minAmountLowerPriced;
     }
 
     struct ProtocolFees {
+        uint128 token0;
+        uint128 token1;
+    }
+
+    struct SyncFees {
         uint128 token0;
         uint128 token1;
     }
@@ -83,16 +94,27 @@ interface ICoverPoolStructs {
 
     struct BurnParams {
         address to;
+        uint128 percent;
         int24 lower;
         int24 claim;
         int24 upper;
         bool zeroForOne;
-        uint128 amount; /// @dev - taken in as a percent
         bool sync;
     }
 
+    struct SnapshotParams {
+        address owner;
+        uint128 amount;
+        int24 lower;
+        int24 upper;
+        int24 claim;
+        bool zeroForOne;
+    }
+
     struct CollectParams {
+        SyncFees syncFees;
         address to;
+        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;
@@ -100,45 +122,66 @@ interface ICoverPoolStructs {
     }
 
     struct SizeParams {
-        int24 latestTick;
-        uint24 auctionCount;
-        bool zeroForOne;
-        uint128 liquidityAmount;
         uint256 priceLower;
         uint256 priceUpper;
+        uint128 liquidityAmount;
+        bool zeroForOne;
+        int24 latestTick;
+        uint24 auctionCount;
     }
 
     struct AddParams {
         address owner;
+        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;
         bool zeroForOne;
-        uint128 amount;
     }
 
     struct RemoveParams {
         address owner;
+        address to;
+        uint128 amount;
         int24 lower;
         int24 upper;
         bool zeroForOne;
-        uint128 amount;
     }
 
     struct UpdateParams {
         address owner;
+        address to;
+        uint128 amount;
         int24 lower;
         int24 upper;
         int24 claim;
         bool zeroForOne;
-        uint128 amount;
+    }
+
+    struct MintCache {
+        GlobalState state;
+        Position position;
+        Immutables constants;
+        SyncFees syncFees;
+        uint256 liquidityMinted;
+    }
+
+    struct BurnCache {
+        GlobalState state;
+        Position position;
+        Immutables constants;
+        SyncFees syncFees;
     }
 
     struct SwapCache {
+        GlobalState state;
+        SyncFees syncFees;
+        Immutables constants;
         uint256 price;
         uint256 liquidity;
         uint256 amountIn;
         uint256 input;
+        uint256 output;
         uint256 inputBoosted;
         uint256 auctionDepth;
         uint256 auctionBoost;
@@ -157,35 +200,40 @@ interface ICoverPoolStructs {
     }
 
     struct UpdatePositionCache {
-        uint160 priceLower;
-        uint160 priceClaim;
-        uint160 priceUpper;
-        uint160 priceSpread;
-        bool removeLower;
-        bool removeUpper;
+        Deltas deltas;
+        Deltas finalDeltas;
+        PoolState pool;
         uint256 amountInFilledMax;    // considers the range covered by each update
         uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
         Tick finalTick;
         Position position;
-        Deltas deltas;
-        Deltas finalDeltas;
+        uint160 priceLower;
+        uint160 priceClaim;
+        uint160 priceUpper;
+        uint160 priceSpread;
+        bool earlyReturn;
+        bool removeLower;
+        bool removeUpper;
     }
 
     struct AccumulateCache {
+        Deltas deltas0;
+        Deltas deltas1;
+        SyncFees syncFees;
         int24 nextTickToCross0;
         int24 nextTickToCross1;
         int24 nextTickToAccum0;
         int24 nextTickToAccum1;
         int24 stopTick0;
         int24 stopTick1;
-        Deltas deltas0;
-        Deltas deltas1;
     }
 
-    struct AccumulateOutputs {
+    struct AccumulateParams {
         Deltas deltas;
         Tick crossTick;
         Tick accumTick;
+        bool updateAccumDeltas;
+        bool isPool0;
     }
 }

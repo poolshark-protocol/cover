@@ -22,8 +22,8 @@ library TickMath {
         return _getSqrtRatioAtTick(tick);
     }
 
-    function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24 tick) {
-        return _getTickAtSqrtRatio(sqrtPriceX96);
+    function getTickAtSqrtRatio(uint160 price) external pure returns (int24 tick) {
+        return _getTickAtSqrtRatio(price);
     }
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96.
@@ -63,12 +63,6 @@ library TickMath {
             // We then downcast because we know the result always fits within 160 bits due to our tick input constraint.
             // We round up in the division so getTickAtSqrtRatio of the output price is always consistent.
             sqrtPriceX96 = uint160((ratio >> 32) + (ratio % (1 << 32) == 0 ? 0 : 1));
-        }
-    }
-
-    function validatePrice(uint160 price) external pure {
-        if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) {
-            revert PriceOutOfBounds();
         }
     }
 

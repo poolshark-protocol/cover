@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
+import '../base/structs/CoverPoolManagerStructs.sol';
+
 /// @notice CoverPoolManager interface
-interface ICoverPoolManager {
-    struct CoverPoolConfig {
-        uint16  auctionLength;
-        int16   minPositionWidth;
-        uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
-        bool    minLowerPriced;
-    }
+interface ICoverPoolManager is CoverPoolManagerStructs {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
     function protocolFee() external view returns (uint16);
+    function twapSources(
+        bytes32 sourceName
+    ) external view returns (
+        address sourceAddress
+    );
     function volatilityTiers(
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength
     ) external view returns (
-        uint16,
-        int16,
-        uint128,
-        bool
+        CoverPoolConfig memory
     );
 }

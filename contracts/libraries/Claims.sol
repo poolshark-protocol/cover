@@ -22,26 +22,27 @@ library Claims {
             storage positions,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState storage pool,
+        ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.UpdatePositionCache memory cache
+        ICoverPoolStructs.UpdatePositionCache memory cache,
+        ICoverPoolStructs.Immutables memory constants
     ) external view returns (
-        ICoverPoolStructs.UpdatePositionCache memory,
-        bool
+        ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
         if (cache.position.liquidity == 0) {
-
-            return (cache, true);
+            cache.earlyReturn = true;
+            return cache;
         }
         // if the position has not been crossed into at all
         else if (params.zeroForOne ? params.claim == params.upper 
-                                        && EpochMap.get(tickMap, params.upper) <= cache.position.accumEpochLast
+                                        && EpochMap.get(tickMap, params.upper, constants.tickSpread) <= cache.position.accumEpochLast
                                      : params.claim == params.lower 
-                                        && EpochMap.get(tickMap, params.lower) <= cache.position.accumEpochLast
+                                        && EpochMap.get(tickMap, params.lower, constants.tickSpread) <= cache.position.accumEpochLast
         ) {
-            return (cache, true);
+            cache.earlyReturn = true;
+            return cache;
         }
         // early return if no update and amount burned is 0
         if (
@@ -50,7 +51,11 @@ library Claims {
                     ? params.claim == params.upper && cache.priceUpper != pool.price
                     : params.claim == params.lower && cache.priceLower != pool.price /// @dev - if pool price is start tick, set claimPriceLast to next tick crossed
             ) && params.claim == state.latestTick
-        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {return (cache, true);} } /// @dev - nothing to update if pool price hasn't moved
+        ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
+                cache.earlyReturn = true;
+                return cache;
+            } 
+        } /// @dev - nothing to update if pool price hasn't moved
         
         // claim tick sanity checks
         else if (
@@ -63,7 +68,7 @@ library Claims {
         ) revert InvalidClaimTick(); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
-        uint32 claimTickEpoch = EpochMap.get(tickMap, params.claim);
+        uint32 claimTickEpoch = EpochMap.get(tickMap, params.claim, constants.tickSpread);
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -72,12 +77,12 @@ library Claims {
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim))
-                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim));
+                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim, constants.tickSpread), constants.tickSpread)
+                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim, constants.tickSpread), constants.tickSpread);
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 //TODO: search for claim tick if necessary
-                //TODO: limit search to within 10 closest words
+                //TODO: limit search to within 1 closest word
                 revert WrongTickClaimedAt();
             }
         }
@@ -97,7 +102,7 @@ library Claims {
             }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
-        return (cache, false);
+        return cache;
     }
 
     function getDeltas(
@@ -113,7 +118,6 @@ library Claims {
             /// @dev - deltas are applied once per each tick claimed at
             /// @dev - deltas should never be applied if position is not crossed into
             // check if tick already claimed at
-
             bool transferDeltas = (cache.position.claimPriceLast == 0
                                && (params.claim != (params.zeroForOne ? params.upper : params.lower)))
                                || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
@@ -121,19 +125,16 @@ library Claims {
             if (transferDeltas) {
                 (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
             }
-            // if (debugDeltas) {
-            //     console.log('initial deltas:', cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-            // }
-
         } /// @dev - deltas transfer from claim tick are replaced after applying changes
         return cache;
     }
 
     function applyDeltas(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
-    ) external returns (
+        ICoverPoolStructs.UpdateParams memory params,
+        ICoverPoolStructs.Immutables memory constants
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         uint256 percentInDelta; uint256 percentOutDelta;
@@ -145,26 +146,22 @@ library Claims {
                 percentOutDelta = percentOutDelta > 1e38 ? 1e38 : percentOutDelta;
             }
         }
-        // if (debugDeltas) {
-        //     console.log('final deltas:', cache.deltas.amountInDelta, cache.deltas.amountInDeltaMax);
-        //     console.log(cache.deltas.amountOutDelta, cache.deltas.amountOutDeltaMax);
-        // }  
         (cache.deltas, cache.finalDeltas) = Deltas.transfer(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
         (cache.deltas, cache.finalDeltas) = Deltas.transferMax(cache.deltas, cache.finalDeltas, percentInDelta, percentOutDelta);
 
-        // apply deltas and add to position
-        //TODO: this shouldn't be needed; we apply what is present
-        if (cache.amountInFilledMax >= cache.finalDeltas.amountInDelta)
-            //TODO: take a portion based on the protocol fee
-            cache.position.amountIn  += cache.finalDeltas.amountInDelta;
+        uint128 fillFeeAmount = cache.finalDeltas.amountInDelta * constants.fillFee / 1e6;
+        if (params.zeroForOne) {
+            state.protocolFees.token1 += fillFeeAmount;
+        } else {
+            state.protocolFees.token0 += fillFeeAmount;
+        }
+        cache.finalDeltas.amountInDelta -= fillFeeAmount;
+        cache.position.amountIn  += cache.finalDeltas.amountInDelta;
         cache.position.amountOut += cache.finalDeltas.amountOutDelta;
-        // console.log('position amounts:', cache.position.amountIn, cache.position.amountOut);
+
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
-            ICoverPoolStructs.Tick memory updateTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            // console.log('burning deltas:', cache.finalDeltas.amountOutDeltaMax);
-            updateTick = Deltas.burnMaxMinus(updateTick, cache.finalDeltas);
-            ticks[params.zeroForOne ? params.lower : params.upper] = updateTick;
+            cache.finalTick = Deltas.burnMaxMinus(cache.finalTick, cache.finalDeltas);
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
                 (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
             } else {
@@ -180,7 +177,7 @@ library Claims {
     function section1(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.Immutables memory constants
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -212,14 +209,9 @@ library Claims {
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - state.tickSpread)
-                                                               : TickMath.getSqrtRatioAtTick(params.lower + state.tickSpread);
+            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - constants.tickSpread)
+                                                               : TickMath.getSqrtRatioAtTick(params.lower + constants.tickSpread);
         }
-        // if(debugDeltas) {
-        //     console.log('section 1 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 
@@ -249,11 +241,6 @@ library Claims {
             cache.amountInFilledMax += amountInFilledMax;
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
         }
-        // if(debugDeltas) {
-        //     console.log('section 2 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 
@@ -261,8 +248,8 @@ library Claims {
     function section3(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState storage pool
-    ) external view returns (
+        ICoverPoolStructs.PoolState memory pool
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 3 - current auction unfilled section
@@ -284,11 +271,6 @@ library Claims {
             cache.finalDeltas.amountInDeltaMax  += amountInOmitted;
             cache.finalDeltas.amountOutDeltaMax += amountOutRemoved;
         }
-        // if(debugDeltas) {
-        //     console.log('section 3 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 
@@ -296,8 +278,8 @@ library Claims {
     function section4(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState storage pool
-    ) external returns (
+        ICoverPoolStructs.PoolState memory pool
+    ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 4 - current auction filled section
@@ -320,7 +302,7 @@ library Claims {
                                                 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
             
             cache.position.amountIn += uint128(poolAmountInDeltaChange);
-            pool.amountInDelta -= uint128(poolAmountInDeltaChange);
+            pool.amountInDelta -= uint128(poolAmountInDeltaChange); //CHANGE POOL TO MEMORY
             cache.finalDeltas.amountInDeltaMax += amountInFilledMax;
             cache.finalDeltas.amountOutDeltaMax += amountOutUnfilledMax;
             /// @dev - record how much delta max was claimed
@@ -345,26 +327,12 @@ library Claims {
             && (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
                                     : cache.position.claimPriceLast > cache.priceClaim)) {
                 // reduce delta max claimed based on liquidity removed
-                uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
-                (
-                    amountInMaxClaimedBefore,
-                    amountOutMaxClaimedBefore
-                ) = Deltas.maxAuction(
-                    params.amount,
-                    cache.priceSpread,
-                    cache.position.claimPriceLast,
-                    params.zeroForOne
-                );
-                pool.amountInDeltaMaxClaimed  -= amountInMaxClaimedBefore;
-                pool.amountOutDeltaMaxClaimed -= amountOutMaxClaimedBefore;
+                pool = Deltas.burnMaxPool(pool, cache, params);
         }
         // modify claim price for section 5
         cache.priceClaim = cache.priceSpread;
-        // if(debugDeltas) {
-        //     console.log('section 4 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
+        // save pool changes to cache
+        cache.pool = pool;
         return cache;
     }
 
@@ -377,12 +345,10 @@ library Claims {
     ) {
         // section 5 - burned liquidity past claim tick
         {
-            // console.log('price claim check:', cache.priceClaim);
             uint160 endPrice = params.zeroForOne ? cache.priceLower
                                                  : cache.priceUpper;
             if (params.amount > 0 && cache.priceClaim != endPrice) {
                 // update max deltas based on liquidity removed
-                //TODO: remove maxRoundUp
                 uint128 amountInOmitted; uint128 amountOutRemoved;
                 (
                     amountInOmitted,
@@ -402,11 +368,6 @@ library Claims {
                 }      
             }
         }
-        // if(debugDeltas) {
-        //     console.log('section 5 check');
-        //     console.log(cache.amountInFilledMax);
-        //     console.log(cache.amountOutUnfilledMax);
-        // }
         return cache;
     }
 }

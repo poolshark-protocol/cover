@@ -63,6 +63,7 @@ export interface ValidateSwapParams {
     balanceOutIncrease: BigNumber
     revertMessage: string
     syncRevertMessage?: string
+    splitInto?: number
 }
 
 export interface ValidateBurnParams {
@@ -78,6 +79,7 @@ export interface ValidateBurnParams {
     upperTickCleared: boolean
     expectedLower?: string
     expectedUpper?: string
+    compareSnapshot?: boolean
     revertMessage: string
 }
 
@@ -130,20 +132,19 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     const globalState = (await hre.props.coverPool.globalState())
     const oldLatestTick: number = globalState.latestTick
-    const tickSpread: number = globalState.tickSpread
+    const tickSpread: number = await hre.props.coverPool.tickSpread()
 
-    //TODO: wait number of blocks equal to (twapMove * auctionLength)
+    // //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick) {
         // mine until end of auction
-        const auctionLength: number = (await hre.props.coverPool.globalState()).auctionLength 
+        const auctionLength: number = await hre.props.coverPool.auctionLength()
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
-        // console.log('auction length:', auctionLength)
         await mine(auctionLength)
     }
 
-    let txn = await hre.props.rangePoolMock.setTickCumulatives(
-        BigNumber.from(newLatestTick).mul(120),
-        BigNumber.from(newLatestTick).mul(60)
+    let txn = await hre.props.uniswapV3PoolMock.setTickCumulatives(
+        BigNumber.from(newLatestTick).mul(10),
+        BigNumber.from(newLatestTick).mul(5)
     )
     await txn.wait();
 
@@ -158,8 +159,8 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
             txn = await hre.props.coverPool.swap(
                 hre.props.admin.address,
                 true,
-                BigNumber.from('0'),
-                BigNumber.from('4295128739')
+                BN_ZERO,
+                BigNumber.from('4297706460')
             )
             await txn.wait()
         } else {
@@ -168,7 +169,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
                     hre.props.admin.address,
                     true,
                     BigNumber.from('0'),
-                    BigNumber.from('4295128739')
+                    BigNumber.from('4297706460')
                 )
             ).to.be.revertedWith(revertMessage)
             return
@@ -189,6 +190,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const balanceOutIncrease = params.balanceOutIncrease
     const revertMessage = params.revertMessage
     const syncRevertMessage = params.syncRevertMessage
+    const splitInto = params.splitInto && params.splitInto > 1 ? params.splitInto : 1
 
     let balanceInBefore
     let balanceOutBefore
@@ -219,10 +221,17 @@ export async function validateSwap(params: ValidateSwapParams) {
     // await network.provider.send('evm_setAutomine', [false]);
 
     if (revertMessage == '') {
-        let txn = await hre.props.coverPool
-            .connect(signer)
-            .swap(signer.address, zeroForOne, amountIn, priceLimit)
-        await txn.wait()
+        if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
+        for (let i = 0; i < splitInto; i++) {
+            let txn = await hre.props.coverPool
+                .connect(signer)
+                .swap(signer.address, zeroForOne, amountIn.div(splitInto), priceLimit)
+            if (splitInto == 1) await txn.wait()
+        }
+        if (splitInto > 1){
+            await ethers.provider.send('evm_mine')
+            await ethers.provider.send("evm_setAutomine", [true])
+        } 
     } else {
         await expect(
             hre.props.coverPool
@@ -327,8 +336,6 @@ export async function validateMint(params: ValidateMintParams) {
                 upper: upper,
                 amount: amountDesired,
                 zeroForOne: zeroForOne
-              }, {
-                gasLimit: 1000000,
               })
         await txn.wait()
     } else {
@@ -433,6 +440,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     const revertMessage = params.revertMessage
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
+    const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
 
     let balanceInBefore
     let balanceOutBefore
@@ -451,6 +459,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
     let positionBefore: Position
+    let positionSnapshot: Position
     if (zeroForOne) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(upper)
@@ -460,8 +469,19 @@ export async function validateBurn(params: ValidateBurnParams) {
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
         positionBefore = await hre.props.coverPool.positions1(signer.address, lower, upper)
     }
+    let liquidityPercent: BigNumber = BN_ZERO
+    if (positionBefore.liquidity.gt(BN_ZERO))
+        liquidityPercent = liquidityAmount.mul(ethers.utils.parseUnits("1",38)).div(positionBefore.liquidity)
 
     if (revertMessage == '') {
+        positionSnapshot = await hre.props.coverPool.snapshot({
+            owner: signer.address,
+            amount: liquidityAmount,
+            lower: lower,
+            claim: claim,
+            upper: upper,
+            zeroForOne: zeroForOne
+        })
         const burnTxn = await hre.props.coverPool
             .connect(signer)
             .burn({
@@ -470,7 +490,7 @@ export async function validateBurn(params: ValidateBurnParams) {
                 claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne,
-                amount: liquidityAmount,
+                percent: liquidityPercent,
                 sync: true
             })
         await burnTxn.wait()
@@ -484,13 +504,12 @@ export async function validateBurn(params: ValidateBurnParams) {
                     claim: claim,
                     upper: upper,
                     zeroForOne: zeroForOne,
-                    amount: liquidityAmount,
+                    percent: liquidityPercent,
                     sync: true
                 })
         ).to.be.revertedWith(revertMessage)
         return
     }
-    // console.log('-60 tick after:', (await hre.props.coverPool.ticks0("-60")).toString())
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {
@@ -500,12 +519,14 @@ export async function validateBurn(params: ValidateBurnParams) {
         balanceInAfter = await hre.props.token0.balanceOf(signer.address)
         balanceOutAfter = await hre.props.token1.balanceOf(signer.address)
     }
-    // console.log('pool balance after')
-    // console.log((await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
-    // console.log((await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
 
     expect(balanceInAfter.sub(balanceInBefore)).to.be.equal(balanceInIncrease)
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
+
+    // if (compareSnapshot) {
+    //     expect(positionSnapshot.amountIn).to.be.equal(balanceInIncrease)
+    //     expect(positionSnapshot.amountOut).to.be.equal(balanceOutIncrease)
+    // }
 
     let lowerTickAfter: Tick
     let upperTickAfter: Tick

@@ -46,6 +46,7 @@ abstract contract CoverPoolFactoryErrors {
     error FeeTierNotSupported();
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
+    error TwapSourceNotFound();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();
 }

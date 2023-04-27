@@ -6,8 +6,9 @@ import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './math/FullPrecisionMath.sol';
 import './math/DyDxMath.sol';
-import './TwapOracle.sol';
+import '../interfaces/ITwapSource.sol';
 import './TickMap.sol';
+import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -32,21 +33,20 @@ library Ticks {
         bool zeroForOne,
         uint160 priceLimit,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.SwapCache memory cache
-    ) external pure returns (ICoverPoolStructs.SwapCache memory, uint256 amountOut) {
-        if (zeroForOne ? priceLimit >= cache.price 
-                       : priceLimit <= cache.price 
-            || cache.price == 0 
+        ICoverPoolStructs.SwapCache memory cache,
+        ICoverPoolStructs.Immutables memory constants
+    ) external pure returns (ICoverPoolStructs.SwapCache memory) {
+        if ((zeroForOne ? priceLimit >= cache.price 
+                        : priceLimit <= cache.price) 
+            || cache.liquidity == 0 
             || cache.input == 0
         )
-            return (cache, 0);
-        uint256 nextTickPrice = state.latestPrice;
-        uint256 nextPrice = nextTickPrice;
-
+            return cache;
+        uint256 nextPrice = state.latestPrice;
         // determine input boost from tick auction
-        cache.auctionBoost = ((cache.auctionDepth <= state.auctionLength) ? cache.auctionDepth 
-                                                                          : state.auctionLength
-                             ) * 1e14 / state.auctionLength * uint16(state.tickSpread);
+        cache.auctionBoost = ((cache.auctionDepth <= constants.auctionLength) ? cache.auctionDepth
+                                                                          : constants.auctionLength
+                             ) * 1e14 / constants.auctionLength * uint16(constants.tickSpread);
         cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
         if (zeroForOne) {
             // trade token 0 (x) for token 1 (y)
@@ -56,10 +56,7 @@ library Ticks {
                 nextPrice = priceLimit;
             }
             uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
-            // check if we can increase input to account for auction
-            // if we can't, subtract amount inputted at the end
-            // store amountInDelta in pool either way
-            // putting in less either way
+            // check if all input is used
             if (cache.inputBoosted <= maxDx) {
                 uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
@@ -68,12 +65,12 @@ library Ticks {
                     cache.price,
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
-                amountOut = DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
+                cache.output += DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDx > 0) {
-                amountOut = DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+                cache.output += DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
                 cache.price = nextPrice;
                 cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
                 cache.amountInDelta = cache.amountIn - cache.input;
@@ -89,46 +86,44 @@ library Ticks {
                 // calculate price after swap
                 uint256 newPrice = cache.price +
                     FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
+                cache.output += DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDy > 0) {
-                amountOut = DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
+                cache.output += DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
                 cache.price = nextPrice;
                 cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
                 cache.amountInDelta = cache.amountIn - cache.input;
             }
         }
-        return (cache, amountOut);
+        return (cache);
     }
 
     function initialize(
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.PoolState storage pool0,
         ICoverPoolStructs.PoolState storage pool1,
-        ICoverPoolStructs.GlobalState memory state
+        ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants 
     ) external returns (ICoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
-            (state.unlocked, state.latestTick) = TwapOracle.initializePoolObservations(
-                state.inputPool,
-                state.twapLength
-            );
+            (state.unlocked, state.latestTick) = ITwapSource(constants.twapSource).initialize(constants);
             if (state.unlocked == 1) {
                 // initialize state
-                state.latestTick = (state.latestTick / int24(state.tickSpread)) * int24(state.tickSpread);
+                state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
                 state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
-                state.auctionStart = uint32(block.number - state.genesisBlock);
+                state.auctionStart = uint32(block.timestamp - constants.genesisTime);
                 state.accumEpoch = 1;
 
                 // initialize ticks
-                TickMap.set(tickMap, TickMath.MIN_TICK);
-                TickMap.set(tickMap, TickMath.MAX_TICK);
-                TickMap.set(tickMap, state.latestTick);
+                TickMap.set(tickMap, TickMath.MIN_TICK / constants.tickSpread * constants.tickSpread, constants.tickSpread);
+                TickMap.set(tickMap, TickMath.MAX_TICK / constants.tickSpread * constants.tickSpread, constants.tickSpread);
+                TickMap.set(tickMap, state.latestTick, constants.tickSpread);
 
                 // initialize price
-                pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - state.tickSpread);
-                pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + state.tickSpread);
+                pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - constants.tickSpread);
+                pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + constants.tickSpread);
             }
         }
         return state;
@@ -141,7 +136,8 @@ library Ticks {
         int24 lower,
         int24 upper,
         uint128 amount,
-        bool isPool0
+        bool isPool0,
+        int16 tickSpread
     ) external {
         /// @dev - validation of ticks is in Positions.validate
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
@@ -153,7 +149,7 @@ library Ticks {
         ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
 
         // sets bit in map
-        TickMap.set(tickMap, lower);
+        TickMap.set(tickMap, lower, tickSpread);
 
         // updates liquidity values
         if (isPool0) {
@@ -162,7 +158,7 @@ library Ticks {
                 tickLower.liquidityDelta += int128(amount);
         }
 
-        TickMap.set(tickMap, upper);
+        TickMap.set(tickMap, upper, tickSpread);
 
         if (isPool0) {
                 tickUpper.liquidityDelta += int128(amount);
@@ -171,20 +167,18 @@ library Ticks {
         }
         ticks[lower] = tickLower;
         ticks[upper] = tickUpper;
-
-        // state.liquidityGlobal += amount;
     }
 
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
         int24 lower,
         int24 upper,
         uint128 amount,
         bool isPool0,
         bool removeLower,
-        bool removeUpper
+        bool removeUpper,
+        int16 tickSpread
     ) external {
         {
             ICoverPoolStructs.Tick memory tickLower = ticks[lower];
@@ -194,11 +188,10 @@ library Ticks {
                 } else {
                     tickLower.liquidityDelta -= int128(amount);
                 }
+                ticks[lower] = tickLower;
             }
-            /// @dev - not deleting ticks just yet
-            ticks[lower] = tickLower;
             if (lower != TickMath.MIN_TICK && _empty(tickLower)) {
-                TickMap.unset(tickMap, lower);
+                TickMap.unset(tickMap, lower, tickSpread);
             }
         }
         {
@@ -209,14 +202,12 @@ library Ticks {
                 } else {
                     tickUpper.liquidityDelta += int128(amount);
                 }
+                ticks[upper] = tickUpper;
             }
-            ticks[upper] = tickUpper;
             if (upper != TickMath.MAX_TICK && _empty(tickUpper)) {
-                TickMap.unset(tickMap, upper);
+                TickMap.unset(tickMap, upper, tickSpread);
             }
         }
-        //TODO: subtract from liquidityGlobal
-        //TODO: need _empty to also check for amountInDeltaMaxMinus/amountOutDeltaMaxMinus
     }
 
     function _empty(

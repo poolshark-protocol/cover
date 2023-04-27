@@ -1,8 +1,8 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { getNonce } from '../../../tasks/utils'
 import {
-    RangeFactoryMock,
-    RangePoolMock,
+    UniswapV3FactoryMock,
+    UniswapV3PoolMock,
     DyDxMath,
     FullPrecisionMath,
     CoverPool,
@@ -11,13 +11,15 @@ import {
     TickMath,
     Ticks,
     Token20,
-    TwapOracle,
+    UniswapV3Source,
     Epochs,
     Deltas,
     Claims,
     CoverPoolManager,
     TickMap,
     EpochMap,
+    IUniswapV3Factory,
+    IUniswapV3Pool,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 
@@ -26,8 +28,8 @@ export interface BeforeEachProps {
     coverPool2: CoverPool
     coverPoolManager: CoverPoolManager
     coverPoolFactory: CoverPoolFactory
-    rangeFactoryMock: RangeFactoryMock
-    rangePoolMock: RangePoolMock
+    uniswapV3FactoryMock: UniswapV3FactoryMock
+    uniswapV3PoolMock: UniswapV3PoolMock
     tickMapLib: TickMap
     tickMathLib: TickMath
     dydxMathLib: DyDxMath
@@ -36,7 +38,7 @@ export interface BeforeEachProps {
     epochMapLib: EpochMap
     fullPrecisionMathLib: FullPrecisionMath
     ticksLib: Ticks
-    twapOracleLib: TwapOracle
+    uniswapV3Source: UniswapV3Source
     claimsLib: Claims
     positionsLib: Positions
     tokenA: Token20
@@ -76,8 +78,8 @@ export class GetBeforeEach {
         let coverPool2: CoverPool
         let coverPoolManager: CoverPoolManager
         let coverPoolFactory: CoverPoolFactory
-        let rangeFactoryMock: RangeFactoryMock
-        let rangePoolMock: RangePoolMock
+        let uniswapV3FactoryMock: UniswapV3FactoryMock
+        let uniswapV3PoolMock: UniswapV3PoolMock
         let tickMapLib: TickMap
         let tickMathLib: TickMath
         let dydxMathLib: DyDxMath
@@ -86,7 +88,7 @@ export class GetBeforeEach {
         let epochMapLib: EpochMap
         let fullPrecisionMathLib: FullPrecisionMath
         let ticksLib: Ticks
-        let twapOracleLib: TwapOracle
+        let uniswapV3Source: UniswapV3Source
         let claimsLib: Claims
         let positionsLib: Positions
         let tokenA: Token20
@@ -104,8 +106,8 @@ export class GetBeforeEach {
             coverPool2,
             coverPoolManager,
             coverPoolFactory,
-            rangeFactoryMock,
-            rangePoolMock,
+            uniswapV3FactoryMock,
+            uniswapV3PoolMock,
             tickMapLib,
             tickMathLib,
             dydxMathLib,
@@ -114,7 +116,7 @@ export class GetBeforeEach {
             epochMapLib,
             fullPrecisionMathLib,
             ticksLib,
-            twapOracleLib,
+            uniswapV3Source,
             claimsLib,
             positionsLib,
             tokenA,

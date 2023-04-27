@@ -20,8 +20,7 @@ describe('CoverPoolFactory Tests', function () {
     const liquidityAmount = BigNumber.from('99855108194609381495771')
     const minTickIdx = BigNumber.from('-887272')
     const maxTickIdx = BigNumber.from('887272')
-
-    //TODO: mint position and burn as if there were 100
+    const uniV3String = ethers.utils.formatBytes32String('UNI-V3')
 
     before(async function () {
         await gBefore()
@@ -34,6 +33,7 @@ describe('CoverPoolFactory Tests', function () {
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
+                    uniV3String,
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
                     '500',
@@ -43,32 +43,19 @@ describe('CoverPoolFactory Tests', function () {
         ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
     })
 
-    it('Should not create pool tick spread greater than tick spacing', async function () {
+    it('Should not create pool with invalid twap source', async function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
-                    hre.props.token1.address,
-                    hre.props.token0.address,
+                    ethers.utils.formatBytes32String('test'),
+                    '0x0000000000000000000000000000000000000000',
+                    '0x0000000000000000000000000000000000000000',
                     '500',
-                    '10',
+                    '20',
                     '5'
                 )
-        ).to.be.revertedWith('TickSpreadNotAtLeastDoubleTickSpread()')
-    })
-
-    it('Should not create pool without clean multiple of tick spacing', async function () {
-        await expect(
-            hre.props.coverPoolFactory
-                .connect(hre.props.admin)
-                .createCoverPool(
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '500',
-                    '25',
-                    '5'
-                )
-        ).to.be.revertedWith('TickSpreadNotMultipleOfTickSpacing()')
+        ).to.be.revertedWith('TwapSourceNotFound()')
     })
 
     it('Should not create pool if the pair already exists', async function () {
@@ -76,6 +63,7 @@ describe('CoverPoolFactory Tests', function () {
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
+                    uniV3String,
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '500',
@@ -85,18 +73,18 @@ describe('CoverPoolFactory Tests', function () {
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
 
-    it('Should not create pool for a fee tier not supported', async function () {
+    it('Should not create pool if volatility tier does not exist', async function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
+                    uniV3String,
                     hre.props.token1.address,
                     hre.props.token0.address,
-                    '1000',
+                    '2000',
                     '20',
                     '5'
                 )
-        ).to.be.revertedWith('FeeTierNotSupported()')
+        ).to.be.revertedWith('VolatilityTierNotSupported()')
     })
-    /// @auditor - pool should not work if decimals is set to '0'
 })
