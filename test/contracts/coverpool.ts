@@ -78,11 +78,11 @@ describe('CoverPool Tests', function () {
 
         await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
 
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('5')
+        await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
     })
 
     it('pool0 - Should wait until enough observations', async function () {
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('4')
+        await hre.props.uniswapV3PoolMock.setObservationCardinality('4', '5')
         // mint should revert
         await validateMint({
             signer: hre.props.alice,
@@ -130,7 +130,7 @@ describe('CoverPool Tests', function () {
     })
 
     it('pool1 - Should wait until enough observations', async function () {
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('4')
+        await hre.props.uniswapV3PoolMock.setObservationCardinality('4', '5')
         // mint should revert
         await validateMint({
             signer: hre.props.alice,

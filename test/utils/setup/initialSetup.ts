@@ -345,7 +345,7 @@ export class InitialSetup {
 
         //TODO: for coverPool2 we need a second mock pool with a different cardinality
 
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('5')
+        await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
 
         return hre.nonce
     }

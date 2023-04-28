@@ -31,12 +31,17 @@ contract UniswapV3Source is ITwapSource {
     {
         // get the number of blocks covered by the twapLength
         uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.blockTime;
-        if (!_isPoolObservationsEnough(
+        (
+            bool observationsCountEnough,
+            bool observationsLengthEnough
+        ) = _isPoolObservationsEnough(
                 constants.inputPool,
                 blockCount
-            )
-        ) {
+        );
+        if (!observationsLengthEnough) {
             _increaseV3Observations(constants.inputPool, blockCount);
+            return (0, 0);
+        } else if (!observationsCountEnough) {
             return (0, 0);
         }
         return (1, _calculateAverageTick(constants.inputPool, constants.twapLength));
@@ -92,13 +97,16 @@ contract UniswapV3Source is ITwapSource {
         if (averageTick == TickMath.MIN_TICK) revert WaitUntilAboveMinTick();
     }
 
-    function _isPoolObservationsEnough(address pool, uint32 blockCount)
-        internal
-        view
-        returns (bool)
+    function _isPoolObservationsEnough(
+        address pool,
+        uint32 blockCount
+    ) internal view returns (
+        bool,
+        bool
+    )
     {
-        (, , , uint16 observationsCount, , , ) = IUniswapV3Pool(pool).slot0();
-        return observationsCount >= blockCount;
+        (, , , uint16 observationsCount, uint16 observationsLength, , ) = IUniswapV3Pool(pool).slot0();
+        return (observationsCount >= blockCount, observationsLength >= blockCount);
     }
 
     function _increaseV3Observations(address pool, uint32 blockCount) internal {
