@@ -40,19 +40,14 @@ contract CoverPool is
     error PriceOutOfBounds();
 
     modifier ownerOnly() {
-        if (owner != msg.sender) revert OwnerOnly();
+        _onlyOwner();
         _;
     }
 
     modifier lock() {
-        if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
-        }
-        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
-        if (globalState.unlocked == 2) revert Locked();
-        globalState.unlocked = 2;
+        _prelock();
         _;
-        globalState.unlocked = 1;
+        _postlock();
     }
 
     constructor(
@@ -444,7 +439,7 @@ contract CoverPool is
         }
     }
 
-    function _immutables() internal view returns (
+    function _immutables() private view returns (
         Immutables memory
     ) {
         return Immutables(
@@ -467,5 +462,22 @@ contract CoverPool is
         if (price < MIN_PRICE || price >= MAX_PRICE) {
             revert PriceOutOfBounds();
         }
+    }
+
+    function _prelock() private {
+        if (globalState.unlocked == 0) {
+            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
+        }
+        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
+        if (globalState.unlocked == 2) revert Locked();
+        globalState.unlocked = 2;
+    }
+
+    function _postlock() private {
+        globalState.unlocked = 1;
+    }
+
+    function _onlyOwner() private view {
+        if (msg.sender != owner) revert OwnerOnly();
     }
 }
