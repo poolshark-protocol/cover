@@ -230,7 +230,6 @@ export class InitialSetup {
             [
                 this.uniV3String,
                 hre.props.uniswapV3Source.address,
-                this.constantProductString,
                 hre.props.constantProduct.address
             ]
         )
@@ -262,7 +261,6 @@ export class InitialSetup {
         // create first cover pool
         let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
             this.uniV3String,
-            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '500',
@@ -275,7 +273,6 @@ export class InitialSetup {
 
         let coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
             this.uniV3String,
-            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '500',
@@ -295,7 +292,6 @@ export class InitialSetup {
         // create second cover pool
         createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
             this.uniV3String,
-            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '500',
@@ -308,7 +304,6 @@ export class InitialSetup {
 
         coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
             this.uniV3String,
-            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '500',

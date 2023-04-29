@@ -11,11 +11,7 @@ interface ICoverPoolManager is CoverPoolManagerStructs {
     function twapSources(
         bytes32 sourceName
     ) external view returns (
-        address sourceAddress
-    );
-    function curveMaths(
-        bytes32 curvename
-    ) external view returns (
+        address sourceAddress,
         address curveAddress
     );
     function volatilityTiers(

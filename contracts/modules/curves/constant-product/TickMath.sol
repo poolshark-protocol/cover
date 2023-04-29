@@ -86,7 +86,7 @@ abstract contract TickMath is ITickMath {
     function getTickAtPrice(
         uint160 price,
         ICoverPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) external pure returns (
         int24 tick
     ) {
         return _getTickAtPrice(price, constants);
@@ -145,7 +145,7 @@ abstract contract TickMath is ITickMath {
     function _getTickAtPrice(
         uint160 price,
         ICoverPoolStructs.Immutables memory constants
-    ) internal view returns (int24 tick) {
+    ) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
         if (price < constants.bounds.min || price >= constants.bounds.max)
             revert PriceOutOfBounds();

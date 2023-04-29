@@ -17,9 +17,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
     // curveName => curveAddress
-    mapping(bytes32 => address) public curveMaths;
+    mapping(bytes32 => address) internal _curveMaths;
     // sourceName => sourceAddress
-    mapping(bytes32 => address) public twapSources;
+    mapping(bytes32 => address) internal _twapSources;
     // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
     mapping(bytes32 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
@@ -38,10 +38,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
     error TwapSourceNameInvalid();
-    error CurveMathNameInvalid();
-    error CurveMathAlreadyExists();
+    error TwapSourceAddressZero();
     error TwapSourceAlreadyExists();
     error TwapSourceNotFound();
+    error CurveMathAddressZero();
     error MismatchedArrayLengths();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();
@@ -49,7 +49,6 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     constructor(
         bytes32 sourceName,
         address sourceAddress,
-        bytes32 curveName,
         address curveAddress
     ) {
         owner = msg.sender;
@@ -78,11 +77,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit VolatilityTierEnabled(sourceName, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
         emit VolatilityTierEnabled(sourceName, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
     
-        twapSources[sourceName] = sourceAddress;
-        emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
-
-        curveMaths[curveName] = curveAddress;
-        emit CurveMathEnabled(curveName, curveAddress);
+        _twapSources[sourceName] = sourceAddress;
+        _curveMaths[sourceName] = curveAddress;
+        emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
     }
 
     /**
@@ -132,24 +129,18 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(oldFeeTo, newFeeTo);
     }
 
-    function enableCurveMath(
-        bytes32 curveName,
-        address curveAddress
-    ) external onlyOwner {
-        if (curveName[0] == bytes32("")) revert CurveMathNameInvalid();
-        if (curveMaths[curveName] != address(0)) revert CurveMathAlreadyExists();
-        curveMaths[curveName] = curveAddress;
-        emit CurveMathEnabled(curveName, curveAddress);
-    }
-
     function enableTwapSource(
         bytes32 sourceName,
-        address sourceAddress
+        address sourceAddress,
+        address curveAddress
     ) external onlyOwner {
         if (sourceName[0] == bytes32("")) revert TwapSourceNameInvalid();
-        if (twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
-        twapSources[sourceName] = sourceAddress;
-        emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
+        if (sourceAddress == address(0)) revert TwapSourceAddressZero();
+        if (curveAddress == address(0)) revert CurveMathAddressZero();
+        if (_twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
+        _twapSources[sourceName] = sourceAddress;
+        _curveMaths[sourceName] = curveAddress;
+        emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
     }
 
     function enableVolatilityTier(
@@ -176,7 +167,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         }
         {
             // check fee tier exists
-            address twapSource = twapSources[sourceName];
+            address twapSource = _twapSources[sourceName];
             if (twapSource == address(0)) revert TwapSourceNotFound();
             int24 tickSpacing = ITwapSource(twapSource).feeTierTickSpacing(feeTier);
             if (tickSpacing == 0) {
@@ -277,6 +268,15 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             );
         }
         emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
+    }
+
+    function twapSources(
+        bytes32 sourceName
+    ) external view returns (
+        address sourceAddress,
+        address curveAddress
+    ) {
+        return (_twapSources[sourceName], _curveMaths[sourceName]);
     }
 
     function volatilityTiers(
