@@ -25,8 +25,8 @@ contract CoverPool is
     address public immutable twapSource;
     address public immutable curveMath;
     address public immutable inputPool; 
-    uint160 public immutable MIN_PRICE;
-    uint160 public immutable MAX_PRICE;
+    uint160 public immutable minPrice;
+    uint160 public immutable maxPrice;
     uint128 public immutable minAmountPerAuction;
     uint32  public immutable genesisTime;
     int16   public immutable minPositionWidth;
@@ -81,8 +81,9 @@ contract CoverPool is
         minAmountLowerPriced = params.config.minAmountLowerPriced;
 
         // set price boundaries
-        MIN_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MIN_TICK / tickSpread * tickSpread);
-        MAX_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MAX_TICK / tickSpread * tickSpread);
+        ICurveMath curve = ICurveMath(curveMath);
+        minPrice = curve.minPrice(tickSpread);
+        maxPrice = curve.maxPrice(tickSpread);
     }
 
     function mint(
@@ -246,7 +247,7 @@ contract CoverPool is
         uint160 priceLimit
     ) external override lock
     {
-        _validatePrice(priceLimit);
+        // ICurveMath(curveMath).checkPrice(priceLimit);
         SwapCache memory cache;
         cache.state = globalState;
         cache.constants = _immutables();
@@ -447,6 +448,7 @@ contract CoverPool is
         return Immutables(
             ICurveMath(curveMath),
             ITwapSource(twapSource),
+            ITickMath.PriceBounds(minPrice, maxPrice),
             inputPool,
             minAmountPerAuction,
             genesisTime,
@@ -461,11 +463,11 @@ contract CoverPool is
         );
     }
 
-    function _validatePrice(uint160 price) internal view {
-        if (price < MIN_PRICE || price >= MAX_PRICE) {
-            revert PriceOutOfBounds();
-        }
-    }
+    // function _validatePrice(uint160 price) internal view {
+    //     if (price < MIN_PRICE || price >= MAX_PRICE) {
+    //         revert PriceOutOfBounds();
+    //     }
+    // }
 
     function _prelock() private {
         if (globalState.unlocked == 0) {

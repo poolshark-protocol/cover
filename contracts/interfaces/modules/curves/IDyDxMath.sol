@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-interface ICurveMath {
+import '../../../interfaces/ICoverPoolStructs.sol';
+import '../../../base/structs/CurveMathStructs.sol';
+
+interface IDyDxMath {
     function getDy(
         uint256 liquidity,
         uint256 priceLower,

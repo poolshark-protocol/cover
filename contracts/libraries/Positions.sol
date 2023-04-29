@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './math/TickMath.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './math/FullPrecisionMath.sol';
-import '../interfaces/modules/ICurveMath.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
 
@@ -75,8 +75,8 @@ library Positions {
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
             liquidityMinted: 0,
             denomTokenIn: true
@@ -104,7 +104,7 @@ library Positions {
         if (params.zeroForOne) {
             if (params.upper > cache.requiredStart) {
                 params.upper = cache.requiredStart;
-                uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
+                uint256 priceNewUpper = constants.curve.getPriceAtTick(params.upper, constants);
                 params.amount -= uint128(
                     constants.curve.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
                 );
@@ -116,7 +116,7 @@ library Positions {
         } else {
             if (params.lower < cache.requiredStart) {
                 params.lower = cache.requiredStart;
-                uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
+                uint256 priceNewLower = constants.curve.getPriceAtTick(params.lower, constants);
                 params.amount -= uint128(
                     constants.curve.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
                 );
@@ -165,8 +165,8 @@ library Positions {
             position: positions[params.owner][params.lower][params.upper],
             requiredStart: 0,
             auctionCount: 0,
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
             liquidityMinted: 0,
             denomTokenIn: true
@@ -181,10 +181,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread), constants.tickSpread)
+                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread), constants.tickSpread)
+                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -196,11 +196,11 @@ library Positions {
             ticks,
             tickMap,
             state,
+            constants,
             params.lower,
             params.upper,
             uint128(params.amount),
-            params.zeroForOne,
-            constants.tickSpread
+            params.zeroForOne
         );
 
         // update liquidity global
@@ -249,8 +249,8 @@ library Positions {
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
             liquidityMinted: 0,
             denomTokenIn: true
@@ -277,10 +277,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread), constants.tickSpread)
+                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread), constants.tickSpread)
+                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -290,13 +290,13 @@ library Positions {
         Ticks.remove(
             ticks,
             tickMap,
+            constants,
             params.lower,
             params.upper,
             params.amount,
             params.zeroForOne,
             true,
-            true,
-            constants.tickSpread
+            true
         );
 
         // update liquidity global
@@ -395,13 +395,13 @@ library Positions {
             Ticks.remove(
                 ticks,
                 tickMap,
+                constants,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 params.amount,
                 params.zeroForOne,
                 cache.removeLower,
-                cache.removeUpper,
-                constants.tickSpread
+                cache.removeUpper
             );
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
@@ -535,11 +535,12 @@ library Positions {
         ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             pool: pool,
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
-                                                                       : params.claim + constants.tickSpread),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceClaim: constants.curve.getPriceAtTick(params.claim, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
+            priceSpread: constants.curve.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
+                                                                          : params.claim + constants.tickSpread,
+                                                        constants),
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
@@ -605,8 +606,8 @@ library Positions {
         ICoverPoolStructs.Immutables memory constants
     ) internal pure {
         // check for valid position bounds
-        if (params.lower < TickMath.MIN_TICK / constants.tickSpread * constants.tickSpread) revert InvalidLowerTick();
-        if (params.upper > TickMath.MAX_TICK / constants.tickSpread * constants.tickSpread) revert InvalidUpperTick();
+        if (params.lower < constants.curve.minTick(constants.tickSpread) / constants.tickSpread * constants.tickSpread) revert InvalidLowerTick();
+        if (params.upper > constants.curve.maxTick(constants.tickSpread) / constants.tickSpread * constants.tickSpread) revert InvalidUpperTick();
         if (params.lower % int24(constants.tickSpread) != 0) revert InvalidLowerTick();
         if (params.upper % int24(constants.tickSpread) != 0) revert InvalidUpperTick();
         if (params.lower >= params.upper)
@@ -696,7 +697,7 @@ library Positions {
         ICoverPoolStructs.UpdateParams memory
     ) {
         // update claimPriceLast
-        cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
+        cache.priceClaim = constants.curve.getPriceAtTick(params.claim, constants);
         cache.position.claimPriceLast = (params.claim == state.latestTick)
             ? pool.price
             : cache.priceClaim;

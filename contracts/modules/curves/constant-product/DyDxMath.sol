@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import '../../interfaces/modules/ICurveMath.sol';
-import '../../libraries/math/FullPrecisionMath.sol';
+import '../../../interfaces/modules/curves/ICurveMath.sol';
+import '../../../libraries/math/FullPrecisionMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
-contract ConstantProduct is ICurveMath {
+abstract contract DyDxMath
+{
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     error PriceOutsideBounds();

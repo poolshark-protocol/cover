@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './math/TickMath.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
 
@@ -37,9 +37,9 @@ library Claims {
         }
         // if the position has not been crossed into at all
         else if (params.zeroForOne ? params.claim == params.upper 
-                                        && EpochMap.get(tickMap, params.upper, constants.tickSpread) <= cache.position.accumEpochLast
+                                        && EpochMap.get(params.upper, tickMap, constants) <= cache.position.accumEpochLast
                                      : params.claim == params.lower 
-                                        && EpochMap.get(tickMap, params.lower, constants.tickSpread) <= cache.position.accumEpochLast
+                                        && EpochMap.get(params.lower, tickMap, constants) <= cache.position.accumEpochLast
         ) {
             cache.earlyReturn = true;
             return cache;
@@ -68,7 +68,7 @@ library Claims {
         ) revert InvalidClaimTick(); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
 
-        uint32 claimTickEpoch = EpochMap.get(tickMap, params.claim, constants.tickSpread);
+        uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -77,8 +77,8 @@ library Claims {
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(tickMap, TickMap.previous(tickMap, params.claim, constants.tickSpread), constants.tickSpread)
-                : EpochMap.get(tickMap, TickMap.next(tickMap, params.claim, constants.tickSpread), constants.tickSpread);
+                ? EpochMap.get(TickMap.previous(params.claim, tickMap, constants), tickMap, constants)
+                : EpochMap.get(TickMap.next(params.claim, tickMap, constants), tickMap, constants);
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 //TODO: search for claim tick if necessary
@@ -209,8 +209,8 @@ library Claims {
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? TickMath.getSqrtRatioAtTick(params.upper - constants.tickSpread)
-                                                               : TickMath.getSqrtRatioAtTick(params.lower + constants.tickSpread);
+            cache.position.claimPriceLast  = params.zeroForOne ? constants.curve.getPriceAtTick(params.upper - constants.tickSpread, constants)
+                                                               : constants.curve.getPriceAtTick(params.lower + constants.tickSpread, constants);
         }
         return cache;
     }

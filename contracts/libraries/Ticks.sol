@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './math/TickMath.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './math/FullPrecisionMath.sol';
-import '../interfaces/modules/ICurveMath.sol';
-import '../interfaces/modules/ITwapSource.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
+import '../interfaces/modules/sources/ITwapSource.sol';
 import './TickMap.sol';
 
 /// @notice Tick management library for ranged liquidity.
@@ -111,18 +111,18 @@ library Ticks {
             if (state.unlocked == 1) {
                 // initialize state
                 state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
-                state.latestPrice = TickMath.getSqrtRatioAtTick(state.latestTick);
+                state.latestPrice = constants.curve.getPriceAtTick(state.latestTick, constants);
                 state.auctionStart = uint32(block.timestamp - constants.genesisTime);
                 state.accumEpoch = 1;
 
                 // initialize ticks
-                TickMap.set(tickMap, TickMath.MIN_TICK / constants.tickSpread * constants.tickSpread, constants.tickSpread);
-                TickMap.set(tickMap, TickMath.MAX_TICK / constants.tickSpread * constants.tickSpread, constants.tickSpread);
-                TickMap.set(tickMap, state.latestTick, constants.tickSpread);
+                TickMap.set(constants.curve.minTick(constants.tickSpread), tickMap, constants);
+                TickMap.set(constants.curve.maxTick(constants.tickSpread), tickMap, constants);
+                TickMap.set(state.latestTick, tickMap, constants);
 
                 // initialize price
-                pool0.price = TickMath.getSqrtRatioAtTick(state.latestTick - constants.tickSpread);
-                pool1.price = TickMath.getSqrtRatioAtTick(state.latestTick + constants.tickSpread);
+                pool0.price = constants.curve.getPriceAtTick(state.latestTick - constants.tickSpread, constants);
+                pool1.price = constants.curve.getPriceAtTick(state.latestTick + constants.tickSpread, constants);
             }
         }
         return state;
@@ -132,11 +132,11 @@ library Ticks {
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
+        ICoverPoolStructs.Immutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount,
-        bool isPool0,
-        int16 tickSpread
+        bool isPool0
     ) external {
         /// @dev - validation of ticks is in Positions.validate
         if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
@@ -148,7 +148,7 @@ library Ticks {
         ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
 
         // sets bit in map
-        TickMap.set(tickMap, lower, tickSpread);
+        TickMap.set(lower, tickMap, constants);
 
         // updates liquidity values
         if (isPool0) {
@@ -157,7 +157,7 @@ library Ticks {
                 tickLower.liquidityDelta += int128(amount);
         }
 
-        TickMap.set(tickMap, upper, tickSpread);
+        TickMap.set(upper, tickMap, constants);
 
         if (isPool0) {
                 tickUpper.liquidityDelta += int128(amount);
@@ -171,13 +171,13 @@ library Ticks {
     function remove(
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount,
         bool isPool0,
         bool removeLower,
-        bool removeUpper,
-        int16 tickSpread
+        bool removeUpper
     ) external {
         {
             ICoverPoolStructs.Tick memory tickLower = ticks[lower];
@@ -189,8 +189,8 @@ library Ticks {
                 }
                 ticks[lower] = tickLower;
             }
-            if (lower != TickMath.MIN_TICK && _empty(tickLower)) {
-                TickMap.unset(tickMap, lower, tickSpread);
+            if (lower != constants.curve.minTick(constants.tickSpread) && _empty(tickLower)) {
+                TickMap.unset(lower, tickMap, constants);
             }
         }
         {
@@ -203,8 +203,8 @@ library Ticks {
                 }
                 ticks[upper] = tickUpper;
             }
-            if (upper != TickMath.MAX_TICK && _empty(tickUpper)) {
-                TickMap.unset(tickMap, upper, tickSpread);
+            if (upper != constants.curve.maxTick(constants.tickSpread) && _empty(tickUpper)) {
+                TickMap.unset(upper, tickMap, constants);
             }
         }
     }
