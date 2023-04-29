@@ -337,7 +337,7 @@ export async function validateMint(params: ValidateMintParams) {
                 upper: upper,
                 amount: amountDesired,
                 zeroForOne: zeroForOne
-              })
+            })
         await txn.wait()
     } else {
         await expect(

@@ -7,6 +7,7 @@ abstract contract CoverPoolFactoryStructs is CoverPoolManagerStructs {
     struct CoverPoolParams {
         VolatilityTier config;
         address twapSource;
+        address curveMath;
         address inputPool;
         address owner;
         address token0;

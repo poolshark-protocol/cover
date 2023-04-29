@@ -2,11 +2,11 @@
 pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '../interfaces/external/IUniswapV3Factory.sol';
-import '../interfaces/external/IUniswapV3Pool.sol';
-import '../interfaces/ICoverPoolStructs.sol';
-import '../interfaces/ITwapSource.sol';
-import '../libraries/math/TickMath.sol';
+import '../../interfaces/external/IUniswapV3Factory.sol';
+import '../../interfaces/external/IUniswapV3Pool.sol';
+import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/modules/ITwapSource.sol';
+import '../../libraries/math/TickMath.sol';
 
 contract UniswapV3Source is ITwapSource {
     error WaitUntilBelowMaxTick();

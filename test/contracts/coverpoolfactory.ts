@@ -21,6 +21,7 @@ describe('CoverPoolFactory Tests', function () {
     const minTickIdx = BigNumber.from('-887272')
     const maxTickIdx = BigNumber.from('887272')
     const uniV3String = ethers.utils.formatBytes32String('UNI-V3')
+    const constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
 
     before(async function () {
         await gBefore()
@@ -34,6 +35,7 @@ describe('CoverPoolFactory Tests', function () {
                 .connect(hre.props.admin)
                 .createCoverPool(
                     uniV3String,
+                    constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
                     '500',
@@ -49,6 +51,7 @@ describe('CoverPoolFactory Tests', function () {
                 .connect(hre.props.admin)
                 .createCoverPool(
                     ethers.utils.formatBytes32String('test'),
+                    constantProductString,
                     '0x0000000000000000000000000000000000000000',
                     '0x0000000000000000000000000000000000000000',
                     '500',
@@ -58,12 +61,29 @@ describe('CoverPoolFactory Tests', function () {
         ).to.be.revertedWith('TwapSourceNotFound()')
     })
 
+    it('Should not create pool with invalid curve math', async function () {
+        await expect(
+            hre.props.coverPoolFactory
+                .connect(hre.props.admin)
+                .createCoverPool(
+                    uniV3String,
+                    ethers.utils.formatBytes32String('test'),
+                    '0x0000000000000000000000000000000000000000',
+                    '0x0000000000000000000000000000000000000000',
+                    '500',
+                    '20',
+                    '5'
+                )
+        ).to.be.revertedWith('CurveMathNotFound()')
+    })
+
     it('Should not create pool if the pair already exists', async function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
                 .createCoverPool(
                     uniV3String,
+                    constantProductString,
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '500',
@@ -79,6 +99,7 @@ describe('CoverPoolFactory Tests', function () {
                 .connect(hre.props.admin)
                 .createCoverPool(
                     uniV3String,
+                    constantProductString,
                     hre.props.token1.address,
                     hre.props.token0.address,
                     '2000',

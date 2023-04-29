@@ -16,6 +16,10 @@ abstract contract CoverPoolManagerEvents {
         int16   minPositionWidth,
         bool    minLowerPriced
     );
+    event CurveMathEnabled(
+        bytes32 curveName,
+        address curveAddress
+    );
     event TwapSourceEnabled(
         bytes32  sourceName,
         address sourceAddress,

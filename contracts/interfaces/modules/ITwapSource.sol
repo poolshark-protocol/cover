@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import './ICoverPoolStructs.sol';
+import '../ICoverPoolStructs.sol';
 
-interface ITwapSource is ICoverPoolStructs {
+interface ITwapSource {
     function initialize(
         ICoverPoolStructs.Immutables memory constants
     ) external returns (

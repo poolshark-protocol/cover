@@ -5,8 +5,8 @@ import './math/TickMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './math/FullPrecisionMath.sol';
-import './math/DyDxMath.sol';
-import '../interfaces/ITwapSource.sol';
+import '../interfaces/modules/ICurveMath.sol';
+import '../interfaces/modules/ITwapSource.sol';
 import './TickMap.sol';
 
 /// @notice Tick management library for ranged liquidity.
@@ -54,7 +54,7 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDx = DyDxMath.getDx(cache.liquidity, nextPrice, cache.price, false);
+            uint256 maxDx = constants.curve.getDx(cache.liquidity, nextPrice, cache.price, false);
             // check if all input is used
             if (cache.inputBoosted <= maxDx) {
                 uint256 liquidityPadded = cache.liquidity << 96;
@@ -64,12 +64,12 @@ library Ticks {
                     cache.price,
                     liquidityPadded + cache.price * cache.inputBoosted
                 );
-                cache.output += DyDxMath.getDy(cache.liquidity, newPrice, cache.price, false);
+                cache.output += constants.curve.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDx > 0) {
-                cache.output += DyDxMath.getDy(cache.liquidity, nextPrice, cache.price, false);
+                cache.output += constants.curve.getDy(cache.liquidity, nextPrice, cache.price, false);
                 cache.price = nextPrice;
                 cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
                 cache.amountInDelta = cache.amountIn - cache.input;
@@ -80,17 +80,17 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDy = DyDxMath.getDy(cache.liquidity, cache.price, nextPrice, false);
+            uint256 maxDy = constants.curve.getDy(cache.liquidity, cache.price, nextPrice, false);
             if (cache.inputBoosted <= maxDy) {
                 // calculate price after swap
                 uint256 newPrice = cache.price +
                     FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
-                cache.output += DyDxMath.getDx(cache.liquidity, cache.price, newPrice, false);
+                cache.output += constants.curve.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDy > 0) {
-                cache.output += DyDxMath.getDx(cache.liquidity, cache.price, nextPrice, false);
+                cache.output += constants.curve.getDx(cache.liquidity, cache.price, nextPrice, false);
                 cache.price = nextPrice;
                 cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
                 cache.amountInDelta = cache.amountIn - cache.input;
@@ -107,7 +107,7 @@ library Ticks {
         ICoverPoolStructs.Immutables memory constants 
     ) external returns (ICoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
-            (state.unlocked, state.latestTick) = ITwapSource(constants.twapSource).initialize(constants);
+            (state.unlocked, state.latestTick) = constants.source.initialize(constants);
             if (state.unlocked == 1) {
                 // initialize state
                 state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
