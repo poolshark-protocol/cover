@@ -112,14 +112,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            TickMath__factory,
-            'tickMathLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             FullPrecisionMath__factory,
             'fullPrecisionMathLib',
             []
@@ -178,7 +170,6 @@ export class InitialSetup {
             'epochsLib',
             [],
             {
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/UniswapV3Source.sol:UniswapV3Source': hre.props.uniswapV3Source.address,
@@ -197,7 +188,6 @@ export class InitialSetup {
             {
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
             }
         )
@@ -210,7 +200,6 @@ export class InitialSetup {
             [],
             {
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
@@ -225,7 +214,6 @@ export class InitialSetup {
             {
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
@@ -260,7 +248,6 @@ export class InitialSetup {
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
             }
         )

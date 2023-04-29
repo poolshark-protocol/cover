@@ -62,6 +62,7 @@ library Epochs {
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
             syncFees: ICoverPoolStructs.SyncFees(0, 0),
+            newLatestTick: cache.newLatestTick,
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
             nextTickToAccum0: TickMap.previous(state.latestTick, tickMap, constants), // below
@@ -71,8 +72,7 @@ library Epochs {
                 : cache.newLatestTick, 
             stopTick1: (cache.newLatestTick > state.latestTick) // where we do stop for pool1 sync
                 ? cache.newLatestTick
-                : state.latestTick + constants.tickSpread,
-            newLatestTick: cache.newLatestTick
+                : state.latestTick + constants.tickSpread
         });
 
         while (true) {
@@ -162,6 +162,7 @@ library Epochs {
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
             syncFees: ICoverPoolStructs.SyncFees(0,0),
+                newLatestTick: cache.newLatestTick,
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
             nextTickToAccum0: TickMap.previous(state.latestTick, tickMap, constants), // below
@@ -171,8 +172,7 @@ library Epochs {
                 : cache.newLatestTick, 
             stopTick1: (cache.newLatestTick > state.latestTick) // where we do stop for pool1 sync
                 ? cache.newLatestTick
-                : state.latestTick + constants.tickSpread,
-            newLatestTick: cache.newLatestTick
+                : state.latestTick + constants.tickSpread
         });
 
         while (true) {

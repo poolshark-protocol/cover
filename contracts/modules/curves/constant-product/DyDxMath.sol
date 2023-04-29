@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import '../../../interfaces/modules/curves/ICurveMath.sol';
+import '../../../interfaces/modules/curves/IDyDxMath.sol';
 import '../../../libraries/math/FullPrecisionMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
-abstract contract DyDxMath
+abstract contract DyDxMath is IDyDxMath
 {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 

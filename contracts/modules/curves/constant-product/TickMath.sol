@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.13;
 
-import '../../../interfaces/modules/curves/ICurveMath.sol';
+import '../../../interfaces/modules/curves/ITickMath.sol';
 
 /// @notice Math library for computing sqrt price for ticks of size 1.0001, i.e., sqrt(1.0001^tick) as fixed point Q64.96 numbers - supports
 /// prices between 2**-128 and 2**128 - 1.
 /// @author Adapted from https://github.com/Uniswap/uniswap-v3-core/blob/main/contracts/libraries/TickMath.sol.
-abstract contract TickMath {
+abstract contract TickMath is ITickMath {
     /// @dev The minimum tick that may be passed to #getPriceAtTick computed from log base 1.0001 of 2**-128.
     int24 internal constant MIN_TICK = -887272;
     /// @dev The maximum tick that may be passed to #getPriceAtTick computed from log base 1.0001 of 2**128 - 1.
@@ -23,18 +23,38 @@ abstract contract TickMath {
 
     function minTick(
         int16 tickSpacing
-    ) external pure returns (
+    ) public pure returns (
         int24 tick
     ) {
-        return MIN_TICK * tickSpacing / tickSpacing;
+        return MIN_TICK / tickSpacing * tickSpacing ;
     }
 
     function maxTick(
         int16 tickSpacing
-    ) external pure returns (
+    ) public pure returns (
         int24 tick
     ) {
-        return MAX_TICK * tickSpacing / tickSpacing;
+        return MAX_TICK / tickSpacing * tickSpacing;
+    }
+
+    function minPrice(
+        int16 tickSpacing
+    ) external pure returns (
+        uint160 price
+    ) {
+        ICoverPoolStructs.Immutables memory constants;
+        constants.tickSpread = tickSpacing;
+        return _getPriceAtTick(minTick(tickSpacing), constants);
+    }
+
+    function maxPrice(
+        int16 tickSpacing
+    ) external pure returns (
+        uint160 price
+    ) {
+        ICoverPoolStructs.Immutables memory constants;
+        constants.tickSpread = tickSpacing;
+        return _getPriceAtTick(maxTick(tickSpacing), constants);
     }
 
     function checkTick(
@@ -47,12 +67,29 @@ abstract contract TickMath {
         if (tick % tickSpacing != 0) revert TickOutsideTickSpacing();
     }
 
-    function getPriceAtTick(int24 tick, int16 tickSpacing) external pure returns (uint160 getSqrtPriceX96) {
-        return _getPriceAtTick(tick, tickSpacing);
+    function checkPrice(
+        uint160 price,
+        PriceBounds memory bounds
+    ) external pure {
+        if (price < bounds.min || price >= bounds.max) revert PriceOutOfBounds();
     }
 
-    function getTickAtPrice(uint160 price, int16 tickSpacing, ICurveMath.PriceBounds memory bounds) external pure returns (int24 tick) {
-        return _getTickAtPrice(price, tickSpacing, bounds);
+    function getPriceAtTick(
+        int24 tick,
+        ICoverPoolStructs.Immutables memory constants
+    ) external pure returns (
+        uint160 price
+    ) {
+        return _getPriceAtTick(tick, constants);
+    }
+
+    function getTickAtPrice(
+        uint160 price,
+        ICoverPoolStructs.Immutables memory constants
+    ) external view returns (
+        int24 tick
+    ) {
+        return _getTickAtPrice(price, constants);
     }
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96.
@@ -60,9 +97,14 @@ abstract contract TickMath {
     /// @param tick The input tick for the above formula.
     /// @return price Fixed point Q64.96 number representing the sqrt of the ratio of the two assets (token1/token0)
     /// at the given tick.
-    function _getPriceAtTick(int24 tick, int16 tickSpacing) internal pure returns (uint160 price) {
+    function _getPriceAtTick(
+        int24 tick,
+        ICoverPoolStructs.Immutables memory constants
+    ) internal pure returns (
+        uint160 price
+    ) {
         uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
-        if (absTick > uint256(uint24(MAX_TICK / tickSpacing * tickSpacing))) revert TickOutOfBounds();
+        if (absTick > uint256(uint24(maxTick(constants.tickSpread)))) revert TickOutOfBounds();
         unchecked {
             uint256 ratio = absTick & 0x1 != 0
                 ? 0xfffcb933bd6fad37aa2d162d1a594001
@@ -100,9 +142,12 @@ abstract contract TickMath {
     /// ever return.
     /// @param price The sqrt ratio for which to compute the tick as a Q64.96.
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
-    function _getTickAtPrice(uint160 price, int16 tickSpacing, ICurveMath.PriceBounds memory bounds) internal pure returns (int24 tick) {
+    function _getTickAtPrice(
+        uint160 price,
+        ICoverPoolStructs.Immutables memory constants
+    ) internal view returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
-        if (price < bounds.min || price >= bounds.max)
+        if (price < constants.bounds.min || price >= constants.bounds.max)
             revert PriceOutOfBounds();
         uint256 ratio = uint256(price) << 32;
 
@@ -243,7 +288,7 @@ abstract contract TickMath {
         int24 tickLow = int24((log_sqrt10001 - 3402992956809132418596140100660247210) >> 128);
         int24 tickHi = int24((log_sqrt10001 + 291339464771989622907027621153398088495) >> 128);
 
-        tick = tickLow == tickHi ? tickLow : _getPriceAtTick(tickHi, tickSpacing) <= price
+        tick = tickLow == tickHi ? tickLow : _getPriceAtTick(tickHi, constants) <= price
             ? tickHi
             : tickLow;
     }

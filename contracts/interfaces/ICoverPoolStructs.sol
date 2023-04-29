@@ -225,13 +225,14 @@ interface ICoverPoolStructs {
         Deltas deltas0;
         Deltas deltas1;
         SyncFees syncFees;
+        int24 newLatestTick;
         int24 nextTickToCross0;
         int24 nextTickToCross1;
         int24 nextTickToAccum0;
         int24 nextTickToAccum1;
         int24 stopTick0;
         int24 stopTick1;
-        int24 newLatestTick;
+
     }
 
     struct AccumulateParams {

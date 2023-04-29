@@ -20,7 +20,7 @@ interface ITickMath {
     function getTickAtPrice(
         uint160 price,
         ICoverPoolStructs.Immutables memory
-    ) external pure returns (
+    ) external view returns (
         int24 tick
     );
 
@@ -49,10 +49,12 @@ interface ITickMath {
     );
 
     function checkTick(
+        int24 tick,
         int16 tickSpacing
     ) external pure;
 
     function checkPrice(
+        uint160 price,
         PriceBounds memory bounds
     ) external pure;
 }

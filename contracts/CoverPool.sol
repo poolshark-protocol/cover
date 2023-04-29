@@ -247,7 +247,9 @@ contract CoverPool is
         uint160 priceLimit
     ) external override lock
     {
-        // ICurveMath(curveMath).checkPrice(priceLimit);
+        ICurveMath(curveMath).checkPrice(
+            priceLimit,
+            ITickMath.PriceBounds(minPrice, maxPrice));
         SwapCache memory cache;
         cache.state = globalState;
         cache.constants = _immutables();
@@ -462,12 +464,6 @@ contract CoverPool is
             minAmountLowerPriced
         );
     }
-
-    // function _validatePrice(uint160 price) internal view {
-    //     if (price < MIN_PRICE || price >= MAX_PRICE) {
-    //         revert PriceOutOfBounds();
-    //     }
-    // }
 
     function _prelock() private {
         if (globalState.unlocked == 0) {
