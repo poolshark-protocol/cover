@@ -6,7 +6,7 @@ import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './math/FullPrecisionMath.sol';
-import './math/DyDxMath.sol';
+import '../interfaces/modules/ICurveMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
 
@@ -92,7 +92,7 @@ library Positions {
             if (params.upper <= cache.requiredStart) revert PositionInsideSafetyWindow();
         }
 
-        cache.liquidityMinted = DyDxMath.getLiquidityForAmounts(
+        cache.liquidityMinted = constants.curve.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
             params.zeroForOne ? cache.priceLower : cache.priceUpper,
@@ -106,7 +106,7 @@ library Positions {
                 params.upper = cache.requiredStart;
                 uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
                 params.amount -= uint128(
-                    DyDxMath.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
+                    constants.curve.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
                 );
                 cache.priceUpper = uint160(priceNewUpper);
             }
@@ -118,7 +118,7 @@ library Positions {
                 params.lower = cache.requiredStart;
                 uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
                 params.amount -= uint128(
-                    DyDxMath.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
+                    constants.curve.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
                 );
                 cache.priceLower = uint160(priceNewLower);
             }
@@ -156,7 +156,7 @@ library Positions {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params,
-        int16 tickSpread
+        ICoverPoolStructs.Immutables memory constants
     ) external returns (
         ICoverPoolStructs.GlobalState memory
     )    
@@ -181,10 +181,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, tickSpread), tickSpread)
+                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread), constants.tickSpread)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, tickSpread), tickSpread)
+                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread), constants.tickSpread)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -200,7 +200,7 @@ library Positions {
             params.upper,
             uint128(params.amount),
             params.zeroForOne,
-            tickSpread
+            constants.tickSpread
         );
 
         // update liquidity global
@@ -210,7 +210,7 @@ library Positions {
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, mintDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            (finalTick, mintDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true, constants.curve);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
@@ -306,14 +306,14 @@ library Positions {
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, burnDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
+            (finalTick, burnDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false, constants.curve);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.amountOut += uint128(
             params.zeroForOne
-                ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
-                : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
+                ? constants.curve.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
+                : constants.curve.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
         );
 
         cache.position.liquidity -= uint128(params.amount);
@@ -484,8 +484,8 @@ library Positions {
             if (params.amount > 0)
                 cache.position.amountOut += uint128(
                     params.zeroForOne
-                        ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
-                        : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
+                        ? constants.curve.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
+                        : constants.curve.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
                 );
             return cache.position;
         }
@@ -583,17 +583,17 @@ library Positions {
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, constants);
         /// @dev - section 2 => position start -> claim tick
-        cache = Claims.section2(cache, params);
+        cache = Claims.section2(cache, params, constants.curve);
         // check if auction in progress 
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             /// @dev - section 3 => claim tick - unfilled section
-            cache = Claims.section3(cache, params, cache.pool);
+            cache = Claims.section3(cache, params, cache.pool, constants.curve);
             /// @dev - section 4 => claim tick - filled section
-            cache = Claims.section4(cache, params, cache.pool);
+            cache = Claims.section4(cache, params, cache.pool, constants.curve);
         }
         /// @dev - section 5 => claim tick -> position end
-        cache = Claims.section5(cache, params);
+        cache = Claims.section5(cache, params, constants.curve);
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(state, cache, params);
 
@@ -645,7 +645,7 @@ library Positions {
         }
         if (params.zeroForOne) {
             //calculate amount in the position currently
-            uint128 amount = uint128(DyDxMath.getDx(
+            uint128 amount = uint128(constants.curve.getDx(
                 params.liquidityAmount,
                 params.priceLower,
                 params.priceUpper,
@@ -663,7 +663,7 @@ library Positions {
                     revert PositionAuctionAmountTooSmall();
             }
         } else {
-            uint128 amount = uint128(DyDxMath.getDy(
+            uint128 amount = uint128(constants.curve.getDy(
                 params.liquidityAmount,
                 params.priceLower,
                 params.priceUpper,

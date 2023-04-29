@@ -16,6 +16,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
+    // curveName => curveAddress
+    mapping(bytes32 => address) public curveMaths;
     // sourceName => sourceAddress
     mapping(bytes32 => address) public twapSources;
     // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
@@ -36,6 +38,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
     error TwapSourceNameInvalid();
+    error CurveMathNameInvalid();
+    error CurveMathAlreadyExists();
     error TwapSourceAlreadyExists();
     error TwapSourceNotFound();
     error MismatchedArrayLengths();
@@ -44,7 +48,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
     constructor(
         bytes32 sourceName,
-        address sourceAddress
+        address sourceAddress,
+        bytes32 curveName,
+        address curveAddress
     ) {
         owner = msg.sender;
         feeTo = msg.sender;
@@ -74,6 +80,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     
         twapSources[sourceName] = sourceAddress;
         emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
+
+        curveMaths[curveName] = curveAddress;
+        emit CurveMathEnabled(curveName, curveAddress);
     }
 
     /**
@@ -121,6 +130,16 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address oldFeeTo = feeTo;
         feeTo = newFeeTo;
         emit OwnerTransfer(oldFeeTo, newFeeTo);
+    }
+
+    function enableCurveMath(
+        bytes32 curveName,
+        address curveAddress
+    ) external onlyOwner {
+        if (curveName[0] == bytes32("")) revert CurveMathNameInvalid();
+        if (curveMaths[curveName] != address(0)) revert CurveMathAlreadyExists();
+        curveMaths[curveName] = curveAddress;
+        emit CurveMathEnabled(curveName, curveAddress);
     }
 
     function enableTwapSource(

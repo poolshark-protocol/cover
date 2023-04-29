@@ -636,7 +636,6 @@ describe('CoverPool Tests', function () {
 
     it('pool0 - Should move TWAP in range, partial fill, sync lower tick, and burn 54', async function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
-        hre.props.dydxMathLib
 
         await validateSync(0)
 

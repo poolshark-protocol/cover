@@ -25,6 +25,7 @@ contract CoverPoolFactory is
 
     function createCoverPool(
         bytes32 sourceName,
+        bytes32 curveName,
         address tokenIn,
         address tokenOut,
         uint16 feeTier,
@@ -36,13 +37,15 @@ contract CoverPoolFactory is
         params.token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         params.token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
         // generate key for pool
-        bytes32 key = keccak256(abi.encodePacked(sourceName, params.token0, params.token1, feeTier, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encodePacked(sourceName, curveName, params.token0, params.token1, feeTier, tickSpread, twapLength));
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
         // get twap source
         params.twapSource = ICoverPoolManager(owner).twapSources(sourceName);
         if (params.twapSource == address(0)) revert TwapSourceNotFound();
+        params.curveMath = ICoverPoolManager(owner).curveMaths(curveName);
+        if (params.curveMath == address(0)) revert CurveMathNotFound();
         // get volatility tier config
         params.owner = owner;
         params.config = ICoverPoolManager(owner).volatilityTiers(sourceName, feeTier, tickSpread, twapLength);
@@ -71,6 +74,7 @@ contract CoverPoolFactory is
 
     function getCoverPool(
         bytes32 sourceName,
+        bytes32 curveName,
         address tokenIn,
         address tokenOut,
         uint16 feeTier,
@@ -82,7 +86,7 @@ contract CoverPoolFactory is
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encodePacked(sourceName, token0, token1, feeTier, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encodePacked(sourceName, curveName, token0, token1, feeTier, tickSpread, twapLength));
 
         return coverPools[key];
     }

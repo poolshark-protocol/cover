@@ -13,6 +13,11 @@ interface ICoverPoolManager is CoverPoolManagerStructs {
     ) external view returns (
         address sourceAddress
     );
+    function curveMaths(
+        bytes32 curvename
+    ) external view returns (
+        address curveAddress
+    );
     function volatilityTiers(
         bytes32 sourceName,
         uint16 feeTier,

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.13;
 
 import './math/TickMath.sol';
-import './math/DyDxMath.sol';
-import '../interfaces/ITwapSource.sol';
+import '../interfaces/modules/ICurveMath.sol';
+import '../interfaces/modules/ITwapSource.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
@@ -334,7 +334,7 @@ library Epochs {
         if (auctionsElapsed < 1) {
             return (state.latestTick, true);
         }
-        newLatestTick = ITwapSource(constants.twapSource).calculateAverageTick(constants.inputPool, constants.twapLength);
+        newLatestTick = constants.source.calculateAverageTick(constants.inputPool, constants.twapLength);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;
@@ -385,7 +385,7 @@ library Epochs {
             if (cache.nextTickToCross0 == state.latestTick && cache.nextTickToCross0 - nextTickToAccum > constants.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0 - constants.tickSpread);
                 /// @dev - amountOutDeltaMax accounted for down below
-                cache.deltas0.amountOutDelta += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
+                cache.deltas0.amountOutDelta += uint128(constants.curve.getDx(pool.liquidity, accumPrice, spreadPrice, false));
             }
             currentPrice = pool.price;
             // if pool.price the bounds set currentPrice to start of auction
@@ -402,7 +402,7 @@ library Epochs {
             if (cache.nextTickToCross1 == state.latestTick && nextTickToAccum - cache.nextTickToCross1 > constants.tickSpread) {
                 uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1 + constants.tickSpread);
                 /// @dev - DeltaMax values accounted for down below
-                cache.deltas1.amountOutDelta += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
+                cache.deltas1.amountOutDelta += uint128(constants.curve.getDy(pool.liquidity, spreadPrice, accumPrice, false));
             }
             currentPrice = pool.price;
             if (!(pool.price < accumPrice && pool.price > crossPrice)) currentPrice = accumPrice;
@@ -414,7 +414,7 @@ library Epochs {
             {
                 // amountIn pool did not receive
                 uint128 amountInDelta;
-                uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
+                uint128 amountInDeltaMax  = uint128(constants.curve.getDy(pool.liquidity, accumPrice, crossPrice, false));
                 amountInDelta       = pool.amountInDelta;
                 amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
                                                                                         : pool.amountInDeltaMaxClaimed;
@@ -427,8 +427,8 @@ library Epochs {
             }
             {
                 // amountOut pool has leftover
-                uint128 amountOutDelta    = uint128(DyDxMath.getDx(pool.liquidity, currentPrice, crossPrice, false));
-                uint128 amountOutDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, accumPrice, crossPrice, false));
+                uint128 amountOutDelta    = uint128(constants.curve.getDx(pool.liquidity, currentPrice, crossPrice, false));
+                uint128 amountOutDeltaMax = uint128(constants.curve.getDx(pool.liquidity, accumPrice, crossPrice, false));
                 amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
                                                                                         : pool.amountOutDeltaMaxClaimed;
                 pool.amountOutDeltaMaxClaimed = 0;
@@ -446,7 +446,7 @@ library Epochs {
             {
                 // amountIn pool did not receive
                 uint128 amountInDelta;
-                uint128 amountInDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, accumPrice, false));
+                uint128 amountInDeltaMax = uint128(constants.curve.getDx(pool.liquidity, crossPrice, accumPrice, false));
                 amountInDelta       = pool.amountInDelta;
                 amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
                                                                                         : pool.amountInDeltaMaxClaimed;
@@ -459,8 +459,8 @@ library Epochs {
             }
             {
                 // amountOut pool has leftover
-                uint128 amountOutDelta    = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
-                uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
+                uint128 amountOutDelta    = uint128(constants.curve.getDy(pool.liquidity, crossPrice, currentPrice, false));
+                uint128 amountOutDeltaMax = uint128(constants.curve.getDy(pool.liquidity, crossPrice, accumPrice, false));
                 amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
                                                                                         : pool.amountOutDeltaMaxClaimed;
                 pool.amountOutDeltaMaxClaimed = 0;

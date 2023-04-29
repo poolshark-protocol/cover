@@ -23,6 +23,7 @@ contract CoverPool is
     address public immutable token0;
     address public immutable token1;
     address public immutable twapSource;
+    address public immutable curveMath;
     address public immutable inputPool; 
     uint160 public immutable MIN_PRICE;
     uint160 public immutable MAX_PRICE;
@@ -56,6 +57,7 @@ contract CoverPool is
         // set addresses
         owner      = params.owner;
         twapSource = params.twapSource;
+        curveMath  = params.curveMath;
         inputPool  = params.inputPool;
         token0     = params.token0;
         token1     = params.token1;
@@ -148,7 +150,7 @@ contract CoverPool is
                 params.upper,
                 params.zeroForOne
             ),
-            tickSpread
+            _immutables()
         );
         globalState = cache.state;
         _collect(
@@ -443,7 +445,8 @@ contract CoverPool is
         Immutables memory
     ) {
         return Immutables(
-            twapSource,
+            ICurveMath(curveMath),
+            ITwapSource(twapSource),
             inputPool,
             minAmountPerAuction,
             genesisTime,

@@ -24,7 +24,7 @@ describe('DyDxMath Library Tests', function () {
 
     it('Should get accurate dx value when rounding up', async function () {
         expect(
-            await hre.props.dydxMathLib.getDx(
+            await hre.props.constantProduct.getDx(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
                 BigNumber.from('79625275426524748796330556128'),
@@ -35,7 +35,7 @@ describe('DyDxMath Library Tests', function () {
 
     it('Should get accurate dy value across first tick', async function () {
         expect(
-            await hre.props.dydxMathLib.getDy(
+            await hre.props.constantProduct.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
                 BigNumber.from('79625275426524748796330556128'),
@@ -46,7 +46,7 @@ describe('DyDxMath Library Tests', function () {
 
     it('Should get accurate dy value across second tick', async function () {
         expect(
-            await hre.props.dydxMathLib.getDy(
+            await hre.props.constantProduct.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79625275426524748796330556128'),
                 BigNumber.from('79704936542881920863903188245'),
@@ -57,7 +57,7 @@ describe('DyDxMath Library Tests', function () {
 
     it('Should get accurate dy value across multiple ticks', async function () {
         expect(
-            await hre.props.dydxMathLib.getDy(
+            await hre.props.constantProduct.getDy(
                 BigNumber.from('49753115595468372952776'),
                 BigNumber.from('79545693927487839655804034730'),
                 BigNumber.from('79704936542881920863903188245'),
@@ -68,14 +68,14 @@ describe('DyDxMath Library Tests', function () {
 
     it('Should revert if getting liquidity value outside price bounds', async function () {
         await expect(
-            hre.props.dydxMathLib.getLiquidityForAmounts(
+            hre.props.constantProduct.getLiquidityForAmounts(
                 BigNumber.from('79386769463160146968577785965'),
                 BigNumber.from('79545693927487839655804034729'),
                 BigNumber.from('99855108194609381495771'),
                 BigNumber.from('20'),
                 BigNumber.from('20')
             )
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+        ).to.be.revertedWith('PriceOutsideBounds()')
         //TODO: wrong error is reported using hardhat
         // )).to.be.revertedWith("PriceOutsideOfBounds()");
     })
