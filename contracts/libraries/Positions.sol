@@ -68,7 +68,7 @@ library Positions {
         uint256
     )
     {
-        _validate(params, constants);
+        constants.curve.checkTicks(params.lower, params.upper, constants.tickSpread);
 
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: position,
@@ -599,19 +599,6 @@ library Positions {
         cache = Claims.applyDeltas(state, cache, params);
 
         return (cache, state);
-    }
-
-    function _validate(
-        ICoverPoolStructs.MintParams memory params,
-        ICoverPoolStructs.Immutables memory constants
-    ) internal pure {
-        // check for valid position bounds
-        if (params.lower < constants.curve.minTick(constants.tickSpread) / constants.tickSpread * constants.tickSpread) revert InvalidLowerTick();
-        if (params.upper > constants.curve.maxTick(constants.tickSpread) / constants.tickSpread * constants.tickSpread) revert InvalidUpperTick();
-        if (params.lower % int24(constants.tickSpread) != 0) revert InvalidLowerTick();
-        if (params.upper % int24(constants.tickSpread) != 0) revert InvalidUpperTick();
-        if (params.lower >= params.upper)
-            revert InvalidPositionBoundsOrder();
     }
 
     function _size(

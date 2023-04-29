@@ -391,7 +391,6 @@ export class InitialSetup {
           .connect(hre.props.admin)
           .createCoverPool(
             this.uniV3String,
-            this.constantProductString,
             hre.props.token0.address,
             hre.props.token1.address,
             '500',

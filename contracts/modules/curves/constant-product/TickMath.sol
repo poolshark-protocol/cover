@@ -11,13 +11,13 @@ abstract contract TickMath is ITickMath {
     int24 internal constant MIN_TICK = -887272;
     /// @dev The maximum tick that may be passed to #getPriceAtTick computed from log base 1.0001 of 2**128 - 1.
     int24 internal constant MAX_TICK = -MIN_TICK;
-    /// @dev The minimum value that can be returned from #getPriceAtTick - equivalent to getPriceAtTick(MIN_TICK).
-    uint160 internal constant MIN_SQRT_RATIO = 4295128739;
-    /// @dev The maximum value that can be returned from #getPriceAtTick - equivalent to getPriceAtTick(MAX_TICK).
-    uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
+    error LowerTickOutOfBounds();
+    error UpperTickOutOfBounds();
+    error LowerTickOutsideTickSpacing();
+    error UpperTickOutsideTickSpacing();
+    error LowerUpperTickOrderInvalid();
     error TickOutOfBounds();
-    error TickOutsideTickSpacing();
     error PriceOutOfBounds();
     error WaitUntilEnoughObservations();
 
@@ -57,14 +57,17 @@ abstract contract TickMath is ITickMath {
         return _getPriceAtTick(maxTick(tickSpacing), constants);
     }
 
-    function checkTick(
-        int24 tick,
+    function checkTicks(
+        int24 lower,
+        int24 upper,
         int16 tickSpacing
     ) external pure
     {
-        if (tick > MAX_TICK * tickSpacing / tickSpacing - tickSpacing) revert TickOutOfBounds();
-        if (tick < MIN_TICK * tickSpacing / tickSpacing + tickSpacing) revert TickOutOfBounds();
-        if (tick % tickSpacing != 0) revert TickOutsideTickSpacing();
+        if (lower < minTick(tickSpacing)) revert LowerTickOutOfBounds();
+        if (upper > maxTick(tickSpacing)) revert UpperTickOutOfBounds();
+        if (lower % tickSpacing != 0) revert LowerTickOutsideTickSpacing();
+        if (upper % tickSpacing != 0) revert UpperTickOutsideTickSpacing();
+        if (lower >= upper) revert LowerUpperTickOrderInvalid();
     }
 
     function checkPrice(
@@ -138,8 +141,6 @@ abstract contract TickMath is ITickMath {
     }
 
     /// @notice Calculates the greatest tick value such that getRatioAtTick(tick) <= ratio.
-    /// @dev Throws in case price < MIN_SQRT_RATIO, as MIN_SQRT_RATIO is the lowest value getRatioAtTick may
-    /// ever return.
     /// @param price The sqrt ratio for which to compute the tick as a Q64.96.
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
     function _getTickAtPrice(

@@ -48,8 +48,9 @@ interface ITickMath {
         uint160 maxPrice
     );
 
-    function checkTick(
-        int24 tick,
+    function checkTicks(
+        int24 lower,
+        int24 upper,
         int16 tickSpacing
     ) external pure;
 

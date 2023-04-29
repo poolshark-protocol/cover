@@ -232,7 +232,6 @@ interface ICoverPoolStructs {
         int24 nextTickToAccum1;
         int24 stopTick0;
         int24 stopTick1;
-
     }
 
     struct AccumulateParams {
