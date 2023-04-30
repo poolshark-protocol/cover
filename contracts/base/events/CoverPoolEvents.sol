@@ -44,18 +44,20 @@ abstract contract CoverPoolEvents {
     );
 
     event FinalDeltasAccumulated(
-        bool isPool0,
+        uint128 amountInDelta,
+        uint128 amountOutDelta,
+        uint32 accumEpoch,
         int24 accumTick,
         int24 crossTick,
-        uint128 amountInDelta,
-        uint128 amountOutDelta
+        bool isPool0
     );
 
     event StashDeltasAccumulated(
-        bool isPool0,
         uint128 amountInDelta,
         uint128 amountOutDelta,
         uint128 amountInDeltaMaxStashed,
-        uint128 amountOutDeltaMaxStashed
+        uint128 amountOutDeltaMaxStashed,
+        uint32 accumEpoch,
+        bool isPool0
     );
 }
