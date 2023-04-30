@@ -98,4 +98,24 @@ abstract contract DyDxMath is IDyDxMath
             token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
         }
     }
+
+    function getNewPrice(
+        uint256 price,
+        uint256 liquidity,
+        uint256 input,
+        bool zeroForOne
+    ) external pure returns (
+        uint256 newPrice
+    ) {
+        if (zeroForOne) {
+            uint256 liquidityPadded = liquidity << 96;
+            newPrice = FullPrecisionMath.mulDivRoundingUp(
+                            liquidityPadded,
+                            price,
+                            liquidityPadded + price * input
+                       );
+        } else {
+            newPrice = price + FullPrecisionMath.mulDiv(input, Q96, liquidity);
+        }
+    }
 }

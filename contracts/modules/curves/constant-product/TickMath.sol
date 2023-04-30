@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import '../../../interfaces/modules/curves/ITickMath.sol';
+import '../../../libraries/math/FullPrecisionMath.sol';
 
 /// @notice Math library for computing sqrt price for ticks of size 1.0001, i.e., sqrt(1.0001^tick) as fixed point Q64.96 numbers - supports
 /// prices between 2**-128 and 2**128 - 1.
@@ -11,6 +12,7 @@ abstract contract TickMath is ITickMath {
     int24 internal constant MIN_TICK = -887272;
     /// @dev The maximum tick that may be passed to #getPriceAtTick computed from log base 1.0001 of 2**128 - 1.
     int24 internal constant MAX_TICK = -MIN_TICK;
+    uint256 private constant Q96 = 0x1000000000000000000000000;
 
     error LowerTickOutOfBounds();
     error UpperTickOutOfBounds();

@@ -24,7 +24,6 @@ library Ticks {
     error AmountOutDeltaNeutral();
 
     uint256 internal constant Q96 = 0x1000000000000000000000000;
-    uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     using Ticks for mapping(int24 => ICoverPoolStructs.Tick);
 
@@ -44,7 +43,7 @@ library Ticks {
         uint256 nextPrice = state.latestPrice;
         // determine input boost from tick auction
         cache.auctionBoost = ((cache.auctionDepth <= constants.auctionLength) ? cache.auctionDepth
-                                                                          : constants.auctionLength
+                                                                              : constants.auctionLength
                              ) * 1e14 / constants.auctionLength * uint16(constants.tickSpread);
         cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
         if (zeroForOne) {
@@ -57,13 +56,8 @@ library Ticks {
             uint256 maxDx = constants.curve.getDx(cache.liquidity, nextPrice, cache.price, false);
             // check if all input is used
             if (cache.inputBoosted <= maxDx) {
-                uint256 liquidityPadded = cache.liquidity << 96;
                 // calculate price after swap
-                uint256 newPrice = FullPrecisionMath.mulDivRoundingUp(
-                    liquidityPadded,
-                    cache.price,
-                    liquidityPadded + cache.price * cache.inputBoosted
-                );
+                uint256 newPrice = constants.curve.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
                 cache.output += constants.curve.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = newPrice;
                 cache.input = 0;
@@ -83,8 +77,7 @@ library Ticks {
             uint256 maxDy = constants.curve.getDy(cache.liquidity, cache.price, nextPrice, false);
             if (cache.inputBoosted <= maxDy) {
                 // calculate price after swap
-                uint256 newPrice = cache.price +
-                    FullPrecisionMath.mulDiv(cache.inputBoosted, Q96, cache.liquidity);
+                uint256 newPrice = constants.curve.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
                 cache.output += constants.curve.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;
                 cache.input = 0;

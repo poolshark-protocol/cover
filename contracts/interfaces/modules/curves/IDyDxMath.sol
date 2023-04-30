@@ -43,4 +43,13 @@ interface IDyDxMath {
         uint128 token0amount,
         uint128 token1amount
     );
+
+    function getNewPrice(
+        uint256 price,
+        uint256 liquidity,
+        uint256 input,
+        bool zeroForOne
+    ) external pure returns (
+        uint256 newPrice
+    );
 }
