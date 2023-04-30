@@ -32,6 +32,7 @@ library Epochs {
         uint128 amountInDeltaMaxStashed,
         uint128 amountOutDeltaMaxStashed,
         uint32 accumEpoch,
+        int24 stashTick,
         bool isPool0
     );
 
@@ -595,6 +596,7 @@ library Epochs {
             deltas.amountInDeltaMax,
             deltas.amountOutDeltaMax,
             state.accumEpoch,
+            isPool0 ? cache.stopTick0 : cache.stopTick1,
             isPool0
         );
         if (deltas.amountInDeltaMax > 0) {

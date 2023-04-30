@@ -58,6 +58,7 @@ abstract contract CoverPoolEvents {
         uint128 amountInDeltaMaxStashed,
         uint128 amountOutDeltaMaxStashed,
         uint32 accumEpoch,
+        int24 stashTick,
         bool isPool0
     );
 }
