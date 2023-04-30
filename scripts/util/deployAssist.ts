@@ -61,7 +61,7 @@ export class DeployAssist {
         contractName = contractName ?? contractFactory.name.split('__')[0]
 
         let contract: Contract
-        console.log('deploying', contractName)
+
         if (linkedLibraries) {
             // @ts-ignore
             contract = await new contractFactory(linkedLibraries, hre.props.admin).deploy(
@@ -74,7 +74,7 @@ export class DeployAssist {
                 nonce: hre.nonce,
             })
         }
-        console.log('deployed', contractName)
+
         await contract.deployTransaction.wait(1)
 
         // console.log("Waiting for confirmation");

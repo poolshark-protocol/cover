@@ -128,7 +128,7 @@ export async function getPositionLiquidity(isPool0: boolean, owner: string, lowe
     return positionLiquidity
 }
 
-export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string) {
+export async function validateSync(newLatestTick: number, autoSync: boolean = true, revertMessage?: string, signer: SignerWithAddress = hre.props.alice) {
     /// get tick node status before
 
     const globalState = (await hre.props.coverPool.globalState())
@@ -136,14 +136,14 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
     const tickSpread: number = await hre.props.coverPool.tickSpread()
 
     // //TODO: wait number of blocks equal to (twapMove * auctionLength)
-    if (newLatestTick != oldLatestTick) {
+    if (newLatestTick != oldLatestTick && hre.network.name == 'hardhat') {
         // mine until end of auction
         const auctionLength: number = await hre.props.coverPool.auctionLength()
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         await mine(auctionLength)
     }
 
-    let txn = await hre.props.uniswapV3PoolMock.setTickCumulatives(
+    let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
         BigNumber.from(newLatestTick).mul(10),
         BigNumber.from(newLatestTick).mul(5)
     )
@@ -152,13 +152,13 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
     // console.log("-- START ACCUMULATE LAST BLOCK --");
 
     /// send a "no op" swap to trigger accumulate
-    const token1Balance = await hre.props.token1.balanceOf(hre.props.admin.address)
-    await hre.props.token1.approve(hre.props.coverPool.address, token1Balance)
+    const token1Balance = await hre.props.token1.balanceOf(signer.address)
+    await hre.props.token1.connect(signer).approve(hre.props.coverPool.address, token1Balance)
 
     if (autoSync) {
         if (!revertMessage || revertMessage == '') {
-            txn = await hre.props.coverPool.swap(
-                hre.props.admin.address,
+            txn = await hre.props.coverPool.connect(signer).swap(
+                signer.address,
                 true,
                 BN_ZERO,
                 BigNumber.from('4297706460')
@@ -166,8 +166,8 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
             await txn.wait()
         } else {
             await expect(
-                hre.props.coverPool.swap(
-                    hre.props.admin.address,
+                hre.props.coverPool.connect(signer).swap(
+                    signer.address,
                     true,
                     BigNumber.from('0'),
                     BigNumber.from('4297706460')
@@ -337,7 +337,7 @@ export async function validateMint(params: ValidateMintParams) {
                 claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne
-            },{gasLimit: 1000000})
+            },{gasLimit: 20000000})
         await txn.wait()
     } else {
         await expect(
