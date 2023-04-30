@@ -59,16 +59,17 @@ class LoadVolatilityTierRet {
     entity: VolatilityTier
     exists: boolean
 }
-export function safeLoadVolatilityTier(feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt, auctionLength: BigInt): LoadVolatilityTierRet {
+export function safeLoadVolatilityTier(twapSource: string, feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt): LoadVolatilityTierRet {
     let exists = true
 
-    let volatilityTierId = feeTier.toString()
-                           .concat('-')
-                           .concat(tickSpread.toString())
-                           .concat('-')
-                           .concat(twapLength.toString())
-                           .concat('-')
-                           .concat(auctionLength.toString())
+    let volatilityTierId = 
+                            twapSource
+                            .concat('-')                        
+                            .concat(feeTier.toString())
+                            .concat('-')
+                            .concat(tickSpread.toString())
+                            .concat('-')
+                            .concat(twapLength.toString())
 
     let volatilityTierEntity = VolatilityTier.load(volatilityTierId)
 
@@ -87,12 +88,11 @@ class LoadTickRet {
     entity: Tick
     exists: boolean
 }
-export function safeLoadTick(address: string, index: BigInt, zeroForOne: boolean): LoadTickRet {
+export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
     let exists = true
 
     let tickId = address
     .concat(index.toString())
-    .concat(zeroForOne.toString())
 
     let tickEntity = Tick.load(tickId)
 
@@ -100,7 +100,6 @@ export function safeLoadTick(address: string, index: BigInt, zeroForOne: boolean
         tickEntity = new Tick(tickId)
         tickEntity.pool = address
         tickEntity.index = index
-        tickEntity.isPool0 = zeroForOne
         tickEntity.epochLast = ONE_BI
         // 1.0001^tick is token1/token0.
         tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))

@@ -31,13 +31,11 @@ export function handleMint(event: Mint): void {
 
     let loadLowerTick = safeLoadTick(
         poolAddress,
-        lower,
-        zeroForOneParam
+        lower
     )
     let loadUpperTick = safeLoadTick(
         poolAddress,
-        upper,
-        zeroForOneParam
+        upper
     )
     let loadPosition = safeLoadPosition(
         poolAddress,
@@ -74,16 +72,16 @@ export function handleMint(event: Mint): void {
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     // increase tvl count
-    if (zeroForOneParam) {
-        //TODO: calculate by using getAmountsForLiquidity
-        // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
-        lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
-        lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
-    } else {
-        // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
-        upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
-        upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
-    }
+    // if (zeroForOneParam) {
+    //     //TODO: calculate by using getAmountsForLiquidity
+    //     // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
+    //     lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
+    //     lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
+    // } else {
+    //     // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
+    //     upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
+    //     upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
+    // }
     pool.save()
     position.save()
     lowerTick.save()
@@ -114,13 +112,11 @@ export function handleBurn(event: Burn): void {
     let loadCoverPool = safeLoadCoverPool(poolAddress)
     let loadLowerTick = safeLoadTick(
         poolAddress,
-        lower,
-        zeroForOneParam
+        lower
     )
     let loadUpperTick = safeLoadTick(
         poolAddress,
-        upper,
-        zeroForOneParam
+        upper
     )
 
     let position  = loadPosition.entity
@@ -142,12 +138,12 @@ export function handleBurn(event: Burn): void {
     if (zeroForOneParam) {
         //TODO: calculate by using getAmountsForLiquidity
         // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
-        lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.minus(amountInDeltaMaxBurnedParam)
-        lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.minus(amountOutDeltaMaxBurnedParam)
+        // lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.minus(amountInDeltaMaxBurnedParam)
+        // lowerTick.amountInDeltaMaxMinus = lowerTick.amountInDeltaMaxMinus.minus(amountOutDeltaMaxBurnedParam)
     } else {
         // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
-        upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.minus(amountInDeltaMaxBurnedParam)
-        upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.minus(amountOutDeltaMaxBurnedParam)
+        // upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.minus(amountInDeltaMaxBurnedParam)
+        // upperTick.amountInDeltaMaxMinus = upperTick.amountInDeltaMaxMinus.minus(amountOutDeltaMaxBurnedParam)
     }
     //TODO: check if Tick is empty and if so delete it
 

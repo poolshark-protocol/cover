@@ -36,24 +36,22 @@ export class MintPosition {
 
         await getLatestTick(true)
 
-        await validateSync(87628)
+        await getPrice(true)
 
-        // await getPrice(true)
-
-        // await validateMint({
-        //     signer: hre.props.alice,
-        //     recipient: '0x34e800D1456d87A5F62B774AD98cea54a3A40048',
-        //     lower: '0',
-        //     claim: '0',
-        //     upper: '100',
-        //     amount: token1Amount,
-        //     zeroForOne: true,
-        //     balanceInDecrease: token1Amount,
-        //     liquidityIncrease: liquidityAmount,
-        //     upperTickCleared: false,
-        //     lowerTickCleared: false,
-        //     revertMessage: '',
-        // })
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: '0x34e800D1456d87A5F62B774AD98cea54a3A40048',
+            lower: '20',
+            claim: '0',
+            upper: '100',
+            amount: token1Amount,
+            zeroForOne: false,
+            balanceInDecrease: token1Amount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
 
         console.log('position minted')
     }

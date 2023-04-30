@@ -36,13 +36,14 @@ contract CoverPoolFactory is
         params.token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         params.token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
         // generate key for pool
-        bytes32 key = keccak256(abi.encodePacked(
-                                                    sourceName,
-                                                    params.token0,
-                                                    params.token1,
-                                                    feeTier,
-                                                    tickSpread,
-                                                    twapLength));
+        bytes32 key = keccak256(abi.encode(
+                                            params.token0,
+                                            params.token1,
+                                            sourceName,
+                                            feeTier,
+                                            tickSpread,
+                                            twapLength
+                                ));
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
@@ -88,7 +89,7 @@ contract CoverPoolFactory is
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
 
         // get pool address from mapping
-        bytes32 key = keccak256(abi.encodePacked(sourceName, token0, token1, feeTier, tickSpread, twapLength));
+        bytes32 key = keccak256(abi.encode(token0, token1, sourceName, feeTier, tickSpread, twapLength));
 
         return coverPools[key];
     }

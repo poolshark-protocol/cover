@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
-import { gBefore } from '../../utils/hooks.test'
+import { gBefore } from '../../../utils/hooks.test'
 
 describe('DyDxMath Library Tests', function () {
     let token0Amount: BigNumber

@@ -332,12 +332,12 @@ export async function validateMint(params: ValidateMintParams) {
             .connect(params.signer)
             .mint({
                 to: params.signer.address,
+                amount: amountDesired,
                 lower: lower,
                 claim: claim,
                 upper: upper,
-                amount: amountDesired,
                 zeroForOne: zeroForOne
-            })
+            },{gasLimit: 1000000})
         await txn.wait()
     } else {
         await expect(
