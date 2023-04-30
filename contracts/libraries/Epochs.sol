@@ -11,8 +11,19 @@ import './EpochMap.sol';
 library Epochs {
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
+    event Sync(
+        uint160 pool0Price,
+        uint160 pool1Price,
+        uint128 pool0Liquidity,
+        uint128 pool1Liquidity,
+        uint32 auctionStart,
+        uint32 indexed accumEpoch,
+        int24 indexed oldLatestTick,
+        int24 indexed newLatestTick
+    );
+
     event SyncFeesCollected(
-        address collector,
+        address indexed collector,
         uint128 token0Amount,
         uint128 token1Amount
     );
@@ -20,10 +31,10 @@ library Epochs {
     event FinalDeltasAccumulated(
         uint128 amountInDelta,
         uint128 amountOutDelta,
-        uint32 accumEpoch,
-        int24 accumTick,
+        uint32 indexed accumEpoch,
+        int24 indexed accumTick,
         int24 crossTick,
-        bool isPool0
+        bool indexed isPool0
     );
 
     event StashDeltasAccumulated(
@@ -31,9 +42,9 @@ library Epochs {
         uint128 amountOutDelta,
         uint128 amountInDeltaMaxStashed,
         uint128 amountOutDeltaMaxStashed,
-        uint32 accumEpoch,
-        int24 stashTick,
-        bool isPool0
+        uint32 indexed accumEpoch,
+        int24 indexed stashTick,
+        bool indexed isPool0
     );
 
     function simulateSync(
@@ -312,6 +323,11 @@ library Epochs {
         
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
+
+        // emit sync event
+        emit Sync(pool0.price, pool1.price, pool0.liquidity, pool1.liquidity, state.auctionStart, state.accumEpoch, state.latestTick, cache.newLatestTick);
+        
+        // update latestTick
         state.latestTick = cache.newLatestTick;
 
         if (cache.syncFees.token0 > 0 || cache.syncFees.token1 > 0) {

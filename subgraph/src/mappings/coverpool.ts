@@ -21,6 +21,7 @@ export function handleMint(event: Mint): void {
     let upperParam = event.params.upper 
     let zeroForOneParam = event.params.zeroForOne
     let liquidityMintedParam = event.params.liquidityMinted
+    let amountInDeltaMaxMintedParam = event.params.amountInDeltaMaxMinted
     let poolAddress = event.address.toHex()
     let msgSender = event.transaction.from
 

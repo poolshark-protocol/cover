@@ -60,25 +60,25 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "collectPools",
+        "type": "address[]"
       },
       {
         "indexed": false,
-        "internalType": "uint128",
+        "internalType": "uint128[]",
         "name": "token0Fees",
-        "type": "uint128"
+        "type": "uint128[]"
       },
       {
         "indexed": false,
-        "internalType": "uint128",
+        "internalType": "uint128[]",
         "name": "token1Fees",
-        "type": "uint128"
+        "type": "uint128[]"
       }
     ],
-    "name": "ProtocolFeeCollected",
+    "name": "ProtocolFeesCollected",
     "type": "event"
   },
   {
@@ -86,18 +86,42 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
-        "name": "oldProtocolFee",
-        "type": "uint16"
+        "internalType": "address[]",
+        "name": "modifyPools",
+        "type": "address[]"
       },
       {
         "indexed": false,
-        "internalType": "uint16",
-        "name": "newProtocolFee",
-        "type": "uint16"
+        "internalType": "uint16[]",
+        "name": "syncFees",
+        "type": "uint16[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16[]",
+        "name": "fillFees",
+        "type": "uint16[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool[]",
+        "name": "setFees",
+        "type": "bool[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token0Fees",
+        "type": "uint128[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token1Fees",
+        "type": "uint128[]"
       }
     ],
-    "name": "ProtocolFeeUpdated",
+    "name": "ProtocolFeesModified",
     "type": "event"
   },
   {
@@ -118,6 +142,12 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "curveAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "factoryAddress",
         "type": "address"
       }
@@ -128,6 +158,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "sourceName",
+        "type": "bytes32"
+      },
       {
         "indexed": false,
         "internalType": "uint16",

@@ -89,12 +89,24 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "isPool0",
-        "type": "bool"
+        "internalType": "uint128",
+        "name": "amountInDelta",
+        "type": "uint128"
       },
       {
         "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOutDelta",
+        "type": "uint128"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "accumEpoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
         "internalType": "int24",
         "name": "accumTick",
         "type": "int24"
@@ -106,16 +118,10 @@
         "type": "int24"
       },
       {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "amountInDelta",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "amountOutDelta",
-        "type": "uint128"
+        "indexed": true,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
       }
     ],
     "name": "FinalDeltasAccumulated",
@@ -181,37 +187,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "feeTo",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "token0Fees",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "token1Fees",
-        "type": "uint128"
-      }
-    ],
-    "name": "ProtocolFeesCollected",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isPool0",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
         "internalType": "uint128",
         "name": "amountInDelta",
         "type": "uint128"
@@ -233,6 +208,24 @@
         "internalType": "uint128",
         "name": "amountOutDeltaMaxStashed",
         "type": "uint128"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "accumEpoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "int24",
+        "name": "stashTick",
+        "type": "int24"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
       }
     ],
     "name": "StashDeltasAccumulated",
@@ -241,6 +234,12 @@
   {
     "anonymous": false,
     "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
       {
         "indexed": true,
         "internalType": "address",
@@ -280,6 +279,61 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint160",
+        "name": "pool0Price",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "pool1Price",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "pool0Liquidity",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "pool1Liquidity",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "auctionStart",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "accumEpoch",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "int24",
+        "name": "oldLatestTick",
+        "type": "int24"
+      },
+      {
+        "indexed": true,
+        "internalType": "int24",
+        "name": "newLatestTick",
+        "type": "int24"
+      }
+    ],
+    "name": "Sync",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "collector",
         "type": "address"
