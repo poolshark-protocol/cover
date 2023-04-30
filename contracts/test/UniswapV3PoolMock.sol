@@ -75,7 +75,8 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
         tickCumulative1 = _tickCumulative1;
     }
 
-    function setObservationCardinality(uint16 _observationCardinality) external {
+    function setObservationCardinality(uint16 _observationCardinality, uint16 _observationCardinalityNext) external {
         observationCardinality = _observationCardinality;
+        observationCardinalityNext = _observationCardinalityNext;
     }
 }

@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 import '../base/storage/CoverPoolFactoryStorage.sol';
 
 abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
-
     function createCoverPool(
         bytes32 sourceName,
         address tokenIn,
@@ -21,8 +20,4 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
         int16 tickSpread,
         uint16 twapLength
     ) external view virtual returns (address);
-
-    function collectProtocolFees(
-        address collectPool
-    ) external virtual;
 }

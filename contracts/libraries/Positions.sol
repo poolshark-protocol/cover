@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './math/TickMath.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './math/FullPrecisionMath.sol';
-import './math/DyDxMath.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
 
@@ -21,6 +21,7 @@ library Positions {
     error InvalidLowerTick();
     error InvalidUpperTick();
     error InvalidPositionWidth();
+    error InvalidBurnPercentage();
     error PositionAmountZero();
     error PositionAuctionAmountTooSmall();
     error InvalidPositionBoundsOrder();
@@ -67,15 +68,15 @@ library Positions {
         uint256
     )
     {
-        _validate(params, constants);
+        constants.curve.checkTicks(params.lower, params.upper, constants.tickSpread);
 
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: position,
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
             liquidityMinted: 0,
             denomTokenIn: true
@@ -91,7 +92,7 @@ library Positions {
             if (params.upper <= cache.requiredStart) revert PositionInsideSafetyWindow();
         }
 
-        cache.liquidityMinted = DyDxMath.getLiquidityForAmounts(
+        cache.liquidityMinted = constants.curve.getLiquidityForAmounts(
             cache.priceLower,
             cache.priceUpper,
             params.zeroForOne ? cache.priceLower : cache.priceUpper,
@@ -103,9 +104,9 @@ library Positions {
         if (params.zeroForOne) {
             if (params.upper > cache.requiredStart) {
                 params.upper = cache.requiredStart;
-                uint256 priceNewUpper = TickMath.getSqrtRatioAtTick(params.upper);
+                uint256 priceNewUpper = constants.curve.getPriceAtTick(params.upper, constants);
                 params.amount -= uint128(
-                    DyDxMath.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
+                    constants.curve.getDx(cache.liquidityMinted, priceNewUpper, cache.priceUpper, false)
                 );
                 cache.priceUpper = uint160(priceNewUpper);
             }
@@ -115,9 +116,9 @@ library Positions {
         } else {
             if (params.lower < cache.requiredStart) {
                 params.lower = cache.requiredStart;
-                uint256 priceNewLower = TickMath.getSqrtRatioAtTick(params.lower);
+                uint256 priceNewLower = constants.curve.getPriceAtTick(params.lower, constants);
                 params.amount -= uint128(
-                    DyDxMath.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
+                    constants.curve.getDy(cache.liquidityMinted, cache.priceLower, priceNewLower, false)
                 );
                 cache.priceLower = uint160(priceNewLower);
             }
@@ -155,7 +156,7 @@ library Positions {
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params,
-        int16 tickSpread
+        ICoverPoolStructs.Immutables memory constants
     ) external returns (
         ICoverPoolStructs.GlobalState memory
     )    
@@ -164,8 +165,8 @@ library Positions {
             position: positions[params.owner][params.lower][params.upper],
             requiredStart: 0,
             auctionCount: 0,
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
             liquidityMinted: 0,
             denomTokenIn: true
@@ -180,10 +181,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, tickSpread), tickSpread)
+                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, tickSpread), tickSpread)
+                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -195,11 +196,11 @@ library Positions {
             ticks,
             tickMap,
             state,
+            constants,
             params.lower,
             params.upper,
             uint128(params.amount),
-            params.zeroForOne,
-            tickSpread
+            params.zeroForOne
         );
 
         // update liquidity global
@@ -209,7 +210,7 @@ library Positions {
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, mintDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            (finalTick, mintDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true, constants.curve);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
@@ -240,17 +241,23 @@ library Positions {
         ICoverPoolStructs.RemoveParams memory params,
         ICoverPoolStructs.Immutables memory constants
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
+        // validate burn percentage
+        if (params.amount > 1e38) revert InvalidBurnPercentage();
+        // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
             liquidityMinted: 0,
             denomTokenIn: true
         });
+        // convert percentage to liquidity amount
+        params.amount = _convert(cache.position.liquidity, params.amount);
+        // early return if no liquidity to remove
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
             revert NotEnoughPositionLiquidity();
@@ -270,10 +277,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(tickMap, TickMap.previous(tickMap, params.upper, constants.tickSpread), constants.tickSpread)
+                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(tickMap, TickMap.next(tickMap, params.lower, constants.tickSpread), constants.tickSpread)
+                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
                 revert WrongTickClaimedAt();
@@ -283,13 +290,13 @@ library Positions {
         Ticks.remove(
             ticks,
             tickMap,
+            constants,
             params.lower,
             params.upper,
             params.amount,
             params.zeroForOne,
             true,
-            true,
-            constants.tickSpread
+            true
         );
 
         // update liquidity global
@@ -299,14 +306,14 @@ library Positions {
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, burnDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
+            (finalTick, burnDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false, constants.curve);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.amountOut += uint128(
             params.zeroForOne
-                ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
-                : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
+                ? constants.curve.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
+                : constants.curve.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
         );
 
         cache.position.liquidity -= uint128(params.amount);
@@ -388,13 +395,13 @@ library Positions {
             Ticks.remove(
                 ticks,
                 tickMap,
+                constants,
                 params.zeroForOne ? params.lower : params.claim,
                 params.zeroForOne ? params.claim : params.upper,
                 params.amount,
                 params.zeroForOne,
                 cache.removeLower,
-                cache.removeUpper,
-                constants.tickSpread
+                cache.removeUpper
             );
             // update position liquidity
             cache.position.liquidity -= uint128(params.amount);
@@ -477,8 +484,8 @@ library Positions {
             if (params.amount > 0)
                 cache.position.amountOut += uint128(
                     params.zeroForOne
-                        ? DyDxMath.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
-                        : DyDxMath.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
+                        ? constants.curve.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
+                        : constants.curve.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
                 );
             return cache.position;
         }
@@ -500,6 +507,18 @@ library Positions {
         return cache.position;
     }
 
+    function _convert(
+        uint128 liquidity,
+        uint128 percent
+    ) internal pure returns (
+        uint128
+    ) {
+        // convert percentage to liquidity amount
+        if (percent > 1e38) revert InvalidBurnPercentage();
+        if (liquidity == 0 && percent > 0) revert NotEnoughPositionLiquidity();
+        return uint128(uint256(liquidity) * uint256(percent) / 1e38);
+    }
+
     function _deltas(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
             storage positions,
@@ -513,14 +532,15 @@ library Positions {
         ICoverPoolStructs.UpdatePositionCache memory,
         ICoverPoolStructs.GlobalState memory
     ) {
-       ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
+        ICoverPoolStructs.UpdatePositionCache memory cache = ICoverPoolStructs.UpdatePositionCache({
             position: positions[params.owner][params.lower][params.upper],
             pool: pool,
-            priceLower: TickMath.getSqrtRatioAtTick(params.lower),
-            priceClaim: TickMath.getSqrtRatioAtTick(params.claim),
-            priceUpper: TickMath.getSqrtRatioAtTick(params.upper),
-            priceSpread: TickMath.getSqrtRatioAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
-                                                                       : params.claim + constants.tickSpread),
+            priceLower: constants.curve.getPriceAtTick(params.lower, constants),
+            priceClaim: constants.curve.getPriceAtTick(params.claim, constants),
+            priceUpper: constants.curve.getPriceAtTick(params.upper, constants),
+            priceSpread: constants.curve.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
+                                                                          : params.claim + constants.tickSpread,
+                                                        constants),
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
@@ -531,6 +551,8 @@ library Positions {
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
         });
+
+        params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
         cache = Claims.validate(
@@ -562,34 +584,21 @@ library Positions {
         /// @dev - section 1 => position start - previous auction
         cache = Claims.section1(cache, params, constants);
         /// @dev - section 2 => position start -> claim tick
-        cache = Claims.section2(cache, params);
+        cache = Claims.section2(cache, params, constants.curve);
         // check if auction in progress 
         if (params.claim == state.latestTick 
             && params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             /// @dev - section 3 => claim tick - unfilled section
-            cache = Claims.section3(cache, params, cache.pool);
+            cache = Claims.section3(cache, params, cache.pool, constants.curve);
             /// @dev - section 4 => claim tick - filled section
-            cache = Claims.section4(cache, params, cache.pool);
+            cache = Claims.section4(cache, params, cache.pool, constants.curve);
         }
         /// @dev - section 5 => claim tick -> position end
-        cache = Claims.section5(cache, params);
+        cache = Claims.section5(cache, params, constants.curve);
         // adjust position amounts based on deltas
-        cache = Claims.applyDeltas(state, cache, params, constants);
+        cache = Claims.applyDeltas(state, cache, params);
 
         return (cache, state);
-    }
-
-    function _validate(
-        ICoverPoolStructs.MintParams memory params,
-        ICoverPoolStructs.Immutables memory constants
-    ) internal pure {
-        // check for valid position bounds
-        if (params.lower < TickMath.MIN_TICK / constants.tickSpread * constants.tickSpread) revert InvalidLowerTick();
-        if (params.upper > TickMath.MAX_TICK / constants.tickSpread * constants.tickSpread) revert InvalidUpperTick();
-        if (params.lower % int24(constants.tickSpread) != 0) revert InvalidLowerTick();
-        if (params.upper % int24(constants.tickSpread) != 0) revert InvalidUpperTick();
-        if (params.lower >= params.upper)
-            revert InvalidPositionBoundsOrder();
     }
 
     function _size(
@@ -615,16 +624,16 @@ library Positions {
             if (constants.minAmountLowerPriced) {
                 // token0 is the lower priced token
                 denomTokenIn = params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token0Decimals);
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token0Decimals);
             } else {
                 // token1 is the higher priced token
                 denomTokenIn = !params.zeroForOne;
-                minAmountPerAuction = minAmountPerAuction / 10**(18 - constants.token1Decimals);
+                minAmountPerAuction = constants.minAmountPerAuction / 10**(18 - constants.token1Decimals);
             }
         }
         if (params.zeroForOne) {
             //calculate amount in the position currently
-            uint128 amount = uint128(DyDxMath.getDx(
+            uint128 amount = uint128(constants.curve.getDx(
                 params.liquidityAmount,
                 params.priceLower,
                 params.priceUpper,
@@ -642,7 +651,7 @@ library Positions {
                     revert PositionAuctionAmountTooSmall();
             }
         } else {
-            uint128 amount = uint128(DyDxMath.getDy(
+            uint128 amount = uint128(constants.curve.getDy(
                 params.liquidityAmount,
                 params.priceLower,
                 params.priceUpper,
@@ -675,7 +684,7 @@ library Positions {
         ICoverPoolStructs.UpdateParams memory
     ) {
         // update claimPriceLast
-        cache.priceClaim = TickMath.getSqrtRatioAtTick(params.claim);
+        cache.priceClaim = constants.curve.getPriceAtTick(params.claim, constants);
         cache.position.claimPriceLast = (params.claim == state.latestTick)
             ? pool.price
             : cache.priceClaim;

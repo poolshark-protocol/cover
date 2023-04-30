@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
+import './modules/curves/ICurveMath.sol';
+import './modules/sources/ITwapSource.sol';
+
 interface ICoverPoolStructs {
     struct GlobalState {
         ProtocolFees protocolFees;
@@ -11,6 +14,8 @@ interface ICoverPoolStructs {
         uint32   auctionStart;     /// @dev last block price reference was updated
         uint32   accumEpoch;       /// @dev number of times this pool has been synced
         int24    latestTick;       /// @dev latest updated inputPool price tick
+        uint16   syncFee;
+        uint16   fillFee;
         //int16    tickSpread;       /// @dev this is a integer multiple of the inputPool tickSpacing
         //uint16   twapLength;       /// @dev number of blocks used for TWAP sampling
         //uint16   auctionLength;    /// @dev number of seconds to improve price by tickSpread
@@ -57,7 +62,9 @@ interface ICoverPoolStructs {
     }
 
     struct Immutables {
-        address twapSource;
+        ICurveMath  curve;
+        ITwapSource source;
+        ICurveMath.PriceBounds bounds;
         address inputPool;
         uint256 minAmountPerAuction;
         uint32 genesisTime;
@@ -66,8 +73,6 @@ interface ICoverPoolStructs {
         uint16 twapLength;
         uint16 auctionLength;
         uint16 blockTime;
-        uint16 syncFee;
-        uint16 fillFee;
         uint8 token0Decimals;
         uint8 token1Decimals;
         bool minAmountLowerPriced;
@@ -94,7 +99,7 @@ interface ICoverPoolStructs {
 
     struct BurnParams {
         address to;
-        uint128 amount;
+        uint128 burnPercent;
         int24 lower;
         int24 claim;
         int24 upper;
@@ -104,7 +109,7 @@ interface ICoverPoolStructs {
 
     struct SnapshotParams {
         address owner;
-        uint128 amount;
+        uint128 burnPercent;
         int24 lower;
         int24 upper;
         int24 claim;
@@ -114,7 +119,6 @@ interface ICoverPoolStructs {
     struct CollectParams {
         SyncFees syncFees;
         address to;
-        uint128 amount;
         int24 lower;
         int24 claim;
         int24 upper;
@@ -221,6 +225,7 @@ interface ICoverPoolStructs {
         Deltas deltas0;
         Deltas deltas1;
         SyncFees syncFees;
+        int24 newLatestTick;
         int24 nextTickToCross0;
         int24 nextTickToCross1;
         int24 nextTickToAccum0;

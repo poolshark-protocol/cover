@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import './FullPrecisionMath.sol';
+import '../../../interfaces/modules/curves/IDyDxMath.sol';
+import '../../../libraries/math/FullPrecisionMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
-library DyDxMath {
+abstract contract DyDxMath is IDyDxMath
+{
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     error PriceOutsideBounds();
@@ -77,6 +79,43 @@ library DyDxMath {
                 /// @dev - price should either be priceUpper or priceLower
                 revert PriceOutsideBounds();
             }  
+        }
+    }
+
+    function getAmountsForLiquidity(
+        uint256 priceLower,
+        uint256 priceUpper,
+        uint256 currentPrice,
+        uint256 liquidityAmount,
+        bool roundUp
+    ) external pure returns (uint128 token0amount, uint128 token1amount) {
+        if (priceUpper <= currentPrice) {
+            token1amount = uint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
+        } else if (currentPrice <= priceLower) {
+            token0amount = uint128(_getDx(liquidityAmount, priceLower, priceUpper, roundUp));
+        } else {
+            token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
+            token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
+        }
+    }
+
+    function getNewPrice(
+        uint256 price,
+        uint256 liquidity,
+        uint256 input,
+        bool zeroForOne
+    ) external pure returns (
+        uint256 newPrice
+    ) {
+        if (zeroForOne) {
+            uint256 liquidityPadded = liquidity << 96;
+            newPrice = FullPrecisionMath.mulDivRoundingUp(
+                            liquidityPadded,
+                            price,
+                            liquidityPadded + price * input
+                       );
+        } else {
+            newPrice = price + FullPrecisionMath.mulDiv(input, Q96, liquidity);
         }
     }
 }

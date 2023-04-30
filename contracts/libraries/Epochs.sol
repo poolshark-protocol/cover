@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './math/TickMath.sol';
-import './math/DyDxMath.sol';
-import '../interfaces/ITwapSource.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
+import '../interfaces/modules/sources/ITwapSource.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import './Deltas.sol';
 import './TickMap.sol';
@@ -48,10 +47,10 @@ library Epochs {
         ICoverPoolStructs.PoolState memory,
         ICoverPoolStructs.PoolState memory
     ) {
-        int24 newLatestTick;
+        ICoverPoolStructs.AccumulateCache memory cache;
         {
             bool earlyReturn;
-            (newLatestTick, earlyReturn) = _syncTick(state, constants);
+            (cache.newLatestTick, earlyReturn) = _syncTick(state, constants);
             if (earlyReturn) {
                 return (state, ICoverPoolStructs.SyncFees(0, 0), pool0, pool1);
             }
@@ -59,19 +58,20 @@ library Epochs {
         }
 
         // setup cache
-        ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
+        cache = ICoverPoolStructs.AccumulateCache({
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
             syncFees: ICoverPoolStructs.SyncFees(0, 0),
+            newLatestTick: cache.newLatestTick,
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
-            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick, constants.tickSpread), // below
-            nextTickToAccum1: TickMap.next(tickMap, state.latestTick, constants.tickSpread),     // above
-            stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
+            nextTickToAccum0: TickMap.previous(state.latestTick, tickMap, constants), // below
+            nextTickToAccum1: TickMap.next(state.latestTick, tickMap, constants),     // above
+            stopTick0: (cache.newLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - constants.tickSpread
-                : newLatestTick, 
-            stopTick1: (newLatestTick > state.latestTick) // where we do stop for pool1 sync
-                ? newLatestTick
+                : cache.newLatestTick, 
+            stopTick1: (cache.newLatestTick > state.latestTick) // where we do stop for pool1 sync
+                ? cache.newLatestTick
                 : state.latestTick + constants.tickSpread
         });
 
@@ -81,13 +81,13 @@ library Epochs {
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 >= cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
-                    tickMap,
                     ticks0[cache.nextTickToAccum0].liquidityDelta,
+                    tickMap,
+                    constants,
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
                     pool0.liquidity,
-                    true,
-                    constants.tickSpread
+                    true
                 );
             } else break;
         }
@@ -97,34 +97,34 @@ library Epochs {
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {
                 (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
-                    tickMap,
                     ticks1[cache.nextTickToAccum1].liquidityDelta,
+                    tickMap,
+                    constants,
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
                     pool1.liquidity,
-                    false,
-                    constants.tickSpread
+                    false
                 );
             } else break;
         }
 
         // update ending pool price for fully filled auction
-        state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
+        state.latestPrice = constants.curve.getPriceAtTick(cache.newLatestTick, constants);
         
         // set pool price and liquidity
-        if (newLatestTick > state.latestTick) {
+        if (cache.newLatestTick > state.latestTick) {
             pool0.liquidity = 0;
             pool0.price = state.latestPrice;
-            pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + constants.tickSpread);
+            pool1.price = constants.curve.getPriceAtTick(cache.newLatestTick + constants.tickSpread, constants);
         } else {
             pool1.liquidity = 0;
-            pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - constants.tickSpread);
+            pool0.price = constants.curve.getPriceAtTick(cache.newLatestTick - constants.tickSpread, constants);
             pool1.price = state.latestPrice;
         }
         
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
-        state.latestTick = newLatestTick;
+        state.latestTick = cache.newLatestTick;
     
         return (state, cache.syncFees, pool0, pool1);
     }
@@ -144,10 +144,10 @@ library Epochs {
         ICoverPoolStructs.PoolState memory
     )
     {
-        int24 newLatestTick;
+        ICoverPoolStructs.AccumulateCache memory cache;
         {
             bool earlyReturn;
-            (newLatestTick, earlyReturn) = _syncTick(state, constants);
+            (cache.newLatestTick, earlyReturn) = _syncTick(state, constants);
             if (earlyReturn) {
                 return (state, ICoverPoolStructs.SyncFees(0,0), pool0, pool1);
             }
@@ -158,19 +158,20 @@ library Epochs {
         state.accumEpoch += 1;
 
         // setup cache
-        ICoverPoolStructs.AccumulateCache memory cache = ICoverPoolStructs.AccumulateCache({
+        cache = ICoverPoolStructs.AccumulateCache({
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
             syncFees: ICoverPoolStructs.SyncFees(0,0),
+                newLatestTick: cache.newLatestTick,
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
-            nextTickToAccum0: TickMap.previous(tickMap, state.latestTick, constants.tickSpread), // below
-            nextTickToAccum1: TickMap.next(tickMap, state.latestTick, constants.tickSpread),     // above
-            stopTick0: (newLatestTick > state.latestTick) // where we do stop for pool0 sync
+            nextTickToAccum0: TickMap.previous(state.latestTick, tickMap, constants), // below
+            nextTickToAccum1: TickMap.next(state.latestTick, tickMap, constants),     // above
+            stopTick0: (cache.newLatestTick > state.latestTick) // where we do stop for pool0 sync
                 ? state.latestTick - constants.tickSpread
-                : newLatestTick, 
-            stopTick1: (newLatestTick > state.latestTick) // where we do stop for pool1 sync
-                ? newLatestTick
+                : cache.newLatestTick, 
+            stopTick1: (cache.newLatestTick > state.latestTick) // where we do stop for pool1 sync
+                ? cache.newLatestTick
                 : state.latestTick + constants.tickSpread
         });
 
@@ -179,14 +180,14 @@ library Epochs {
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
                  && ticks0[cache.nextTickToAccum0].amountInDeltaMaxMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum0, state.accumEpoch, constants.tickSpread);
+                EpochMap.set(cache.nextTickToAccum0, state.accumEpoch, tickMap, constants);
             }
             // accumulate to next tick
             ICoverPoolStructs.AccumulateParams memory params = ICoverPoolStructs.AccumulateParams({
                 deltas: cache.deltas0,
                 crossTick: ticks0[cache.nextTickToCross0],
                 accumTick: ticks0[cache.nextTickToAccum0],
-                updateAccumDeltas: newLatestTick > state.latestTick
+                updateAccumDeltas: cache.newLatestTick > state.latestTick
                                             ? cache.nextTickToAccum0 == cache.stopTick0
                                             : cache.nextTickToAccum0 >= cache.stopTick0,
                 isPool0: true
@@ -203,13 +204,13 @@ library Epochs {
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 >= cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
-                    tickMap,
                     ticks0[cache.nextTickToAccum0].liquidityDelta,
+                    tickMap,
+                    constants,
                     cache.nextTickToCross0,
                     cache.nextTickToAccum0,
                     pool0.liquidity,
-                    true,
-                    constants.tickSpread
+                    true
                 );
             } else break;
         }
@@ -217,7 +218,7 @@ library Epochs {
         {
             // create stopTick0 if necessary
             if (cache.nextTickToAccum0 != cache.stopTick0) {
-                TickMap.set(tickMap, cache.stopTick0, constants.tickSpread);
+                TickMap.set(cache.stopTick0, tickMap, constants);
             }
             ICoverPoolStructs.Tick memory stopTick0 = ticks0[cache.stopTick0];
             // checkpoint at stopTick0
@@ -227,7 +228,7 @@ library Epochs {
                 pool0.liquidity,
                 true
             );
-            EpochMap.set(tickMap, cache.stopTick0, state.accumEpoch, constants.tickSpread);
+            EpochMap.set(cache.stopTick0, state.accumEpoch, tickMap, constants);
             ticks0[cache.stopTick0] = stopTick0;
         }
 
@@ -237,14 +238,14 @@ library Epochs {
             // accumulate deltas pool1
             if (cache.nextTickToAccum1 < cache.stopTick1 
                  && ticks1[cache.nextTickToAccum1].amountInDeltaMaxMinus > 0) {
-                EpochMap.set(tickMap, cache.nextTickToAccum1, state.accumEpoch, constants.tickSpread);
+                EpochMap.set(cache.nextTickToAccum1, state.accumEpoch, tickMap, constants);
             }
             {
                 ICoverPoolStructs.AccumulateParams memory params = ICoverPoolStructs.AccumulateParams({
                     deltas: cache.deltas1,
                     crossTick: ticks1[cache.nextTickToCross1],
                     accumTick: ticks1[cache.nextTickToAccum1],
-                    updateAccumDeltas: newLatestTick > state.latestTick
+                    updateAccumDeltas: cache.newLatestTick > state.latestTick
                                                 ? cache.nextTickToAccum1 <= cache.stopTick1
                                                 : cache.nextTickToAccum1 == cache.stopTick1,
                     isPool0: false
@@ -261,13 +262,13 @@ library Epochs {
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {
                 (pool1.liquidity, cache.nextTickToCross1, cache.nextTickToAccum1) = _cross(
-                    tickMap,
                     ticks1[cache.nextTickToAccum1].liquidityDelta,
+                    tickMap,
+                    constants,
                     cache.nextTickToCross1,
                     cache.nextTickToAccum1,
                     pool1.liquidity,
-                    false,
-                    constants.tickSpread
+                    false
                 );
             } else break;
         }
@@ -275,7 +276,7 @@ library Epochs {
         {
             // create stopTick1 if necessary
             if (cache.nextTickToAccum1 != cache.stopTick1) {
-                TickMap.set(tickMap, cache.stopTick1, constants.tickSpread);
+                TickMap.set(cache.stopTick1, tickMap, constants);
             }
             ICoverPoolStructs.Tick memory stopTick1 = ticks1[cache.stopTick1];
             // update deltas on stopTick
@@ -286,25 +287,25 @@ library Epochs {
                 false
             );
             ticks1[cache.stopTick1] = stopTick1;
-            EpochMap.set(tickMap, cache.stopTick1, state.accumEpoch, constants.tickSpread);
+            EpochMap.set(cache.stopTick1, state.accumEpoch, tickMap, constants);
         }
         // update ending pool price for fully filled auction
-        state.latestPrice = TickMath.getSqrtRatioAtTick(newLatestTick);
+        state.latestPrice = constants.curve.getPriceAtTick(cache.newLatestTick, constants);
         
         // set pool price and liquidity
-        if (newLatestTick > state.latestTick) {
+        if (cache.newLatestTick > state.latestTick) {
             pool0.liquidity = 0;
             pool0.price = state.latestPrice;
-            pool1.price = TickMath.getSqrtRatioAtTick(newLatestTick + constants.tickSpread);
+            pool1.price = constants.curve.getPriceAtTick(cache.newLatestTick + constants.tickSpread, constants);
         } else {
             pool1.liquidity = 0;
-            pool0.price = TickMath.getSqrtRatioAtTick(newLatestTick - constants.tickSpread);
+            pool0.price = constants.curve.getPriceAtTick(cache.newLatestTick - constants.tickSpread, constants);
             pool1.price = state.latestPrice;
         }
         
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
-        state.latestTick = newLatestTick;
+        state.latestTick = cache.newLatestTick;
 
         if (cache.syncFees.token0 > 0 || cache.syncFees.token1 > 0) {
             emit SyncFeesCollected(msg.sender, cache.syncFees.token0, cache.syncFees.token1);
@@ -326,12 +327,15 @@ library Epochs {
         }
         state.lastTime = uint32(block.timestamp) - constants.genesisTime;
         // check auctions elapsed
-        int32 auctionsElapsed = int32((uint32(block.timestamp) - constants.genesisTime - state.auctionStart) / constants.auctionLength);
+        uint32 timeElapsed = state.lastTime - state.auctionStart;
+        int32 auctionsElapsed = int32(timeElapsed / constants.twapLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
+        // if 3/4 of twapLength has passed allow for latestTick move
+        if (timeElapsed > 3 * constants.twapLength / 4) auctionsElapsed += 1;
 
-        if (auctionsElapsed == 0) {
+        if (auctionsElapsed < 1) {
             return (state.latestTick, true);
         }
-        newLatestTick = ITwapSource(constants.twapSource).calculateAverageTick(constants.inputPool, constants.twapLength);
+        newLatestTick = constants.source.calculateAverageTick(constants);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;
@@ -373,16 +377,16 @@ library Epochs {
         }
         uint160 crossPrice; uint160 accumPrice; uint160 currentPrice;
         if (isPool0) {
-            crossPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0);
+            crossPrice = constants.curve.getPriceAtTick(cache.nextTickToCross0, constants);
             int24 nextTickToAccum = (cache.nextTickToAccum0 < cache.stopTick0)
                                         ? cache.stopTick0
                                         : cache.nextTickToAccum0;
-            accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
+            accumPrice = constants.curve.getPriceAtTick(nextTickToAccum, constants);
             // check for multiple auction skips
             if (cache.nextTickToCross0 == state.latestTick && cache.nextTickToCross0 - nextTickToAccum > constants.tickSpread) {
-                uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross0 - constants.tickSpread);
+                uint160 spreadPrice = constants.curve.getPriceAtTick(cache.nextTickToCross0 - constants.tickSpread, constants);
                 /// @dev - amountOutDeltaMax accounted for down below
-                cache.deltas0.amountOutDelta += uint128(DyDxMath.getDx(pool.liquidity, accumPrice, spreadPrice, false));
+                cache.deltas0.amountOutDelta += uint128(constants.curve.getDx(pool.liquidity, accumPrice, spreadPrice, false));
             }
             currentPrice = pool.price;
             // if pool.price the bounds set currentPrice to start of auction
@@ -390,16 +394,16 @@ library Epochs {
             // if auction is current and fully filled => set currentPrice to crossPrice
             if (state.latestTick == cache.nextTickToCross0 && crossPrice == pool.price) currentPrice = crossPrice;
         } else {
-            crossPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1);
+            crossPrice = constants.curve.getPriceAtTick(cache.nextTickToCross1, constants);
             int24 nextTickToAccum = (cache.nextTickToAccum1 > cache.stopTick1)
                                         ? cache.stopTick1
                                         : cache.nextTickToAccum1;
-            accumPrice = TickMath.getSqrtRatioAtTick(nextTickToAccum);
+            accumPrice = constants.curve.getPriceAtTick(nextTickToAccum, constants);
             // check for multiple auction skips
             if (cache.nextTickToCross1 == state.latestTick && nextTickToAccum - cache.nextTickToCross1 > constants.tickSpread) {
-                uint160 spreadPrice = TickMath.getSqrtRatioAtTick(cache.nextTickToCross1 + constants.tickSpread);
+                uint160 spreadPrice = constants.curve.getPriceAtTick(cache.nextTickToCross1 + constants.tickSpread, constants);
                 /// @dev - DeltaMax values accounted for down below
-                cache.deltas1.amountOutDelta += uint128(DyDxMath.getDy(pool.liquidity, spreadPrice, accumPrice, false));
+                cache.deltas1.amountOutDelta += uint128(constants.curve.getDy(pool.liquidity, spreadPrice, accumPrice, false));
             }
             currentPrice = pool.price;
             if (!(pool.price < accumPrice && pool.price > crossPrice)) currentPrice = accumPrice;
@@ -408,64 +412,69 @@ library Epochs {
 
         //handle liquidity rollover
         if (isPool0) {
-            // amountIn pool did not receive
-            uint128 amountInDelta;
-            uint128 amountInDeltaMax  = uint128(DyDxMath.getDy(pool.liquidity, accumPrice, crossPrice, false));
-            amountInDelta       = pool.amountInDelta;
-            amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
-                                                                                    : pool.amountInDeltaMaxClaimed;
-            pool.amountInDelta  = 0;
-            pool.amountInDeltaMaxClaimed = 0;
+            {
+                // amountIn pool did not receive
+                uint128 amountInDelta;
+                uint128 amountInDeltaMax  = uint128(constants.curve.getDy(pool.liquidity, accumPrice, crossPrice, false));
+                amountInDelta       = pool.amountInDelta;
+                amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
+                                                                                        : pool.amountInDeltaMaxClaimed;
+                pool.amountInDelta  = 0;
+                pool.amountInDeltaMaxClaimed = 0;
 
-            // amountOut pool has leftover
-            uint128 amountOutDelta    = uint128(DyDxMath.getDx(pool.liquidity, currentPrice, crossPrice, false));
-            uint128 amountOutDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, accumPrice, crossPrice, false));
-            amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
-                                                                                     : pool.amountOutDeltaMaxClaimed;
-            pool.amountOutDeltaMaxClaimed = 0;
+                // update cache in deltas
+                cache.deltas0.amountInDelta     += amountInDelta;
+                cache.deltas0.amountInDeltaMax  += amountInDeltaMax;
+            }
+            {
+                // amountOut pool has leftover
+                uint128 amountOutDelta    = uint128(constants.curve.getDx(pool.liquidity, currentPrice, crossPrice, false));
+                uint128 amountOutDeltaMax = uint128(constants.curve.getDx(pool.liquidity, accumPrice, crossPrice, false));
+                amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
+                                                                                        : pool.amountOutDeltaMaxClaimed;
+                pool.amountOutDeltaMaxClaimed = 0;
 
-            // update cache in deltas
-            cache.deltas0.amountInDelta     += amountInDelta;
-            cache.deltas0.amountInDeltaMax  += amountInDeltaMax;
+                // calculate sync fee
+                uint128 syncFeeAmount = state.syncFee * amountOutDelta / 1e6;
+                cache.syncFees.token0 += syncFeeAmount;
+                amountOutDelta -= syncFeeAmount;
 
-            // calculate sync fee
-            uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
-            cache.syncFees.token0 += syncFeeAmount;
-            amountOutDelta -= syncFeeAmount;
-
-            // update cache out deltas
-            cache.deltas0.amountOutDelta    += amountOutDelta;
-            cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
+                // update cache out deltas
+                cache.deltas0.amountOutDelta    += amountOutDelta;
+                cache.deltas0.amountOutDeltaMax += amountOutDeltaMax;
+            }
         } else {
-            // amountIn pool did not receive
-            uint128 amountInDelta;
-            uint128 amountInDeltaMax = uint128(DyDxMath.getDx(pool.liquidity, crossPrice, accumPrice, false));
-            amountInDelta       = pool.amountInDelta;
-            amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
-                                                                                    : pool.amountInDeltaMaxClaimed;
-            pool.amountInDelta  = 0;
-            pool.amountInDeltaMaxClaimed = 0;
+            {
+                // amountIn pool did not receive
+                uint128 amountInDelta;
+                uint128 amountInDeltaMax = uint128(constants.curve.getDx(pool.liquidity, crossPrice, accumPrice, false));
+                amountInDelta       = pool.amountInDelta;
+                amountInDeltaMax   -= (amountInDeltaMax < pool.amountInDeltaMaxClaimed) ? amountInDeltaMax 
+                                                                                        : pool.amountInDeltaMaxClaimed;
+                pool.amountInDelta  = 0;
+                pool.amountInDeltaMaxClaimed = 0;
 
-            // amountOut pool has leftover
-            uint128 amountOutDelta    = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, currentPrice, false));
-            uint128 amountOutDeltaMax = uint128(DyDxMath.getDy(pool.liquidity, crossPrice, accumPrice, false));
-            amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
-                                                                                     : pool.amountOutDeltaMaxClaimed;
-            pool.amountOutDeltaMaxClaimed = 0;
+                // update cache in deltas
+                cache.deltas1.amountInDelta     += amountInDelta;
+                cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
+            }
+            {
+                // amountOut pool has leftover
+                uint128 amountOutDelta    = uint128(constants.curve.getDy(pool.liquidity, crossPrice, currentPrice, false));
+                uint128 amountOutDeltaMax = uint128(constants.curve.getDy(pool.liquidity, crossPrice, accumPrice, false));
+                amountOutDeltaMax -= (amountOutDeltaMax < pool.amountOutDeltaMaxClaimed) ? amountOutDeltaMax
+                                                                                        : pool.amountOutDeltaMaxClaimed;
+                pool.amountOutDeltaMaxClaimed = 0;
 
-            // update cache in deltas
-            cache.deltas1.amountInDelta     += amountInDelta;
-            cache.deltas1.amountInDeltaMax  += amountInDeltaMax;
+                // calculate sync fee
+                uint128 syncFeeAmount = state.syncFee * amountOutDelta / 1e6;
+                cache.syncFees.token1 += syncFeeAmount;
+                amountOutDelta -= syncFeeAmount;    
 
-            // calculate sync fee
-            //TODO: only take syncFee if auctionLength expired
-            uint128 syncFeeAmount = constants.syncFee * amountOutDelta / 1e6;
-            cache.syncFees.token1 += syncFeeAmount;
-            amountOutDelta -= syncFeeAmount;    
-
-            // update cache out deltas
-            cache.deltas1.amountOutDelta    += amountOutDelta;
-            cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
+                // update cache out deltas
+                cache.deltas1.amountOutDelta    += amountOutDelta;
+                cache.deltas1.amountOutDeltaMax += amountOutDeltaMax;
+            }
         }
         return (cache, pool);
     }
@@ -532,13 +541,13 @@ library Epochs {
 
     //maybe call ticks on msg.sender to get tick
     function _cross(
-        ICoverPoolStructs.TickMap storage tickMap,
         int128 liquidityDelta,
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants,
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,
-        bool zeroForOne,
-        int16 tickSpread
+        bool zeroForOne
     ) internal view returns (
         uint128,
         int24,
@@ -553,9 +562,9 @@ library Epochs {
             currentLiquidity -= uint128(-liquidityDelta);
         }
         if (zeroForOne) {
-            nextTickToAccum = TickMap.previous(tickMap, nextTickToAccum, tickSpread);
+            nextTickToAccum = TickMap.previous(nextTickToAccum, tickMap, constants);
         } else {
-            nextTickToAccum = TickMap.next(tickMap, nextTickToAccum, tickSpread);
+            nextTickToAccum = TickMap.next(nextTickToAccum, tickMap, constants);
         }
         return (currentLiquidity, nextTickToCross, nextTickToAccum);
     }
@@ -570,7 +579,6 @@ library Epochs {
         if (currentLiquidity == 0) return (stashTick);
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
-        //TODO: event emit specifying amounts stashed
         emit StashDeltasAccumulated(
             isPool0,
             deltas.amountInDelta,

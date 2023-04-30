@@ -5,9 +5,11 @@ import './CoverPoolManagerStructs.sol';
 
 abstract contract CoverPoolFactoryStructs is CoverPoolManagerStructs {
     struct CoverPoolParams {
-        CoverPoolConfig config;
+        VolatilityTier config;
         address twapSource;
+        address curveMath;
         address inputPool;
+        address owner;
         address token0;
         address token1;
         int16   tickSpread;

@@ -20,6 +20,7 @@ import {
     EpochMap,
     IUniswapV3Factory,
     IUniswapV3Pool,
+    ConstantProduct,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 
@@ -32,7 +33,7 @@ export interface BeforeEachProps {
     uniswapV3PoolMock: UniswapV3PoolMock
     tickMapLib: TickMap
     tickMathLib: TickMath
-    dydxMathLib: DyDxMath
+    constantProduct: ConstantProduct
     deltasLib: Deltas
     epochsLib: Epochs
     epochMapLib: EpochMap
@@ -82,7 +83,7 @@ export class GetBeforeEach {
         let uniswapV3PoolMock: UniswapV3PoolMock
         let tickMapLib: TickMap
         let tickMathLib: TickMath
-        let dydxMathLib: DyDxMath
+        let constantProduct: ConstantProduct
         let deltasLib: Deltas
         let epochsLib: Epochs
         let epochMapLib: EpochMap
@@ -110,7 +111,7 @@ export class GetBeforeEach {
             uniswapV3PoolMock,
             tickMapLib,
             tickMathLib,
-            dydxMathLib,
+            constantProduct,
             deltasLib,
             epochsLib,
             epochMapLib,

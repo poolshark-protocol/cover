@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import './interfaces/ICoverPool.sol';
 import './interfaces/ICoverPoolManager.sol';
 import './base/events/CoverPoolEvents.sol';
+import './base/storage/CoverPoolStorage.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
-import './base/modifiers/CoverPoolModifiers.sol';
 import './utils/SafeTransfers.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Positions.sol';
@@ -16,16 +16,17 @@ contract CoverPool is
     ICoverPool,
     CoverPoolEvents,
     CoverPoolFactoryStructs,
-    CoverPoolModifiers,
+    CoverPoolStorage,
     SafeTransfers
 {
-    address public immutable factory;
+    address public immutable owner;
     address public immutable token0;
     address public immutable token1;
     address public immutable twapSource;
+    address public immutable curveMath;
     address public immutable inputPool; 
-    uint160 public immutable MIN_PRICE;
-    uint160 public immutable MAX_PRICE;
+    uint160 public immutable minPrice;
+    uint160 public immutable maxPrice;
     uint128 public immutable minAmountPerAuction;
     uint32  public immutable genesisTime;
     int16   public immutable minPositionWidth;
@@ -39,26 +40,27 @@ contract CoverPool is
 
     error PriceOutOfBounds();
 
-    modifier lock() {
-        if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
-        }
-        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
-        if (globalState.unlocked == 2) revert Locked();
-        globalState.unlocked = 2;
+    modifier ownerOnly() {
+        _onlyOwner();
         _;
-        globalState.unlocked = 1;
+    }
+
+    modifier lock() {
+        _prelock();
+        _;
+        _postlock();
     }
 
     constructor(
         CoverPoolParams memory params
     ) {
         // set addresses
-        factory   = msg.sender;
+        owner      = params.owner;
         twapSource = params.twapSource;
-        inputPool = params.inputPool;
-        token0    = params.token0;
-        token1    = params.token1;
+        curveMath  = params.curveMath;
+        inputPool  = params.inputPool;
+        token0     = params.token0;
+        token1     = params.token1;
         
         // set token decimals
         token0Decimals = ERC20(token0).decimals();
@@ -79,8 +81,9 @@ contract CoverPool is
         minAmountLowerPriced = params.config.minAmountLowerPriced;
 
         // set price boundaries
-        MIN_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MIN_TICK / tickSpread * tickSpread);
-        MAX_PRICE = TickMath.getSqrtRatioAtTick(TickMath.MAX_TICK / tickSpread * tickSpread);
+        ICurveMath curve = ICurveMath(curveMath);
+        minPrice = curve.minPrice(tickSpread);
+        maxPrice = curve.maxPrice(tickSpread);
     }
 
     function mint(
@@ -148,14 +151,13 @@ contract CoverPool is
                 params.upper,
                 params.zeroForOne
             ),
-            tickSpread
+            _immutables()
         );
         globalState = cache.state;
         _collect(
             CollectParams(
                 cache.syncFees,
                 params.to, //address(0) goes to msg.sender
-                0,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -184,7 +186,7 @@ contract CoverPool is
                 pool1,
                 cache.state,
                 cache.constants
-            );
+        );
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? params.upper : params.lower) 
             || params.claim == cache.state.latestTick)
@@ -199,7 +201,7 @@ contract CoverPool is
                 UpdateParams(
                     msg.sender,
                     params.to,
-                    params.amount,
+                    params.burnPercent,
                     params.lower,
                     params.upper,
                     params.claim,
@@ -217,7 +219,7 @@ contract CoverPool is
                 RemoveParams(
                     msg.sender,
                     params.to,
-                    params.amount,
+                    params.burnPercent,
                     params.lower,
                     params.upper,
                     params.zeroForOne
@@ -230,7 +232,6 @@ contract CoverPool is
             CollectParams(
                 cache.syncFees,
                 params.to, //address(0) goes to msg.sender
-                params.amount,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -244,12 +245,11 @@ contract CoverPool is
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
-    ) external override lock returns (
-        uint256,
-        uint256
-    )
+    ) external override lock
     {
-        _validatePrice(priceLimit);
+        ICurveMath(curveMath).checkPrice(
+            priceLimit,
+            ITickMath.PriceBounds(minPrice, maxPrice));
         SwapCache memory cache;
         cache.state = globalState;
         cache.constants = _immutables();
@@ -306,10 +306,6 @@ contract CoverPool is
                 _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
                 emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
             }
-            return (
-                cache.input  + cache.syncFees.token0,
-                cache.output + cache.syncFees.token1
-            );
         } else {
             if (cache.input > 0) {
                 _transferOut(recipient, token1, cache.input + cache.syncFees.token1);
@@ -318,10 +314,6 @@ contract CoverPool is
                 _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
                 emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
             }
-            return (
-                cache.input  + cache.syncFees.token1,
-                cache.output + cache.syncFees.token0
-            );
         }
     }
 
@@ -391,7 +383,7 @@ contract CoverPool is
             UpdateParams(
                 params.owner,
                 params.owner,
-                params.amount,
+                params.burnPercent,
                 params.lower,
                 params.upper,
                 params.claim,
@@ -401,18 +393,25 @@ contract CoverPool is
         );
     }
 
-    function collectFees() public returns (
+    function protocolFees(
+        uint16 syncFee,
+        uint16 fillFee,
+        bool setFees
+    ) external ownerOnly returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
+        if (setFees) {
+            globalState.syncFee = syncFee;
+            globalState.fillFee = fillFee;
+        }
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
-        address feeTo = ICoverPoolManager(ICoverPoolFactory(factory).owner()).feeTo();
+        address feeTo = ICoverPoolManager(owner).feeTo();
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
         _transferOut(feeTo, token0, token0Fees);
         _transferOut(feeTo, token1, token1Fees);
-        emit ProtocolFeesCollected(feeTo, token0Fees, token1Fees);
     }
 
     function _collect(
@@ -445,11 +444,13 @@ contract CoverPool is
         }
     }
 
-    function _immutables() internal view returns (
+    function _immutables() private view returns (
         Immutables memory
     ) {
         return Immutables(
-            twapSource,
+            ICurveMath(curveMath),
+            ITwapSource(twapSource),
+            ITickMath.PriceBounds(minPrice, maxPrice),
             inputPool,
             minAmountPerAuction,
             genesisTime,
@@ -458,20 +459,26 @@ contract CoverPool is
             twapLength,
             auctionLength,
             blockTime,
-            0,
-            0,
             token0Decimals,
             token1Decimals,
             minAmountLowerPriced
         );
     }
 
-    function _validatePrice(uint160 price) internal view {
-        if (price < MIN_PRICE || price >= MAX_PRICE) {
-            revert PriceOutOfBounds();
+    function _prelock() private {
+        if (globalState.unlocked == 0) {
+            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
         }
+        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
+        if (globalState.unlocked == 2) revert Locked();
+        globalState.unlocked = 2;
     }
 
-    //TODO: zap into LP position
-    //TODO: remove old latest tick if necessary
+    function _postlock() private {
+        globalState.unlocked = 1;
+    }
+
+    function _onlyOwner() private view {
+        if (msg.sender != owner) revert OwnerOnly();
+    }
 }

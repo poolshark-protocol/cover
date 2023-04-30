@@ -16,41 +16,47 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
-    // source name => source address
-    mapping(bytes32 => address) public twapSources;
-    // feeTier => tickSpread => twapLength => CoverPoolConfig
-    mapping(uint16 => mapping(int16 => mapping(uint16 => CoverPoolConfig))) internal _volatilityTiers;
+    // curveName => curveAddress
+    mapping(bytes32 => address) internal _curveMaths;
+    // sourceName => sourceAddress
+    mapping(bytes32 => address) internal _twapSources;
+    // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
+    mapping(bytes32 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
     uint16 public protocolFee;
 
     error OwnerOnly();
+    error EmptyPoolsArray();
     error FeeToOnly();
     error FactoryAlreadySet();
     error VolatilityTierCannotBeZero();
     error VolatilityTierAlreadyEnabled();
     error VoltatilityTierTwapTooShort();
-    error VolatilityTierFeeLimitExceeded();
-    error TransferredToZeroAddress();
     error ProtocolFeeCeilingExceeded();
+    error TransferredToZeroAddress();
     error FeeTierNotSupported();
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
     error TwapSourceNameInvalid();
+    error TwapSourceAddressZero();
     error TwapSourceAlreadyExists();
     error TwapSourceNotFound();
+    error CurveMathAddressZero();
+    error MismatchedArrayLengths();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();
 
     constructor(
         bytes32 sourceName,
-        address sourceAddress
+        address sourceAddress,
+        address curveAddress
     ) {
         owner = msg.sender;
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
         // create initial volatility tiers
-        _volatilityTiers[500][20][5] = CoverPoolConfig({
+        _volatilityTiers[sourceName][500][20][5] = VolatilityTier({
            minAmountPerAuction: 1e18,
            auctionLength: 5,
            blockTime: 1000,
@@ -59,7 +65,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minPositionWidth: 1,
            minAmountLowerPriced: true
         });
-        _volatilityTiers[500][40][10] = CoverPoolConfig({
+        _volatilityTiers[sourceName][500][40][10] = VolatilityTier({
            minAmountPerAuction: 1e18,
            auctionLength: 10,
            blockTime: 1000,
@@ -68,11 +74,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minPositionWidth: 5,
            minAmountLowerPriced: false
         });
-        emit VolatilityTierEnabled(500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
-        emit VolatilityTierEnabled(500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
+        emit VolatilityTierEnabled(sourceName, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
+        emit VolatilityTierEnabled(sourceName, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
     
-        twapSources[sourceName] = sourceAddress;
-        emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
+        _twapSources[sourceName] = sourceAddress;
+        _curveMaths[sourceName] = curveAddress;
+        emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
     }
 
     /**
@@ -124,12 +131,16 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
     function enableTwapSource(
         bytes32 sourceName,
-        address sourceAddress
+        address sourceAddress,
+        address curveAddress
     ) external onlyOwner {
         if (sourceName[0] == bytes32("")) revert TwapSourceNameInvalid();
-        if (twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
-        twapSources[sourceName] = sourceAddress;
-        emit TwapSourceEnabled(sourceName, sourceAddress, ITwapSource(sourceAddress).factory());
+        if (sourceAddress == address(0)) revert TwapSourceAddressZero();
+        if (curveAddress == address(0)) revert CurveMathAddressZero();
+        if (_twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
+        _twapSources[sourceName] = sourceAddress;
+        _curveMaths[sourceName] = curveAddress;
+        emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
     }
 
     function enableVolatilityTier(
@@ -145,18 +156,18 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16   minPositionWidth,
         bool    minLowerPriced
     ) external onlyOwner {
-        if (_volatilityTiers[feeTier][tickSpread][twapLength].auctionLength != 0) {
+        if (_volatilityTiers[sourceName][feeTier][tickSpread][twapLength].auctionLength != 0) {
             revert VolatilityTierAlreadyEnabled();
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
             revert VolatilityTierCannotBeZero();
         } else if (twapLength < 5 * blockTime / oneSecond) {
             revert VoltatilityTierTwapTooShort();
         } else if (syncFee > 10000 || fillFee > 10000) {
-            revert VolatilityTierFeeLimitExceeded();
+            revert ProtocolFeeCeilingExceeded();
         }
         {
             // check fee tier exists
-            address twapSource = twapSources[sourceName];
+            address twapSource = _twapSources[sourceName];
             if (twapSource == address(0)) revert TwapSourceNotFound();
             int24 tickSpacing = ITwapSource(twapSource).feeTierTickSpacing(feeTier);
             if (tickSpacing == 0) {
@@ -171,7 +182,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             }
         }
         // twapLength * blockTime should never overflow uint16
-        _volatilityTiers[feeTier][tickSpread][twapLength] = CoverPoolConfig(
+        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength] = VolatilityTier(
             minAmountPerAuction,
             auctionLength,
             blockTime,
@@ -181,6 +192,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             minLowerPriced
         );
         emit VolatilityTierEnabled(
+            sourceName,
             feeTier,
             tickSpread,
             twapLength,
@@ -194,6 +206,21 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         );
     }
 
+    function modifyVolatilityTierFees(
+        bytes32 sourceName,
+        uint16 feeTier,
+        int16 tickSpread,
+        uint16 twapLength,
+        uint16 syncFee,
+        uint16 fillFee
+    ) external onlyOwner {
+        if (syncFee > 10000 || fillFee > 10000) {
+            revert ProtocolFeeCeilingExceeded();
+        }
+        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].syncFee = syncFee;
+        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].fillFee = fillFee;
+    }
+
     function setFactory(
         address factory_
     ) external onlyOwner {
@@ -202,30 +229,65 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         factory = factory_;
     }
 
-    function setProtocolFee(
-        uint16 protocolFee_
-    ) external onlyOwner {
-        if (protocolFee_ > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
-        emit ProtocolFeeUpdated(protocolFee, protocolFee_);
-        protocolFee = protocolFee_;
-    }
-
     function collectProtocolFees(
         address[] calldata collectPools
     ) external {
+        if (collectPools.length == 0) revert EmptyPoolsArray();
+        uint128[] memory token0Fees = new uint128[](collectPools.length);
+        uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length; i++) {
-            ICoverPoolFactory(factory).collectProtocolFees(collectPools[i]);
+            (token0Fees[i], token1Fees[i]) = ICoverPool(collectPools[i]).protocolFees(0,0,false);
         }
+        emit ProtocolFeesCollected(collectPools, token0Fees, token1Fees);
+    }
+
+    function modifyProtocolFees(
+        address[] calldata modifyPools,
+        uint16[] calldata syncFees,
+        uint16[] calldata fillFees,
+        bool[] calldata setFees
+    ) external onlyOwner {
+        if (modifyPools.length == 0) revert EmptyPoolsArray();
+        if (modifyPools.length != syncFees.length
+            || syncFees.length != fillFees.length
+            || fillFees.length != setFees.length) {
+            revert MismatchedArrayLengths();
+        }
+        uint128[] memory token0Fees = new uint128[](modifyPools.length);
+        uint128[] memory token1Fees = new uint128[](modifyPools.length);
+        for (uint i; i < modifyPools.length; i++) {
+            if (syncFees[i] > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
+            if (fillFees[i] > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
+            (
+                token0Fees[i],
+                token1Fees[i]
+            ) =ICoverPool(modifyPools[i]).protocolFees(
+                syncFees[i],
+                fillFees[i],
+                setFees[i]
+            );
+        }
+        emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
+    }
+
+    function twapSources(
+        bytes32 sourceName
+    ) external view returns (
+        address sourceAddress,
+        address curveAddress
+    ) {
+        return (_twapSources[sourceName], _curveMaths[sourceName]);
     }
 
     function volatilityTiers(
+        bytes32 sourceName,
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength
     ) external view returns (
-        CoverPoolConfig memory config
+        VolatilityTier memory config
     ) {
-        config = _volatilityTiers[feeTier][tickSpread][twapLength];
+        config = _volatilityTiers[sourceName][feeTier][tickSpread][twapLength];
     }
     
     /**

@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 abstract contract CoverPoolErrors {
     error Locked();
+    error OwnerOnly();
     error InvalidToken();
     error InvalidPosition();
     error InvalidSwapFee();
@@ -47,6 +48,7 @@ abstract contract CoverPoolFactoryErrors {
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
     error TwapSourceNotFound();
+    error CurveMathNotFound();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();
 }

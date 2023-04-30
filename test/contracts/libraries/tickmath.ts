@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
 import { gBefore } from '../../utils/hooks.test'
+import { BN_ZERO } from '../../utils/contracts/coverpool'
 
 describe('TickMath Library Tests', function () {
     let token0Amount: BigNumber
@@ -13,9 +14,29 @@ describe('TickMath Library Tests', function () {
     let alice: SignerWithAddress
     let bob: SignerWithAddress
     let carol: SignerWithAddress
+    let constants
 
     before(async function () {
         await gBefore()
+        constants = {
+            curve: hre.props.constantProduct.address,
+            source: hre.props.uniswapV3Source.address,
+            bounds: {
+                min: BigNumber.from('4302006101'),
+                max: BigNumber.from('1459110375135176227217141799363990665779938914150')
+            },
+            inputPool: '0x0000000000000000000000000000000000000000',
+            minAmountPerAuction: BN_ZERO,
+            tickSpread: BigNumber.from('40'),
+            twapLength: BigNumber.from('5'),
+            auctionLength: BigNumber.from('5'),
+            blockTime: BigNumber.from('1000'),
+            token0Decimals: '18',
+            token1Decimals: '18',
+            minAmountLowerPriced: true,
+            genesisTime: '0',
+            minPositionWidth: '1'
+        }
     })
 
     this.beforeEach(async function () {})
@@ -33,7 +54,7 @@ describe('TickMath Library Tests', function () {
     })
 
     it('validatePrice - Should revert at or above max sqrt price', async function () {
-        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198570')
+        let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198571')
         await expect(
             hre.props.coverPool.swap(
                 hre.props.admin.address,
@@ -44,51 +65,52 @@ describe('TickMath Library Tests', function () {
         ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
-    it('getSqrtRatioAtTick - Should get tick near min sqrt price', async function () {
+    it('getPriceAtTick - Should get tick near min sqrt price', async function () {
         expect(
-            await hre.props.tickMathLib.getSqrtRatioAtTick(BigNumber.from('-887272'))
-        ).to.be.equal(BigNumber.from('4295128739'))
+            await hre.props.constantProduct.getPriceAtTick(BigNumber.from('-887240'), constants)
+        ).to.be.equal(BigNumber.from('4302006101'))
     })
 
-    it('getTickAtSqrtRatio - Should get tick at min sqrt price', async function () {
+    it('getTickAtPrice - Should get tick at min sqrt price', async function () {
         expect(
-            await hre.props.tickMathLib.getTickAtSqrtRatio(BigNumber.from('4295128739'))
-        ).to.be.equal(BigNumber.from('-887272'))
+            await hre.props.constantProduct.getTickAtPrice(BigNumber.from('4302006102'), constants)
+        ).to.be.equal(BigNumber.from('-887240'))
     })
 
-    it('getTickAtSqrtRatio - Should get tick at sqrt price', async function () {
+    it('getTickAtPrice - Should get tick at sqrt price', async function () {
         expect(
-            await hre.props.tickMathLib.getTickAtSqrtRatio(BigNumber.from('83095200000000000000000000000'))
+            await hre.props.constantProduct.getTickAtPrice(BigNumber.from('83095200000000000000000000000'), constants)
         ).to.be.equal(BigNumber.from('953'))
     })
 
-    it('getTickAtSqrtRatio - Should get tick near max sqrt price', async function () {
+    it('getTickAtPrice - Should get tick near max sqrt price', async function () {
         expect(
-            await hre.props.tickMathLib.getTickAtSqrtRatio(
-                BigNumber.from('1461446703485210103287273052203988822378723970341')
+            await hre.props.constantProduct.getTickAtPrice(
+                BigNumber.from('1459110375135176227217141799363990665779938914149'), constants
             )
-        ).to.be.equal(BigNumber.from('887271'))
+        ).to.be.equal(BigNumber.from('887239'))
     })
 
-    it('getTickAtSqrtRatio - Should revert at max sqrt price', async function () {
+    it('getTickAtPrice - Should revert at max sqrt price', async function () {
         await expect(
-            hre.props.tickMathLib.getTickAtSqrtRatio(
-                BigNumber.from('1461446703485210103287273052203988822378723970342')
+            hre.props.constantProduct.getTickAtPrice(
+                BigNumber.from('1461446703485210103287273052203988822378723970342'), constants
             )
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+        ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
-    it('getTickAtSqrtRatio - Should revert when sqrt price is below bounds', async function () {
+    it('getTickAtPrice - Should revert when sqrt price is below bounds', async function () {
         await expect(
-            hre.props.tickMathLib.getTickAtSqrtRatio(BigNumber.from('4295128738'))
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+            hre.props.constantProduct.getTickAtPrice(BigNumber.from('4295128738'), constants)
+        ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
-    it('getTickAtSqrtRatio - Should revert when sqrt price is above bounds', async function () {
+    it('getTickAtPrice - Should revert when sqrt price is above bounds', async function () {
         await expect(
-            hre.props.tickMathLib.getTickAtSqrtRatio(
-                BigNumber.from('1461446703485210103287273052203988822378723970343')
+            hre.props.constantProduct.getTickAtPrice(
+                BigNumber.from('1461446703485210103287273052203988822378723970343'),
+                constants
             )
-        ).to.be.revertedWith('Transaction reverted: library was called directly')
+        ).to.be.revertedWith('PriceOutOfBounds()')
     })
 })

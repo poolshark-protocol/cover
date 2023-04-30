@@ -1,17 +1,12 @@
-import { network } from 'hardhat'
 import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks'
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { readDeploymentsFile, writeDeploymentsFile } from '../../../tasks/utils'
 import {
     Token20__factory,
     CoverPoolFactory__factory,
-    UniswapV3FactoryMock,
-    UniswapV3Source,
     Ticks__factory,
     TickMath__factory,
-    DyDxMath__factory,
     FullPrecisionMath__factory,
     Positions__factory,
     Epochs__factory,
@@ -22,12 +17,14 @@ import {
     EpochMap__factory,
     UniswapV3Source__factory,
     UniswapV3FactoryMock__factory,
+    ConstantProduct__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
     private token0Decimals = 18
     private token1Decimals = 18
     private uniV3String = ethers.utils.formatBytes32String('UNI-V3')
+    private constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
     private deployAssist: DeployAssist
     private contractDeploymentsJson: ContractDeploymentsJson
     private contractDeploymentsKeys: ContractDeploymentsKeys
@@ -115,14 +112,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            TickMath__factory,
-            'tickMathLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             FullPrecisionMath__factory,
             'fullPrecisionMathLib',
             []
@@ -131,8 +120,8 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            DyDxMath__factory,
-            'dydxMathLib',
+            ConstantProduct__factory,
+            'constantProduct',
             [],
             {
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
@@ -172,9 +161,6 @@ export class InitialSetup {
             Deltas__factory,
             'deltasLib',
             [],
-            {
-                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address
-            }
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -184,10 +170,8 @@ export class InitialSetup {
             'epochsLib',
             [],
             {
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/UniswapV3Source.sol:UniswapV3Source': hre.props.uniswapV3Source.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
@@ -202,10 +186,8 @@ export class InitialSetup {
             'ticksLib',
             [],
             {
-                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
             }
         )
@@ -218,8 +200,6 @@ export class InitialSetup {
             [],
             {
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
-                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
             }
@@ -232,10 +212,8 @@ export class InitialSetup {
             'positionsLib',
             [],
             {
-                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
@@ -251,7 +229,8 @@ export class InitialSetup {
             'coverPoolManager',
             [
                 this.uniV3String,
-                hre.props.uniswapV3Source.address
+                hre.props.uniswapV3Source.address,
+                hre.props.constantProduct.address
             ]
         )
 
@@ -268,8 +247,6 @@ export class InitialSetup {
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
                 'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
                     hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/math/TickMath.sol:TickMath': hre.props.tickMathLib.address,
-                'contracts/libraries/math/DyDxMath.sol:DyDxMath': hre.props.dydxMathLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
             }
         )
@@ -345,7 +322,7 @@ export class InitialSetup {
 
         //TODO: for coverPool2 we need a second mock pool with a different cardinality
 
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('5')
+        await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
 
         return hre.nonce
     }
