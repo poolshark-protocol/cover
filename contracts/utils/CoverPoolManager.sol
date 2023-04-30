@@ -23,29 +23,6 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
     mapping(bytes32 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
-    uint16 public protocolFee;
-
-    error OwnerOnly();
-    error EmptyPoolsArray();
-    error FeeToOnly();
-    error FactoryAlreadySet();
-    error VolatilityTierCannotBeZero();
-    error VolatilityTierAlreadyEnabled();
-    error VoltatilityTierTwapTooShort();
-    error ProtocolFeeCeilingExceeded();
-    error TransferredToZeroAddress();
-    error FeeTierNotSupported();
-    error VolatilityTierNotSupported();
-    error InvalidTickSpread();
-    error TwapSourceNameInvalid();
-    error TwapSourceAddressZero();
-    error TwapSourceAlreadyExists();
-    error TwapSourceNotFound();
-    error CurveMathAddressZero();
-    error MismatchedArrayLengths();
-    error TickSpreadNotMultipleOfTickSpacing();
-    error TickSpreadNotAtLeastDoubleTickSpread();
-
     constructor(
         bytes32 sourceName,
         address sourceAddress,
@@ -100,12 +77,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
      * Can only be called by the current owner.
      */
     function transferOwner(address newOwner) public virtual onlyOwner {
-        if(newOwner == address(0)) revert TransferredToZeroAddress();
+        if(newOwner == address(0)) require (false, 'TransferredToZeroAddress()');
         _transferOwner(newOwner);
     }
 
     function transferFeeTo(address newFeeTo) public virtual onlyFeeTo {
-        if(newFeeTo == address(0)) revert TransferredToZeroAddress();
+        if(newFeeTo == address(0)) require (false, 'TransferredToZeroAddress()');
         _transferFeeTo(newFeeTo);
     }
 
@@ -134,10 +111,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address sourceAddress,
         address curveAddress
     ) external onlyOwner {
-        if (sourceName[0] == bytes32("")) revert TwapSourceNameInvalid();
-        if (sourceAddress == address(0)) revert TwapSourceAddressZero();
-        if (curveAddress == address(0)) revert CurveMathAddressZero();
-        if (_twapSources[sourceName] != address(0)) revert TwapSourceAlreadyExists();
+        if (sourceName[0] == bytes32("")) require (false, 'TwapSourceNameInvalid()');
+        if (sourceAddress == address(0)) require (false, 'TwapSourceAddressZero()');
+        if (curveAddress == address(0)) require (false, 'CurveMathAddressZero()');
+        if (_twapSources[sourceName] != address(0)) require (false, 'TwapSourceAlreadyExists()');
         _twapSources[sourceName] = sourceAddress;
         _curveMaths[sourceName] = curveAddress;
         emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
@@ -157,28 +134,28 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         bool    minLowerPriced
     ) external onlyOwner {
         if (_volatilityTiers[sourceName][feeTier][tickSpread][twapLength].auctionLength != 0) {
-            revert VolatilityTierAlreadyEnabled();
+            require (false, 'VolatilityTierAlreadyEnabled()');
         } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
-            revert VolatilityTierCannotBeZero();
+            require (false, 'VolatilityTierCannotBeZero()');
         } else if (twapLength < 5 * blockTime / oneSecond) {
-            revert VoltatilityTierTwapTooShort();
+            require (false, 'VoltatilityTierTwapTooShort()');
         } else if (syncFee > 10000 || fillFee > 10000) {
-            revert ProtocolFeeCeilingExceeded();
+            require (false, 'ProtocolFeeCeilingExceeded()');
         }
         {
             // check fee tier exists
             address twapSource = _twapSources[sourceName];
-            if (twapSource == address(0)) revert TwapSourceNotFound();
+            if (twapSource == address(0)) require (false, 'TwapSourceNotFound()');
             int24 tickSpacing = ITwapSource(twapSource).feeTierTickSpacing(feeTier);
             if (tickSpacing == 0) {
-                revert FeeTierNotSupported();
+                require (false, 'FeeTierNotSupported()');
             }
             // check tick multiple
             int24 tickMultiple = tickSpread / tickSpacing;
             if (tickMultiple * tickSpacing != tickSpread) {
-                revert TickSpreadNotMultipleOfTickSpacing();
+                require (false, 'TickSpreadNotMultipleOfTickSpacing()');
             } else if (tickMultiple < 2) {
-                revert TickSpreadNotAtLeastDoubleTickSpread();
+                require (false, 'TickSpreadNotAtLeastDoubleTickSpread()');
             }
         }
         // twapLength * blockTime should never overflow uint16
@@ -215,7 +192,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         uint16 fillFee
     ) external onlyOwner {
         if (syncFee > 10000 || fillFee > 10000) {
-            revert ProtocolFeeCeilingExceeded();
+            require (false, 'ProtocolFeeCeilingExceeded()');
         }
         _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].syncFee = syncFee;
         _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].fillFee = fillFee;
@@ -224,7 +201,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function setFactory(
         address factory_
     ) external onlyOwner {
-        if (factory != address(0)) revert FactoryAlreadySet();
+        if (factory != address(0)) require (false, 'FactoryAlreadySet()');
         emit FactoryChanged(factory, factory_);
         factory = factory_;
     }
@@ -232,7 +209,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function collectProtocolFees(
         address[] calldata collectPools
     ) external {
-        if (collectPools.length == 0) revert EmptyPoolsArray();
+        if (collectPools.length == 0) require (false, 'EmptyPoolsArray()');
         uint128[] memory token0Fees = new uint128[](collectPools.length);
         uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length; i++) {
@@ -247,17 +224,17 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         uint16[] calldata fillFees,
         bool[] calldata setFees
     ) external onlyOwner {
-        if (modifyPools.length == 0) revert EmptyPoolsArray();
+        if (modifyPools.length == 0) require (false, 'EmptyPoolsArray()');
         if (modifyPools.length != syncFees.length
             || syncFees.length != fillFees.length
             || fillFees.length != setFees.length) {
-            revert MismatchedArrayLengths();
+            require (false, 'MismatchedArrayLengths()');
         }
         uint128[] memory token0Fees = new uint128[](modifyPools.length);
         uint128[] memory token1Fees = new uint128[](modifyPools.length);
         for (uint i; i < modifyPools.length; i++) {
-            if (syncFees[i] > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
-            if (fillFees[i] > MAX_PROTOCOL_FEE) revert ProtocolFeeCeilingExceeded();
+            if (syncFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
+            if (fillFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
             (
                 token0Fees[i],
                 token1Fees[i]
@@ -294,13 +271,13 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
      * @dev Throws if the sender is not the owner.
      */
     function _checkOwner() internal view {
-        if (owner != msg.sender) revert OwnerOnly();
+        if (owner != msg.sender) require (false, 'OwnerOnly()');
     }
 
     /**
      * @dev Throws if the sender is not the feeTo.
      */
     function _checkFeeTo() internal view {
-        if (feeTo != msg.sender) revert FeeToOnly();
+        if (feeTo != msg.sender) require (false, 'FeeToOnly()');
     }
 }
