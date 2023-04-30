@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './modules/ICurveMath.sol';
-import './modules/ITwapSource.sol';
+import './modules/curves/ICurveMath.sol';
+import './modules/sources/ITwapSource.sol';
 
 interface ICoverPoolStructs {
     struct GlobalState {
@@ -64,6 +64,7 @@ interface ICoverPoolStructs {
     struct Immutables {
         ICurveMath  curve;
         ITwapSource source;
+        ICurveMath.PriceBounds bounds;
         address inputPool;
         uint256 minAmountPerAuction;
         uint32 genesisTime;
@@ -224,6 +225,7 @@ interface ICoverPoolStructs {
         Deltas deltas0;
         Deltas deltas1;
         SyncFees syncFees;
+        int24 newLatestTick;
         int24 nextTickToCross0;
         int24 nextTickToCross1;
         int24 nextTickToAccum0;

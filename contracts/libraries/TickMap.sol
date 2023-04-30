@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './math/TickMath.sol';
+import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
 library TickMap {
@@ -12,9 +12,9 @@ library TickMap {
     error BlockIndexOverflow();
 
     function set(
-        ICoverPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpread
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants
     ) external returns (
         bool exists
     )    
@@ -23,7 +23,7 @@ library TickMap {
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex
-        ) = getIndices(tick, tickSpread);
+        ) = getIndices(tick, constants);
 
         // check if bit is already set
         uint256 word = tickMap.ticks[wordIndex] | 1 << (tickIndex & 0xFF);
@@ -38,15 +38,15 @@ library TickMap {
     }
 
     function unset(
-        ICoverPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpread
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants
     ) external {
         (
             uint256 tickIndex,
             uint256 wordIndex,
             uint256 blockIndex
-        ) = getIndices(tick, tickSpread);
+        ) = getIndices(tick, constants);
 
         tickMap.ticks[wordIndex] &= ~(1 << (tickIndex & 0xFF));
         if (tickMap.ticks[wordIndex] == 0) {
@@ -58,9 +58,9 @@ library TickMap {
     }
 
     function previous(
-        ICoverPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpread
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants
     ) external view returns (
         int24 previousTick
     ) {
@@ -69,7 +69,7 @@ library TickMap {
               uint256 tickIndex,
               uint256 wordIndex,
               uint256 blockIndex
-            ) = getIndices(tick, tickSpread);
+            ) = getIndices(tick, constants);
 
             uint256 word = tickMap.ticks[wordIndex] & ((1 << (tickIndex & 0xFF)) - 1);
             if (word == 0) {
@@ -85,14 +85,14 @@ library TickMap {
                 wordIndex = (blockIndex << 8) | _msb(block_);
                 word = tickMap.ticks[wordIndex];
             }
-            previousTick = _tick((wordIndex << 8) | _msb(word), tickSpread);
+            previousTick = _tick((wordIndex << 8) | _msb(word), constants);
         }
     }
 
     function next(
-        ICoverPoolStructs.TickMap storage tickMap,
         int24 tick,
-        int16 tickSpread
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants
     ) external view returns (
         int24 nextTick
     ) {
@@ -101,7 +101,7 @@ library TickMap {
               uint256 tickIndex,
               uint256 wordIndex,
               uint256 blockIndex
-            ) = getIndices(tick, tickSpread);
+            ) = getIndices(tick, constants);
             uint256 word = tickMap.ticks[wordIndex] & ~((1 << ((tickIndex & 0xFF) + 1)) - 1);
             if (word == 0) {
                 uint256 block_ = tickMap.words[blockIndex] & ~((1 << ((wordIndex & 0xFF) + 1)) - 1);
@@ -116,13 +116,13 @@ library TickMap {
                 wordIndex = (blockIndex << 8) | _lsb(block_);
                 word = tickMap.ticks[wordIndex];
             }
-            nextTick = _tick((wordIndex << 8) | _lsb(word), tickSpread);
+            nextTick = _tick((wordIndex << 8) | _lsb(word), constants);
         }
     }
 
     function getIndices(
         int24 tick,
-        int16 tickSpread
+        ICoverPoolStructs.Immutables memory constants
     ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -130,10 +130,10 @@ library TickMap {
         )
     {
         unchecked {
-            if (tick > TickMath.MAX_TICK / tickSpread * tickSpread) revert TickIndexOverflow();
-            if (tick < TickMath.MIN_TICK / tickSpread * tickSpread) revert TickIndexUnderflow();
-            if (tick % tickSpread != 0) revert TickIndexInvalid();
-            tickIndex = uint256(int256((tick - TickMath.MIN_TICK / tickSpread * tickSpread)) / tickSpread);
+            if (tick > constants.curve.maxTick(constants.tickSpread)) revert TickIndexOverflow();
+            if (tick < constants.curve.minTick(constants.tickSpread)) revert TickIndexUnderflow();
+            if (tick % constants.tickSpread != 0) revert TickIndexInvalid();
+            tickIndex = uint256(int256((tick - constants.curve.minTick(constants.tickSpread))) / constants.tickSpread);
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
             if (blockIndex > 255) revert BlockIndexOverflow();
@@ -142,13 +142,13 @@ library TickMap {
 
     function _tick (
         uint256 tickIndex,
-        int16 tickSpread
+        ICoverPoolStructs.Immutables memory constants
     ) internal pure returns (
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(TickMath.MAX_TICK / tickSpread * tickSpread * 2)) revert TickIndexOverflow();
-            tick = int24(int256(tickIndex) * int256(tickSpread) + TickMath.MIN_TICK / tickSpread * tickSpread);
+            if (tickIndex > uint24(constants.curve.maxTick(constants.tickSpread) * 2)) revert TickIndexOverflow();
+            tick = int24(int256(tickIndex) * int256(constants.tickSpread) + constants.curve.minTick(constants.tickSpread));
         }
     }
 

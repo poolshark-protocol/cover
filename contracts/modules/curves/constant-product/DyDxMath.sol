@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import '../../interfaces/modules/ICurveMath.sol';
-import '../../libraries/math/FullPrecisionMath.sol';
+import '../../../interfaces/modules/curves/IDyDxMath.sol';
+import '../../../libraries/math/FullPrecisionMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
-contract ConstantProduct is ICurveMath {
+abstract contract DyDxMath is IDyDxMath
+{
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     error PriceOutsideBounds();
@@ -95,6 +96,26 @@ contract ConstantProduct is ICurveMath {
         } else {
             token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
             token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
+        }
+    }
+
+    function getNewPrice(
+        uint256 price,
+        uint256 liquidity,
+        uint256 input,
+        bool zeroForOne
+    ) external pure returns (
+        uint256 newPrice
+    ) {
+        if (zeroForOne) {
+            uint256 liquidityPadded = liquidity << 96;
+            newPrice = FullPrecisionMath.mulDivRoundingUp(
+                            liquidityPadded,
+                            price,
+                            liquidityPadded + price * input
+                       );
+        } else {
+            newPrice = price + FullPrecisionMath.mulDiv(input, Q96, liquidity);
         }
     }
 }

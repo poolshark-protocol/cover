@@ -342,7 +342,7 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'InvalidLowerTick()',
+            revertMessage: 'LowerTickOutsideTickSpacing()',
         })
 
         await validateMint({
@@ -357,7 +357,7 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'InvalidUpperTick()',
+            revertMessage: 'UpperTickOutsideTickSpacing()',
         })
     })
 

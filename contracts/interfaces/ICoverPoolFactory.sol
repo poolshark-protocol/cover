@@ -5,7 +5,6 @@ import '../base/storage/CoverPoolFactoryStorage.sol';
 abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
     function createCoverPool(
         bytes32 sourceName,
-        bytes32 curveName,
         address tokenIn,
         address tokenOut,
         uint16 fee,
@@ -15,7 +14,6 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
 
     function getCoverPool(
         bytes32 sourceName,
-        bytes32 curveName,
         address tokenIn,
         address tokenOut,
         uint16 fee,

@@ -5,8 +5,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '../../interfaces/external/IUniswapV3Factory.sol';
 import '../../interfaces/external/IUniswapV3Pool.sol';
 import '../../interfaces/ICoverPoolStructs.sol';
-import '../../interfaces/modules/ITwapSource.sol';
-import '../../libraries/math/TickMath.sol';
+import '../../interfaces/modules/sources/ITwapSource.sol';
 
 contract UniswapV3Source is ITwapSource {
     error WaitUntilBelowMaxTick();
@@ -44,7 +43,7 @@ contract UniswapV3Source is ITwapSource {
         } else if (!observationsCountEnough) {
             return (0, 0);
         }
-        return (1, _calculateAverageTick(constants.inputPool, constants.twapLength));
+        return (1, _calculateAverageTick(constants));
     }
 
     function factory() external view returns (address) {
@@ -71,30 +70,29 @@ contract UniswapV3Source is ITwapSource {
     }
 
     function calculateAverageTick(
-        address pool,
-        uint16 twapLength
+        ICoverPoolStructs.Immutables memory constants
     ) external view returns (
         int24 averageTick
     )
     {
-        return _calculateAverageTick(pool, twapLength);
+        return _calculateAverageTick(constants);
     }
 
     function _calculateAverageTick(
-        address pool,
-        uint16 twapLength
+        ICoverPoolStructs.Immutables memory constants
     ) internal view returns (
         int24 averageTick
     )
     {
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 0;
-        secondsAgos[1] = twapLength;
-        (int56[] memory tickCumulatives, ) = IUniswapV3Pool(pool).observe(secondsAgos);
+        secondsAgos[1] = constants.twapLength;
+        (int56[] memory tickCumulatives, ) = IUniswapV3Pool(constants.inputPool).observe(secondsAgos);
         averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
-        //TODO: this should be limited to TickMath.MAX_TICK / tickSpread * tickSpread
-        if (averageTick == TickMath.MAX_TICK) revert WaitUntilBelowMaxTick();
-        if (averageTick == TickMath.MIN_TICK) revert WaitUntilAboveMinTick();
+        int24 maxAverageTick = constants.curve.maxTick(constants.tickSpread) - constants.tickSpread;
+        if (averageTick > maxAverageTick) return maxAverageTick;
+        int24 minAverageTick = constants.curve.minTick(constants.tickSpread) + constants.tickSpread;
+        if (averageTick < minAverageTick) return minAverageTick;
     }
 
     function _isPoolObservationsEnough(
