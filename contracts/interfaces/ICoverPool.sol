@@ -18,15 +18,20 @@ interface ICoverPool is ICoverPoolStructs {
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
-    ) external;
+    ) external returns (
+        int256 inAmount,
+        uint256 outAmount,
+        uint256 priceAfter
+    );
 
     function quote(
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
     ) external view returns (
-        uint256 inAmount,
-        uint256 outAmount
+        int256 inAmount,
+        uint256 outAmount,
+        uint256 priceAfter
     );
 
     function protocolFees(

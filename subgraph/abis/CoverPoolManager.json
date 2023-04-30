@@ -60,25 +60,99 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "collectPools",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token0Fees",
+        "type": "uint128[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token1Fees",
+        "type": "uint128[]"
+      }
+    ],
+    "name": "ProtocolFeesCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "modifyPools",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16[]",
+        "name": "syncFees",
+        "type": "uint16[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16[]",
+        "name": "fillFees",
+        "type": "uint16[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool[]",
+        "name": "setFees",
+        "type": "bool[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token0Fees",
+        "type": "uint128[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128[]",
+        "name": "token1Fees",
+        "type": "uint128[]"
+      }
+    ],
+    "name": "ProtocolFeesModified",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "sourceName",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
-        "name": "pool",
+        "name": "sourceAddress",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint128",
-        "name": "token0Fees",
-        "type": "uint128"
+        "internalType": "address",
+        "name": "curveAddress",
+        "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint128",
-        "name": "token1Fees",
-        "type": "uint128"
+        "internalType": "address",
+        "name": "factoryAddress",
+        "type": "address"
       }
     ],
-    "name": "ProtocolFeeCollected",
+    "name": "TwapSourceEnabled",
     "type": "event"
   },
   {
@@ -86,23 +160,10 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint16",
-        "name": "oldProtocolFee",
-        "type": "uint16"
+        "internalType": "bytes32",
+        "name": "sourceName",
+        "type": "bytes32"
       },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "newProtocolFee",
-        "type": "uint16"
-      }
-    ],
-    "name": "ProtocolFeeUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
       {
         "indexed": false,
         "internalType": "uint16",
@@ -123,9 +184,45 @@
       },
       {
         "indexed": false,
+        "internalType": "uint128",
+        "name": "minAmountPerAuction",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
         "internalType": "uint16",
         "name": "auctionLength",
         "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "blockTime",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "syncFee",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "fillFee",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "int16",
+        "name": "minPositionWidth",
+        "type": "int16"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "minLowerPriced",
+        "type": "bool"
       }
     ],
     "name": "VolatilityTierEnabled",

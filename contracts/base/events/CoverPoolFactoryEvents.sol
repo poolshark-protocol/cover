@@ -12,10 +12,4 @@ abstract contract CoverPoolFactoryEvents {
         int16 indexed tickSpread,
         uint16 twapLength
     );
-
-    event ProtocolFeeCollected(
-        address pool,
-        uint128 token0Fees,
-        uint128 token1Fees
-    );
 }

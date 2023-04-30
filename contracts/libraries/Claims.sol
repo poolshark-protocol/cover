@@ -6,14 +6,9 @@ import '../interfaces/ICoverPoolStructs.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
+import './utils/String.sol';
 
 library Claims {
-    error InvalidClaimTick();
-    error LiquidityOverflow();
-    error WrongTickClaimedAt();
-    error UpdatePositionFirstAt(int24, int24);
-    error NotEnoughPositionLiquidity();
-
     /////////// DEBUG FLAGS ///////////
     bool constant debugDeltas = true;
 
@@ -30,7 +25,7 @@ library Claims {
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
-        if (params.amount > cache.position.liquidity) revert NotEnoughPositionLiquidity();
+        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
         if (cache.position.liquidity == 0) {
             cache.earlyReturn = true;
             return cache;
@@ -65,15 +60,15 @@ library Claims {
                     ? cache.position.claimPriceLast < cache.priceClaim
                     : cache.position.claimPriceLast > cache.priceClaim
             ) && params.claim != state.latestTick
-        ) revert InvalidClaimTick(); /// @dev - wrong claim tick
-        if (params.claim < params.lower || params.claim > params.upper) revert InvalidClaimTick();
+        ) require (false, 'InvalidClaimTick()'); /// @dev - wrong claim tick
+        if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
         uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
              if (claimTickEpoch <= cache.position.accumEpochLast)
-                revert WrongTickClaimedAt();
+                require (false, 'WrongTickClaimedAt()');
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
@@ -83,21 +78,21 @@ library Claims {
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 //TODO: search for claim tick if necessary
                 //TODO: limit search to within 1 closest word
-                revert WrongTickClaimedAt();
+                require (false, 'WrongTickClaimedAt()');
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
             // check accumEpochLast on claim tick
             if (claimTickEpoch <= cache.position.accumEpochLast)
-                revert WrongTickClaimedAt();
+                require (false, 'WrongTickClaimedAt()');
             // prevent position overwriting at claim tick
             if (params.zeroForOne) {
                 if (positions[params.owner][params.lower][params.claim].liquidity > 0) {
-                    revert UpdatePositionFirstAt(params.lower, params.claim);
+                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
                 }
             } else {
                 if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
-                    revert UpdatePositionFirstAt(params.claim, params.upper);
+                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
                 }
             }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()

@@ -1,7 +1,7 @@
 import { safeLoadManager, safeLoadCoverPoolFactory, safeLoadVolatilityTier } from './utils/loads'
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../constants/constants'
-import { FactoryChanged, FeeToTransfer, OwnerTransfer, ProtocolFeeCollected, ProtocolFeeUpdated } from '../../generated/CoverPoolManager/CoverPoolManager'
+import { FactoryChanged, FeeToTransfer, OwnerTransfer } from '../../generated/CoverPoolManager/CoverPoolManager'
 import { VolatilityTierEnabled } from '../../generated/CoverPoolManager/CoverPoolManager'
 
 export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void {
@@ -9,9 +9,10 @@ export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void 
     let tickSpreadParam    = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam    = BigInt.fromI32(event.params.twapLength)
     let auctionLengthParam = BigInt.fromI32(event.params.auctionLength)
+    let twapSourceParam    = event.params.sourceName.toHex()
 
     let loadManager        = safeLoadManager(event.address.toHex())
-    let loadVolatilityTier = safeLoadVolatilityTier(feeTierParam, tickSpreadParam, twapLengthParam, auctionLengthParam)
+    let loadVolatilityTier = safeLoadVolatilityTier(twapSourceParam, feeTierParam, tickSpreadParam, twapLengthParam)
 
     let manager        = loadManager.entity
     let volatilityTier = loadVolatilityTier.entity
@@ -78,10 +79,4 @@ export function handleOwnerTransfer(event: OwnerTransfer): void {
 
     manager.save()
     factory.save()
-}
-
-export function handleProtocolFeeCollected(event: ProtocolFeeCollected): void {
-}
-
-export function handleProtocolFeeUpdated(event: ProtocolFeeUpdated): void {
 }

@@ -61,6 +61,7 @@ export class DeployAssist {
         contractName = contractName ?? contractFactory.name.split('__')[0]
 
         let contract: Contract
+
         if (linkedLibraries) {
             // @ts-ignore
             contract = await new contractFactory(linkedLibraries, hre.props.admin).deploy(

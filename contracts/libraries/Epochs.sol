@@ -11,26 +11,40 @@ import './EpochMap.sol';
 library Epochs {
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
+    event Sync(
+        uint160 pool0Price,
+        uint160 pool1Price,
+        uint128 pool0Liquidity,
+        uint128 pool1Liquidity,
+        uint32 auctionStart,
+        uint32 indexed accumEpoch,
+        int24 indexed oldLatestTick,
+        int24 indexed newLatestTick
+    );
+
     event SyncFeesCollected(
-        address collector,
+        address indexed collector,
         uint128 token0Amount,
         uint128 token1Amount
     );
 
     event FinalDeltasAccumulated(
-        bool isPool0,
-        int24 accumTick,
-        int24 crossTick,
         uint128 amountInDelta,
-        uint128 amountOutDelta
+        uint128 amountOutDelta,
+        uint32 indexed accumEpoch,
+        int24 indexed accumTick,
+        int24 crossTick,
+        bool indexed isPool0
     );
 
     event StashDeltasAccumulated(
-        bool isPool0,
         uint128 amountInDelta,
         uint128 amountOutDelta,
         uint128 amountInDeltaMaxStashed,
-        uint128 amountOutDeltaMaxStashed
+        uint128 amountOutDeltaMaxStashed,
+        uint32 indexed accumEpoch,
+        int24 indexed stashTick,
+        bool indexed isPool0
     );
 
     function simulateSync(
@@ -194,7 +208,8 @@ library Epochs {
             });
             params = _accumulate(
                 cache,
-                params
+                params,
+                state
             );
             /// @dev - deltas in cache updated after _accumulate
             cache.deltas0 = params.deltas;
@@ -225,6 +240,7 @@ library Epochs {
             (stopTick0) = _stash(
                 stopTick0,
                 cache,
+                state,
                 pool0.liquidity,
                 true
             );
@@ -252,7 +268,8 @@ library Epochs {
                 });
                 params = _accumulate(
                     cache,
-                    params
+                    params,
+                    state
                 );
                 /// @dev - deltas in cache updated after _accumulate
                 cache.deltas1 = params.deltas;
@@ -283,6 +300,7 @@ library Epochs {
             (stopTick1) = _stash(
                 stopTick1,
                 cache,
+                state,
                 pool1.liquidity,
                 false
             );
@@ -305,6 +323,11 @@ library Epochs {
         
         // set auction start as an offset of the pool genesis block
         state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
+
+        // emit sync event
+        emit Sync(pool0.price, pool1.price, pool0.liquidity, pool1.liquidity, state.auctionStart, state.accumEpoch, state.latestTick, cache.newLatestTick);
+        
+        // update latestTick
         state.latestTick = cache.newLatestTick;
 
         if (cache.syncFees.token0 > 0 || cache.syncFees.token1 > 0) {
@@ -481,7 +504,8 @@ library Epochs {
 
     function _accumulate(
         ICoverPoolStructs.AccumulateCache memory cache,
-        ICoverPoolStructs.AccumulateParams memory params
+        ICoverPoolStructs.AccumulateParams memory params,
+        ICoverPoolStructs.GlobalState memory state
     ) internal returns (
         ICoverPoolStructs.AccumulateParams memory
     ) {
@@ -509,19 +533,21 @@ library Epochs {
 
                 if (params.isPool0) {
                     emit FinalDeltasAccumulated(
-                        params.isPool0,
+                        accumDeltas.amountInDelta,
+                        accumDeltas.amountOutDelta,
+                        state.accumEpoch,
                         cache.nextTickToCross0,
                         cache.nextTickToAccum0,
-                        accumDeltas.amountInDelta,
-                        accumDeltas.amountOutDelta
+                        params.isPool0
                     );
                 } else {
                     emit FinalDeltasAccumulated(
-                        params.isPool0,
+                        accumDeltas.amountInDelta,
+                        accumDeltas.amountOutDelta,
+                        state.accumEpoch,
                         cache.nextTickToCross1,
                         cache.nextTickToAccum1,
-                        accumDeltas.amountInDelta,
-                        accumDeltas.amountOutDelta
+                        params.isPool0
                     );
                 }
                 params.accumTick.amountInDeltaMaxMinus  = 0;
@@ -572,6 +598,7 @@ library Epochs {
     function _stash(
         ICoverPoolStructs.Tick memory stashTick,
         ICoverPoolStructs.AccumulateCache memory cache,
+        ICoverPoolStructs.GlobalState memory state,
         uint128 currentLiquidity,
         bool isPool0
     ) internal returns (ICoverPoolStructs.Tick memory) {
@@ -580,11 +607,13 @@ library Epochs {
         // handle deltas
         ICoverPoolStructs.Deltas memory deltas = isPool0 ? cache.deltas0 : cache.deltas1;
         emit StashDeltasAccumulated(
-            isPool0,
             deltas.amountInDelta,
             deltas.amountOutDelta,
             deltas.amountInDeltaMax,
-            deltas.amountOutDeltaMax
+            deltas.amountOutDeltaMax,
+            state.accumEpoch,
+            isPool0 ? cache.stopTick0 : cache.stopTick1,
+            isPool0
         );
         if (deltas.amountInDeltaMax > 0) {
             (deltas, stashTick) = Deltas.stash(deltas, stashTick);

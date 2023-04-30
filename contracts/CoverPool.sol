@@ -245,7 +245,11 @@ contract CoverPool is
         bool zeroForOne,
         uint128 amountIn,
         uint160 priceLimit
-    ) external override lock
+    ) external override lock returns (
+        int256 inAmount,
+        uint256 outAmount,
+        uint256 priceAfter
+    ) 
     {
         ICurveMath(curveMath).checkPrice(
             priceLimit,
@@ -299,21 +303,31 @@ contract CoverPool is
         globalState = cache.state;
 
         if (zeroForOne) {
-            if (cache.input > 0) {
+            if (cache.input + cache.syncFees.token0 > 0) {
                 _transferOut(recipient, token0, cache.input + cache.syncFees.token0);
             }
-            if (cache.output > 0) {
+            if (cache.output + cache.syncFees.token1 > 0) {
                 _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
-                emit Swap(recipient, token0, token1, amountIn - cache.input, cache.output);
+                emit Swap(msg.sender, recipient, token0, token1, amountIn - cache.input, cache.output);
             }
+            return (
+                int128(amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
+                cache.output + cache.syncFees.token1,
+                cache.price 
+            );
         } else {
-            if (cache.input > 0) {
+            if (cache.input + cache.syncFees.token1 > 0) {
                 _transferOut(recipient, token1, cache.input + cache.syncFees.token1);
             }
-            if (cache.output > 0) {
+            if (cache.output + cache.syncFees.token0 > 0) {
                 _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
-                emit Swap(recipient, token1, token0, amountIn - cache.input, cache.output);
+                emit Swap(msg.sender, recipient, token1, token0, amountIn - cache.input, cache.output);
             }
+            return (
+                int128(amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
+                cache.output + cache.syncFees.token0,
+                cache.price 
+            );
         }
     }
 
@@ -322,8 +336,9 @@ contract CoverPool is
         uint128 amountIn,
         uint160 priceLimit
     ) external view override returns (
-        uint256 inAmount,
-        uint256 outAmount
+        int256 inAmount,
+        uint256 outAmount,
+        uint256 priceAfter
     ) {
         PoolState memory pool0State;
         PoolState memory pool1State;
@@ -360,13 +375,18 @@ contract CoverPool is
         });
         cache = Ticks.quote(zeroForOne, priceLimit, cache.state, cache, _immutables());
         if (zeroForOne) {
-            inAmount  = cache.input  + cache.syncFees.token0;
-            outAmount = cache.output + cache.syncFees.token1;
+            return (
+                int128(amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
+                cache.output + cache.syncFees.token1,
+                cache.price 
+            );
         } else {
-            inAmount  = cache.input  + cache.syncFees.token1;
-            outAmount = cache.output + cache.syncFees.token0;
+            return (
+                int128(amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
+                cache.output + cache.syncFees.token0,
+                cache.price 
+            );
         }
-        return (inAmount, outAmount);
     }
 
     function snapshot(

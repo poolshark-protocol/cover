@@ -9,8 +9,6 @@ abstract contract DyDxMath is IDyDxMath
 {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
-    error PriceOutsideBounds();
-
     function getDy(
         uint256 liquidity,
         uint256 priceLower,
@@ -77,7 +75,7 @@ abstract contract DyDxMath is IDyDxMath
                 );
             } else {
                 /// @dev - price should either be priceUpper or priceLower
-                revert PriceOutsideBounds();
+                require (false, 'PriceOutsideBounds()');
             }  
         }
     }

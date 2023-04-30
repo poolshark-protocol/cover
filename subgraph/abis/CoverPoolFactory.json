@@ -11,6 +11,12 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "twapSource",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "inputPool",
         "type": "address"
       },
@@ -27,13 +33,13 @@
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint16",
         "name": "fee",
         "type": "uint16"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "int16",
         "name": "tickSpread",
         "type": "int16"
@@ -43,40 +49,9 @@
         "internalType": "uint16",
         "name": "twapLength",
         "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "auctionLength",
-        "type": "uint16"
       }
     ],
     "name": "PoolCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "pool",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "token0Fees",
-        "type": "uint128"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint128",
-        "name": "token1Fees",
-        "type": "uint128"
-      }
-    ],
-    "name": "ProtocolFeeCollected",
     "type": "event"
   }
 ]

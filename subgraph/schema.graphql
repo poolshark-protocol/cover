@@ -114,3 +114,19 @@ type Tick @entity {
     price1: BigDecimal!
     epochLast: BigInt!
 }
+
+type TickDeltas @entity {
+    # poolAddress + index + zeroForOne
+    id: ID!
+    pool: CoverPool!
+    index: BigInt!
+    zeroForOne: Boolean!
+    amountInDelta: BigInt!
+    amountOutDelta: BigInt!
+    amountInDeltaMax: BigInt!
+    amountOutDeltaMax: BigInt!
+    amountInDeltaMaxMinus: BigInt!
+    amountOutDeltaMaxMinus: BigInt!
+    amountInDeltaMaxStashed: BigInt!
+    amountOutDeltaMaxStashed: BigInt!
+}

@@ -45,7 +45,6 @@ describe('CoverPool Tests', function () {
     //every test should clear out all liquidity
 
     before(async function () {
-        await gBefore()
         let currentBlock = await ethers.provider.getBlockNumber()
         let currentTime = (await ethers.provider.getBlock(currentBlock)).timestamp
         let lastTime = (await ethers.provider.getBlock(currentBlock - 1)).timestamp

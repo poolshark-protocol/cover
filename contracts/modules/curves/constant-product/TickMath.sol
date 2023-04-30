@@ -14,15 +14,6 @@ abstract contract TickMath is ITickMath {
     int24 internal constant MAX_TICK = -MIN_TICK;
     uint256 private constant Q96 = 0x1000000000000000000000000;
 
-    error LowerTickOutOfBounds();
-    error UpperTickOutOfBounds();
-    error LowerTickOutsideTickSpacing();
-    error UpperTickOutsideTickSpacing();
-    error LowerUpperTickOrderInvalid();
-    error TickOutOfBounds();
-    error PriceOutOfBounds();
-    error WaitUntilEnoughObservations();
-
     function minTick(
         int16 tickSpacing
     ) public pure returns (
@@ -65,18 +56,18 @@ abstract contract TickMath is ITickMath {
         int16 tickSpacing
     ) external pure
     {
-        if (lower < minTick(tickSpacing)) revert LowerTickOutOfBounds();
-        if (upper > maxTick(tickSpacing)) revert UpperTickOutOfBounds();
-        if (lower % tickSpacing != 0) revert LowerTickOutsideTickSpacing();
-        if (upper % tickSpacing != 0) revert UpperTickOutsideTickSpacing();
-        if (lower >= upper) revert LowerUpperTickOrderInvalid();
+        if (lower < minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
+        if (upper > maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
+        if (lower % tickSpacing != 0) require (false, 'LowerTickOutsideTickSpacing()');
+        if (upper % tickSpacing != 0) require (false, 'UpperTickOutsideTickSpacing()');
+        if (lower >= upper) require (false, 'LowerUpperTickOrderInvalid()');
     }
 
     function checkPrice(
         uint160 price,
         PriceBounds memory bounds
     ) external pure {
-        if (price < bounds.min || price >= bounds.max) revert PriceOutOfBounds();
+        if (price < bounds.min || price >= bounds.max) require (false, 'PriceOutOfBounds()');
     }
 
     function getPriceAtTick(
@@ -109,7 +100,7 @@ abstract contract TickMath is ITickMath {
         uint160 price
     ) {
         uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
-        if (absTick > uint256(uint24(maxTick(constants.tickSpread)))) revert TickOutOfBounds();
+        if (absTick > uint256(uint24(maxTick(constants.tickSpread)))) require (false, 'TickOutOfBounds()');
         unchecked {
             uint256 ratio = absTick & 0x1 != 0
                 ? 0xfffcb933bd6fad37aa2d162d1a594001
@@ -151,7 +142,7 @@ abstract contract TickMath is ITickMath {
     ) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
         if (price < constants.bounds.min || price >= constants.bounds.max)
-            revert PriceOutOfBounds();
+            require (false, 'PriceOutOfBounds()');
         uint256 ratio = uint256(price) << 32;
 
         uint256 r = ratio;

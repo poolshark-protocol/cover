@@ -12,30 +12,12 @@ import './EpochMap.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
-    error InvalidClaimTick();
-    error LiquidityOverflow();
-    error WrongTickClaimedAt();
-    error PositionNotUpdated();
-    error ClaimPriceLastNonZero();
-    error UpdatePositionFirstAt(int24, int24);
-    error InvalidLowerTick();
-    error InvalidUpperTick();
-    error InvalidPositionWidth();
-    error InvalidBurnPercentage();
-    error PositionAmountZero();
-    error PositionAuctionAmountTooSmall();
-    error InvalidPositionBoundsOrder();
-    error PositionInsideSafetyWindow();
-    error NotEnoughPositionLiquidity();
-    error NotImplementedYet();
-
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     event Mint(
         address indexed owner,
         int24 indexed lower,
         int24 indexed upper,
-        int24 claim,
         bool zeroForOne,
         uint128 liquidityMinted,
         uint128 amountInDeltaMaxMinted,
@@ -83,13 +65,13 @@ library Positions {
         });
 
         // cannot mint empty position
-        if (params.amount == 0) revert PositionAmountZero();
+        if (params.amount == 0) require (false, 'PositionAmountZero()');
 
         // enforce safety window
         if (params.zeroForOne) {    
-            if (params.lower >= cache.requiredStart) revert PositionInsideSafetyWindow(); 
+            if (params.lower >= cache.requiredStart) require (false, 'PositionInsideSafetyWindow()'); 
         } else {
-            if (params.upper <= cache.requiredStart) revert PositionInsideSafetyWindow();
+            if (params.upper <= cache.requiredStart) require (false, 'PositionInsideSafetyWindow()');
         }
 
         cache.liquidityMinted = constants.curve.getLiquidityForAmounts(
@@ -112,7 +94,7 @@ library Positions {
             }
             // update auction count
             cache.auctionCount = uint24((params.upper - params.lower) / constants.tickSpread);
-            if (cache.auctionCount == 0) revert InvalidPositionWidth();
+            if (cache.auctionCount == 0) require (false, 'InvalidPositionWidth()');
         } else {
             if (params.lower < cache.requiredStart) {
                 params.lower = cache.requiredStart;
@@ -124,11 +106,11 @@ library Positions {
             }
             // update auction count
             cache.auctionCount = uint24((params.upper - params.lower) / constants.tickSpread);
-            if (cache.auctionCount == 0) revert InvalidPositionWidth();
+            if (cache.auctionCount == 0) require (false, 'InvalidPositionWidth()');
         }
         // enforce minimum position width
-        if (cache.auctionCount < uint16(constants.minPositionWidth)) revert InvalidPositionWidth();
-        if (cache.liquidityMinted > uint128(type(int128).max)) revert LiquidityOverflow();
+        if (cache.auctionCount < uint16(constants.minPositionWidth)) require (false, 'InvalidPositionWidth()');
+        if (cache.liquidityMinted > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
 
         // enforce minimum amount per auction
         _size(
@@ -187,7 +169,7 @@ library Positions {
                         EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
-                revert WrongTickClaimedAt();
+                require (false, 'WrongTickClaimedAt()');
             }
         }
         
@@ -222,7 +204,6 @@ library Positions {
                 params.owner,
                 params.lower,
                 params.upper,
-                params.claim,
                 params.zeroForOne,
                 uint128(params.amount),
                 mintDeltas.amountInDeltaMax,
@@ -242,7 +223,7 @@ library Positions {
         ICoverPoolStructs.Immutables memory constants
     ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
         // validate burn percentage
-        if (params.amount > 1e38) revert InvalidBurnPercentage();
+        if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
@@ -260,7 +241,7 @@ library Positions {
         // early return if no liquidity to remove
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
-            revert NotEnoughPositionLiquidity();
+            require (false, 'NotEnoughPositionLiquidity()');
         } else {
             _size(
                 ICoverPoolStructs.SizeParams(
@@ -283,7 +264,7 @@ library Positions {
                         EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
-                revert WrongTickClaimedAt();
+                require (false, 'WrongTickClaimedAt()');
             }
         }
 
@@ -514,8 +495,8 @@ library Positions {
         uint128
     ) {
         // convert percentage to liquidity amount
-        if (percent > 1e38) revert InvalidBurnPercentage();
-        if (liquidity == 0 && percent > 0) revert NotEnoughPositionLiquidity();
+        if (percent > 1e38) require (false, 'InvalidBurnPercentage()');
+        if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
 
@@ -641,14 +622,14 @@ library Positions {
             ));
             if (denomTokenIn) {
                 if (amount / params.auctionCount < minAmountPerAuction)
-                    revert PositionAuctionAmountTooSmall();
+                    require (false, 'PositionAuctionAmountTooSmall()');
             } else {
                 // denominate in incoming token
                 uint256 priceAverage = (params.priceUpper + params.priceLower) / 2;
                 uint256 convertedAmount = amount * priceAverage / Q96 
                                                  * priceAverage / Q96; // convert by squaring price
                 if (convertedAmount / params.auctionCount < minAmountPerAuction) 
-                    revert PositionAuctionAmountTooSmall();
+                    require (false, 'PositionAuctionAmountTooSmall()');
             }
         } else {
             uint128 amount = uint128(constants.curve.getDy(
@@ -661,14 +642,14 @@ library Positions {
                 // denominate in token1
                 // calculate amount in position currently
                 if (amount / params.auctionCount < minAmountPerAuction) 
-                    revert PositionAuctionAmountTooSmall();
+                    require (false, 'PositionAuctionAmountTooSmall()');
             } else {
                 // denominate in token0
                 uint256 priceAverage = (params.priceUpper + params.priceLower) / 2;
                 uint256 convertedAmount = amount * Q96 / priceAverage 
                                                  * Q96 / priceAverage; // convert by squaring price
                 if (convertedAmount / params.auctionCount < minAmountPerAuction) 
-                    revert PositionAuctionAmountTooSmall();
+                    require (false, 'PositionAuctionAmountTooSmall()');
             }
         }
     }
