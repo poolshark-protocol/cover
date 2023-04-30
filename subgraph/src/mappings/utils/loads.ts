@@ -87,11 +87,12 @@ class LoadTickRet {
     entity: Tick
     exists: boolean
 }
-export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
+export function safeLoadTick(address: string, index: BigInt, zeroForOne: boolean): LoadTickRet {
     let exists = true
 
     let tickId = address
     .concat(index.toString())
+    .concat(zeroForOne.toString())
 
     let tickEntity = Tick.load(tickId)
 
@@ -99,6 +100,7 @@ export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
         tickEntity = new Tick(tickId)
         tickEntity.pool = address
         tickEntity.index = index
+        tickEntity.isPool0 = zeroForOne
         tickEntity.epochLast = ONE_BI
         // 1.0001^tick is token1/token0.
         tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))

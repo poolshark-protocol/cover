@@ -89,7 +89,7 @@ templates:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: Mint(indexed address,indexed int24,indexed int24,int24,bool,uint128,uint128,uint128)
+              - event: Mint(indexed address,indexed int24,indexed int24,bool,uint128,uint128,uint128,uint128)
                 handler: handleMint
               - event: Burn(indexed address,address,indexed int24,indexed int24,int24,bool,uint128,uint128,uint128,uint128,uint128,uint128,uint128)
                 handler: handleBurn

@@ -150,15 +150,15 @@
       },
       {
         "indexed": false,
-        "internalType": "int24",
-        "name": "claim",
-        "type": "int24"
-      },
-      {
-        "indexed": false,
         "internalType": "bool",
         "name": "zeroForOne",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountIn",
+        "type": "uint128"
       },
       {
         "indexed": false,
