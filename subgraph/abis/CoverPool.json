@@ -3,12 +3,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      },
-      {
         "indexed": false,
         "internalType": "address",
         "name": "to",
@@ -79,6 +73,12 @@
         "internalType": "uint128",
         "name": "amountOutDeltaMaxBurned",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "claimPriceLast",
+        "type": "uint160"
       }
     ],
     "name": "Burn",
@@ -133,7 +133,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "owner",
+        "name": "to",
         "type": "address"
       },
       {

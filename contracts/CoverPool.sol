@@ -146,6 +146,7 @@ contract CoverPool is
             AddParams(
                 params.to,
                 uint128(cache.liquidityMinted),
+                params.amount,
                 params.lower,
                 params.claim,
                 params.upper,

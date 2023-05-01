@@ -15,12 +15,15 @@ import {
     safeLoadToken,
 } from './utils/loads'
 import { ONE_BI } from './utils/constants'
+import { convertTokenToDecimal } from './utils/math'
+import { safeMinus } from './utils/deltas'
 
 export function handleMint(event: Mint): void {
-    let ownerParam = event.params.owner.toHex()
+    let ownerParam = event.params.to.toHex()
     let lowerParam = event.params.lower
     let upperParam = event.params.upper 
     let zeroForOneParam = event.params.zeroForOne
+    let amountInParam = event.params.amountIn
     let liquidityMintedParam = event.params.liquidityMinted
     let amountInDeltaMaxMintedParam = event.params.amountInDeltaMaxMinted
     let amountOutDeltaMaxMintedParam = event.params.amountOutDeltaMaxMinted
@@ -66,14 +69,15 @@ export function handleMint(event: Mint): void {
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     // increase tvl count
     if (zeroForOneParam) {
-        //TODO: calculate by using getAmountsForLiquidity
-        // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
+        let tokenIn = safeLoadToken(pool.token0).entity
+        pool.totalValueLocked0 = pool.totalValueLocked0.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
         lowerTickDeltas.amountInDeltaMaxMinus = lowerTickDeltas.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
-        lowerTickDeltas.amountInDeltaMaxMinus = lowerTickDeltas.amountInDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
+        lowerTickDeltas.amountOutDeltaMaxMinus = lowerTickDeltas.amountOutDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
     } else {
-        // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
+        let tokenIn = safeLoadToken(pool.token1).entity
+        pool.totalValueLocked1 = pool.totalValueLocked1.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
         upperTickDeltas.amountInDeltaMaxMinus = upperTickDeltas.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
-        upperTickDeltas.amountInDeltaMaxMinus = upperTickDeltas.amountInDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
+        upperTickDeltas.amountOutDeltaMaxMinus = upperTickDeltas.amountOutDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
     }
     pool.save()
     position.save()
@@ -84,12 +88,14 @@ export function handleMint(event: Mint): void {
 }
 
 export function handleBurn(event: Burn): void {
-    let ownerParam = event.params.owner.toHex()
+    let ownerParam = event.transaction.from.toHex()
     let lowerParam = event.params.lower
     let claimParam = event.params.claim
     let upperParam = event.params.upper
     let zeroForOneParam = event.params.zeroForOne
     let liquidityBurnedParam = event.params.liquidityBurned
+    let tokenInAmountParam = zeroForOneParam ? event.params.token1Amount : event.params.token0Amount
+    let tokenOutAmountParam = zeroForOneParam ? event.params.token0Amount : event.params.token1Amount
     let amountInDeltaMaxStashedBurnedParam = event.params.amountInDeltaMaxStashedBurned
     let amountOutDeltaMaxStashedBurnedParam = event.params.amountOutDeltaMaxStashedBurned
     let amountInDeltaMaxBurnedParam = event.params.amountInDeltaMaxBurned
@@ -110,11 +116,13 @@ export function handleBurn(event: Burn): void {
         zeroForOneParam
     )
     let loadLowerTickDeltas = safeLoadTickDeltas(poolAddress, lower, zeroForOneParam)
+    let loadClaimTickDeltas = safeLoadTickDeltas(poolAddress, claim, zeroForOneParam)
     let loadUpperTickDeltas = safeLoadTickDeltas(poolAddress, upper, zeroForOneParam)
 
     let position  = loadPosition.entity
     let pool      = loadCoverPool.entity
     let lowerTickDeltas = loadLowerTickDeltas.entity
+    let claimTickDeltas = loadClaimTickDeltas.entity
     let upperTickDeltas = loadUpperTickDeltas.entity
 
     if (!loadPosition.exists) {
@@ -128,20 +136,42 @@ export function handleBurn(event: Burn): void {
     pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
     // decrease tvl count
+    let tokenOutDeltaMaxBurned = amountOutDeltaMaxStashedBurnedParam.plus(amountOutDeltaMaxBurnedParam)
     if (zeroForOneParam) {
-        //TODO: calculate by using getAmountsForLiquidity
-        // pool.totalValueLocked0 = pool.totalValueLocked0.plus()
-        lowerTickDeltas.amountInDeltaMaxMinus = lowerTickDeltas.amountInDeltaMaxMinus.minus(amountInDeltaMaxBurnedParam)
-        lowerTickDeltas.amountInDeltaMaxMinus = lowerTickDeltas.amountInDeltaMaxMinus.minus(amountOutDeltaMaxBurnedParam)
+        let tokenIn = safeLoadToken(pool.token0).entity
+        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutDeltaMaxBurned, tokenIn.decimals))
+        if (claim != (zeroForOneParam ? lower : upper)) {
+            lowerTickDeltas.amountInDeltaMaxMinus = safeMinus(lowerTickDeltas.amountInDeltaMaxMinus, amountInDeltaMaxBurnedParam)
+            lowerTickDeltas.amountOutDeltaMaxMinus = safeMinus(lowerTickDeltas.amountOutDeltaMaxMinus, amountOutDeltaMaxBurnedParam)
+        } else {
+            lowerTickDeltas.amountInDeltaMax = safeMinus(lowerTickDeltas.amountInDeltaMax, amountInDeltaMaxBurnedParam)
+            lowerTickDeltas.amountOutDeltaMax = safeMinus(lowerTickDeltas.amountOutDeltaMax, amountOutDeltaMaxBurnedParam)
+        } 
     } else {
-        // pool.totalValueLocked1 = pool.totalValueLocked1.plus()
-        upperTickDeltas.amountInDeltaMaxMinus = upperTickDeltas.amountInDeltaMaxMinus.minus(amountInDeltaMaxBurnedParam)
-        upperTickDeltas.amountInDeltaMaxMinus = upperTickDeltas.amountInDeltaMaxMinus.minus(amountOutDeltaMaxBurnedParam)
+        let tokenIn = safeLoadToken(pool.token0).entity
+        pool.totalValueLocked1 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutDeltaMaxBurned, tokenIn.decimals))
+        if (claim != (zeroForOneParam ? lower : upper)) {
+            upperTickDeltas.amountInDeltaMaxMinus = safeMinus(upperTickDeltas.amountInDeltaMaxMinus, amountInDeltaMaxBurnedParam)
+            upperTickDeltas.amountOutDeltaMaxMinus = safeMinus(upperTickDeltas.amountOutDeltaMaxMinus, amountOutDeltaMaxBurnedParam)
+        } else {
+            upperTickDeltas.amountInDeltaMax = safeMinus(upperTickDeltas.amountInDeltaMax, amountInDeltaMaxBurnedParam)
+            upperTickDeltas.amountOutDeltaMax = safeMinus(upperTickDeltas.amountOutDeltaMax, amountOutDeltaMaxBurnedParam) 
+        }
     }
-    //TODO: check if Tick is empty and if so delete it
+    if (claim != (zeroForOneParam ? lower : upper)) {
+        claimTickDeltas.amountInDeltaMaxStashed = safeMinus(claimTickDeltas.amountInDeltaMaxStashed, amountInDeltaMaxStashedBurnedParam)
+        claimTickDeltas.amountOutDeltaMaxStashed = safeMinus(claimTickDeltas.amountOutDeltaMaxStashed, amountOutDeltaMaxStashedBurnedParam)
+    } else {
+        claimTickDeltas.amountOutDelta = claimTickDeltas.amountOutDelta.minus(tokenOutAmountParam)
+        claimTickDeltas.amountInDeltaMax = safeMinus(claimTickDeltas.amountInDeltaMax, amountInDeltaMaxStashedBurnedParam)
+        claimTickDeltas.amountOutDeltaMax = safeMinus(claimTickDeltas.amountOutDeltaMax, amountOutDeltaMaxStashedBurnedParam)
+    }
+    claimTickDeltas.amountInDelta = claimTickDeltas.amountInDelta.minus(tokenInAmountParam)
+    // stash burned vs. minus burned will tell us the portion of tokenOutAmount which came from the position update vs. the liquidity removal
 
     pool.save()
     position.save()
     lowerTickDeltas.save()
+    claimTickDeltas.save()
     upperTickDeltas.save()
 }

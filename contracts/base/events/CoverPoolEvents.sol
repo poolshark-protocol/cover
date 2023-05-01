@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 abstract contract CoverPoolEvents {
     event Mint(
-        address indexed owner,
+        address indexed to,
         int24 indexed lower,
         int24 indexed upper,
         bool zeroForOne,
@@ -13,9 +13,7 @@ abstract contract CoverPoolEvents {
         uint128 amountOutDeltaMaxMinted
     );
 
-    //TODO: emit claimPriceLast
     event Burn(
-        address indexed owner,
         address to,
         int24 indexed lower,
         int24 indexed upper,
@@ -27,7 +25,8 @@ abstract contract CoverPoolEvents {
         uint128 amountInDeltaMaxStashedBurned,
         uint128 amountOutDeltaMaxStashedBurned,
         uint128 amountInDeltaMaxBurned,
-        uint128 amountOutDeltaMaxBurned
+        uint128 amountOutDeltaMaxBurned,
+        uint160 claimPriceLast
     );
 
     event Swap(

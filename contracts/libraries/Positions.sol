@@ -15,17 +15,17 @@ library Positions {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     event Mint(
-        address indexed owner,
+        address indexed to,
         int24 indexed lower,
         int24 indexed upper,
         bool zeroForOne,
+        uint128 amountIn,
         uint128 liquidityMinted,
         uint128 amountInDeltaMaxMinted,
         uint128 amountOutDeltaMaxMinted
     );
 
     event Burn(
-        address indexed owner,
         address to,
         int24 indexed lower,
         int24 indexed upper,
@@ -37,7 +37,8 @@ library Positions {
         uint128 amountInDeltaMaxStashedBurned,
         uint128 amountOutDeltaMaxStashedBurned,
         uint128 amountInDeltaMaxBurned,
-        uint128 amountOutDeltaMaxBurned
+        uint128 amountOutDeltaMaxBurned,
+        uint160 claimPriceLast
     );
 
     function resize(
@@ -54,6 +55,7 @@ library Positions {
 
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: position,
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
@@ -144,7 +146,8 @@ library Positions {
     )    
     {
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
-            position: positions[params.owner][params.lower][params.upper],
+            position: positions[params.to][params.lower][params.upper],
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: 0,
             auctionCount: 0,
             priceLower: constants.curve.getPriceAtTick(params.lower, constants),
@@ -188,26 +191,26 @@ library Positions {
         // update liquidity global
         state.liquidityGlobal += params.amount;
 
-        ICoverPoolStructs.Deltas memory mintDeltas;
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, mintDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true, constants.curve);
+            (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true, constants.curve);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
         cache.position.liquidity += uint128(params.amount);
 
-        positions[params.owner][params.lower][params.upper] = cache.position;
+        positions[params.to][params.lower][params.upper] = cache.position;
 
         emit Mint(
-                params.owner,
+                params.to,
                 params.lower,
                 params.upper,
                 params.zeroForOne,
+                uint128(params.amountIn),
                 uint128(params.amount),
-                mintDeltas.amountInDeltaMax,
-                mintDeltas.amountOutDeltaMax
+                cache.deltas.amountInDeltaMax,
+                cache.deltas.amountOutDeltaMax
         );
 
         return state;
@@ -227,6 +230,7 @@ library Positions {
         // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: positions[params.owner][params.lower][params.upper],
+            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
@@ -283,11 +287,10 @@ library Positions {
         // update liquidity global
         state.liquidityGlobal -= params.amount;
 
-        ICoverPoolStructs.Deltas memory burnDeltas;
         {
             // update max deltas
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, burnDeltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false, constants.curve);
+            (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false, constants.curve);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
 
@@ -302,7 +305,6 @@ library Positions {
 
         if (params.amount > 0) {
             emit Burn(
-                    params.owner,
                     params.to,
                     params.lower,
                     params.upper,
@@ -312,8 +314,9 @@ library Positions {
                     params.zeroForOne ? cache.position.amountOut : 0,
                     params.zeroForOne ? 0 : cache.position.amountOut,
                     0, 0,
-                    burnDeltas.amountInDeltaMax,
-                    burnDeltas.amountOutDeltaMax
+                    cache.deltas.amountInDeltaMax,
+                    cache.deltas.amountOutDeltaMax,
+                    cache.position.claimPriceLast
             );
         }
         return (params.amount, state);
@@ -417,7 +420,6 @@ library Positions {
             : positions[params.owner][params.claim][params.upper] = cache.position;
         
         emit Burn(
-            params.owner,
             params.to,
             params.lower,
             params.upper,
@@ -429,7 +431,8 @@ library Positions {
             uint128(cache.amountInFilledMax),
             uint128(cache.amountOutUnfilledMax),
             cache.finalDeltas.amountInDeltaMax,
-            cache.finalDeltas.amountOutDeltaMax
+            cache.finalDeltas.amountOutDeltaMax,
+            cache.position.claimPriceLast
         );
         // return cached position in memory and transfer out
         return (state, params.claim);

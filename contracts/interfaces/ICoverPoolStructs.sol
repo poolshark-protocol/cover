@@ -135,8 +135,9 @@ interface ICoverPoolStructs {
     }
 
     struct AddParams {
-        address owner;
+        address to;
         uint128 amount;
+        uint128 amountIn;
         int24 lower;
         int24 claim;
         int24 upper;
@@ -194,6 +195,7 @@ interface ICoverPoolStructs {
 
     struct PositionCache {
         Position position;
+        Deltas deltas;
         uint160 priceLower;
         uint160 priceUpper;
         uint256 priceAverage;
