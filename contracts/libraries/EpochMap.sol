@@ -5,12 +5,6 @@ import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
 library EpochMap {
-
-    error TickIndexInvalid();
-    error TickIndexOverflow();
-    error TickIndexUnderflow();
-    error BlockIndexOverflow();
-
     function set(
         int24  tick,
         uint256 epoch,
@@ -85,14 +79,14 @@ library EpochMap {
         )
     {
         unchecked {
-            if (tick > constants.curve.maxTick(constants.tickSpread)) revert TickIndexOverflow();
-            if (tick < constants.curve.minTick(constants.tickSpread)) revert TickIndexUnderflow();
-            if (tick % constants.tickSpread != 0) revert TickIndexInvalid();
+            if (tick > constants.curve.maxTick(constants.tickSpread)) require (false, 'TickIndexOverflow()');
+            if (tick < constants.curve.minTick(constants.tickSpread)) require (false, 'TickIndexUnderflow()');
+            if (tick % constants.tickSpread != 0) require (false, 'TickIndexInvalid()');
             tickIndex = uint256(int256((tick - constants.curve.minTick(constants.tickSpread))) / constants.tickSpread);
             wordIndex = tickIndex >> 3;        // 2^3 epochs per word
             blockIndex = tickIndex >> 11;      // 2^8 words per block
             volumeIndex = tickIndex >> 19;     // 2^8 blocks per volume
-            if (blockIndex > 1023) revert BlockIndexOverflow();
+            if (blockIndex > 1023) require (false, 'BlockIndexOverflow()');
         }
     }
 
@@ -103,7 +97,7 @@ library EpochMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(constants.curve.maxTick(constants.tickSpread) * 2)) revert TickIndexOverflow();
+            if (tickIndex > uint24(constants.curve.maxTick(constants.tickSpread) * 2)) require (false, 'TickIndexOverflow()');
             tick = int24(int256(tickIndex) * int256(constants.tickSpread) + constants.curve.maxTick(constants.tickSpread));
         }
     }

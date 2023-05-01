@@ -5,12 +5,6 @@ import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 
 library TickMap {
-
-    error TickIndexInvalid();
-    error TickIndexOverflow();
-    error TickIndexUnderflow();
-    error BlockIndexOverflow();
-
     function set(
         int24 tick,
         ICoverPoolStructs.TickMap storage tickMap,
@@ -130,13 +124,13 @@ library TickMap {
         )
     {
         unchecked {
-            if (tick > constants.curve.maxTick(constants.tickSpread)) revert TickIndexOverflow();
-            if (tick < constants.curve.minTick(constants.tickSpread)) revert TickIndexUnderflow();
-            if (tick % constants.tickSpread != 0) revert TickIndexInvalid();
+            if (tick > constants.curve.maxTick(constants.tickSpread)) require (false, 'TickIndexOverflow()');
+            if (tick < constants.curve.minTick(constants.tickSpread)) require (false, 'TickIndexUnderflow()');
+            if (tick % constants.tickSpread != 0) require (false, 'TickIndexInvalid()');
             tickIndex = uint256(int256((tick - constants.curve.minTick(constants.tickSpread))) / constants.tickSpread);
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
-            if (blockIndex > 255) revert BlockIndexOverflow();
+            if (blockIndex > 255) require (false, 'BlockIndexOverflow()');
         }
     }
 
@@ -147,7 +141,7 @@ library TickMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(constants.curve.maxTick(constants.tickSpread) * 2)) revert TickIndexOverflow();
+            if (tickIndex > uint24(constants.curve.maxTick(constants.tickSpread) * 2)) require (false, 'TickIndexOverflow()');
             tick = int24(int256(tickIndex) * int256(constants.tickSpread) + constants.curve.minTick(constants.tickSpread));
         }
     }

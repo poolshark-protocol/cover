@@ -4,7 +4,7 @@ module.exports = {
         'utils',
         'libraries/TickMap.sol', 
         'libraries/EpochMap.sol',
-        'CoverPoolRouter.sol'
+        'libraries/utils/String.sol'
     ],
     configureYulOptimizer: true,
 }

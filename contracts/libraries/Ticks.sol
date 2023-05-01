@@ -11,18 +11,6 @@ import './TickMap.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
-    //TODO: alphabetize errors
-    error NotImplementedYet();
-    error InvalidLatestTick();
-    error LiquidityOverflow();
-    error WrongTickOrder();
-    error WrongTickLowerRange();
-    error WrongTickUpperRange();
-    error WrongTickLowerOld();
-    error WrongTickUpperOld();
-    error AmountInDeltaNeutral();
-    error AmountOutDeltaNeutral();
-
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     using Ticks for mapping(int24 => ICoverPoolStructs.Tick);
@@ -132,9 +120,9 @@ library Ticks {
         bool isPool0
     ) external {
         /// @dev - validation of ticks is in Positions.validate
-        if (amount > uint128(type(int128).max)) revert LiquidityOverflow();
+        if (amount > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
         if ((uint128(type(int128).max) - state.liquidityGlobal) < amount)
-            revert LiquidityOverflow();
+            require (false, 'LiquidityOverflow()');
 
         // load ticks into memory to reduce reads/writes
         ICoverPoolStructs.Tick memory tickLower = ticks[lower];
