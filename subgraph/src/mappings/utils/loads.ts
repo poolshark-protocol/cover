@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, Token, VolatilityTier } from '../../../generated/schema'
+import { CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
 import { ONE_BD, ONE_BI } from './constants'
 import {
     fetchTokenSymbol,
@@ -109,6 +109,33 @@ export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
 
     return {
         entity: tickEntity,
+        exists: exists,
+    }
+}
+
+class LoadTickDeltasRet {
+    entity: TickDeltas
+    exists: boolean
+}
+export function safeLoadTickDeltas(address: string, index: BigInt, zeroForOne: boolean): LoadTickDeltasRet {
+    let exists = true
+
+    let tickDeltasId = address
+    .concat(index.toString())
+    .concat(zeroForOne.toString())
+
+    let tickDeltasEntity = TickDeltas.load(tickDeltasId)
+
+    if (!tickDeltasEntity) {
+        tickDeltasEntity = new TickDeltas(tickDeltasId)
+        tickDeltasEntity.pool = address
+        tickDeltasEntity.index = index
+        tickDeltasEntity.zeroForOne = zeroForOne
+        exists = false
+    }
+
+    return {
+        entity: tickDeltasEntity,
         exists: exists,
     }
 }

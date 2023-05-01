@@ -13,6 +13,7 @@ abstract contract CoverPoolEvents {
         uint128 amountOutDeltaMaxMinted
     );
 
+    //TODO: emit claimPriceLast
     event Burn(
         address indexed owner,
         address to,
