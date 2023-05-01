@@ -95,6 +95,7 @@ type Position @entity {
     createdBy: Bytes!
     createdAtTimestamp: BigInt!
     epochLast: BigInt!
+    claimPriceLast: BigInt!
     owner: Bytes!
     lower: BigInt!
     upper: BigInt!

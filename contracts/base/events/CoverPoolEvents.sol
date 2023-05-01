@@ -7,6 +7,7 @@ abstract contract CoverPoolEvents {
         int24 indexed lower,
         int24 indexed upper,
         bool zeroForOne,
+        uint32 epochLast,
         uint128 amountIn,
         uint128 liquidityMinted,
         uint128 amountInDeltaMaxMinted,

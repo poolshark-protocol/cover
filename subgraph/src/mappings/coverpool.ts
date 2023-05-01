@@ -23,6 +23,7 @@ export function handleMint(event: Mint): void {
     let lowerParam = event.params.lower
     let upperParam = event.params.upper 
     let zeroForOneParam = event.params.zeroForOne
+    let epochLastParam = event.params.epochLast
     let amountInParam = event.params.amountIn
     let liquidityMintedParam = event.params.liquidityMinted
     let amountInDeltaMaxMintedParam = event.params.amountInDeltaMaxMinted
@@ -61,6 +62,7 @@ export function handleMint(event: Mint): void {
         position.lower = lower
         position.upper = upper
         position.owner = Bytes.fromHexString(ownerParam) as Bytes
+        position.epochLast = epochLastParam
         position.createdBy = msgSender
         position.createdAtTimestamp = event.block.timestamp
         position.txnHash = event.transaction.hash
@@ -88,7 +90,7 @@ export function handleMint(event: Mint): void {
 }
 
 export function handleBurn(event: Burn): void {
-    let ownerParam = event.transaction.from.toHex()
+    let msgSender = event.transaction.from.toHex()
     let lowerParam = event.params.lower
     let claimParam = event.params.claim
     let upperParam = event.params.upper
@@ -100,6 +102,7 @@ export function handleBurn(event: Burn): void {
     let amountOutDeltaMaxStashedBurnedParam = event.params.amountOutDeltaMaxStashedBurned
     let amountInDeltaMaxBurnedParam = event.params.amountInDeltaMaxBurned
     let amountOutDeltaMaxBurnedParam = event.params.amountOutDeltaMaxBurned
+    let claimPriceLastParam = event.params.claimPriceLast
     let poolAddress = event.address.toHex()
     let senderParam = event.transaction.from
 
@@ -110,7 +113,7 @@ export function handleBurn(event: Burn): void {
     let loadCoverPool = safeLoadCoverPool(poolAddress)
     let loadPosition = safeLoadPosition(
         poolAddress,
-        ownerParam,
+        msgSender,
         lower,
         upper,
         zeroForOneParam
@@ -131,7 +134,15 @@ export function handleBurn(event: Burn): void {
     if (position.liquidity == liquidityBurnedParam) {
         store.remove('Position', position.id)
     } else {
+        // update id if position is shrunk
+        if (claim != (zeroForOneParam ? upper : lower))
+            position.id = poolAddress
+            .concat(msgSender)
+            .concat(zeroForOneParam ? lower.toString() : claim.toString())
+            .concat(zeroForOneParam ? claim.toString() : upper.toString())
+            .concat(zeroForOneParam.toString())
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
+        position.claimPriceLast = claimPriceLastParam
     }
     pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
@@ -168,6 +179,13 @@ export function handleBurn(event: Burn): void {
     }
     claimTickDeltas.amountInDelta = claimTickDeltas.amountInDelta.minus(tokenInAmountParam)
     // stash burned vs. minus burned will tell us the portion of tokenOutAmount which came from the position update vs. the liquidity removal
+
+    // shrink position to new size
+    if (zeroForOneParam) {
+        position.upper = claim
+    } else {
+        position.lower = claim
+    }
 
     pool.save()
     position.save()
