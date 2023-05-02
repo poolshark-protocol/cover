@@ -107,6 +107,8 @@ type Position @entity {
     lower: BigInt!
     upper: BigInt!
     liquidity: BigInt!
+    amountInDeltaMax: BigInt!
+    amountOutDeltaMax: BigInt!
     inToken: Token!
     outToken: Token!
     inAmount: BigInt!

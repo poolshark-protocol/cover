@@ -41,13 +41,19 @@
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "token0Amount",
+        "name": "tokenInClaimed",
         "type": "uint128"
       },
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "token1Amount",
+        "name": "tokenOutClaimed",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "tokenOutBurned",
         "type": "uint128"
       },
       {

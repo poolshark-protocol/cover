@@ -93,7 +93,7 @@ templates:
                 handler: handleInitialize
               - event: Mint(indexed address,int24,int24,bool,uint32,uint128,uint128,uint128,uint128)
                 handler: handleMint
-              - event: Burn(indexed address,int24,int24,int24,bool,uint128,uint128,uint128,uint128,uint128,uint128,uint128,uint160)
+              - event: Burn(indexed address,int24,int24,int24,bool,uint128,uint128,uint128,uint128,uint128,uint128,uint128,uint128,uint160)
                 handler: handleBurn
               - event: Swap(indexed address,uint128,uint128,uint160,uint160,bool)
                 handler: handleSwap
