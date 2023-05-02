@@ -13,7 +13,15 @@ import './TickMap.sol';
 library Ticks {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
-    using Ticks for mapping(int24 => ICoverPoolStructs.Tick);
+    event Initialize(
+        int24 minTick,
+        int24 maxTick,
+        int24 latestTick,
+        uint32 genesisTime,
+        uint32 auctionStart,
+        uint160 pool0Price,
+        uint160 pool1Price
+    );
 
     function quote(
         bool zeroForOne,
@@ -104,6 +112,16 @@ library Ticks {
                 // initialize price
                 pool0.price = constants.curve.getPriceAtTick(state.latestTick - constants.tickSpread, constants);
                 pool1.price = constants.curve.getPriceAtTick(state.latestTick + constants.tickSpread, constants);
+            
+                emit Initialize(
+                    constants.curve.minTick(constants.tickSpread),
+                    constants.curve.maxTick(constants.tickSpread),
+                    state.latestTick,
+                    constants.genesisTime,
+                    state.auctionStart,
+                    pool0.price,
+                    pool1.price
+                );
             }
         }
         return state;

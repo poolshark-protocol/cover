@@ -38,8 +38,6 @@ contract CoverPool is
     uint8   internal immutable token1Decimals;
     bool    public immutable minAmountLowerPriced;
 
-    error PriceOutOfBounds();
-
     modifier ownerOnly() {
         _onlyOwner();
         _;
@@ -146,6 +144,7 @@ contract CoverPool is
             AddParams(
                 params.to,
                 uint128(cache.liquidityMinted),
+                params.amount,
                 params.lower,
                 params.claim,
                 params.upper,
@@ -308,7 +307,7 @@ contract CoverPool is
             }
             if (cache.output + cache.syncFees.token1 > 0) {
                 _transferOut(recipient, token1, cache.output + cache.syncFees.token1);
-                emit Swap(msg.sender, recipient, token0, token1, amountIn - cache.input, cache.output);
+                emit Swap(recipient, uint128(amountIn - cache.input), uint128(cache.output), uint160(cache.price), priceLimit, zeroForOne);
             }
             return (
                 int128(amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
@@ -321,7 +320,7 @@ contract CoverPool is
             }
             if (cache.output + cache.syncFees.token0 > 0) {
                 _transferOut(recipient, token0, cache.output + cache.syncFees.token0);
-                emit Swap(msg.sender, recipient, token1, token0, amountIn - cache.input, cache.output);
+                emit Swap(recipient, uint128(amountIn - cache.input), uint128(cache.output), uint160(cache.price), priceLimit, zeroForOne);
             }
             return (
                 int128(amountIn) - int256(cache.input) - int128(cache.syncFees.token1),

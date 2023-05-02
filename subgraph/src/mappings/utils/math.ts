@@ -75,6 +75,10 @@ export function convertTokenToDecimal(tokenAmount: BigInt, exchangeDecimals: Big
   return tokenAmount.toBigDecimal().div(exponentToBigDecimal(exchangeDecimals))
 }
 
+export function bigInt1e38(): BigInt {
+  return BigInt.fromString('100000000000000000000000000000000000000')
+}
+
 export function convertEthToDecimal(eth: BigInt): BigDecimal {
   return eth.toBigDecimal().div(exponentToBigDecimal(BigInt.fromI32(18)))
 }

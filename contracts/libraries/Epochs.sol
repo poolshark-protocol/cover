@@ -17,24 +17,22 @@ library Epochs {
         uint128 pool0Liquidity,
         uint128 pool1Liquidity,
         uint32 auctionStart,
-        uint32 indexed accumEpoch,
-        int24 indexed oldLatestTick,
-        int24 indexed newLatestTick
-    );
-
-    event SyncFeesCollected(
-        address indexed collector,
-        uint128 token0Amount,
-        uint128 token1Amount
+        uint32 accumEpoch,
+        int24 oldLatestTick,
+        int24 newLatestTick
     );
 
     event FinalDeltasAccumulated(
         uint128 amountInDelta,
         uint128 amountOutDelta,
-        uint32 indexed accumEpoch,
-        int24 indexed accumTick,
-        int24 crossTick,
-        bool indexed isPool0
+        uint32 accumEpoch,
+        int24 accumTick,
+        bool isPool0
+    );
+
+    event StashDeltasCleared(
+        int24 stashTick,
+        bool isPool0
     );
 
     event StashDeltasAccumulated(
@@ -42,9 +40,15 @@ library Epochs {
         uint128 amountOutDelta,
         uint128 amountInDeltaMaxStashed,
         uint128 amountOutDeltaMaxStashed,
-        uint32 indexed accumEpoch,
-        int24 indexed stashTick,
-        bool indexed isPool0
+        uint32 accumEpoch,
+        int24 stashTick,
+        bool isPool0
+    );
+
+    event SyncFeesCollected(
+        address collector,
+        uint128 token0Amount,
+        uint128 token1Amount
     );
 
     function simulateSync(
@@ -513,6 +517,13 @@ library Epochs {
             /// @dev - else we migrate carry deltas onto cache
             // add carry amounts to cache
             (params.crossTick, params.deltas) = Deltas.unstash(params.crossTick, params.deltas);
+            // clear out stash
+            params.crossTick.amountInDeltaMaxStashed  = 0;
+            params.crossTick.amountOutDeltaMaxStashed = 0;
+            emit StashDeltasCleared(
+                params.isPool0 ? cache.nextTickToCross0 : cache.nextTickToCross1,
+                params.isPool0
+            );
         }
         if (params.updateAccumDeltas) {
             // migrate carry deltas from cache to accum tick
@@ -531,36 +542,22 @@ library Epochs {
                 accumDeltas.amountInDeltaMax  += params.accumTick.amountInDeltaMaxMinus;
                 accumDeltas.amountOutDeltaMax += params.accumTick.amountOutDeltaMaxMinus;
 
-                if (params.isPool0) {
-                    emit FinalDeltasAccumulated(
-                        accumDeltas.amountInDelta,
-                        accumDeltas.amountOutDelta,
-                        state.accumEpoch,
-                        cache.nextTickToCross0,
-                        cache.nextTickToAccum0,
-                        params.isPool0
-                    );
-                } else {
-                    emit FinalDeltasAccumulated(
-                        accumDeltas.amountInDelta,
-                        accumDeltas.amountOutDelta,
-                        state.accumEpoch,
-                        cache.nextTickToCross1,
-                        cache.nextTickToAccum1,
-                        params.isPool0
-                    );
-                }
+                // clear out delta max minus and save on tick
                 params.accumTick.amountInDeltaMaxMinus  = 0;
                 params.accumTick.amountOutDeltaMaxMinus = 0;
                 params.accumTick.deltas = accumDeltas;
+
+                emit FinalDeltasAccumulated(
+                    accumDeltas.amountInDelta,
+                    accumDeltas.amountOutDelta,
+                    state.accumEpoch,
+                    params.isPool0 ? cache.nextTickToAccum0 : cache.nextTickToAccum1,
+                    params.isPool0
+                );
             }
         }
         // remove all liquidity
         params.crossTick.liquidityDelta = 0;
-
-        // clear out stash
-        params.crossTick.amountInDeltaMaxStashed  = 0;
-        params.crossTick.amountOutDeltaMaxStashed = 0;
 
         return params;
     }

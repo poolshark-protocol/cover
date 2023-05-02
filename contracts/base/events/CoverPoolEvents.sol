@@ -3,10 +3,11 @@ pragma solidity ^0.8.13;
 
 abstract contract CoverPoolEvents {
     event Mint(
-        address indexed owner,
-        int24 indexed lower,
-        int24 indexed upper,
+        address indexed to,
+        int24 lower,
+        int24 upper,
         bool zeroForOne,
+        uint32 epochLast,
         uint128 amountIn,
         uint128 liquidityMinted,
         uint128 amountInDeltaMaxMinted,
@@ -14,28 +15,39 @@ abstract contract CoverPoolEvents {
     );
 
     event Burn(
-        address indexed owner,
-        address to,
-        int24 indexed lower,
-        int24 indexed upper,
+        address indexed to,
+        int24 lower,
+        int24 upper,
         int24 claim,
         bool zeroForOne,
         uint128 liquidityBurned,
-        uint128 token0Amount,
-        uint128 token1Amount,
+        uint128 tokenInClaimed,
+        uint128 tokenOutClaimed,
+        uint128 tokenOutBurned,
         uint128 amountInDeltaMaxStashedBurned,
         uint128 amountOutDeltaMaxStashedBurned,
         uint128 amountInDeltaMaxBurned,
-        uint128 amountOutDeltaMaxBurned
+        uint128 amountOutDeltaMaxBurned,
+        uint160 claimPriceLast
     );
 
     event Swap(
-        address sender,
         address indexed recipient,
-        address indexed tokenIn,
-        address indexed tokenOut,
-        uint256 amountIn,
-        uint256 amountOut
+        uint128 amountIn,
+        uint128 amountOut,
+        uint160 priceLimit,
+        uint160 newPrice,
+        bool zeroForOne
+    );
+
+    event Initialize(
+        int24 minTick,
+        int24 maxTick,
+        int24 latestTick,
+        uint32 genesisTime,
+        uint32 auctionStart,
+        uint160 pool0Price,
+        uint160 pool1Price
     );
 
     event Sync(
@@ -44,24 +56,22 @@ abstract contract CoverPoolEvents {
         uint128 pool0Liquidity,
         uint128 pool1Liquidity,
         uint32 auctionStart,
-        uint32 indexed accumEpoch,
-        int24 indexed oldLatestTick,
-        int24 indexed newLatestTick
-    );
-
-    event SyncFeesCollected(
-        address indexed collector,
-        uint128 token0Amount,
-        uint128 token1Amount
+        uint32 accumEpoch,
+        int24 oldLatestTick,
+        int24 newLatestTick
     );
 
     event FinalDeltasAccumulated(
         uint128 amountInDelta,
         uint128 amountOutDelta,
-        uint32 indexed accumEpoch,
-        int24 indexed accumTick,
-        int24 crossTick,
-        bool indexed isPool0
+        uint32 accumEpoch,
+        int24 accumTick,
+        bool isPool0
+    );
+
+    event StashDeltasCleared(
+        int24 stashTick,
+        bool isPool0
     );
 
     event StashDeltasAccumulated(
@@ -69,8 +79,14 @@ abstract contract CoverPoolEvents {
         uint128 amountOutDelta,
         uint128 amountInDeltaMaxStashed,
         uint128 amountOutDeltaMaxStashed,
-        uint32 indexed accumEpoch,
-        int24 indexed stashTick,
-        bool indexed isPool0
+        uint32 accumEpoch,
+        int24 stashTick,
+        bool isPool0
+    );
+
+    event SyncFeesCollected(
+        address indexed collector,
+        uint128 token0Amount,
+        uint128 token1Amount
     );
 }

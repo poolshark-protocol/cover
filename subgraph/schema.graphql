@@ -55,11 +55,18 @@ type CoverPool @entity {
     # pool setup
     inputPool: Bytes!
     volatilityTier: VolatilityTier!
+    genesisTime: BigInt!
 
-    # price:     BigInt!
     liquidity: BigInt!
     liquidityGlobal: BigInt!
-    latestTick: Tick!
+    latestTick: BigInt!
+    auctionEpoch: BigInt!
+    auctionStart: BigInt!
+
+    pool0Price: BigInt!
+    pool1Price: BigInt!
+    pool0Liquidity: BigInt!
+    pool1Liquidity: BigInt!
 
     price0: BigDecimal!
     price1: BigDecimal!
@@ -95,10 +102,13 @@ type Position @entity {
     createdBy: Bytes!
     createdAtTimestamp: BigInt!
     epochLast: BigInt!
+    claimPriceLast: BigInt!
     owner: Bytes!
     lower: BigInt!
     upper: BigInt!
     liquidity: BigInt!
+    amountInDeltaMax: BigInt!
+    amountOutDeltaMax: BigInt!
     inToken: Token!
     outToken: Token!
     inAmount: BigInt!
@@ -120,6 +130,7 @@ type TickDeltas @entity {
     id: ID!
     pool: CoverPool!
     index: BigInt!
+    liquidityMinus: BigInt!
     zeroForOne: Boolean!
     amountInDelta: BigInt!
     amountOutDelta: BigInt!
