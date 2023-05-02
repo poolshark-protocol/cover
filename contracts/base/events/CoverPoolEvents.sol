@@ -39,6 +39,16 @@ abstract contract CoverPoolEvents {
         uint256 amountOut
     );
 
+    event Initialize(
+        int24 minTick,
+        int24 maxTick,
+        int24 latestTick,
+        uint32 genesisTime,
+        uint32 auctionStart,
+        uint160 pool0Price,
+        uint160 pool1Price
+    );
+
     event Sync(
         uint160 pool0Price,
         uint160 pool1Price,

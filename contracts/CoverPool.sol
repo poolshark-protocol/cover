@@ -38,8 +38,6 @@ contract CoverPool is
     uint8   internal immutable token1Decimals;
     bool    public immutable minAmountLowerPriced;
 
-    error PriceOutOfBounds();
-
     modifier ownerOnly() {
         _onlyOwner();
         _;

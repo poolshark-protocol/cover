@@ -1,4 +1,4 @@
-import { Burn, Mint } from '../../generated/CoverPoolFactory/CoverPool'
+import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated } from '../../generated/CoverPoolFactory/CoverPool'
 import {
     Address,
     BigInt,
@@ -17,6 +17,45 @@ import {
 import { ONE_BI } from './utils/constants'
 import { convertTokenToDecimal } from './utils/math'
 import { safeMinus } from './utils/deltas'
+import { Sync } from '../../generated/templates/CoverPoolTemplate/CoverPool'
+import { BIGINT_ONE, BIGINT_ZERO } from './utils/helpers'
+
+export function handleInitialize(event: Initialize): void {
+    let minTickParam = event.params.minTick
+    let maxTickParam = event.params.maxTick
+    let latestTickParam = event.params.latestTick
+    let genesisTimeParam = event.params.genesisTime
+    let auctionStartParam = event.params.auctionStart
+    let pool0PriceParam = event.params.pool0Price
+    let pool1PriceParam = event.params.pool1Price
+    let poolAddress = event.address.toHex()
+
+    let min = BigInt.fromI32(minTickParam)
+    let max = BigInt.fromI32(maxTickParam)
+    let latest = BigInt.fromI32(latestTickParam)
+
+    let loadCoverPool = safeLoadCoverPool(poolAddress)
+    let loadMinTick = safeLoadTick(poolAddress, min)
+    let loadMaxTick = safeLoadTick(poolAddress, max)
+    let loadLatestTick = safeLoadTick(poolAddress, latest)
+
+    let pool = loadCoverPool.entity
+    let minTick = loadMinTick.entity
+    let maxTick = loadMaxTick.entity
+    let latestTick = loadLatestTick.entity
+
+    pool.latestTick = latest
+    pool.genesisTime = genesisTimeParam
+    pool.auctionEpoch = BIGINT_ONE
+    pool.auctionStart = auctionStartParam
+    pool.pool0Price = pool0PriceParam
+    pool.pool1Price = pool1PriceParam
+
+    pool.save()
+    minTick.save()
+    maxTick.save()
+    latestTick.save()
+}
 
 export function handleMint(event: Mint): void {
     let ownerParam = event.params.to.toHex()
@@ -147,10 +186,11 @@ export function handleBurn(event: Burn): void {
     pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
     // decrease tvl count
-    let tokenOutDeltaMaxBurned = amountOutDeltaMaxStashedBurnedParam.plus(amountOutDeltaMaxBurnedParam)
     if (zeroForOneParam) {
-        let tokenIn = safeLoadToken(pool.token0).entity
-        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutDeltaMaxBurned, tokenIn.decimals))
+        let tokenIn = safeLoadToken(pool.token1).entity
+        let tokenOut = safeLoadToken(pool.token0).entity
+        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(tokenInAmountParam, tokenIn.decimals))
+        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutAmountParam, tokenIn.decimals))
         if (claim != (zeroForOneParam ? lower : upper)) {
             lowerTickDeltas.amountInDeltaMaxMinus = safeMinus(lowerTickDeltas.amountInDeltaMaxMinus, amountInDeltaMaxBurnedParam)
             lowerTickDeltas.amountOutDeltaMaxMinus = safeMinus(lowerTickDeltas.amountOutDeltaMaxMinus, amountOutDeltaMaxBurnedParam)
@@ -160,7 +200,9 @@ export function handleBurn(event: Burn): void {
         } 
     } else {
         let tokenIn = safeLoadToken(pool.token0).entity
-        pool.totalValueLocked1 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutDeltaMaxBurned, tokenIn.decimals))
+        let tokenOut = safeLoadToken(pool.token1).entity
+        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(tokenOutAmountParam, tokenOut.decimals))
+        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenInAmountParam, tokenIn.decimals))
         if (claim != (zeroForOneParam ? lower : upper)) {
             upperTickDeltas.amountInDeltaMaxMinus = safeMinus(upperTickDeltas.amountInDeltaMaxMinus, amountInDeltaMaxBurnedParam)
             upperTickDeltas.amountOutDeltaMaxMinus = safeMinus(upperTickDeltas.amountOutDeltaMaxMinus, amountOutDeltaMaxBurnedParam)
@@ -192,4 +234,99 @@ export function handleBurn(event: Burn): void {
     lowerTickDeltas.save()
     claimTickDeltas.save()
     upperTickDeltas.save()
+}
+
+export function handleSync(event: Sync): void {
+    let pool0PriceParam = event.params.pool0Price
+    let pool1PriceParam = event.params.pool1Price
+    let pool0LiquidityParam = event.params.pool0Liquidity
+    let pool1LiquidityParam = event.params.pool1Liquidity
+    let auctionStartParam = event.params.auctionStart
+    let accumEpochParam = event.params.accumEpoch
+    let oldLatestTickParam = event.params.oldLatestTick
+    let newLatestTickParam = event.params.newLatestTick
+    let poolAddress = event.address.toHex()
+
+    let loadCoverPool = safeLoadCoverPool(poolAddress)
+
+    let pool = loadCoverPool.entity
+
+    let newLatestTick = BigInt.fromI32(newLatestTickParam)
+
+    pool.pool0Price = pool0PriceParam
+    pool.pool1Price = pool1PriceParam
+    pool.pool0Liquidity = pool0LiquidityParam
+    pool.pool1Liquidity = pool1LiquidityParam
+    pool.latestTick = newLatestTick
+    pool.auctionEpoch = accumEpochParam
+    pool.auctionStart = auctionStartParam
+
+    pool.save()
+}
+
+export function handleFinalDeltasAccumulated(event: FinalDeltasAccumulated): void {
+    let amountInDeltaParam = event.params.amountInDelta
+    let amountOutDeltaParam = event.params.amountOutDelta
+    let auctionEpochParam = event.params.accumEpoch
+    let accumTickParam = event.params.accumTick
+    let crossTickParam = event.params.crossTick
+    let isPool0Param = event.params.isPool0
+    let poolAddress = event.address.toHex()
+
+    let accum = BigInt.fromI32(accumTickParam)
+    let cross = BigInt.fromI32(crossTickParam)
+
+    let loadCoverPool = safeLoadCoverPool(poolAddress)
+    let loadAccumTick = safeLoadTick(poolAddress, accum)
+    let loadAccumTickDeltas = safeLoadTickDeltas(poolAddress, accum, isPool0Param)
+    let loadCrossTickDeltas = safeLoadTickDeltas(poolAddress, cross, isPool0Param)
+
+    let pool = loadCoverPool.entity
+    let accumTick = loadAccumTick.entity
+    let accumTickDeltas = loadAccumTickDeltas.entity
+    let crossTickDeltas = loadCrossTickDeltas.entity
+
+    pool.liquidityGlobal = pool.liquidityGlobal.minus(accumTickDeltas.liquidityMinus)
+    accumTick.epochLast = auctionEpochParam
+    //TODO: subtract from crossTickDeltas.amonutIn/OutDelta based on amountDeltaMaxStashed / (amountDeltaMaxStashed + amountDeltaMax)
+    crossTickDeltas.amountInDeltaMaxStashed = BIGINT_ZERO
+    crossTickDeltas.amountOutDeltaMaxStashed = BIGINT_ZERO
+    accumTickDeltas.liquidityMinus = BIGINT_ZERO
+    accumTickDeltas.amountInDelta = accumTickDeltas.amountInDelta.plus(amountInDeltaParam)
+    accumTickDeltas.amountOutDelta = accumTickDeltas.amountOutDelta.plus(amountOutDeltaParam)
+    accumTickDeltas.amountInDeltaMax = accumTickDeltas.amountInDeltaMax.plus(accumTickDeltas.amountInDeltaMaxMinus)
+    accumTickDeltas.amountOutDeltaMax = accumTickDeltas.amountOutDeltaMax.plus(accumTickDeltas.amountOutDeltaMaxMinus)
+
+    pool.save()
+    accumTick.save()
+    accumTickDeltas.save()
+    crossTickDeltas.save()
+}
+
+export function handleStashDeltasAccumulated(event: StashDeltasAccumulated): void {
+    let amountInDeltaParam = event.params.amountInDelta
+    let amountOutDeltaParam = event.params.amountOutDelta
+    let amountInDeltaMaxStashedParam = event.params.amountInDeltaMaxStashed
+    let amountOutDeltaMaxStashedParam = event.params.amountOutDeltaMaxStashed
+    let auctionEpochParam = event.params.accumEpoch
+    let stashTickParam = event.params.stashTick
+    let isPool0Param = event.params.isPool0
+    let poolAddress = event.address.toHex()
+
+    let stash = BigInt.fromI32(stashTickParam)
+
+    let loadStashTick = safeLoadTick(poolAddress, stash)
+    let loadStashTickDeltas = safeLoadTickDeltas(poolAddress, stash, isPool0Param)
+
+    let stashTick = loadStashTick.entity
+    let stashTickDeltas = loadStashTickDeltas.entity
+
+    stashTick.epochLast = auctionEpochParam
+    stashTickDeltas.amountInDelta = stashTickDeltas.amountInDelta.plus(amountInDeltaParam)
+    stashTickDeltas.amountOutDelta = stashTickDeltas.amountOutDelta.plus(amountOutDeltaParam)
+    stashTickDeltas.amountInDeltaMaxStashed = stashTickDeltas.amountInDeltaMaxStashed.plus(amountInDeltaMaxStashedParam)
+    stashTickDeltas.amountOutDeltaMaxStashed = stashTickDeltas.amountOutDeltaMaxStashed.plus(amountOutDeltaMaxStashedParam)
+
+    stashTick.save()
+    stashTickDeltas.save()
 }

@@ -25,19 +25,12 @@ export function handlePoolCreated(event: PoolCreated): void {
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS)
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
     let loadToken1 = safeLoadToken(event.params.token1.toHexString())
-    //TODO: use TickCreated event
-    let loadLatestTick = safeLoadTick(poolAddressParam, BigInt.fromI32(0))
-    let loadMinTick = safeLoadTick(poolAddressParam, BigInt.fromI32(887272))
-    let loadMaxTick = safeLoadTick(poolAddressParam, BigInt.fromI32(-887272))
     
     let volatilityTier = loadVolatilityTier.entity
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
     let pool = loadCoverPool.entity
     let factory = loadCoverPoolFactory.entity
-    let latestTick = loadLatestTick.entity
-    let minTick = loadMinTick.entity
-    let maxTick = loadMaxTick.entity
 
     // fetch info if null
     if (!loadToken0.exists) {
@@ -68,7 +61,6 @@ export function handlePoolCreated(event: PoolCreated): void {
     pool.volatilityTier = volatilityTier.id
     pool.token0 = token0.id
     pool.token1 = token1.id
-    pool.latestTick = latestTick.id
     pool.createdAtBlockNumber = event.block.number
     pool.createdAtTimestamp   = event.block.timestamp
     pool.updatedAtBlockNumber = event.block.number
@@ -81,9 +73,6 @@ export function handlePoolCreated(event: PoolCreated): void {
     factory.save()
     token0.save()
     token1.save()
-    latestTick.save()
-    maxTick.save()
-    minTick.save()
 
     // create the tracked contract based on the template
     CoverPoolTemplate.create(event.params.pool)
