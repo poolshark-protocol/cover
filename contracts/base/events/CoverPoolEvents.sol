@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 abstract contract CoverPoolEvents {
     event Mint(
         address indexed to,
-        int24 indexed lower,
-        int24 indexed upper,
+        int24 lower,
+        int24 upper,
         bool zeroForOne,
         uint32 epochLast,
         uint128 amountIn,
@@ -15,9 +15,9 @@ abstract contract CoverPoolEvents {
     );
 
     event Burn(
-        address to,
-        int24 indexed lower,
-        int24 indexed upper,
+        address indexed to,
+        int24 lower,
+        int24 upper,
         int24 claim,
         bool zeroForOne,
         uint128 liquidityBurned,
@@ -36,7 +36,7 @@ abstract contract CoverPoolEvents {
         uint128 amountOut,
         uint160 priceLimit,
         uint160 newPrice,
-        bool indexed zeroForOne
+        bool zeroForOne
     );
 
     event Initialize(
@@ -55,24 +55,22 @@ abstract contract CoverPoolEvents {
         uint128 pool0Liquidity,
         uint128 pool1Liquidity,
         uint32 auctionStart,
-        uint32 indexed accumEpoch,
-        int24 indexed oldLatestTick,
-        int24 indexed newLatestTick
-    );
-
-    event SyncFeesCollected(
-        address indexed collector,
-        uint128 token0Amount,
-        uint128 token1Amount
+        uint32 accumEpoch,
+        int24 oldLatestTick,
+        int24 newLatestTick
     );
 
     event FinalDeltasAccumulated(
         uint128 amountInDelta,
         uint128 amountOutDelta,
-        uint32 indexed accumEpoch,
-        int24 indexed accumTick,
-        int24 crossTick,
-        bool indexed isPool0
+        uint32 accumEpoch,
+        int24 accumTick,
+        bool isPool0
+    );
+
+    event StashDeltasCleared(
+        int24 stashTick,
+        bool isPool0
     );
 
     event StashDeltasAccumulated(
@@ -80,8 +78,14 @@ abstract contract CoverPoolEvents {
         uint128 amountOutDelta,
         uint128 amountInDeltaMaxStashed,
         uint128 amountOutDeltaMaxStashed,
-        uint32 indexed accumEpoch,
-        int24 indexed stashTick,
-        bool indexed isPool0
+        uint32 accumEpoch,
+        int24 stashTick,
+        bool isPool0
+    );
+
+    event SyncFeesCollected(
+        address indexed collector,
+        uint128 token0Amount,
+        uint128 token1Amount
     );
 }

@@ -1,4 +1,4 @@
-import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated, Swap } from '../../generated/CoverPoolFactory/CoverPool'
+import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated, StashDeltasCleared, Swap } from '../../generated/CoverPoolFactory/CoverPool'
 import {
     Address,
     BigInt,
@@ -15,7 +15,7 @@ import {
     safeLoadToken,
 } from './utils/loads'
 import { ONE_BI } from './utils/constants'
-import { convertTokenToDecimal } from './utils/math'
+import { bigInt1e38, convertTokenToDecimal } from './utils/math'
 import { safeMinus } from './utils/deltas'
 import { Sync } from '../../generated/templates/CoverPoolTemplate/CoverPool'
 import { BIGINT_ONE, BIGINT_ZERO } from './utils/helpers'
@@ -249,6 +249,7 @@ export function handleSwap(event: Swap): void {
 
     let pool = loadCoverPool.entity
 
+
     if (zeroForOneParam) {
         let tokenIn = safeLoadToken(pool.token0).entity
         let tokenOut = safeLoadToken(pool.token1).entity
@@ -297,33 +298,50 @@ export function handleSync(event: Sync): void {
     pool.save()
 }
 
+export function handleStashDeltasCleared(event: StashDeltasCleared): void {
+    //TODO: subtract from crossTickDeltas.amonutIn/OutDelta based on amountDeltaMaxStashed / (amountDeltaMaxStashed + amountDeltaMax)
+    let stashTickParam = event.params.stashTick
+    let isPool0Param = event.params.isPool0
+    let poolAddress = event.address.toHex()
+
+    let cross = BigInt.fromI32(stashTickParam)
+
+    let loadStashTickDeltas = safeLoadTickDeltas(poolAddress, cross, isPool0Param)
+
+    let stashTickDeltas = loadStashTickDeltas.entity
+    
+    let totalInDeltaMax  = stashTickDeltas.amountInDeltaMax.plus(stashTickDeltas.amountInDeltaMaxStashed)
+    let totalOutDeltaMax = stashTickDeltas.amountInDeltaMax.plus(stashTickDeltas.amountOutDeltaMaxStashed)
+    let amountInDeltaChange  = stashTickDeltas.amountInDeltaMaxStashed.times(bigInt1e38()).div(totalInDeltaMax)
+    let amountOutDeltaChange = stashTickDeltas.amountOutDeltaMaxStashed.times(bigInt1e38()).div(totalOutDeltaMax) 
+    stashTickDeltas.amountInDelta = safeMinus(stashTickDeltas.amountInDelta, amountInDeltaChange)
+    stashTickDeltas.amountOutDelta = safeMinus(stashTickDeltas.amountOutDelta, amountOutDeltaChange)
+    stashTickDeltas.amountInDeltaMaxStashed = BIGINT_ZERO
+    stashTickDeltas.amountOutDeltaMaxStashed = BIGINT_ZERO
+
+    stashTickDeltas.save()
+}
+
 export function handleFinalDeltasAccumulated(event: FinalDeltasAccumulated): void {
     let amountInDeltaParam = event.params.amountInDelta
     let amountOutDeltaParam = event.params.amountOutDelta
     let auctionEpochParam = event.params.accumEpoch
     let accumTickParam = event.params.accumTick
-    let crossTickParam = event.params.crossTick
     let isPool0Param = event.params.isPool0
     let poolAddress = event.address.toHex()
 
     let accum = BigInt.fromI32(accumTickParam)
-    let cross = BigInt.fromI32(crossTickParam)
 
     let loadCoverPool = safeLoadCoverPool(poolAddress)
     let loadAccumTick = safeLoadTick(poolAddress, accum)
     let loadAccumTickDeltas = safeLoadTickDeltas(poolAddress, accum, isPool0Param)
-    let loadCrossTickDeltas = safeLoadTickDeltas(poolAddress, cross, isPool0Param)
 
     let pool = loadCoverPool.entity
     let accumTick = loadAccumTick.entity
     let accumTickDeltas = loadAccumTickDeltas.entity
-    let crossTickDeltas = loadCrossTickDeltas.entity
 
     pool.liquidityGlobal = pool.liquidityGlobal.minus(accumTickDeltas.liquidityMinus)
     accumTick.epochLast = auctionEpochParam
-    //TODO: subtract from crossTickDeltas.amonutIn/OutDelta based on amountDeltaMaxStashed / (amountDeltaMaxStashed + amountDeltaMax)
-    crossTickDeltas.amountInDeltaMaxStashed = BIGINT_ZERO
-    crossTickDeltas.amountOutDeltaMaxStashed = BIGINT_ZERO
     accumTickDeltas.liquidityMinus = BIGINT_ZERO
     accumTickDeltas.amountInDelta = accumTickDeltas.amountInDelta.plus(amountInDeltaParam)
     accumTickDeltas.amountOutDelta = accumTickDeltas.amountOutDelta.plus(amountOutDeltaParam)
@@ -333,7 +351,6 @@ export function handleFinalDeltasAccumulated(event: FinalDeltasAccumulated): voi
     pool.save()
     accumTick.save()
     accumTickDeltas.save()
-    crossTickDeltas.save()
 }
 
 export function handleStashDeltasAccumulated(event: StashDeltasAccumulated): void {

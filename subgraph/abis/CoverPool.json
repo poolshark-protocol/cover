@@ -3,19 +3,19 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "to",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "lower",
         "type": "int24"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "upper",
         "type": "int24"
@@ -100,25 +100,19 @@
         "type": "uint128"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint32",
         "name": "accumEpoch",
         "type": "uint32"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "accumTick",
         "type": "int24"
       },
       {
         "indexed": false,
-        "internalType": "int24",
-        "name": "crossTick",
-        "type": "int24"
-      },
-      {
-        "indexed": true,
         "internalType": "bool",
         "name": "isPool0",
         "type": "bool"
@@ -186,13 +180,13 @@
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "lower",
         "type": "int24"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "upper",
         "type": "int24"
@@ -265,25 +259,44 @@
         "type": "uint128"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint32",
         "name": "accumEpoch",
         "type": "uint32"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "stashTick",
         "type": "int24"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "bool",
         "name": "isPool0",
         "type": "bool"
       }
     ],
     "name": "StashDeltasAccumulated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "stashTick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isPool0",
+        "type": "bool"
+      }
+    ],
+    "name": "StashDeltasCleared",
     "type": "event"
   },
   {
@@ -320,7 +333,7 @@
         "type": "uint160"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "bool",
         "name": "zeroForOne",
         "type": "bool"
@@ -363,19 +376,19 @@
         "type": "uint32"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint32",
         "name": "accumEpoch",
         "type": "uint32"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "oldLatestTick",
         "type": "int24"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int24",
         "name": "newLatestTick",
         "type": "int24"

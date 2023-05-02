@@ -16,8 +16,8 @@ library Positions {
 
     event Mint(
         address indexed to,
-        int24 indexed lower,
-        int24 indexed upper,
+        int24 lower,
+        int24 upper,
         bool zeroForOne,
         uint32 epochLast,
         uint128 amountIn,
@@ -27,9 +27,9 @@ library Positions {
     );
 
     event Burn(
-        address to,
-        int24 indexed lower,
-        int24 indexed upper,
+        address indexed to,
+        int24 lower,
+        int24 upper,
         int24 claim,
         bool zeroForOne,
         uint128 liquidityBurned,
