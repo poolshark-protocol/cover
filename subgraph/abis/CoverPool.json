@@ -290,40 +290,40 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      },
-      {
         "indexed": true,
         "internalType": "address",
         "name": "recipient",
         "type": "address"
       },
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "tokenIn",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "tokenOut",
-        "type": "address"
-      },
-      {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint128",
         "name": "amountIn",
-        "type": "uint256"
+        "type": "uint128"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
+        "internalType": "uint128",
         "name": "amountOut",
-        "type": "uint256"
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "priceLimit",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "newPrice",
+        "type": "uint160"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "zeroForOne",
+        "type": "bool"
       }
     ],
     "name": "Swap",

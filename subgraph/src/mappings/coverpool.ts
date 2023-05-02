@@ -1,4 +1,4 @@
-import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated } from '../../generated/CoverPoolFactory/CoverPool'
+import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated, Swap } from '../../generated/CoverPoolFactory/CoverPool'
 import {
     Address,
     BigInt,
@@ -228,12 +228,45 @@ export function handleBurn(event: Burn): void {
     } else {
         position.lower = claim
     }
-
     pool.save()
     position.save()
     lowerTickDeltas.save()
     claimTickDeltas.save()
     upperTickDeltas.save()
+}
+
+export function handleSwap(event: Swap): void {
+    let msgSender = event.transaction.from
+    let recipientParam = event.params.recipient
+    let amountInParam = event.params.amountIn
+    let amountOutParam = event.params.amountOut
+    let newPriceParam = event.params.newPrice
+    let priceLimitParam = event.params.priceLimit
+    let zeroForOneParam = event.params.zeroForOne
+    let poolAddress = event.address.toHex()
+
+    let loadCoverPool = safeLoadCoverPool(poolAddress)
+
+    let pool = loadCoverPool.entity
+
+    if (zeroForOneParam) {
+        let tokenIn = safeLoadToken(pool.token0).entity
+        let tokenOut = safeLoadToken(pool.token1).entity
+        pool.pool1Price = newPriceParam
+        pool.volumeToken1 = pool.volumeToken1.plus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
+        pool.totalValueLocked0 = pool.totalValueLocked0.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
+        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
+    } else {
+        let tokenIn = safeLoadToken(pool.token1).entity
+        let tokenOut = safeLoadToken(pool.token0).entity
+        pool.pool0Price = newPriceParam
+        pool.volumeToken0 = pool.volumeToken0.plus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
+        pool.totalValueLocked1 = pool.totalValueLocked1.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
+        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
+    }
+    pool.txnCount = pool.txnCount.plus(BIGINT_ONE)
+
+    pool.save()
 }
 
 export function handleSync(event: Sync): void {

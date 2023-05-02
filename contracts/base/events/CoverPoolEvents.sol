@@ -31,12 +31,12 @@ abstract contract CoverPoolEvents {
     );
 
     event Swap(
-        address sender,
         address indexed recipient,
-        address indexed tokenIn,
-        address indexed tokenOut,
-        uint256 amountIn,
-        uint256 amountOut
+        uint128 amountIn,
+        uint128 amountOut,
+        uint160 priceLimit,
+        uint160 newPrice,
+        bool indexed zeroForOne
     );
 
     event Initialize(
