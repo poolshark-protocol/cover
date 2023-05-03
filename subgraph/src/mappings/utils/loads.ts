@@ -71,6 +71,7 @@ export function safeLoadVolatilityTier(twapSource: string, feeTier: BigInt, tick
                             .concat(tickSpread.toString())
                             .concat('-')
                             .concat(twapLength.toString())
+    log.debug('pool volatility tier id: {}', [volatilityTierId])
 
     let volatilityTierEntity = VolatilityTier.load(volatilityTierId)
 

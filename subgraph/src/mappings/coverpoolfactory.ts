@@ -16,7 +16,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     let feeTierParam = BigInt.fromI32(event.params.fee)
     let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam = BigInt.fromI32(event.params.twapLength)
-    let twapSourceParam = event.params.twapSource.toHex()
+    let twapSourceParam = '0x554e492d56330000000000000000000000000000000000000000000000000000'
     let poolAddressParam = event.params.pool.toHex()
 
     // load from store
