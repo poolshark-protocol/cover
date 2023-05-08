@@ -83,7 +83,7 @@ contract CoverPoolFactory is
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength
-    ) public view override returns (address) {
+    ) external view override returns (address) {
         // set lexographical token address ordering
         address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;

@@ -70,9 +70,7 @@ library TickMap {
                 uint256 block_ = tickMap.words[blockIndex] & ((1 << (wordIndex & 0xFF)) - 1);
                 if (block_ == 0) {
                     uint256 blockMap = tickMap.blocks & ((1 << blockIndex) - 1);
-                    // assert(blockMap != 0);
-                    // if blockMap == 0 return type(int24).min() or MIN_TICK
-
+                    if (blockMap == 0) return tick;
                     blockIndex = _msb(blockMap);
                     block_ = tickMap.words[blockIndex];
                 }
@@ -96,14 +94,18 @@ library TickMap {
               uint256 wordIndex,
               uint256 blockIndex
             ) = getIndices(tick, constants);
-            uint256 word = tickMap.ticks[wordIndex] & ~((1 << ((tickIndex & 0xFF) + 1)) - 1);
+            uint256 word;
+            if ((tickIndex & 0xFF) != 255) {
+                word = tickMap.ticks[wordIndex] & ~((1 << ((tickIndex & 0xFF) + 1)) - 1);
+            }
             if (word == 0) {
-                uint256 block_ = tickMap.words[blockIndex] & ~((1 << ((wordIndex & 0xFF) + 1)) - 1);
+                uint256 block_;
+                if ((blockIndex & 0xFF) != 255) {
+                    block_ = tickMap.words[blockIndex] & ~((1 << ((wordIndex & 0xFF) + 1)) - 1);
+                }
                 if (block_ == 0) {
                     uint256 blockMap = tickMap.blocks & ~((1 << blockIndex + 1) - 1);
-                    // assert(blockMap != 0);
-                    //if blockMap == 0 return type(int24).max()
-
+                    if (blockMap == 0) return tick;
                     blockIndex = _lsb(blockMap);
                     block_ = tickMap.words[blockIndex];
                 }

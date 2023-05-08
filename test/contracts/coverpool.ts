@@ -3327,7 +3327,7 @@ describe('CoverPool Tests', function () {
             hre.props.alice,
             hre.props.bob,
         ])
-
+// max uint256 is x.xxE77; x.xxE70
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,

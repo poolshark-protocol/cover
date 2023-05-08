@@ -5,6 +5,7 @@ abstract contract CoverPoolManagerEvents {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event VolatilityTierEnabled(
         address sourceAddress,
+        address curveAddress,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
