@@ -27,6 +27,7 @@ export class MintPosition {
         hre.nonce = await getNonce(hre, hre.props.alice.address)
         console.log(this.nonce)
         await this.initialSetup.readCoverPoolSetup(this.nonce)
+        console.log('read positions')
         const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
         const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
         await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
@@ -34,15 +35,15 @@ export class MintPosition {
 
         const liquidityAmount = BigNumber.from('199760153929825488153727')
 
-        await getLatestTick(true)
+        // await getLatestTick(true)
 
-        await getPrice(true)
+        // await getPrice(true)
 
         await validateMint({
             signer: hre.props.alice,
-            recipient: hre.props.alice.address,
-            lower: '20',
-            claim: '0',
+            recipient: '0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8',
+            lower: '60',
+            claim: '60',
             upper: '100',
             amount: token1Amount,
             zeroForOne: false,
@@ -53,11 +54,11 @@ export class MintPosition {
             revertMessage: '',
         })
 
-        await validateSync(20)
+        // await validateSync(20)
 
-        await getPrice(false, true)
-        await getLiquidity(false, true)
-        await getLatestTick(true)
+        // await getPrice(false, true)
+        // await getLiquidity(false, true)
+        // await getLatestTick(true)
 
         console.log('position minted')
     }

@@ -306,6 +306,7 @@ export async function validateMint(params: ValidateMintParams) {
             .connect(params.signer)
             .approve(hre.props.coverPool.address, amountDesired)
     }
+    console.log('approved')
 
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
@@ -327,17 +328,18 @@ export async function validateMint(params: ValidateMintParams) {
             upper
         )
     }
+    console.log('approved 2')
     if (revertMessage == '') {
         const txn = await hre.props.coverPool
             .connect(params.signer)
             .mint({
-                to: params.signer.address,
+                to: recipient,
                 amount: amountDesired,
                 lower: lower,
                 claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne
-            },{gasLimit: 20000000})
+            },{gasLimit: 200000000})
         await txn.wait()
     } else {
         await expect(
@@ -354,7 +356,7 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-
+    console.log('approved 3')
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

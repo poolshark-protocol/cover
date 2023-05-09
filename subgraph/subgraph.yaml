@@ -6,11 +6,11 @@ schema:
 dataSources:
     - kind: ethereum/contract
       name: CoverPoolFactory
-      network: optimism-goerli
+      network: arbitrum-goerli
       source:
-          address: '0x4372EE46DfB52d271139Fd40AeDa61c5da0c35E5'
+          address: '0xaD1Aff1234193c1B0A8A178fDe27Fd786b99B7b3'
           abi: CoverPoolFactory
-          startBlock: 8888000
+          startBlock: 19186000
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -35,11 +35,11 @@ dataSources:
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
-      network: optimism-goerli
+      network: arbitrum-goerli
       source:
-          address: '0xC2271A012fbBA8098e569bE9fA893a1255D73b0f'
+          address: '0xA01906e76860870F81BD0CFD6cdaeb35ab2B23A4'
           abi: CoverPoolManager
-          startBlock: 8888000
+          startBlock: 19186000
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -65,7 +65,7 @@ dataSources:
 templates:
     - kind: ethereum/contract
       name: CoverPoolTemplate
-      network: optimism-goerli
+      network: arbitrum-goerli
       source:
           abi: CoverPool
       mapping:
