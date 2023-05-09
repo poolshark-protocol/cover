@@ -36,11 +36,11 @@ export class MintPosition {
 
         await getLatestTick(true)
 
-        // await getPrice(true)
+        await getPrice(true)
 
         await validateMint({
             signer: hre.props.alice,
-            recipient: '0x73a18F0E04A4c7E49C6B25c8f6Bc17674C806b67',
+            recipient: hre.props.alice.address,
             lower: '20',
             claim: '0',
             upper: '100',

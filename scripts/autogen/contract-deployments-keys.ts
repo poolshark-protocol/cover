@@ -3,7 +3,11 @@
 
     export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
-        networkName: 'arb_goerli',
+        networkName: 'op_goerli',
         objectName: 'coverPool'
+    },
+    {
+        networkName: 'op_goerli',
+        objectName: 'coverPool2'
     },
 ];

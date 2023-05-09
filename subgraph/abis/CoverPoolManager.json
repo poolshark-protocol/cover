@@ -160,9 +160,15 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "sourceName",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "sourceAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "curveAddress",
+        "type": "address"
       },
       {
         "indexed": false,

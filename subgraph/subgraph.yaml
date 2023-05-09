@@ -6,11 +6,11 @@ schema:
 dataSources:
     - kind: ethereum/contract
       name: CoverPoolFactory
-      network: arbitrum-goerli
+      network: optimism-goerli
       source:
-          address: '0xf7b7FD8b14221beD8c6AA3290dA9cfa55098a7fD'
+          address: '0x4372EE46DfB52d271139Fd40AeDa61c5da0c35E5'
           abi: CoverPoolFactory
-          startBlock: 18601000
+          startBlock: 8888000
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -35,11 +35,11 @@ dataSources:
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
-      network: arbitrum-goerli
+      network: optimism-goerli
       source:
-          address: '0x257029c7a5d15550A82EfAD7B09292A14A719FA6'
+          address: '0xC2271A012fbBA8098e569bE9fA893a1255D73b0f'
           abi: CoverPoolManager
-          startBlock: 18601000
+          startBlock: 8888000
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -52,7 +52,7 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
-              - event: VolatilityTierEnabled(bytes32,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
+              - event: VolatilityTierEnabled(address,address,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
                 handler: handleFeeToTransfer
@@ -65,7 +65,7 @@ dataSources:
 templates:
     - kind: ethereum/contract
       name: CoverPoolTemplate
-      network: arbitrum-goerli
+      network: optimism-goerli
       source:
           abi: CoverPool
       mapping:
