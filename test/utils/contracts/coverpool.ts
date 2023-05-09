@@ -290,7 +290,6 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : 0
 
-
     let balanceInBefore
     let balanceOutBefore
     if (zeroForOne) {
@@ -306,7 +305,6 @@ export async function validateMint(params: ValidateMintParams) {
             .connect(params.signer)
             .approve(hre.props.coverPool.address, amountDesired)
     }
-    console.log('approved')
 
     let lowerTickBefore: Tick
     let upperTickBefore: Tick
@@ -328,7 +326,7 @@ export async function validateMint(params: ValidateMintParams) {
             upper
         )
     }
-    console.log('approved 2')
+
     if (revertMessage == '') {
         const txn = await hre.props.coverPool
             .connect(params.signer)
@@ -339,7 +337,7 @@ export async function validateMint(params: ValidateMintParams) {
                 claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne
-            },{gasLimit: 200000000})
+            })
         await txn.wait()
     } else {
         await expect(
@@ -356,7 +354,7 @@ export async function validateMint(params: ValidateMintParams) {
         ).to.be.revertedWith(revertMessage)
         return
     }
-    console.log('approved 3')
+
     let balanceInAfter
     let balanceOutAfter
     if (zeroForOne) {

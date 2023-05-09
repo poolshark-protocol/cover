@@ -38,7 +38,8 @@ export class MintPosition {
         // await getLatestTick(true)
 
         // await getPrice(true)
-
+    // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
+    // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
         await validateMint({
             signer: hre.props.alice,
             recipient: '0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8',
