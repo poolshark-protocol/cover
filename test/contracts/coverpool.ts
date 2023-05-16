@@ -1,7 +1,6 @@
 /* global describe it before ethers */
 const hardhat = require('hardhat')
 const { expect } = require('chai')
-import { gBefore } from '../utils/hooks.test'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber } from 'ethers'
 import { mintSigners20 } from '../utils/token'
