@@ -51,8 +51,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minPositionWidth: 5,
            minAmountLowerPriced: false
         });
-        emit VolatilityTierEnabled(sourceName, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
-        emit VolatilityTierEnabled(sourceName, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
+        emit VolatilityTierEnabled(sourceAddress, curveAddress, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
+        emit VolatilityTierEnabled(sourceAddress, curveAddress, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
     
         _twapSources[sourceName] = sourceAddress;
         _curveMaths[sourceName] = curveAddress;
@@ -142,11 +142,12 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         } else if (syncFee > 10000 || fillFee > 10000) {
             require (false, 'ProtocolFeeCeilingExceeded()');
         }
+        address sourceAddress = _twapSources[sourceName];
+        address curveAddress = _curveMaths[sourceName];
         {
             // check fee tier exists
-            address twapSource = _twapSources[sourceName];
-            if (twapSource == address(0)) require (false, 'TwapSourceNotFound()');
-            int24 tickSpacing = ITwapSource(twapSource).feeTierTickSpacing(feeTier);
+            if (sourceAddress == address(0)) require (false, 'TwapSourceNotFound()');
+            int24 tickSpacing = ITwapSource(sourceAddress).feeTierTickSpacing(feeTier);
             if (tickSpacing == 0) {
                 require (false, 'FeeTierNotSupported()');
             }
@@ -168,8 +169,10 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             minPositionWidth,
             minLowerPriced
         );
+
         emit VolatilityTierEnabled(
-            sourceName,
+            sourceAddress,
+            curveAddress,
             feeTier,
             tickSpread,
             twapLength,

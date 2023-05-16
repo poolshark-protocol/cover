@@ -290,7 +290,6 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : 0
 
-
     let balanceInBefore
     let balanceOutBefore
     if (zeroForOne) {
@@ -327,17 +326,18 @@ export async function validateMint(params: ValidateMintParams) {
             upper
         )
     }
+
     if (revertMessage == '') {
         const txn = await hre.props.coverPool
             .connect(params.signer)
             .mint({
-                to: params.signer.address,
+                to: recipient,
                 amount: amountDesired,
                 lower: lower,
                 claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne
-            },{gasLimit: 20000000})
+            })
         await txn.wait()
     } else {
         await expect(

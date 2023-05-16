@@ -278,6 +278,7 @@ export function handleSwap(event: Swap): void {
 }
 
 export function handleSync(event: Sync): void {
+    log.info('processing sync {} {}', [event.params.oldLatestTick.toString(), event.params.newLatestTick.toString()])
     let pool0PriceParam = event.params.pool0Price
     let pool1PriceParam = event.params.pool1Price
     let pool0LiquidityParam = event.params.pool0Liquidity
