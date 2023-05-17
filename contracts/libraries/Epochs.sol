@@ -9,8 +9,6 @@ import './TickMap.sol';
 import './EpochMap.sol';
 
 library Epochs {
-    uint256 internal constant Q128 = 0x100000000000000000000000000000000;
-
     event Sync(
         uint160 pool0Price,
         uint160 pool1Price,
