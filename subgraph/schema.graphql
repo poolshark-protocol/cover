@@ -113,6 +113,7 @@ type Position @entity {
     outToken: Token!
     inAmount: BigInt!
     outAmount: BigInt!
+    zeroForOne: Boolean!
 }
 
 type Tick @entity {

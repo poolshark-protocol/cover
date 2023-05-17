@@ -89,6 +89,13 @@ export function handleMint(event: Mint): void {
 
     pool.liquidityGlobal = pool.liquidityGlobal.plus(liquidityMintedParam)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
+    // initialize tick epoch
+    if (!loadLowerTick.exists) {
+        lowerTick.epochLast = epochLastParam
+    }
+    if (!loadUpperTick.exists) {
+        upperTick.epochLast = epochLastParam
+    }
     // increase liquidity count
     if (!loadPosition.exists) {
         if (zeroForOneParam) {
@@ -100,6 +107,7 @@ export function handleMint(event: Mint): void {
         }
         position.lower = lower
         position.upper = upper
+        position.zeroForOne = zeroForOneParam
         position.owner = Bytes.fromHexString(ownerParam) as Bytes
         position.epochLast = epochLastParam
         position.createdBy = msgSender
