@@ -35,11 +35,10 @@ const config: HardhatUserConfig = {
         },
         arb_goerli: {
             chainId: 421613,
-            gasPrice: 30000000,
+            gasPrice: 600000000,
             url: process.env.ARBITRUM_GOERLI_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-            timeout: 60000,
-            allowUnlimitedContractSize: true,
+            timeout: 60000
         },
         op_goerli: {
             chainId: 420,
