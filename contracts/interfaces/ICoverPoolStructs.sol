@@ -109,6 +109,20 @@ interface ICoverPoolStructs {
         bool sync;
     }
 
+    struct SwapParams {
+        address to;
+        address refundTo;
+        uint160 priceLimit;
+        uint128 amountIn;
+        bool zeroForOne;
+    }
+
+    struct QuoteParams {
+        uint160 priceLimit;
+        uint128 amountIn;
+        bool zeroForOne;
+    }
+
     struct SnapshotParams {
         address owner;
         uint128 burnPercent;
@@ -180,12 +194,16 @@ interface ICoverPoolStructs {
         Position position;
         Immutables constants;
         SyncFees syncFees;
+        PoolState pool0;
+        PoolState pool1;
     }
 
     struct SwapCache {
         GlobalState state;
         SyncFees syncFees;
         Immutables constants;
+        PoolState pool0;
+        PoolState pool1;
         uint256 price;
         uint256 liquidity;
         uint256 amountIn;

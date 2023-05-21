@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import '../../interfaces/ICoverPoolStructs.sol';
-import '../Epochs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 

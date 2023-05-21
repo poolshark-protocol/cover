@@ -228,7 +228,7 @@ library Positions {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.RemoveParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) external returns (uint128, ICoverPoolStructs.GlobalState memory) {
+    ) internal returns (uint128, ICoverPoolStructs.GlobalState memory) {
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
@@ -335,7 +335,7 @@ library Positions {
         ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) external returns (
+    ) internal returns (
             ICoverPoolStructs.GlobalState memory,
             ICoverPoolStructs.PoolState memory,
             int24

@@ -29,7 +29,7 @@ library Ticks {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache,
         ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (ICoverPoolStructs.SwapCache memory) {
+    ) internal pure returns (ICoverPoolStructs.SwapCache memory) {
         if ((zeroForOne ? priceLimit >= cache.price 
                         : priceLimit <= cache.price) 
             || cache.liquidity == 0 

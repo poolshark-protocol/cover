@@ -6,40 +6,41 @@ import './ICoverPoolStructs.sol';
 //TODO: combine everything into one interface
 interface ICoverPool is ICoverPoolStructs {
     function mint(
-        MintParams memory mintParams
+        MintParams memory params
     ) external;
 
-    // function burn(
-    //     BurnParams calldata burnParams
-    // ) external;
+    function burn(
+        BurnParams memory params
+    ) external;
 
-    // function swap(
-    //     address recipient,
-    //     bool zeroForOne,
-    //     uint128 amountIn,
-    //     uint160 priceLimit
-    // ) external returns (
-    //     int256 inAmount,
-    //     uint256 outAmount,
-    //     uint256 priceAfter
-    // );
+    function swap(
+        SwapParams memory params
+    ) external returns (
+        int256 inAmount,
+        uint256 outAmount,
+        uint256 priceAfter
+    );
 
-    // function quote(
-    //     bool zeroForOne,
-    //     uint128 amountIn,
-    //     uint160 priceLimit
-    // ) external view returns (
-    //     int256 inAmount,
-    //     uint256 outAmount,
-    //     uint256 priceAfter
-    // );
+    function quote(
+        QuoteParams memory params
+    ) external view returns (
+        int256 inAmount,
+        uint256 outAmount,
+        uint256 priceAfter
+    );
 
-    // function protocolFees(
-    //     uint16 syncFee,
-    //     uint16 fillFee,
-    //     bool setFees
-    // ) external returns (
-    //     uint128 token0Fees,
-    //     uint128 token1Fees
-    // );
+    function snapshot(
+        SnapshotParams memory params
+    ) external view returns (
+        Position memory
+    );
+
+    function fees(
+        uint16 syncFee,
+        uint16 fillFee,
+        bool setFees
+    ) external returns (
+        uint128 token0Fees,
+        uint128 token1Fees
+    );
 }
