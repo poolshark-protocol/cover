@@ -9,37 +9,37 @@ interface ICoverPool is ICoverPoolStructs {
         MintParams memory mintParams
     ) external;
 
-    function burn(
-        BurnParams calldata burnParams
-    ) external;
+    // function burn(
+    //     BurnParams calldata burnParams
+    // ) external;
 
-    function swap(
-        address recipient,
-        bool zeroForOne,
-        uint128 amountIn,
-        uint160 priceLimit
-    ) external returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
-    );
+    // function swap(
+    //     address recipient,
+    //     bool zeroForOne,
+    //     uint128 amountIn,
+    //     uint160 priceLimit
+    // ) external returns (
+    //     int256 inAmount,
+    //     uint256 outAmount,
+    //     uint256 priceAfter
+    // );
 
-    function quote(
-        bool zeroForOne,
-        uint128 amountIn,
-        uint160 priceLimit
-    ) external view returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
-    );
+    // function quote(
+    //     bool zeroForOne,
+    //     uint128 amountIn,
+    //     uint160 priceLimit
+    // ) external view returns (
+    //     int256 inAmount,
+    //     uint256 outAmount,
+    //     uint256 priceAfter
+    // );
 
-    function protocolFees(
-        uint16 syncFee,
-        uint16 fillFee,
-        bool setFees
-    ) external returns (
-        uint128 token0Fees,
-        uint128 token1Fees
-    );
+    // function protocolFees(
+    //     uint16 syncFee,
+    //     uint16 fillFee,
+    //     bool setFees
+    // ) external returns (
+    //     uint128 token0Fees,
+    //     uint128 token1Fees
+    // );
 }

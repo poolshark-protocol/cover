@@ -65,6 +65,8 @@ interface ICoverPoolStructs {
         ICurveMath  curve;
         ITwapSource source;
         ICurveMath.PriceBounds bounds;
+        address token0;
+        address token1;
         address inputPool;
         uint256 minAmountPerAuction;
         uint32 genesisTime;
@@ -168,6 +170,8 @@ interface ICoverPoolStructs {
         Position position;
         Immutables constants;
         SyncFees syncFees;
+        PoolState pool0;
+        PoolState pool1;
         uint256 liquidityMinted;
     }
 

@@ -216,7 +216,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         uint128[] memory token0Fees = new uint128[](collectPools.length);
         uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length; i++) {
-            (token0Fees[i], token1Fees[i]) = ICoverPool(collectPools[i]).protocolFees(0,0,false);
+            // (token0Fees[i], token1Fees[i]) = ICoverPool(collectPools[i]).protocolFees(0,0,false);
         }
         emit ProtocolFeesCollected(collectPools, token0Fees, token1Fees);
     }
@@ -238,14 +238,14 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         for (uint i; i < modifyPools.length; i++) {
             if (syncFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
             if (fillFees[i] > MAX_PROTOCOL_FEE) require (false, 'ProtocolFeeCeilingExceeded()');
-            (
-                token0Fees[i],
-                token1Fees[i]
-            ) =ICoverPool(modifyPools[i]).protocolFees(
-                syncFees[i],
-                fillFees[i],
-                setFees[i]
-            );
+            // (
+            //     token0Fees[i],
+            //     token1Fees[i]
+            // ) =ICoverPool(modifyPools[i]).protocolFees(
+            //     syncFees[i],
+            //     fillFees[i],
+            //     setFees[i]
+            // );
         }
         emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
     }

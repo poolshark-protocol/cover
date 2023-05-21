@@ -48,7 +48,7 @@ library Positions {
         ICoverPoolStructs.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (
+    ) internal pure returns (
         ICoverPoolStructs.MintParams memory,
         uint256
     )
@@ -136,19 +136,22 @@ library Positions {
     }
 
     function add(
-        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
-            storage positions,
+       ICoverPoolStructs.Position memory position,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.AddParams memory params,
         ICoverPoolStructs.Immutables memory constants
-    ) external returns (
-        ICoverPoolStructs.GlobalState memory
+    ) internal returns (
+        ICoverPoolStructs.GlobalState memory,
+        ICoverPoolStructs.Position memory
     )    
     {
+        if (params.amount == 0) return (state, position);
+
+        // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
-            position: positions[params.to][params.lower][params.upper],
+            position: position,
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: 0,
             auctionCount: 0,
@@ -160,7 +163,7 @@ library Positions {
         });
         /// call if claim != lower and liquidity being added
         /// initialize new position
-        if (params.amount == 0) return state;
+
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
         } else {
@@ -202,8 +205,6 @@ library Positions {
 
         cache.position.liquidity += uint128(params.amount);
 
-        positions[params.to][params.lower][params.upper] = cache.position;
-
         emit Mint(
                 params.to,
                 params.lower,
@@ -216,7 +217,7 @@ library Positions {
                 cache.deltas.amountOutDeltaMax
         );
 
-        return state;
+        return (state, cache.position);
     }
 
     function remove(
@@ -331,11 +332,12 @@ library Positions {
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState storage pool,
+        ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdateParams memory params,
         ICoverPoolStructs.Immutables memory constants
     ) external returns (
             ICoverPoolStructs.GlobalState memory,
+            ICoverPoolStructs.PoolState memory,
             int24
         )
     {
@@ -354,7 +356,7 @@ library Positions {
         );
 
         if (cache.earlyReturn)
-            return (state, params.claim);
+            return (state, pool, params.claim);
 
         pool.amountInDelta = cache.pool.amountInDelta;
         pool.amountInDeltaMaxClaimed  = cache.pool.amountInDeltaMaxClaimed;
@@ -439,7 +441,7 @@ library Positions {
             cache.position.claimPriceLast
         );
         // return cached position in memory and transfer out
-        return (state, params.claim);
+        return (state, pool, params.claim);
     }
 
     function snapshot(
