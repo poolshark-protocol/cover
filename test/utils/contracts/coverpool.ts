@@ -1,5 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
+import { sign } from 'crypto';
 import { BigNumber } from 'ethers'
 const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
@@ -157,21 +158,23 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     if (autoSync) {
         if (!revertMessage || revertMessage == '') {
-            txn = await hre.props.coverPool.connect(signer).swap(
-                signer.address,
-                true,
-                BN_ZERO,
-                BigNumber.from('4297706460')
-            )
+            txn = await hre.props.coverPool.connect(signer).swap({
+                to: signer.address,
+                refundTo: signer.address,
+                priceLimit: BigNumber.from('4297706460'),
+                amountIn: BN_ZERO,
+                zeroForOne: true
+            })
             await txn.wait()
         } else {
             await expect(
-                hre.props.coverPool.connect(signer).swap(
-                    signer.address,
-                    true,
-                    BigNumber.from('0'),
-                    BigNumber.from('4297706460')
-                )
+                hre.props.coverPool.connect(signer).swap({
+                    to: signer.address,
+                    refundTo: signer.address,
+                    priceLimit: BigNumber.from('4297706460'),
+                    amountIn: BN_ZERO,
+                    zeroForOne: true
+                })
             ).to.be.revertedWith(revertMessage)
             return
         }
@@ -214,7 +217,11 @@ export async function validateSwap(params: ValidateSwapParams) {
     const latestTickBefore = (await hre.props.coverPool.globalState()).latestTick
 
     // quote pre-swap and validate balance changes match post-swap
-    const quote = await hre.props.coverPool.quote(zeroForOne, amountIn, priceLimit)
+    const quote = await hre.props.coverPool.quote({
+        priceLimit: priceLimit,
+        amountIn: amountIn,
+        zeroForOne: zeroForOne
+    })
 
     const amountInQuoted = quote[0]
     const amountOutQuoted = quote[1]
@@ -226,7 +233,13 @@ export async function validateSwap(params: ValidateSwapParams) {
         for (let i = 0; i < splitInto; i++) {
             let txn = await hre.props.coverPool
                 .connect(signer)
-                .swap(signer.address, zeroForOne, amountIn.div(splitInto), priceLimit)
+                .swap({
+                    to: signer.address,
+                    refundTo: signer.address,
+                    priceLimit: priceLimit,
+                    amountIn: amountIn.div(splitInto),
+                    zeroForOne: zeroForOne
+                })
             if (splitInto == 1) await txn.wait()
         }
         if (splitInto > 1){
@@ -237,7 +250,13 @@ export async function validateSwap(params: ValidateSwapParams) {
         await expect(
             hre.props.coverPool
                 .connect(signer)
-                .swap(signer.address, zeroForOne, amountIn, priceLimit)
+                .swap({
+                    to: signer.address,
+                    refundTo: signer.address,
+                    priceLimit: priceLimit,
+                    amountIn: amountIn,
+                    zeroForOne: zeroForOne
+                })
         ).to.be.revertedWith(revertMessage)
         return
     }

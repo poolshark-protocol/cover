@@ -187,6 +187,14 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            Deltas__factory,
+            'deltasLib',
+            [],
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             Epochs__factory,
             'epochsLib',
             [],
