@@ -34,7 +34,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
         // create initial volatility tiers
         _volatilityTiers[sourceName][500][20][5] = VolatilityTier({
-           minAmountPerAuction: 1e18,
+           minAmountPerAuction: 0,
            auctionLength: 5,
            blockTime: 1000,
            syncFee: 0,
@@ -43,7 +43,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minAmountLowerPriced: true
         });
         _volatilityTiers[sourceName][500][40][10] = VolatilityTier({
-           minAmountPerAuction: 1e18,
+           minAmountPerAuction: 0,
            auctionLength: 10,
            blockTime: 1000,
            syncFee: 500,

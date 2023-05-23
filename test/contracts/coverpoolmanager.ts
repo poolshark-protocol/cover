@@ -287,7 +287,7 @@ describe('CoverPoolManager Tests', function () {
     let volatilityTierConfig = await
       hre.props.coverPoolManager
         .volatilityTiers(uniV3String, "500", "40", "10");
-    expect(volatilityTierConfig[0]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[0]).to.be.equal(BN_ZERO)
     expect(volatilityTierConfig[1]).to.be.equal(10)
     expect(volatilityTierConfig[2]).to.be.equal(1000)
     expect(volatilityTierConfig[3]).to.be.equal(500)

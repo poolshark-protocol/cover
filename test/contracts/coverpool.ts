@@ -1682,19 +1682,20 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
         if (debugMode) await getTick(true, -40, debugMode)
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-60',
-            claim: '-40',
-            upper: '-40',
-            liquidityAmount: aliceLiquidityAmount.div(2).add(1).add(aliceLiquidityAmount2),
-            zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('116683335274777521986'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: 'PositionAuctionAmountTooSmall()',
-        })
+        /// @dev - minAmountPerAuction turned off for Arbitrum testnet
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-40',
+        //     upper: '-40',
+        //     liquidityAmount: aliceLiquidityAmount.div(2).add(1).add(aliceLiquidityAmount2),
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('0'),
+        //     balanceOutIncrease: BigNumber.from('116683335274777521986'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: 'PositionAuctionAmountTooSmall()',
+        // })
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
@@ -3748,19 +3749,19 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
         if (debugMode) console.log("===== SECOND ALICE BURN =====");
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '40',
-            claim: '40',
-            upper: '60',
-            liquidityAmount: liquidityAmountAlice.sub(1000),
-            zeroForOne: false,
-            balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: BN_ZERO,
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: 'PositionAuctionAmountTooSmall()',
-        });
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '40',
+        //     claim: '40',
+        //     upper: '60',
+        //     liquidityAmount: liquidityAmountAlice.sub(1000),
+        //     zeroForOne: false,
+        //     balanceInIncrease: BN_ZERO,
+        //     balanceOutIncrease: BN_ZERO,
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: 'PositionAuctionAmountTooSmall()',
+        // });
         if (debugMode) console.log("===== THIRD ALICE BURN =====");
         // ticks[params.upper].deltas.amountOutDeltaMax < amountOutRemoved by 1 wei in Section 3
         // As a result, underflow occurs
