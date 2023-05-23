@@ -94,7 +94,6 @@ interface ICoverPoolStructs {
         address to;
         uint128 amount;
         int24 lower;
-        int24 claim;
         int24 upper;
         bool zeroForOne;
     }
@@ -155,7 +154,6 @@ interface ICoverPoolStructs {
         uint128 amount;
         uint128 amountIn;
         int24 lower;
-        int24 claim;
         int24 upper;
         bool zeroForOne;
     }

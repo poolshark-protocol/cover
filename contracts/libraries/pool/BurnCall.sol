@@ -5,7 +5,24 @@ import '../../interfaces/ICoverPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 
-library BurnLib {
+library BurnCall {
+    event Burn(
+        address indexed to,
+        int24 lower,
+        int24 upper,
+        int24 claim,
+        bool zeroForOne,
+        uint128 liquidityBurned,
+        uint128 tokenInClaimed,
+        uint128 tokenOutClaimed,
+        uint128 tokenOutBurned,
+        uint128 amountInDeltaMaxStashedBurned,
+        uint128 amountOutDeltaMaxStashedBurned,
+        uint128 amountInDeltaMaxBurned,
+        uint128 amountOutDeltaMaxBurned,
+        uint160 claimPriceLast
+    );
+
     function perform(
         ICoverPoolStructs.BurnParams memory params,
         ICoverPoolStructs.BurnCache memory cache,

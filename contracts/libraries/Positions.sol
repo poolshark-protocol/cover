@@ -145,8 +145,7 @@ library Positions {
     ) internal returns (
         ICoverPoolStructs.GlobalState memory,
         ICoverPoolStructs.Position memory
-    )    
-    {
+    ) {
         if (params.amount == 0) return (state, position);
 
         // initialize cache
@@ -177,7 +176,7 @@ library Positions {
                         EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
-                require (false, 'WrongTickClaimedAt()');
+                require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
             }
         }
         

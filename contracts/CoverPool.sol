@@ -7,10 +7,10 @@ import './base/storage/CoverPoolStorage.sol';
 import './base/structs/CoverPoolFactoryStructs.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Epochs.sol';
-import './libraries/pool/SwapLib.sol';
-import './libraries/pool/QuoteLib.sol';
-import './libraries/pool/MintLib.sol';
-import './libraries/pool/BurnLib.sol';
+import './libraries/pool/SwapCall.sol';
+import './libraries/pool/QuoteCall.sol';
+import './libraries/pool/MintCall.sol';
+import './libraries/pool/BurnCall.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -111,11 +111,12 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-        cache = RandomLib.random(
+        cache = MintCall.perform(
             params,
             cache,
             tickMap,
-            params.zeroForOne ? ticks0 : ticks1
+            params.zeroForOne ? ticks0 : ticks1,
+            params.zeroForOne ? positions0 : positions1
         );
         pool0 = cache.pool0;
         pool1 = cache.pool1;
@@ -150,7 +151,7 @@ contract CoverPool is
                 cache.state,
                 cache.constants
         );
-        cache = BurnLib.perform(
+        cache = BurnCall.perform(
             params, 
             cache, 
             tickMap,
@@ -193,7 +194,7 @@ contract CoverPool is
             _immutables()
         );
 
-        cache = SwapLib.performSwap(params, cache);
+        cache = SwapCall.perform(params, cache);
         pool0 = cache.pool0;
         pool1 = cache.pool1;
         globalState = cache.state;
@@ -239,7 +240,7 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-        cache = QuoteLib.perform(params, cache);
+        cache = QuoteCall.perform(params, cache);
         if (params.zeroForOne) {
             return (
                 int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),

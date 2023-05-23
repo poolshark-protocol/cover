@@ -25,6 +25,8 @@ describe('TickMath Library Tests', function () {
                 min: BigNumber.from('4302006101'),
                 max: BigNumber.from('1459110375135176227217141799363990665779938914150')
             },
+            token0: hre.props.token0.address,
+            token1: hre.props.token1.address,
             inputPool: '0x0000000000000000000000000000000000000000',
             minAmountPerAuction: BN_ZERO,
             tickSpread: BigNumber.from('40'),
@@ -44,24 +46,26 @@ describe('TickMath Library Tests', function () {
     it('validatePrice - Should revert below min sqrt price', async function () {
         let minPrice = BigNumber.from('4297706460')
         await expect(
-            hre.props.coverPool.swap(
-                hre.props.admin.address,
-                true,
-                BigNumber.from('0'),
-                minPrice.sub(1)
-            )
+            hre.props.coverPool.swap({
+                to: hre.props.admin.address,
+                refundTo: hre.props.admin.address,
+                zeroForOne: true,
+                amountIn: BigNumber.from('0'),
+                priceLimit: minPrice.sub(1)
+            })
         ).to.be.revertedWith('PriceOutOfBounds()')
     })
 
     it('validatePrice - Should revert at or above max sqrt price', async function () {
         let maxPrice = BigNumber.from('1460570142285104104286607650833256105367815198571')
         await expect(
-            hre.props.coverPool.swap(
-                hre.props.admin.address,
-                true,
-                BigNumber.from('0'),
-                maxPrice.add(1)
-            )
+            hre.props.coverPool.swap({
+                to: hre.props.admin.address,
+                refundTo: hre.props.admin.address,
+                zeroForOne: true,
+                amountIn: BigNumber.from('0'),
+                priceLimit: maxPrice.add(1)
+            })
         ).to.be.revertedWith('PriceOutOfBounds()')
     })
 

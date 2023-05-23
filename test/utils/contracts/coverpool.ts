@@ -39,7 +39,6 @@ export interface ValidateMintParams {
     recipient: string
     lower: string
     upper: string
-    claim: string
     amount: BigNumber
     zeroForOne: boolean
     balanceInDecrease: BigNumber
@@ -296,7 +295,6 @@ export async function validateMint(params: ValidateMintParams) {
     const recipient = params.recipient
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
-    const claim = BigNumber.from(params.claim)
     const amountDesired = params.amount
     const zeroForOne = params.zeroForOne
     const balanceInDecrease = params.balanceInDecrease
@@ -353,7 +351,6 @@ export async function validateMint(params: ValidateMintParams) {
                 to: recipient,
                 amount: amountDesired,
                 lower: lower,
-                claim: claim,
                 upper: upper,
                 zeroForOne: zeroForOne
             })
@@ -365,7 +362,6 @@ export async function validateMint(params: ValidateMintParams) {
                 .mint({
                     to: params.signer.address,
                     lower: lower,
-                    claim: claim,
                     upper: upper,
                     amount: amountDesired,
                     zeroForOne: zeroForOne

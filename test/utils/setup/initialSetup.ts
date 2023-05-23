@@ -2,6 +2,10 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
+import { QuoteCall__factory } from '../../../typechain'
+import { BurnCall__factory } from '../../../typechain'
+import { SwapCall__factory } from '../../../typechain'
+import { MintCall__factory } from '../../../typechain'
 import {
     Token20__factory,
     CoverPoolFactory__factory,
@@ -133,21 +137,9 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            FullPrecisionMath__factory,
-            'fullPrecisionMathLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             ConstantProduct__factory,
             'constantProduct',
-            [],
-            {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
-            }
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -187,21 +179,10 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            Deltas__factory,
-            'deltasLib',
-            [],
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             Epochs__factory,
             'epochsLib',
             [],
             {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/UniswapV3Source.sol:UniswapV3Source': hre.props.uniswapV3Source.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
@@ -215,8 +196,6 @@ export class InitialSetup {
             'ticksLib',
             [],
             {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
             }
         )
@@ -241,13 +220,7 @@ export class InitialSetup {
             'positionsLib',
             [],
             {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
+                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address
             }
         )
 
@@ -266,6 +239,51 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
+            MintCall__factory,
+            'mintCall',
+            [],
+            {
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+            }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            BurnCall__factory,
+            'burnCall',
+            [],
+            {
+                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+            }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            SwapCall__factory,
+            'swapCall',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            QuoteCall__factory,
+            'quoteCall',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
             CoverPoolFactory__factory,
             'coverPoolFactory',
             [   
@@ -274,9 +292,11 @@ export class InitialSetup {
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
+                'contracts/libraries/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
+                'contracts/libraries/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
+                'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+                'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
             }
         )
 

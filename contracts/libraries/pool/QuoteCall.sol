@@ -5,7 +5,7 @@ import '../../interfaces/ICoverPoolStructs.sol';
 import '../Ticks.sol';
 
 
-library QuoteLib {
+library QuoteCall {
 
     function perform(
         ICoverPoolStructs.QuoteParams memory params,

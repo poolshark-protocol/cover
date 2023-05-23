@@ -11,8 +11,7 @@ library Collect {
         ICoverPoolStructs.MintCache memory cache,
         ICoverPoolStructs.CollectParams memory params
     ) internal {
-        params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
-
+        if (params.syncFees.token0 == 0 && params.syncFees.token1 == 0) return;
         // store amounts for transferOut
         uint128 amountIn;
         uint128 amountOut;

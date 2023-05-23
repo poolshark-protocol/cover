@@ -2,6 +2,18 @@
 pragma solidity ^0.8.13;
 
 abstract contract CoverPoolEvents {
+    event Mint(
+        address indexed to,
+        int24 lower,
+        int24 upper,
+        bool zeroForOne,
+        uint32 epochLast,
+        uint128 amountIn,
+        uint128 liquidityMinted,
+        uint128 amountInDeltaMaxMinted,
+        uint128 amountOutDeltaMaxMinted
+    );
+
     event Burn(
         address indexed to,
         int24 lower,

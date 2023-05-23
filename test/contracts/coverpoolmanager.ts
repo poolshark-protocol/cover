@@ -216,7 +216,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPool
         .connect(hre.props.bob)
-        .protocolFees(500, 500, true)
+        .fees(500, 500, true)
     ).to.be.revertedWith('OwnerOnly()')
     let globalStateBefore = await hre.props.coverPool.globalState();
     expect(globalStateBefore.syncFee).to.be.equal(BN_ZERO)

@@ -6,7 +6,7 @@ import '../Epochs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 
-library SwapLib {
+library SwapCall {
     event SwapPool0(
         address indexed recipient,
         uint128 amountIn,
@@ -23,7 +23,7 @@ library SwapLib {
         uint160 newPrice
     );
 
-    function performSwap(
+    function perform(
         ICoverPoolStructs.SwapParams memory params,
         ICoverPoolStructs.SwapCache memory cache
     ) external returns (ICoverPoolStructs.SwapCache memory) {
@@ -67,11 +67,6 @@ library SwapLib {
                 SafeTransfers.transferOut(params.to, cache.constants.token1, cache.output + cache.syncFees.token1);
                 emit SwapPool1(params.to, uint128(params.amountIn - cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
             }
-            // return (
-            //     int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-            //     cache.output + cache.syncFees.token1,
-            //     cache.price 
-            // );
         } else {
             if (cache.input + cache.syncFees.token1 > 0) {
                 SafeTransfers.transferOut(params.refundTo, cache.constants.token1, cache.input + cache.syncFees.token1);
@@ -80,11 +75,6 @@ library SwapLib {
                 SafeTransfers.transferOut(params.to, cache.constants.token0, cache.output + cache.syncFees.token0);
                 emit SwapPool0(params.to, uint128(params.amountIn - cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
             }
-            // return (
-            //     int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-            //     cache.output + cache.syncFees.token0,
-            //     cache.price 
-            // );
         }
         return cache;
     }
