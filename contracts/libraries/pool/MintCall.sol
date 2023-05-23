@@ -34,7 +34,10 @@ library MintCall {
             cache.constants
         );
         // params.amount must be > 0 here
-        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amount);
+        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
+                                                   : cache.constants.token1,
+                                 params.amount
+                                );
 
         (cache.state, cache.position) = Positions.add(
             cache.position,

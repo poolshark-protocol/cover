@@ -79,7 +79,6 @@ contract CoverPool is
 
         // set price boundaries
         (minPrice, maxPrice) = ConstantProduct.priceBounds(tickSpread);
-        // maxPrice = ConstantProduct.maxPrice(tickSpread);
     }
 
     function mint(
