@@ -187,12 +187,12 @@ describe('CoverPoolManager Tests', function () {
   it('Should enable new twap source', async function () {
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableTwapSource(psharkString, hre.props.uniswapV3Source.address, hre.props.constantProduct.address)
+        .enableTwapSource(psharkString, hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
     
     const twapSource = await hre.props.coverPoolManager
       .twapSources(psharkString)
     expect(twapSource[0]).to.be.equal(hre.props.uniswapV3Source.address)
-    expect(twapSource[1]).to.be.equal(hre.props.constantProduct.address)
+    expect(twapSource[1]).to.be.equal(hre.props.uniswapV3Source.address)
   })
 
 
@@ -200,7 +200,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enableTwapSource(psharkString, hre.props.uniswapV3Source.address, hre.props.constantProduct.address)
+        .enableTwapSource(psharkString, hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
     ).to.be.revertedWith('OwnerOnly()')
   })
 
@@ -208,7 +208,7 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enableTwapSource(ethers.utils.formatBytes32String(''), hre.props.uniswapV3Source.address, hre.props.constantProduct.address)
+        .enableTwapSource(ethers.utils.formatBytes32String(''), hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
     ).to.be.revertedWith('TwapSourceNameInvalid()')
   })
 

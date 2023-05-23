@@ -62,7 +62,6 @@ interface ICoverPoolStructs {
     }
 
     struct Immutables {
-        ICurveMath  curve;
         ITwapSource source;
         ICurveMath.PriceBounds bounds;
         address token0;

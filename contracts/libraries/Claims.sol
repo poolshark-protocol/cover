@@ -196,16 +196,15 @@ library Claims {
                     cache.position.claimPriceLast,
                     params.zeroForOne ? cache.priceUpper
                                       : cache.priceLower,
-                    params.zeroForOne,
-                    constants.curve
+                    params.zeroForOne
                 );
                 //TODO: modify delta max on claim tick and lower : upper tick
                 cache.amountInFilledMax    += amountInFilledMax;
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
             // move price to next tick in sequence for section 2
-            cache.position.claimPriceLast  = params.zeroForOne ? constants.curve.getPriceAtTick(params.upper - constants.tickSpread, constants)
-                                                               : constants.curve.getPriceAtTick(params.lower + constants.tickSpread, constants);
+            cache.position.claimPriceLast  = params.zeroForOne ? ConstantProduct.getPriceAtTick(params.upper - constants.tickSpread, constants)
+                                                               : ConstantProduct.getPriceAtTick(params.lower + constants.tickSpread, constants);
         }
         return cache;
     }
@@ -213,8 +212,7 @@ library Claims {
     /// @dev - calculate claim from position start up to claim tick
     function section2(
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICurveMath curve
+        ICoverPoolStructs.UpdateParams memory params
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -230,8 +228,7 @@ library Claims {
                 cache.position.liquidity,
                 cache.position.claimPriceLast,
                 cache.priceClaim,
-                params.zeroForOne,
-                curve
+                params.zeroForOne
             );
             cache.amountInFilledMax += amountInFilledMax;
             cache.amountOutUnfilledMax += amountOutUnfilledMax;
@@ -243,8 +240,7 @@ library Claims {
     function section3(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState memory pool,
-        ICurveMath curve
+        ICoverPoolStructs.PoolState memory pool
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -253,13 +249,13 @@ library Claims {
             // remove if burn
             uint128 amountOutRemoved = uint128(
                 params.zeroForOne
-                    ? curve.getDx(params.amount, pool.price, cache.priceClaim, false)
-                    : curve.getDy(params.amount, cache.priceClaim, pool.price, false)
+                    ? ConstantProduct.getDx(params.amount, pool.price, cache.priceClaim, false)
+                    : ConstantProduct.getDy(params.amount, cache.priceClaim, pool.price, false)
             );
             uint128 amountInOmitted = uint128(
                 params.zeroForOne
-                    ? curve.getDy(params.amount, pool.price, cache.priceClaim, false)
-                    : curve.getDx(params.amount, cache.priceClaim, pool.price, false)
+                    ? ConstantProduct.getDy(params.amount, pool.price, cache.priceClaim, false)
+                    : ConstantProduct.getDx(params.amount, cache.priceClaim, pool.price, false)
             );
             // add to position
             cache.position.amountOut += amountOutRemoved;
@@ -274,8 +270,7 @@ library Claims {
     function section4(
         ICoverPoolStructs.UpdatePositionCache memory cache,
         ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState memory pool,
-        ICurveMath curve
+        ICoverPoolStructs.PoolState memory pool
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -293,8 +288,7 @@ library Claims {
                                         ? cache.position.claimPriceLast 
                                         : cache.priceSpread,
                 pool.price,
-                params.zeroForOne,
-                curve
+                params.zeroForOne
             );
             uint256 poolAmountInDeltaChange = uint256(cache.position.liquidity) * 1e38 
                                                 / uint256(pool.liquidity) * uint256(pool.amountInDelta) / 1e38;   
@@ -315,8 +309,7 @@ library Claims {
                                             ? cache.position.claimPriceLast 
                                             : cache.priceSpread,
                     pool.price,
-                    params.zeroForOne,
-                    curve
+                    params.zeroForOne
                 );
                 pool.amountInDeltaMaxClaimed  += amountInFilledMax;
                 pool.amountOutDeltaMaxClaimed += amountOutUnfilledMax;
@@ -326,7 +319,7 @@ library Claims {
             && (params.zeroForOne ? cache.position.claimPriceLast < cache.priceClaim
                                     : cache.position.claimPriceLast > cache.priceClaim)) {
                 // reduce delta max claimed based on liquidity removed
-                pool = Deltas.burnMaxPool(pool, cache, params, curve);
+                pool = Deltas.burnMaxPool(pool, cache, params);
         }
         // modify claim price for section 5
         cache.priceClaim = cache.priceSpread;
@@ -338,8 +331,7 @@ library Claims {
     /// @dev - calculate claim from position start up to claim tick
     function section5(
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICurveMath curve
+        ICoverPoolStructs.UpdateParams memory params
     ) external pure returns (
         ICoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -357,8 +349,7 @@ library Claims {
                     params.amount,
                     cache.priceClaim,
                     endPrice,
-                    params.zeroForOne,
-                    curve
+                    params.zeroForOne
                 );
                 cache.position.amountOut += amountOutRemoved;
                 /// @auditor - we don't add to cache.amountInFilledMax and cache.amountOutUnfilledMax 

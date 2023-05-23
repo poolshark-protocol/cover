@@ -7,7 +7,7 @@ import '../../../libraries/math/FullPrecisionMath.sol';
 /// @notice Math library for computing sqrt price for ticks of size 1.0001, i.e., sqrt(1.0001^tick) as fixed point Q64.96 numbers - supports
 /// prices between 2**-128 and 2**128 - 1.
 /// @author Adapted from https://github.com/Uniswap/uniswap-v3-core/blob/main/contracts/libraries/TickMath.sol.
-abstract contract TickMath is ITickMath {
+library TickMath {
     /// @dev The minimum tick that may be passed to #getPriceAtTick computed from log base 1.0001 of 2**-128.
     int24 internal constant MIN_TICK = -887272;
     /// @dev The maximum tick that may be passed to #getPriceAtTick computed from log base 1.0001 of 2**128 - 1.
@@ -16,15 +16,15 @@ abstract contract TickMath is ITickMath {
 
     function minTick(
         int16 tickSpacing
-    ) public pure returns (
+    ) internal pure returns (
         int24 tick
     ) {
-        return MIN_TICK / tickSpacing * tickSpacing ;
+        return MIN_TICK / tickSpacing * tickSpacing;
     }
 
     function maxTick(
         int16 tickSpacing
-    ) public pure returns (
+    ) internal pure returns (
         int24 tick
     ) {
         return MAX_TICK / tickSpacing * tickSpacing;
@@ -32,29 +32,29 @@ abstract contract TickMath is ITickMath {
 
     function minPrice(
         int16 tickSpacing
-    ) external pure returns (
+    ) internal pure returns (
         uint160 price
     ) {
         ICoverPoolStructs.Immutables memory constants;
         constants.tickSpread = tickSpacing;
-        return _getPriceAtTick(minTick(tickSpacing), constants);
+        return getPriceAtTick(minTick(tickSpacing), constants);
     }
 
     function maxPrice(
         int16 tickSpacing
-    ) external pure returns (
+    ) internal pure returns (
         uint160 price
     ) {
         ICoverPoolStructs.Immutables memory constants;
         constants.tickSpread = tickSpacing;
-        return _getPriceAtTick(maxTick(tickSpacing), constants);
+        return getPriceAtTick(maxTick(tickSpacing), constants);
     }
 
     function checkTicks(
         int24 lower,
         int24 upper,
         int16 tickSpacing
-    ) external pure
+    ) internal pure
     {
         if (lower < minTick(tickSpacing)) require (false, 'LowerTickOutOfBounds()');
         if (upper > maxTick(tickSpacing)) require (false, 'UpperTickOutOfBounds()');
@@ -65,27 +65,9 @@ abstract contract TickMath is ITickMath {
 
     function checkPrice(
         uint160 price,
-        PriceBounds memory bounds
-    ) external pure {
+        ITickMath.PriceBounds memory bounds
+    ) internal pure {
         if (price < bounds.min || price >= bounds.max) require (false, 'PriceOutOfBounds()');
-    }
-
-    function getPriceAtTick(
-        int24 tick,
-        ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (
-        uint160 price
-    ) {
-        return _getPriceAtTick(tick, constants);
-    }
-
-    function getTickAtPrice(
-        uint160 price,
-        ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (
-        int24 tick
-    ) {
-        return _getTickAtPrice(price, constants);
     }
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96.
@@ -93,7 +75,7 @@ abstract contract TickMath is ITickMath {
     /// @param tick The input tick for the above formula.
     /// @return price Fixed point Q64.96 number representing the sqrt of the ratio of the two assets (token1/token0)
     /// at the given tick.
-    function _getPriceAtTick(
+    function getPriceAtTick(
         int24 tick,
         ICoverPoolStructs.Immutables memory constants
     ) internal pure returns (
@@ -136,7 +118,7 @@ abstract contract TickMath is ITickMath {
     /// @notice Calculates the greatest tick value such that getRatioAtTick(tick) <= ratio.
     /// @param price The sqrt ratio for which to compute the tick as a Q64.96.
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
-    function _getTickAtPrice(
+    function getTickAtPrice(
         uint160 price,
         ICoverPoolStructs.Immutables memory constants
     ) internal pure returns (int24 tick) {
@@ -282,7 +264,7 @@ abstract contract TickMath is ITickMath {
         int24 tickLow = int24((log_sqrt10001 - 3402992956809132418596140100660247210) >> 128);
         int24 tickHi = int24((log_sqrt10001 + 291339464771989622907027621153398088495) >> 128);
 
-        tick = tickLow == tickHi ? tickLow : _getPriceAtTick(tickHi, constants) <= price
+        tick = tickLow == tickHi ? tickLow : getPriceAtTick(tickHi, constants) <= price
             ? tickHi
             : tickLow;
     }

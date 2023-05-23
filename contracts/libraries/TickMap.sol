@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import './math/ConstantProduct.sol';
 
 library TickMap {
     function set(
@@ -126,10 +127,10 @@ library TickMap {
         )
     {
         unchecked {
-            if (tick > constants.curve.maxTick(constants.tickSpread)) require (false, 'TickIndexOverflow()');
-            if (tick < constants.curve.minTick(constants.tickSpread)) require (false, 'TickIndexUnderflow()');
+            if (tick > ConstantProduct.maxTick(constants.tickSpread)) require (false, 'TickIndexOverflow()');
+            if (tick < ConstantProduct.minTick(constants.tickSpread)) require (false, 'TickIndexUnderflow()');
             if (tick % constants.tickSpread != 0) require (false, 'TickIndexInvalid()');
-            tickIndex = uint256(int256((tick - constants.curve.minTick(constants.tickSpread))) / constants.tickSpread);
+            tickIndex = uint256(int256((tick - ConstantProduct.minTick(constants.tickSpread))) / constants.tickSpread);
             wordIndex = tickIndex >> 8;   // 2^8 ticks per word
             blockIndex = tickIndex >> 16; // 2^8 words per block
             if (blockIndex > 255) require (false, 'BlockIndexOverflow()');
@@ -143,8 +144,8 @@ library TickMap {
         int24 tick
     ) {
         unchecked {
-            if (tickIndex > uint24(constants.curve.maxTick(constants.tickSpread) * 2)) require (false, 'TickIndexOverflow()');
-            tick = int24(int256(tickIndex) * int256(constants.tickSpread) + constants.curve.minTick(constants.tickSpread));
+            if (tickIndex > uint24(ConstantProduct.maxTick(constants.tickSpread) * 2)) require (false, 'TickIndexOverflow()');
+            tick = int24(int256(tickIndex) * int256(constants.tickSpread) + ConstantProduct.minTick(constants.tickSpread));
         }
     }
 

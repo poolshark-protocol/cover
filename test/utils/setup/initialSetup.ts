@@ -10,8 +10,6 @@ import {
     Token20__factory,
     CoverPoolFactory__factory,
     Ticks__factory,
-    TickMath__factory,
-    FullPrecisionMath__factory,
     Positions__factory,
     Epochs__factory,
     Deltas__factory,
@@ -21,7 +19,6 @@ import {
     EpochMap__factory,
     UniswapV3Source__factory,
     UniswapV3FactoryMock__factory,
-    ConstantProduct__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -137,14 +134,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            ConstantProduct__factory,
-            'constantProduct',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             UniswapV3Source__factory,
             'uniswapV3Source',
             [
@@ -232,7 +221,7 @@ export class InitialSetup {
             [
                 this.uniV3String,
                 hre.props.uniswapV3Source.address,
-                hre.props.constantProduct.address
+                hre.props.uniswapV3Source.address
             ]
         )
 

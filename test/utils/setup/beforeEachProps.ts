@@ -6,7 +6,6 @@ import {
     CoverPool,
     CoverPoolFactory,
     Positions,
-    TickMath,
     Ticks,
     Token20,
     UniswapV3Source,
@@ -16,7 +15,6 @@ import {
     CoverPoolManager,
     TickMap,
     EpochMap,
-    ConstantProduct,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -32,8 +30,6 @@ export interface BeforeEachProps {
     uniswapV3FactoryMock: UniswapV3FactoryMock
     uniswapV3PoolMock: UniswapV3PoolMock
     tickMapLib: TickMap
-    tickMathLib: TickMath
-    constantProduct: ConstantProduct
     deltasLib: Deltas
     epochsLib: Epochs
     epochMapLib: EpochMap
@@ -85,8 +81,6 @@ export class GetBeforeEach {
         let uniswapV3FactoryMock: UniswapV3FactoryMock
         let uniswapV3PoolMock: UniswapV3PoolMock
         let tickMapLib: TickMap
-        let tickMathLib: TickMath
-        let constantProduct: ConstantProduct
         let deltasLib: Deltas
         let epochsLib: Epochs
         let epochMapLib: EpochMap
@@ -116,8 +110,6 @@ export class GetBeforeEach {
             uniswapV3FactoryMock,
             uniswapV3PoolMock,
             tickMapLib,
-            tickMathLib,
-            constantProduct,
             deltasLib,
             epochsLib,
             epochMapLib,

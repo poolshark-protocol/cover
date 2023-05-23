@@ -11,6 +11,7 @@ import './libraries/pool/SwapCall.sol';
 import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
+import './libraries/math/ConstantProduct.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -23,7 +24,6 @@ contract CoverPool is
     address public immutable token0;
     address public immutable token1;
     address public immutable twapSource;
-    address public immutable curveMath;
     address public immutable inputPool; 
     uint160 public immutable minPrice;
     uint160 public immutable maxPrice;
@@ -55,7 +55,6 @@ contract CoverPool is
         // set addresses
         owner      = params.owner;
         twapSource = params.twapSource;
-        curveMath  = params.curveMath;
         inputPool  = params.inputPool;
         token0     = params.token0;
         token1     = params.token1;
@@ -79,9 +78,8 @@ contract CoverPool is
         minAmountLowerPriced = params.config.minAmountLowerPriced;
 
         // set price boundaries
-        ICurveMath curve = ICurveMath(curveMath);
-        minPrice = curve.minPrice(tickSpread);
-        maxPrice = curve.maxPrice(tickSpread);
+        (minPrice, maxPrice) = ConstantProduct.priceBounds(tickSpread);
+        // maxPrice = ConstantProduct.maxPrice(tickSpread);
     }
 
     function mint(
@@ -171,9 +169,6 @@ contract CoverPool is
         uint256 priceAfter
     ) 
     {
-        ICurveMath(curveMath).checkPrice(
-            params.priceLimit,
-            ITickMath.PriceBounds(minPrice, maxPrice));
         SwapCache memory cache;
         cache.pool0 = pool0;
         cache.pool1 = pool1;
@@ -305,7 +300,6 @@ contract CoverPool is
         Immutables memory
     ) {
         return Immutables(
-            ICurveMath(curveMath),
             ITwapSource(twapSource),
             ITickMath.PriceBounds(minPrice, maxPrice),
             token0,
