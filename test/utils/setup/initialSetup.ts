@@ -2,12 +2,14 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
+import { QuoteCall__factory } from '../../../typechain'
+import { BurnCall__factory } from '../../../typechain'
+import { SwapCall__factory } from '../../../typechain'
+import { MintCall__factory } from '../../../typechain'
 import {
     Token20__factory,
     CoverPoolFactory__factory,
     Ticks__factory,
-    TickMath__factory,
-    FullPrecisionMath__factory,
     Positions__factory,
     Epochs__factory,
     Deltas__factory,
@@ -17,7 +19,6 @@ import {
     EpochMap__factory,
     UniswapV3Source__factory,
     UniswapV3FactoryMock__factory,
-    ConstantProduct__factory,
 } from '../../../typechain'
 
 export class InitialSetup {
@@ -133,26 +134,6 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            FullPrecisionMath__factory,
-            'fullPrecisionMathLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            ConstantProduct__factory,
-            'constantProduct',
-            [],
-            {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
             UniswapV3Source__factory,
             'uniswapV3Source',
             [
@@ -191,9 +172,6 @@ export class InitialSetup {
             'epochsLib',
             [],
             {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/UniswapV3Source.sol:UniswapV3Source': hre.props.uniswapV3Source.address,
                 'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
@@ -207,8 +185,6 @@ export class InitialSetup {
             'ticksLib',
             [],
             {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
             }
         )
@@ -233,13 +209,7 @@ export class InitialSetup {
             'positionsLib',
             [],
             {
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
+                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address
             }
         )
 
@@ -251,8 +221,53 @@ export class InitialSetup {
             [
                 this.uniV3String,
                 hre.props.uniswapV3Source.address,
-                hre.props.constantProduct.address
+                hre.props.uniswapV3Source.address
             ]
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            MintCall__factory,
+            'mintCall',
+            [],
+            {
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+            }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            BurnCall__factory,
+            'burnCall',
+            [],
+            {
+                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
+                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+            }
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            SwapCall__factory,
+            'swapCall',
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            QuoteCall__factory,
+            'quoteCall',
+            []
         )
 
         await this.deployAssist.deployContractWithRetry(
@@ -266,9 +281,11 @@ export class InitialSetup {
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
                 'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/math/FullPrecisionMath.sol:FullPrecisionMath':
-                    hre.props.fullPrecisionMathLib.address,
                 'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
+                'contracts/libraries/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
+                'contracts/libraries/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
+                'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+                'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
             }
         )
 

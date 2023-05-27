@@ -62,9 +62,10 @@ interface ICoverPoolStructs {
     }
 
     struct Immutables {
-        ICurveMath  curve;
         ITwapSource source;
         ICurveMath.PriceBounds bounds;
+        address token0;
+        address token1;
         address inputPool;
         uint256 minAmountPerAuction;
         uint32 genesisTime;
@@ -92,7 +93,6 @@ interface ICoverPoolStructs {
         address to;
         uint128 amount;
         int24 lower;
-        int24 claim;
         int24 upper;
         bool zeroForOne;
     }
@@ -105,6 +105,20 @@ interface ICoverPoolStructs {
         int24 upper;
         bool zeroForOne;
         bool sync;
+    }
+
+    struct SwapParams {
+        address to;
+        address refundTo;
+        uint160 priceLimit;
+        uint128 amountIn;
+        bool zeroForOne;
+    }
+
+    struct QuoteParams {
+        uint160 priceLimit;
+        uint128 amountIn;
+        bool zeroForOne;
     }
 
     struct SnapshotParams {
@@ -139,7 +153,6 @@ interface ICoverPoolStructs {
         uint128 amount;
         uint128 amountIn;
         int24 lower;
-        int24 claim;
         int24 upper;
         bool zeroForOne;
     }
@@ -168,6 +181,8 @@ interface ICoverPoolStructs {
         Position position;
         Immutables constants;
         SyncFees syncFees;
+        PoolState pool0;
+        PoolState pool1;
         uint256 liquidityMinted;
     }
 
@@ -176,12 +191,16 @@ interface ICoverPoolStructs {
         Position position;
         Immutables constants;
         SyncFees syncFees;
+        PoolState pool0;
+        PoolState pool1;
     }
 
     struct SwapCache {
         GlobalState state;
         SyncFees syncFees;
         Immutables constants;
+        PoolState pool0;
+        PoolState pool1;
         uint256 price;
         uint256 liquidity;
         uint256 amountIn;

@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers'
-import { getLatestTick, getLiquidity, getPrice, validateMint, validateSync } from '../../../test/utils/contracts/coverpool'
+import { BN_ZERO, getLatestTick, getLiquidity, getPrice, validateBurn, validateMint, validateSwap, validateSync } from '../../../test/utils/contracts/coverpool'
 import { InitialSetup } from '../../../test/utils/setup/initialSetup'
 import { mintSigners20 } from '../../../test/utils/token'
 import { getNonce } from '../../utils'
@@ -35,31 +35,55 @@ export class MintPosition {
 
         const liquidityAmount = BigNumber.from('199760153929825488153727')
 
-        // await getLatestTick(true)
+        await getLatestTick(true)
 
         // await getPrice(true)
     // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
     // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
-        await validateMint({
+        // await validateMint({
+        //     signer: hre.props.alice,
+        //     recipient: hre.props.alice.address,
+        //     lower: '60',
+        //     upper: '100',
+        //     amount: token1Amount,
+        //     zeroForOne: false,
+        //     balanceInDecrease: token1Amount,
+        //     liquidityIncrease: liquidityAmount,
+        //     upperTickCleared: false,
+        //     lowerTickCleared: false,
+        //     revertMessage: '',
+        // })
+
+        //         await validateSwap({
+        // signer: hre.props.alice,
+        // recipient: hre.props.alice.address,
+        // zeroForOne: true,
+        // amountIn: token1Amount.div(10000),
+        // priceLimit: BigNumber.from('79228162514264337593543950336'),
+        // balanceInDecrease: token1Amount.mul(30),
+        // balanceOutIncrease: token1Amount.mul(30),
+        // revertMessage:''
+        // })
+
+        await validateBurn({
             signer: hre.props.alice,
-            recipient: '0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8',
             lower: '60',
             claim: '60',
             upper: '100',
-            amount: token1Amount,
+            liquidityPercent: ethers.utils.parseUnits('1', 38),
             zeroForOne: false,
-            balanceInDecrease: token1Amount,
-            liquidityIncrease: liquidityAmount,
-            upperTickCleared: false,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: token1Amount.sub(1),
             lowerTickCleared: false,
+            upperTickCleared: false,
             revertMessage: '',
         })
 
-        // await validateSync(20)
+        // await validateSync(60)
 
-        // await getPrice(false, true)
-        // await getLiquidity(false, true)
-        // await getLatestTick(true)
+        await getPrice(false, true)
+        await getLiquidity(false, true)
+        await getLatestTick(true)
 
         console.log('position minted')
     }

@@ -34,7 +34,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
         // create initial volatility tiers
         _volatilityTiers[sourceName][500][20][5] = VolatilityTier({
-           minAmountPerAuction: 1e18,
+           minAmountPerAuction: 0,
            auctionLength: 5,
            blockTime: 1000,
            syncFee: 0,
@@ -43,7 +43,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
            minAmountLowerPriced: true
         });
         _volatilityTiers[sourceName][500][40][10] = VolatilityTier({
-           minAmountPerAuction: 1e18,
+           minAmountPerAuction: 0,
            auctionLength: 10,
            blockTime: 1000,
            syncFee: 500,
@@ -216,7 +216,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         uint128[] memory token0Fees = new uint128[](collectPools.length);
         uint128[] memory token1Fees = new uint128[](collectPools.length);
         for (uint i; i < collectPools.length; i++) {
-            (token0Fees[i], token1Fees[i]) = ICoverPool(collectPools[i]).protocolFees(0,0,false);
+            (token0Fees[i], token1Fees[i]) = ICoverPool(collectPools[i]).fees(0,0,false);
         }
         emit ProtocolFeesCollected(collectPools, token0Fees, token1Fees);
     }
@@ -241,7 +241,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             (
                 token0Fees[i],
                 token1Fees[i]
-            ) =ICoverPool(modifyPools[i]).protocolFees(
+            ) =ICoverPool(modifyPools[i]).fees(
                 syncFees[i],
                 fillFees[i],
                 setFees[i]

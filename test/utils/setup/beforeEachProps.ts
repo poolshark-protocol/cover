@@ -3,12 +3,9 @@ import { getNonce } from '../../../tasks/utils'
 import {
     UniswapV3FactoryMock,
     UniswapV3PoolMock,
-    DyDxMath,
-    FullPrecisionMath,
     CoverPool,
     CoverPoolFactory,
     Positions,
-    TickMath,
     Ticks,
     Token20,
     UniswapV3Source,
@@ -18,11 +15,12 @@ import {
     CoverPoolManager,
     TickMap,
     EpochMap,
-    IUniswapV3Factory,
-    IUniswapV3Pool,
-    ConstantProduct,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
+import { MintCall } from '../../../typechain'
+import { BurnCall } from '../../../typechain'
+import { SwapCall } from '../../../typechain'
+import { QuoteCall } from '../../../typechain'
 
 export interface BeforeEachProps {
     coverPool: CoverPool
@@ -32,16 +30,17 @@ export interface BeforeEachProps {
     uniswapV3FactoryMock: UniswapV3FactoryMock
     uniswapV3PoolMock: UniswapV3PoolMock
     tickMapLib: TickMap
-    tickMathLib: TickMath
-    constantProduct: ConstantProduct
     deltasLib: Deltas
     epochsLib: Epochs
     epochMapLib: EpochMap
-    fullPrecisionMathLib: FullPrecisionMath
     ticksLib: Ticks
     uniswapV3Source: UniswapV3Source
     claimsLib: Claims
     positionsLib: Positions
+    mintCall: MintCall
+    burnCall: BurnCall
+    swapCall: SwapCall
+    quoteCall: QuoteCall
     tokenA: Token20
     tokenB: Token20
     token0: Token20
@@ -82,16 +81,17 @@ export class GetBeforeEach {
         let uniswapV3FactoryMock: UniswapV3FactoryMock
         let uniswapV3PoolMock: UniswapV3PoolMock
         let tickMapLib: TickMap
-        let tickMathLib: TickMath
-        let constantProduct: ConstantProduct
         let deltasLib: Deltas
         let epochsLib: Epochs
         let epochMapLib: EpochMap
-        let fullPrecisionMathLib: FullPrecisionMath
         let ticksLib: Ticks
         let uniswapV3Source: UniswapV3Source
         let claimsLib: Claims
         let positionsLib: Positions
+        let mintCall: MintCall
+        let burnCall: BurnCall
+        let swapCall: SwapCall
+        let quoteCall: QuoteCall
         let tokenA: Token20
         let tokenB: Token20
         let token0: Token20
@@ -110,16 +110,17 @@ export class GetBeforeEach {
             uniswapV3FactoryMock,
             uniswapV3PoolMock,
             tickMapLib,
-            tickMathLib,
-            constantProduct,
             deltasLib,
             epochsLib,
             epochMapLib,
-            fullPrecisionMathLib,
             ticksLib,
             uniswapV3Source,
             claimsLib,
             positionsLib,
+            mintCall,
+            burnCall,
+            swapCall,
+            quoteCall,
             tokenA,
             tokenB,
             token0,

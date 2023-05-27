@@ -5,7 +5,7 @@ import '../../../interfaces/modules/curves/IDyDxMath.sol';
 import '../../../libraries/math/FullPrecisionMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
-abstract contract DyDxMath is IDyDxMath
+library DyDxMath
 {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
@@ -14,7 +14,7 @@ abstract contract DyDxMath is IDyDxMath
         uint256 priceLower,
         uint256 priceUpper,
         bool roundUp
-    ) external pure returns (uint256 dy) {
+    ) internal pure returns (uint256 dy) {
         return _getDy(liquidity, priceLower, priceUpper, roundUp);
     }
 
@@ -23,7 +23,7 @@ abstract contract DyDxMath is IDyDxMath
         uint256 priceLower,
         uint256 priceUpper,
         bool roundUp
-    ) external pure returns (uint256 dx) {
+    ) internal pure returns (uint256 dx) {
         return _getDx(liquidity, priceLower, priceUpper, roundUp);
     }
 
@@ -63,7 +63,7 @@ abstract contract DyDxMath is IDyDxMath
         uint256 currentPrice,
         uint256 dy,
         uint256 dx
-    ) external pure returns (uint256 liquidity) {
+    ) internal pure returns (uint256 liquidity) {
         unchecked {
             if (priceUpper == currentPrice) {
                 liquidity = FullPrecisionMath.mulDiv(dy, Q96, priceUpper - priceLower);
@@ -86,7 +86,7 @@ abstract contract DyDxMath is IDyDxMath
         uint256 currentPrice,
         uint256 liquidityAmount,
         bool roundUp
-    ) external pure returns (uint128 token0amount, uint128 token1amount) {
+    ) internal pure returns (uint128 token0amount, uint128 token1amount) {
         if (priceUpper <= currentPrice) {
             token1amount = uint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
         } else if (currentPrice <= priceLower) {
@@ -102,7 +102,7 @@ abstract contract DyDxMath is IDyDxMath
         uint256 liquidity,
         uint256 input,
         bool zeroForOne
-    ) external pure returns (
+    ) internal pure returns (
         uint256 newPrice
     ) {
         if (zeroForOne) {

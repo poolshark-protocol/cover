@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import './math/ConstantProduct.sol';
 
 library Deltas {
 
@@ -10,21 +10,20 @@ library Deltas {
         uint128 liquidity,
         uint160 priceStart,
         uint160 priceEnd,
-        bool   isPool0,
-        ICurveMath curve
+        bool   isPool0
     ) public pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
         amountInDeltaMax = uint128(
             isPool0
-                ? curve.getDy(
+                ? ConstantProduct.getDy(
                     liquidity,
                     priceEnd,
                     priceStart,
                     false
                 )
-                : curve.getDx(
+                : ConstantProduct.getDx(
                     liquidity,
                     priceStart,
                     priceEnd,
@@ -33,13 +32,13 @@ library Deltas {
         );
         amountOutDeltaMax = uint128(
             isPool0
-                ? curve.getDx(
+                ? ConstantProduct.getDx(
                     liquidity,
                     priceEnd,
                     priceStart,
                     false
                 )
-                : curve.getDy(
+                : ConstantProduct.getDy(
                     liquidity,
                     priceStart,
                     priceEnd,
@@ -52,21 +51,20 @@ library Deltas {
         uint128 liquidity,
         uint160 priceStart,
         uint160 priceEnd,
-        bool   isPool0,
-        ICurveMath curve
+        bool   isPool0
     ) public pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
         amountInDeltaMax = uint128(
             isPool0
-                ? curve.getDy(
+                ? ConstantProduct.getDy(
                     liquidity,
                     priceEnd,
                     priceStart,
                     true
                 )
-                : curve.getDx(
+                : ConstantProduct.getDx(
                     liquidity,
                     priceStart,
                     priceEnd,
@@ -75,13 +73,13 @@ library Deltas {
         );
         amountOutDeltaMax = uint128(
             isPool0
-                ? curve.getDx(
+                ? ConstantProduct.getDx(
                     liquidity,
                     priceEnd,
                     priceStart,
                     true
                 )
-                : curve.getDy(
+                : ConstantProduct.getDy(
                     liquidity,
                     priceStart,
                     priceEnd,
@@ -94,21 +92,20 @@ library Deltas {
         uint128 liquidity,
         uint160 priceStart,
         uint160 priceEnd,
-        bool isPool0,
-        ICurveMath curve
+        bool isPool0
     ) public pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
         amountInDeltaMax = uint128(
             isPool0
-                ? curve.getDy(
+                ? ConstantProduct.getDy(
                     liquidity,
                     priceStart,
                     priceEnd,
                     true
                 )
-                : curve.getDx(
+                : ConstantProduct.getDx(
                     liquidity,
                     priceEnd,
                     priceStart,
@@ -117,13 +114,13 @@ library Deltas {
         );
         amountOutDeltaMax = uint128(
             isPool0
-                ? curve.getDx(
+                ? ConstantProduct.getDx(
                     liquidity,
                     priceStart,
                     priceEnd,
                     true
                 )
-                : curve.getDy(
+                : ConstantProduct.getDy(
                     liquidity,
                     priceEnd,
                     priceStart,
@@ -235,8 +232,7 @@ library Deltas {
     function burnMaxPool(
         ICoverPoolStructs.PoolState memory pool,
         ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICurveMath curve
+        ICoverPoolStructs.UpdateParams memory params
     ) external pure returns (
         ICoverPoolStructs.PoolState memory
     )
@@ -249,8 +245,7 @@ library Deltas {
             params.amount,
             cache.priceSpread,
             cache.position.claimPriceLast,
-            params.zeroForOne,
-            curve
+            params.zeroForOne
         );
         pool.amountInDeltaMaxClaimed  -= pool.amountInDeltaMaxClaimed > amountInMaxClaimedBefore ? amountInMaxClaimedBefore
                                                                                                  : pool.amountInDeltaMaxClaimed;
@@ -356,8 +351,7 @@ library Deltas {
         uint160 priceLower,
         uint160 priceUpper,
         bool   isPool0,
-        bool   isAdded,
-        ICurveMath curve
+        bool   isAdded
     ) external pure returns (
         ICoverPoolStructs.Tick memory,
         ICoverPoolStructs.Deltas memory
@@ -368,12 +362,12 @@ library Deltas {
             (
                 amountInDeltaMax,
                 amountOutDeltaMax
-            ) = max(amount, priceUpper, priceLower, true, curve);
+            ) = max(amount, priceUpper, priceLower, true);
         } else {
             (
                 amountInDeltaMax,
                 amountOutDeltaMax
-            ) = max(amount, priceLower, priceUpper, false, curve);
+            ) = max(amount, priceLower, priceUpper, false);
         }
         if (isAdded) {
             tick.amountInDeltaMaxMinus  += amountInDeltaMax;

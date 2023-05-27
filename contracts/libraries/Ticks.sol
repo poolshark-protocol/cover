@@ -29,7 +29,7 @@ library Ticks {
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.SwapCache memory cache,
         ICoverPoolStructs.Immutables memory constants
-    ) external pure returns (ICoverPoolStructs.SwapCache memory) {
+    ) internal pure returns (ICoverPoolStructs.SwapCache memory) {
         if ((zeroForOne ? priceLimit >= cache.price 
                         : priceLimit <= cache.price) 
             || cache.liquidity == 0 
@@ -49,17 +49,17 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDx = constants.curve.getDx(cache.liquidity, nextPrice, cache.price, false);
+            uint256 maxDx = ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, false);
             // check if all input is used
             if (cache.inputBoosted <= maxDx) {
                 // calculate price after swap
-                uint256 newPrice = constants.curve.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
-                cache.output += constants.curve.getDy(cache.liquidity, newPrice, cache.price, false);
+                uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
+                cache.output += ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDx > 0) {
-                cache.output += constants.curve.getDy(cache.liquidity, nextPrice, cache.price, false);
+                cache.output += ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
                 cache.price = nextPrice;
                 cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
                 cache.amountInDelta = cache.amountIn - cache.input;
@@ -70,16 +70,16 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDy = constants.curve.getDy(cache.liquidity, cache.price, nextPrice, false);
+            uint256 maxDy = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, false);
             if (cache.inputBoosted <= maxDy) {
                 // calculate price after swap
-                uint256 newPrice = constants.curve.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
-                cache.output += constants.curve.getDx(cache.liquidity, cache.price, newPrice, false);
+                uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
+                cache.output += ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
                 cache.price = newPrice;
                 cache.input = 0;
                 cache.amountInDelta = cache.amountIn;
             } else if (maxDy > 0) {
-                cache.output += constants.curve.getDx(cache.liquidity, cache.price, nextPrice, false);
+                cache.output += ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
                 cache.price = nextPrice;
                 cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
                 cache.amountInDelta = cache.amountIn - cache.input;
@@ -100,22 +100,22 @@ library Ticks {
             if (state.unlocked == 1) {
                 // initialize state
                 state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
-                state.latestPrice = constants.curve.getPriceAtTick(state.latestTick, constants);
+                state.latestPrice = ConstantProduct.getPriceAtTick(state.latestTick, constants);
                 state.auctionStart = uint32(block.timestamp - constants.genesisTime);
                 state.accumEpoch = 1;
 
                 // initialize ticks
-                TickMap.set(constants.curve.minTick(constants.tickSpread), tickMap, constants);
-                TickMap.set(constants.curve.maxTick(constants.tickSpread), tickMap, constants);
+                TickMap.set(ConstantProduct.minTick(constants.tickSpread), tickMap, constants);
+                TickMap.set(ConstantProduct.maxTick(constants.tickSpread), tickMap, constants);
                 TickMap.set(state.latestTick, tickMap, constants);
 
                 // initialize price
-                pool0.price = constants.curve.getPriceAtTick(state.latestTick - constants.tickSpread, constants);
-                pool1.price = constants.curve.getPriceAtTick(state.latestTick + constants.tickSpread, constants);
+                pool0.price = ConstantProduct.getPriceAtTick(state.latestTick - constants.tickSpread, constants);
+                pool1.price = ConstantProduct.getPriceAtTick(state.latestTick + constants.tickSpread, constants);
             
                 emit Initialize(
-                    constants.curve.minTick(constants.tickSpread),
-                    constants.curve.maxTick(constants.tickSpread),
+                    ConstantProduct.minTick(constants.tickSpread),
+                    ConstantProduct.maxTick(constants.tickSpread),
                     state.latestTick,
                     constants.genesisTime,
                     state.auctionStart,
@@ -188,7 +188,7 @@ library Ticks {
                 }
                 ticks[lower] = tickLower;
             }
-            if (lower != constants.curve.minTick(constants.tickSpread) && _empty(tickLower)) {
+            if (lower != ConstantProduct.minTick(constants.tickSpread) && _empty(tickLower)) {
                 TickMap.unset(lower, tickMap, constants);
             }
         }
@@ -202,7 +202,7 @@ library Ticks {
                 }
                 ticks[upper] = tickUpper;
             }
-            if (upper != constants.curve.maxTick(constants.tickSpread) && _empty(tickUpper)) {
+            if (upper != ConstantProduct.maxTick(constants.tickSpread) && _empty(tickUpper)) {
                 TickMap.unset(upper, tickMap, constants);
             }
         }
