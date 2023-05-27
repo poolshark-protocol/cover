@@ -1,105 +1,77 @@
-    
-    import { ContractDeploymentsKey } from '../util/files/contractDeploymentsJson'
-
-    export const CONTRACT_DEPLOYMENT_KEYS: ContractDeploymentsKey[] = [
     {
-        networkName: 'arb_goerli',
-        objectName: 'coverPool'
-    },
-    {
-        networkName: 'arb_goerli',
-        objectName: 'coverPool2'
-    },
-    {
-        networkName: 'undefined',
-        objectName: 'tokenA'
-    },
-    {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'tokenB'
     },
     {
-        networkName: 'undefined',
-        objectName: 'token1'
-    },
-    {
-        networkName: 'undefined',
-        objectName: 'tokenA'
-    },
-    {
-        networkName: 'undefined',
-        objectName: 'tokenB'
-    },
-    {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'uniswapV3FactoryMock'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'uniswapV3PoolMock'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'uniswapV3Source'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'tickMapLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'epochMapLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'deltasLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'epochsLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'ticksLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'claimsLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'positionsLib'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'coverPoolManager'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'mintCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'burnCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'swapCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'quoteCall'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'coverPoolFactory'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'coverPool'
     },
     {
-        networkName: 'undefined',
+        networkName: 'scroll_alpha',
         objectName: 'coverPool2'
     },
 ];

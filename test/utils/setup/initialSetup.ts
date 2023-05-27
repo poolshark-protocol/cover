@@ -37,6 +37,7 @@ export class InitialSetup {
     }
 
     public async initialCoverPoolSetup(): Promise<number> {
+
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()]
         
         // const token0Address = (

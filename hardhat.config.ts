@@ -41,17 +41,38 @@ const config: HardhatUserConfig = {
             timeout: 60000,
             allowUnlimitedContractSize: true,
         },
+        scroll_alpha: {
+            chainId: 534353,
+            gasPrice: 4000000,
+            url: process.env.SCROLL_ALPHA_URL || '',
+            accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+            timeout: 60000,
+            allowUnlimitedContractSize: true,
+        },
         op_goerli: {
             chainId: 420,
             gasPrice: 500,
-            url: process.env.OPTIMISM_GOERLI_URL || '',
+            url: process.env.SCROLL_ALPHA_URL || '',
             accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
             timeout: 60000,
             allowUnlimitedContractSize: true,
         },
     },
-    etherscan: {
-        apiKey: process.env.ARBITRUM_GOERLI_API_KEY,
+    etherscan: { 
+        apiKey: {
+            arb_goerli: process.env.ARBITRUM_GOERLI_API_KEY,
+            scrollAlpha: 'abc',
+        },
+        customChains: [
+            {
+              network: 'scroll_alpha',
+              chainId: 534353,
+              urls: {
+                apiURL: 'https://blockscout.scroll.io/api',
+                browserURL: 'https://blockscout.scroll.io/',
+              },
+            },
+        ],
     },
 }
 export default config
