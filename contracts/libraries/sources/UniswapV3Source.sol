@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '../../interfaces/external/IUniswapV3Factory.sol';
-import '../../interfaces/external/IUniswapV3Pool.sol';
+import '../../interfaces/external/uniswap/v3/IUniswapV3Factory.sol';
+import '../../interfaces/external/uniswap/v3/IUniswapV3Pool.sol';
 import '../../interfaces/ICoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
@@ -13,7 +12,6 @@ contract UniswapV3Source is ITwapSource {
     error WaitUntilAboveMinTick();
 
     address public immutable uniV3Factory;
-    /// @dev - set for Arbitrum mainnet
     uint32 public constant oneSecond = 1000;
 
     constructor(
@@ -89,7 +87,7 @@ contract UniswapV3Source is ITwapSource {
         secondsAgos[0] = 0;
         secondsAgos[1] = constants.twapLength;
         (int56[] memory tickCumulatives, ) = IUniswapV3Pool(constants.inputPool).observe(secondsAgos);
-        averageTick = -int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
+        averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
         int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
         if (averageTick > maxAverageTick) return maxAverageTick;
         int24 minAverageTick = ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread;

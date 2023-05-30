@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import '../interfaces/external/IUniswapV3Factory.sol';
+import '../interfaces/external/uniswap/v3/IUniswapV3Factory.sol';
 import './UniswapV3PoolMock.sol';
 
 contract UniswapV3FactoryMock is IUniswapV3Factory {
