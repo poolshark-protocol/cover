@@ -89,7 +89,7 @@ contract UniswapV3Source is ITwapSource {
         secondsAgos[0] = 0;
         secondsAgos[1] = constants.twapLength;
         (int56[] memory tickCumulatives, ) = IUniswapV3Pool(constants.inputPool).observe(secondsAgos);
-        averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
+        averageTick = -int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
         int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
         if (averageTick > maxAverageTick) return maxAverageTick;
         int24 minAverageTick = ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread;
