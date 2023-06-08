@@ -262,13 +262,21 @@ export function handleBurn(event: Burn): void {
             .concat(zeroForOneParam.toString())
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.claimPriceLast = claimPriceLastParam
+        // update position delta maxes
+        position.amountInDeltaMax  = safeMinus(position.amountInDeltaMax,  amountInDeltaMaxStashedBurnedParam.plus(amountInDeltaMaxBurnedParam))
+        position.amountOutDeltaMax = safeMinus(position.amountOutDeltaMax, amountOutDeltaMaxStashedBurnedParam.plus(amountOutDeltaMaxBurnedParam))
+        // shrink position to new size
+        if (zeroForOneParam) {
+            position.upper = claim
+        } else {
+            position.lower = claim
+        }
+        position.save()
     }
     // update pool stats
     pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
-    // update position delta maxes
-    position.amountInDeltaMax  = safeMinus(position.amountInDeltaMax,  amountInDeltaMaxStashedBurnedParam.plus(amountInDeltaMaxBurnedParam))
-    position.amountOutDeltaMax = safeMinus(position.amountOutDeltaMax, amountOutDeltaMaxStashedBurnedParam.plus(amountOutDeltaMaxBurnedParam))
+
     // decrease tvl count
     let amount0: BigDecimal; let amount1: BigDecimal;
     if (zeroForOneParam) {
@@ -307,13 +315,6 @@ export function handleBurn(event: Burn): void {
     claimTickDeltas.amountInDelta = claimTickDeltas.amountInDelta.minus(tokenInClaimedParam)
     claimTickDeltas.amountOutDelta = claimTickDeltas.amountOutDelta.minus(tokenOutClaimedParam)
 
-    // shrink position to new size
-    if (zeroForOneParam) {
-        position.upper = claim
-    } else {
-        position.lower = claim
-    }
-
     // eth price updates
     token0.ethPrice = findEthPerToken(token0, token1)
     token1.ethPrice = findEthPerToken(token1, token0)
@@ -340,7 +341,7 @@ export function handleBurn(event: Burn): void {
     //TODO: update liquidityDelta based on liquidity withdrawn
     // lowerTick.save()
     // upperTick.save()
-    position.save()
+
     lowerTickDeltas.save()
     claimTickDeltas.save()
     upperTickDeltas.save()

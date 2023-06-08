@@ -91,7 +91,7 @@ contract PoolsharkRangeSource is ITwapSource {
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 0;
         secondsAgos[1] = constants.twapLength;
-        (int56[] memory tickSecondsAccum, ) = IRangePool(constants.inputPool).sample(secondsAgos);
+        (int56[] memory tickSecondsAccum,,,,) = IRangePool(constants.inputPool).sample(secondsAgos);
         averageTick = int24(((tickSecondsAccum[0] - tickSecondsAccum[1]) / (int32(secondsAgos[1]))));
         int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
         if (averageTick > maxAverageTick) return maxAverageTick;
