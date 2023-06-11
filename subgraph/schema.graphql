@@ -11,17 +11,17 @@ type CoverPoolFactory @entity {
     totalValueLockedEth: BigDecimal!
 }
 
+type BasePrice @entity {
+    id: ID!
+    USD: BigDecimal!
+}
+
 type CoverPoolManager @entity {
     id: ID!
     owner: Bytes!
     feeTo: Bytes!
     # factory: CoverPoolFactory!
     volatilityTiers: [VolatilityTier!]!
-}
-
-type BasePrice @entity {
-    id: ID!
-    ethUsd: BigDecimal!
 }
 
 type VolatilityTier @entity {
@@ -43,6 +43,24 @@ type Token @entity {
     name: String!
     symbol: String!
     decimals: BigInt!
+
+    # price
+    ethPrice: BigDecimal!
+    usdPrice: BigDecimal!
+
+    # token specific volume
+    volume: BigDecimal!
+    volumeUsd: BigDecimal!
+    volumeEth: BigDecimal!
+    txnCount: BigInt!
+
+    # liquidity across all pairs
+    totalValueLocked: BigDecimal!
+    totalValueLockedEth: BigDecimal!
+    totalValueLockedUsd: BigDecimal!
+
+    # for base price tracking
+    whitelistPools: [CoverPool!]!
 }
 
 type CoverPool @entity {
@@ -50,7 +68,7 @@ type CoverPool @entity {
     id: ID!
     token0: Token!
     token1: Token!
-    # factory: CoverPoolFactory!
+    factory: Bytes!
 
     # pool setup
     inputPool: Bytes!

@@ -1,6 +1,7 @@
 import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated, StashDeltasCleared, Swap } from '../../generated/CoverPoolFactory/CoverPool'
 import {
     Address,
+    BigDecimal,
     BigInt,
     Bytes,
     ethereum,
@@ -8,17 +9,22 @@ import {
     store,
 } from '@graphprotocol/graph-ts'
 import {
+    safeLoadBasePrice,
     safeLoadCoverPool,
+    safeLoadCoverPoolFactory,
     safeLoadPosition,
     safeLoadTick,
     safeLoadTickDeltas,
     safeLoadToken,
 } from './utils/loads'
-import { ONE_BI } from './utils/constants'
+import { ONE_BI, TWO_BD, ZERO_BD } from '../constants/constants'
 import { bigInt1e38, convertTokenToDecimal } from './utils/math'
 import { safeMinus } from './utils/deltas'
 import { Sync } from '../../generated/templates/CoverPoolTemplate/CoverPool'
 import { BIGINT_ONE, BIGINT_ZERO } from './utils/helpers'
+import { AmountType, findEthPerToken, getAdjustedAmounts, sqrtPriceX96ToTokenPrices } from './utils/price'
+import { FACTORY_ADDRESS } from '../constants/constants'
+import { updateDerivedTVLAmounts } from './utils/tvl'
 
 export function handleInitialize(event: Initialize): void {
     let minTickParam = event.params.minTick
@@ -44,6 +50,11 @@ export function handleInitialize(event: Initialize): void {
     let maxTick = loadMaxTick.entity
     let latestTick = loadLatestTick.entity
 
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity
+
     pool.latestTick = latest
     pool.genesisTime = genesisTimeParam
     pool.auctionEpoch = BIGINT_ONE
@@ -51,10 +62,19 @@ export function handleInitialize(event: Initialize): void {
     pool.pool0Price = pool0PriceParam
     pool.pool1Price = pool1PriceParam
 
+    let prices = sqrtPriceX96ToTokenPrices(pool0PriceParam, token0, token1)
+    pool.price0 = prices[0]
+    pool.price1 = prices[1]
+    pool.save()
+
+    let loadBasePrice = safeLoadBasePrice('eth')
+    let basePrice = loadBasePrice.entity
+
     pool.save()
     minTick.save()
     maxTick.save()
     latestTick.save()
+    basePrice.save()
 }
 
 export function handleMint(event: Mint): void {
@@ -73,7 +93,18 @@ export function handleMint(event: Mint): void {
     let lower = BigInt.fromI32(lowerParam)
     let upper = BigInt.fromI32(upperParam)
 
+    let loadBasePrice = safeLoadBasePrice('eth')
     let loadCoverPool = safeLoadCoverPool(poolAddress)
+    let basePrice = loadBasePrice.entity
+    let pool = loadCoverPool.entity
+
+    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
+    let factory = loadCoverPoolFactory.entity
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity
+
     let loadPosition = safeLoadPosition(poolAddress, ownerParam, lower, upper, zeroForOneParam)
     let loadLowerTick = safeLoadTick(poolAddress, lower)
     let loadUpperTick = safeLoadTick(poolAddress, upper)
@@ -81,7 +112,6 @@ export function handleMint(event: Mint): void {
     let loadUpperTickDeltas = safeLoadTickDeltas(poolAddress, upper, zeroForOneParam)
 
     let position  = loadPosition.entity
-    let pool      = loadCoverPool.entity
     let lowerTick = loadLowerTick.entity
     let upperTick = loadUpperTick.entity
     let lowerTickDeltas = loadLowerTickDeltas.entity
@@ -130,16 +160,45 @@ export function handleMint(event: Mint): void {
         upperTickDeltas.amountInDeltaMaxMinus = upperTickDeltas.amountInDeltaMaxMinus.plus(amountInDeltaMaxMintedParam)
         upperTickDeltas.amountOutDeltaMaxMinus = upperTickDeltas.amountOutDeltaMaxMinus.plus(amountOutDeltaMaxMintedParam)
     }
+
+    let amount0 = convertTokenToDecimal(zeroForOneParam ? amountInParam : BIGINT_ZERO, token0.decimals)
+    let amount1 = convertTokenToDecimal(zeroForOneParam ? BIGINT_ZERO : amountInParam, token1.decimals)
+
+    token0.txnCount = token0.txnCount.plus(ONE_BI)
+    token1.txnCount = token1.txnCount.plus(ONE_BI)
+    pool.txnCount = pool.txnCount.plus(ONE_BI)
+    factory.txnCount = factory.txnCount.plus(ONE_BI)
+
+    // eth price updates
+    token0.ethPrice = findEthPerToken(token0, token1)
+    token1.ethPrice = findEthPerToken(token1, token0)
+    token0.usdPrice = token0.ethPrice.times(basePrice.USD)
+    token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    let oldPoolTVLETH = pool.totalValueLockedEth
+    token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
+    token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
+    pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
+    pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTVLETH)
+    token0 = updateTvlRet.token0
+    token1 = updateTvlRet.token1
+    pool = updateTvlRet.pool
+    factory = updateTvlRet.factory
+
+    basePrice.save()
     pool.save()
-    position.save()
+    factory.save()
+    token0.save()
+    token1.save()
     lowerTick.save()
     upperTick.save()
     lowerTickDeltas.save()
     upperTickDeltas.save()
+    position.save()
 }
 
 export function handleBurn(event: Burn): void {
-    let msgSender = event.transaction.from.toHex()
     let lowerParam = event.params.lower
     let claimParam = event.params.claim
     let upperParam = event.params.upper
@@ -154,12 +213,13 @@ export function handleBurn(event: Burn): void {
     let amountOutDeltaMaxBurnedParam = event.params.amountOutDeltaMaxBurned
     let claimPriceLastParam = event.params.claimPriceLast
     let poolAddress = event.address.toHex()
-    let senderParam = event.transaction.from
+    let msgSender = event.transaction.from.toHex()
 
     let lower = BigInt.fromI32(lowerParam)
     let claim = BigInt.fromI32(claimParam)
     let upper = BigInt.fromI32(upperParam)
 
+    let loadBasePrice = safeLoadBasePrice('eth')
     let loadCoverPool = safeLoadCoverPool(poolAddress)
     let loadPosition = safeLoadPosition(
         poolAddress,
@@ -168,12 +228,21 @@ export function handleBurn(event: Burn): void {
         upper,
         zeroForOneParam
     )
+
+    let basePrice = loadBasePrice.entity
+    let position  = loadPosition.entity
+    let pool      = loadCoverPool.entity
+
+    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
+    let factory = loadCoverPoolFactory.entity
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity
+
     let loadLowerTickDeltas = safeLoadTickDeltas(poolAddress, lower, zeroForOneParam)
     let loadClaimTickDeltas = safeLoadTickDeltas(poolAddress, claim, zeroForOneParam)
     let loadUpperTickDeltas = safeLoadTickDeltas(poolAddress, upper, zeroForOneParam)
-
-    let position  = loadPosition.entity
-    let pool      = loadCoverPool.entity
     let lowerTickDeltas = loadLowerTickDeltas.entity
     let claimTickDeltas = loadClaimTickDeltas.entity
     let upperTickDeltas = loadUpperTickDeltas.entity
@@ -193,19 +262,28 @@ export function handleBurn(event: Burn): void {
             .concat(zeroForOneParam.toString())
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.claimPriceLast = claimPriceLastParam
+        // update position delta maxes
+        position.amountInDeltaMax  = safeMinus(position.amountInDeltaMax,  amountInDeltaMaxStashedBurnedParam.plus(amountInDeltaMaxBurnedParam))
+        position.amountOutDeltaMax = safeMinus(position.amountOutDeltaMax, amountOutDeltaMaxStashedBurnedParam.plus(amountOutDeltaMaxBurnedParam))
+        // shrink position to new size
+        if (zeroForOneParam) {
+            position.upper = claim
+        } else {
+            position.lower = claim
+        }
+        position.save()
     }
     // update pool stats
     pool.liquidityGlobal = pool.liquidityGlobal.minus(liquidityBurnedParam)
     pool.txnCount = pool.txnCount.plus(ONE_BI)
-    // update position delta maxes
-    position.amountInDeltaMax  = safeMinus(position.amountInDeltaMax,  amountInDeltaMaxStashedBurnedParam.plus(amountInDeltaMaxBurnedParam))
-    position.amountOutDeltaMax = safeMinus(position.amountOutDeltaMax, amountOutDeltaMaxStashedBurnedParam.plus(amountOutDeltaMaxBurnedParam))
+
     // decrease tvl count
+    let amount0: BigDecimal; let amount1: BigDecimal;
     if (zeroForOneParam) {
         let tokenIn = safeLoadToken(pool.token1).entity
         let tokenOut = safeLoadToken(pool.token0).entity
-        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenOutClaimedParam, tokenOut.decimals))
-        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals))
+        amount0 = convertTokenToDecimal(tokenOutClaimedParam.plus(tokenOutBurnedParam), tokenOut.decimals)
+        amount1 = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
         if (claim != (zeroForOneParam ? lower : upper)) {
             lowerTickDeltas.amountInDeltaMaxMinus = safeMinus(lowerTickDeltas.amountInDeltaMaxMinus, amountInDeltaMaxBurnedParam)
             lowerTickDeltas.amountOutDeltaMaxMinus = safeMinus(lowerTickDeltas.amountOutDeltaMaxMinus, amountOutDeltaMaxBurnedParam)
@@ -216,8 +294,8 @@ export function handleBurn(event: Burn): void {
     } else {
         let tokenIn = safeLoadToken(pool.token0).entity
         let tokenOut = safeLoadToken(pool.token1).entity
-        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(tokenOutClaimedParam, tokenOut.decimals))
-        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals))
+        amount1 = convertTokenToDecimal(tokenOutClaimedParam.plus(tokenOutBurnedParam), tokenOut.decimals)
+        amount0 = convertTokenToDecimal(tokenInClaimedParam, tokenIn.decimals)
         if (claim != (zeroForOneParam ? lower : upper)) {
             upperTickDeltas.amountInDeltaMaxMinus = safeMinus(upperTickDeltas.amountInDeltaMaxMinus, amountInDeltaMaxBurnedParam)
             upperTickDeltas.amountOutDeltaMaxMinus = safeMinus(upperTickDeltas.amountOutDeltaMaxMinus, amountOutDeltaMaxBurnedParam)
@@ -237,14 +315,33 @@ export function handleBurn(event: Burn): void {
     claimTickDeltas.amountInDelta = claimTickDeltas.amountInDelta.minus(tokenInClaimedParam)
     claimTickDeltas.amountOutDelta = claimTickDeltas.amountOutDelta.minus(tokenOutClaimedParam)
 
-    // shrink position to new size
-    if (zeroForOneParam) {
-        position.upper = claim
-    } else {
-        position.lower = claim
-    }
+    // eth price updates
+    token0.ethPrice = findEthPerToken(token0, token1)
+    token1.ethPrice = findEthPerToken(token1, token0)
+    token0.usdPrice = token0.ethPrice.times(basePrice.USD)
+    token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    // tvl updates
+    let oldPoolTotalValueLockedEth = pool.totalValueLockedEth
+    token0.totalValueLocked = token0.totalValueLocked.minus(amount0)
+    token1.totalValueLocked = token1.totalValueLocked.minus(amount1)
+    pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
+    pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTotalValueLockedEth)
+    token0 = updateTvlRet.token0
+    token1 = updateTvlRet.token1
+    pool = updateTvlRet.pool
+    factory = updateTvlRet.factory
+
+    basePrice.save()
     pool.save()
-    position.save()
+    factory.save()
+    token0.save()
+    token1.save()
+    //TODO: update liquidityDelta based on liquidity withdrawn
+    // lowerTick.save()
+    // upperTick.save()
+
     lowerTickDeltas.save()
     claimTickDeltas.save()
     upperTickDeltas.save()
@@ -261,28 +358,90 @@ export function handleSwap(event: Swap): void {
     let poolAddress = event.address.toHex()
 
     let loadCoverPool = safeLoadCoverPool(poolAddress)
+    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
+    let loadBasePrice = safeLoadBasePrice('eth')
 
     let pool = loadCoverPool.entity
+    let factory = loadCoverPoolFactory.entity
+    let basePrice = loadBasePrice.entity
 
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity
 
+    let amount0: BigDecimal; let amount1: BigDecimal; let prices: BigDecimal[];
     if (zeroForOneParam) {
-        let tokenIn = safeLoadToken(pool.token0).entity
-        let tokenOut = safeLoadToken(pool.token1).entity
+        let tokenIn = token0
+        let tokenOut = token1
+        amount0 = convertTokenToDecimal(amountInParam, tokenIn.decimals)
+        amount1 = convertTokenToDecimal(amountOutParam, tokenOut.decimals)
         pool.pool1Price = newPriceParam
-        pool.volumeToken1 = pool.volumeToken1.plus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
-        pool.totalValueLocked0 = pool.totalValueLocked0.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
-        pool.totalValueLocked1 = pool.totalValueLocked1.minus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
+        pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
+        pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
+        prices = sqrtPriceX96ToTokenPrices(pool.pool1Price, token0, token1)
+        pool.price1 = prices[1]
     } else {
-        let tokenIn = safeLoadToken(pool.token1).entity
-        let tokenOut = safeLoadToken(pool.token0).entity
+        let tokenIn = token1
+        let tokenOut = token0
+        amount1 = convertTokenToDecimal(amountInParam, tokenIn.decimals)
+        amount0 = convertTokenToDecimal(amountOutParam, tokenOut.decimals)
         pool.pool0Price = newPriceParam
-        pool.volumeToken0 = pool.volumeToken0.plus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
-        pool.totalValueLocked1 = pool.totalValueLocked1.plus(convertTokenToDecimal(amountInParam, tokenIn.decimals))
-        pool.totalValueLocked0 = pool.totalValueLocked0.minus(convertTokenToDecimal(amountOutParam, tokenOut.decimals))
+        pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
+        pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
+        prices = sqrtPriceX96ToTokenPrices(pool.pool0Price, token0, token1)
+        pool.price0 = prices[0]
     }
+    pool.volumeToken0 = pool.volumeToken1.plus(amount0)
+    pool.volumeToken1 = pool.volumeToken1.plus(amount1)
     pool.txnCount = pool.txnCount.plus(BIGINT_ONE)
-
     pool.save()
+
+    // price updates
+    token0.ethPrice = findEthPerToken(token0, token1)
+    token1.ethPrice = findEthPerToken(token1, token0)
+    token0.usdPrice = token0.ethPrice.times(basePrice.USD)
+    token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    let oldPoolTVLEth = pool.totalValueLockedEth
+    pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
+    pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
+    token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
+    token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTVLEth)
+    token0 = updateTvlRet.token0
+    token1 = updateTvlRet.token1
+    pool = updateTvlRet.pool
+    factory = updateTvlRet.factory
+
+    // update volume and fees
+    let amount0Abs = amount0.times(BigDecimal.fromString(amount0.lt(ZERO_BD) ? '-1' : '1'))
+    let amount1Abs = amount1.times(BigDecimal.fromString(amount1.lt(ZERO_BD) ? '-1' : '1'))
+    let volumeAmounts: AmountType = getAdjustedAmounts(amount0Abs, token0, amount1Abs, token1, basePrice)
+    let volumeEth = volumeAmounts.eth.div(TWO_BD)
+    let volumeUsd = volumeAmounts.usd.div(TWO_BD)
+
+    factory.volumeEthTotal = factory.volumeEthTotal.plus(volumeEth)
+    factory.volumeUsdTotal = factory.volumeUsdTotal.plus(volumeUsd)
+    pool.volumeToken0 = pool.volumeToken0.plus(amount0Abs)
+    pool.volumeToken1 = pool.volumeToken1.plus(amount1Abs)
+    pool.volumeUsd = pool.volumeUsd.plus(volumeUsd)
+    pool.volumeEth = pool.volumeEth.plus(volumeEth)
+    pool.volumeUsd = pool.volumeUsd.plus(volumeUsd)
+    pool.volumeEth = pool.volumeEth.plus(volumeEth)
+    token0.volume = token0.volume.plus(amount0Abs)
+    token0.volumeUsd = token0.volumeUsd.plus(volumeUsd)
+    token0.volumeEth = token0.volumeEth.plus(volumeEth)
+    token1.volume = token1.volume.plus(amount1Abs)
+    token1.volumeUsd = token1.volumeUsd.plus(volumeUsd)
+    token1.volumeEth = token1.volumeEth.plus(volumeEth)
+
+    basePrice.save()
+    pool.save()
+    factory.save()
+    token0.save()
+    token1.save()
+    //TODO: save swap/txn data
 }
 
 export function handleSync(event: Sync): void {
@@ -297,11 +456,35 @@ export function handleSync(event: Sync): void {
     let newLatestTickParam = event.params.newLatestTick
     let poolAddress = event.address.toHex()
 
+    let loadBasePrice = safeLoadBasePrice('eth')
     let loadCoverPool = safeLoadCoverPool(poolAddress)
 
+    let basePrice = loadBasePrice.entity
     let pool = loadCoverPool.entity
 
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity 
+
+    let oldLatestTick = BigInt.fromI32(oldLatestTickParam)
     let newLatestTick = BigInt.fromI32(newLatestTickParam)
+
+    let prices: BigDecimal[]
+    if (newLatestTick.gt(oldLatestTick)) {
+        prices = sqrtPriceX96ToTokenPrices(pool0PriceParam, token0, token1)
+    } else {
+        prices = sqrtPriceX96ToTokenPrices(pool1PriceParam, token0, token1)
+    }
+    pool.price0 = prices[0]
+    pool.price1 = prices[1]
+    pool.save()
+
+    // price updates
+    token0.ethPrice = findEthPerToken(token0, token1)
+    token1.ethPrice = findEthPerToken(token1, token0)
+    token0.usdPrice = token0.ethPrice.times(basePrice.USD)
+    token1.usdPrice = token1.ethPrice.times(basePrice.USD)
 
     pool.pool0Price = pool0PriceParam
     pool.pool1Price = pool1PriceParam

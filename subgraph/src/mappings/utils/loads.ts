@@ -1,14 +1,36 @@
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
-import { ONE_BD, ONE_BI } from './constants'
+import { BasePrice, CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
+import { ONE_BD, ONE_BI } from '../../constants/constants'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
     BIGINT_ZERO,
-    BIGINT_ONE,
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
+import { getEthPriceInUSD } from './price'
+
+class LoadBasePriceRet {
+    entity: BasePrice
+    exists: boolean
+}
+export function safeLoadBasePrice(name: string): LoadBasePriceRet {
+    let exists = true
+
+    let basePriceEntity = BasePrice.load(name)
+
+    if (!basePriceEntity) {
+        basePriceEntity = new BasePrice(name)
+        exists = false
+    }
+
+    basePriceEntity.USD = getEthPriceInUSD()
+
+    return {
+        entity: basePriceEntity,
+        exists: exists,
+    }
+}
 
 class LoadTokenRet {
     entity: Token

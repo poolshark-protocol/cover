@@ -31,7 +31,7 @@ export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void 
 }
 
 export function handleFactoryChanged(event: FactoryChanged): void {
-    let loadRangePoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS)
+    let loadRangePoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadManager = safeLoadManager(event.address.toHex())
     
     let manager = loadManager.entity
@@ -62,7 +62,7 @@ export function handleOwnerTransfer(event: OwnerTransfer): void {
     let newOwnerParam      = event.params.newOwner
 
     let loadManager = safeLoadManager(event.address.toHex())
-    let loadFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS)
+    let loadFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
 
     let manager = loadManager.entity
     let factory = loadFactory.entity

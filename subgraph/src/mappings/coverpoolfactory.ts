@@ -6,10 +6,9 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadTick, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
-import { Address, BigInt, Bytes, ethereum } from '@graphprotocol/graph-ts'
-import { FACTORY_ADDRESS, ONE_BI } from './utils/constants'
-import { VolatilityTier } from '../../generated/schema'
+import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
+import { BigInt } from '@graphprotocol/graph-ts'
+import { FACTORY_ADDRESS, ONE_BI } from '../constants/constants'
 
 export function handlePoolCreated(event: PoolCreated): void {
     // grab event parameters
@@ -22,7 +21,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     // load from store
     let loadVolatilityTier = safeLoadVolatilityTier(twapSourceParam, feeTierParam, tickSpreadParam, twapLengthParam)
     let loadCoverPool = safeLoadCoverPool(poolAddressParam)
-    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS)
+    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
     let loadToken1 = safeLoadToken(event.params.token1.toHexString())
     
@@ -57,6 +56,7 @@ export function handlePoolCreated(event: PoolCreated): void {
         token1.decimals = decimals
     }
 
+    pool.factory = event.address
     pool.inputPool = event.params.inputPool
     pool.volatilityTier = volatilityTier.id
     pool.token0 = token0.id
