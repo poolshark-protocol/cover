@@ -89,47 +89,6 @@ interface ICoverPoolStructs {
         uint128 token1;
     }
 
-    struct MintParams {
-        address to;
-        uint128 amount;
-        int24 lower;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct BurnParams {
-        address to;
-        uint128 burnPercent;
-        int24 lower;
-        int24 claim;
-        int24 upper;
-        bool zeroForOne;
-        bool sync;
-    }
-
-    struct SwapParams {
-        address to;
-        address refundTo;
-        uint160 priceLimit;
-        uint128 amountIn;
-        bool zeroForOne;
-    }
-
-    struct QuoteParams {
-        uint160 priceLimit;
-        uint128 amountIn;
-        bool zeroForOne;
-    }
-
-    struct SnapshotParams {
-        address owner;
-        uint128 burnPercent;
-        int24 lower;
-        int24 upper;
-        int24 claim;
-        bool zeroForOne;
-    }
-
     struct CollectParams {
         SyncFees syncFees;
         address to;

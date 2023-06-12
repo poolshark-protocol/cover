@@ -2,13 +2,14 @@
 pragma solidity ^0.8.13;
 
 import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/ICoverPool.sol';
 import '../Ticks.sol';
 
 
 library QuoteCall {
 
     function perform(
-        ICoverPoolStructs.QuoteParams memory params,
+        ICoverPool.QuoteParams memory params,
         ICoverPoolStructs.SwapCache memory cache
     ) external view returns (
         ICoverPoolStructs.SwapCache memory

@@ -19,7 +19,7 @@ library MintCall {
     );
 
     function perform(
-        ICoverPoolStructs.MintParams memory params,
+        ICoverPool.MintParams memory params,
         ICoverPoolStructs.MintCache memory cache,
         ICoverPoolStructs.TickMap storage tickMap,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,

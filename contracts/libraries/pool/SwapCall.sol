@@ -24,7 +24,7 @@ library SwapCall {
     );
 
     function perform(
-        ICoverPoolStructs.SwapParams memory params,
+        ICoverPool.SwapParams memory params,
         ICoverPoolStructs.SwapCache memory cache
     ) external returns (ICoverPoolStructs.SwapCache memory) {
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amountIn);
