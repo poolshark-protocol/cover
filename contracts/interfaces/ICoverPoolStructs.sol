@@ -9,16 +9,12 @@ interface ICoverPoolStructs {
         ProtocolFees protocolFees;
         uint160  latestPrice;      /// @dev price of latestTick
         uint128  liquidityGlobal;
-        //uint32   genesisTime;      /// @dev reference time for which auctionStart is an offset of
         uint32   lastTime;         /// @dev last block checked
         uint32   auctionStart;     /// @dev last block price reference was updated
         uint32   accumEpoch;       /// @dev number of times this pool has been synced
         int24    latestTick;       /// @dev latest updated inputPool price tick
         uint16   syncFee;
         uint16   fillFee;
-        //int16    tickSpread;       /// @dev this is a integer multiple of the inputPool tickSpacing
-        //uint16   twapLength;       /// @dev number of blocks used for TWAP sampling
-        //uint16   auctionLength;    /// @dev number of seconds to improve price by tickSpread
         uint8    unlocked;
     }
 
@@ -38,7 +34,7 @@ interface ICoverPoolStructs {
     }
 
     struct Tick {
-        Deltas deltas;
+        Deltas deltas;                    
         int128  liquidityDelta;
         uint128 amountInDeltaMaxMinus;
         uint128 amountOutDeltaMaxMinus;
@@ -47,18 +43,18 @@ interface ICoverPoolStructs {
     }
 
     struct Deltas {
-        uint128 amountInDelta;     // amt unfilled
-        uint128 amountOutDelta;    // amt unfilled
-        uint128 amountInDeltaMax;  // max unfilled 
-        uint128 amountOutDeltaMax; // max unfilled
+        uint128 amountInDelta;     /// @dev - amount filled
+        uint128 amountOutDelta;    /// @dev - amount unfilled
+        uint128 amountInDeltaMax;  /// @dev - max filled 
+        uint128 amountOutDeltaMax; /// @dev - max unfilled
     }
 
     struct Position {
-        uint160 claimPriceLast; // highest price claimed at
-        uint128 liquidity; // expected amount to be used not actual
-        uint128 amountIn; // token amount already claimed; balance
-        uint128 amountOut; // necessary for non-custodial positions
-        uint32  accumEpochLast;  // last epoch this position was updated at
+        uint160 claimPriceLast;    /// @dev - highest price claimed at
+        uint128 liquidity;         /// @dev - expected amount to be used not actual
+        uint128 amountIn;          /// @dev - token amount already claimed; balance
+        uint128 amountOut;         /// @dev - necessary for non-custodial positions
+        uint32  accumEpochLast;    /// @dev - last epoch this position was updated at
     }
 
     struct Immutables {
@@ -87,47 +83,6 @@ interface ICoverPoolStructs {
     struct SyncFees {
         uint128 token0;
         uint128 token1;
-    }
-
-    struct MintParams {
-        address to;
-        uint128 amount;
-        int24 lower;
-        int24 upper;
-        bool zeroForOne;
-    }
-
-    struct BurnParams {
-        address to;
-        uint128 burnPercent;
-        int24 lower;
-        int24 claim;
-        int24 upper;
-        bool zeroForOne;
-        bool sync;
-    }
-
-    struct SwapParams {
-        address to;
-        address refundTo;
-        uint160 priceLimit;
-        uint128 amountIn;
-        bool zeroForOne;
-    }
-
-    struct QuoteParams {
-        uint160 priceLimit;
-        uint128 amountIn;
-        bool zeroForOne;
-    }
-
-    struct SnapshotParams {
-        address owner;
-        uint128 burnPercent;
-        int24 lower;
-        int24 upper;
-        int24 claim;
-        bool zeroForOne;
     }
 
     struct CollectParams {

@@ -19,7 +19,7 @@ library MintCall {
     );
 
     function perform(
-        ICoverPoolStructs.MintParams memory params,
+        ICoverPool.MintParams memory params,
         ICoverPoolStructs.MintCache memory cache,
         ICoverPoolStructs.TickMap storage tickMap,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
@@ -58,7 +58,7 @@ library MintCall {
             cache,
             ICoverPoolStructs.CollectParams(
                 cache.syncFees,
-                params.to, //address(0) goes to msg.sender
+                params.to,
                 params.lower,
                 0, // not needed for mint collect
                 params.upper,

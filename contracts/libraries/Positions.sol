@@ -5,6 +5,7 @@ import '../interfaces/modules/curves/ICurveMath.sol';
 import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/ICoverPool.sol';
 import './math/FullPrecisionMath.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
 import './Claims.sol';
@@ -45,11 +46,11 @@ library Positions {
 
     function resize(
         ICoverPoolStructs.Position memory position,
-        ICoverPoolStructs.MintParams memory params,
+        ICoverPool.MintParams memory params,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.Immutables memory constants
     ) internal pure returns (
-        ICoverPoolStructs.MintParams memory,
+        ICoverPool.MintParams memory,
         uint256
     )
     {

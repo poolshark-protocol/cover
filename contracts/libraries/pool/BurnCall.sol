@@ -24,7 +24,7 @@ library BurnCall {
     );
 
     function perform(
-        ICoverPoolStructs.BurnParams memory params,
+        ICoverPool.BurnParams memory params,
         ICoverPoolStructs.BurnCache memory cache,
         ICoverPoolStructs.TickMap storage tickMap,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
