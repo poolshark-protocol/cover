@@ -34,6 +34,7 @@ contract CoverPoolFactory is
         // sort tokens by address
         params.token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         params.token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
+        if (params.token1 == address(0)) revert InvalidPoolTokenAddress();
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
                                             params.token0,

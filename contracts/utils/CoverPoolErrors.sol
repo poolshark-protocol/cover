@@ -43,6 +43,7 @@ abstract contract CoverPositionErrors {
 
 abstract contract CoverPoolFactoryErrors {
     error OwnerOnly();
+    error InvalidPoolTokenAddress();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     error VolatilityTierNotSupported();
