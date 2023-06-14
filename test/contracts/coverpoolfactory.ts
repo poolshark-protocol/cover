@@ -40,7 +40,7 @@ describe('CoverPoolFactory Tests', function () {
                     '20',
                     '5'
                 )
-        ).to.be.revertedWith('Transaction reverted: function returned an unexpected amount of data')
+        ).to.be.revertedWith('InvalidPoolTokenAddress()')
     })
 
     it('Should not create pool with invalid twap source', async function () {
@@ -49,8 +49,8 @@ describe('CoverPoolFactory Tests', function () {
                 .connect(hre.props.admin)
                 .createCoverPool(
                     ethers.utils.formatBytes32String('test'),
-                    '0x0000000000000000000000000000000000000000',
-                    '0x0000000000000000000000000000000000000000',
+                    hre.props.token1.address,
+                    hre.props.token0.address,
                     '500',
                     '20',
                     '5'
