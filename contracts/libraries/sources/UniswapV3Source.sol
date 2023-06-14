@@ -42,7 +42,7 @@ contract UniswapV3Source is ITwapSource {
         } else if (!observationsCountEnough) {
             return (0, 0);
         }
-        return (1, _calculateAverageTick(constants));
+        return (1, _calculateAverageTicks(constants));
     }
 
     function factory() external view returns (address) {
@@ -68,30 +68,46 @@ contract UniswapV3Source is ITwapSource {
         return IUniswapV3Factory(uniV3Factory).getPool(token0, token1, feeTier);
     }
 
-    function calculateAverageTick(
+    function calculateAverageTicks(
         ICoverPoolStructs.Immutables memory constants
     ) external view returns (
         int24 averageTick
     )
     {
-        return _calculateAverageTick(constants);
+        return _calculateAverageTicks(constants);
     }
 
-    function _calculateAverageTick(
-        ICoverPoolStructs.Immutables memory constants
+    function _calculateAverageTicks(
+        ICoverPoolStructs.Immutables memory constants,
+        int24 latestTick
     ) internal view returns (
-        int24 averageTick
+        int24[4] memory averageTicks
     )
     {
-        uint32[] memory secondsAgos = new uint32[](2);
+        uint32[] memory secondsAgos = new uint32[](4);
+        /// @dev - take 4 samples
+        /// @dev - twapLength must be >= 5 * blockTime
         secondsAgos[0] = 0;
-        secondsAgos[1] = constants.twapLength;
+        secondsAgos[1] = constants.blockTime;
+        secondsAgos[2] = constants.twapLength;
+        secondsAgos[3] = constants.twapLength - constants.blockTime;
         (int56[] memory tickCumulatives, ) = IUniswapV3Pool(constants.inputPool).observe(secondsAgos);
-        averageTick = int24(((tickCumulatives[0] - tickCumulatives[1]) / (int32(secondsAgos[1]))));
-        int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
-        if (averageTick > maxAverageTick) return maxAverageTick;
+        
+        /// @dev take the smallest absolute value of 4 samples
+        averageTicks[0] = int24(((tickCumulatives[0] - tickCumulatives[2]) / (int32(secondsAgos[2] - secondsAgos[0]))));
+        averageTicks[1] = int24(((tickCumulatives[0] - tickCumulatives[3]) / (int32(secondsAgos[3] - secondsAgos[0]))));
+        averageTicks[2] = int24(((tickCumulatives[1] - tickCumulatives[2]) / (int32(secondsAgos[2] - secondsAgos[1]))));
+        averageTicks[3] = int24(((tickCumulatives[1] - tickCumulatives[3]) / (int32(secondsAgos[3] - secondsAgos[1]))));
+        
+        // make sure all samples fit within min/max bounds
         int24 minAverageTick = ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread;
-        if (averageTick < minAverageTick) return minAverageTick;
+        int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
+        for (uint i; i < 4; i++) {
+            if (averageTicks[i] < minAverageTick)
+                averageTicks[i] = minAverageTick;
+            if (averageTicks[i] > maxAverageTick)
+                averageTicks[i] = maxAverageTick;
+        }
     }
 
     function _isPoolObservationsEnough(

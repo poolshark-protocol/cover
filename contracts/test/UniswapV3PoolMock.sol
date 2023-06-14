@@ -16,6 +16,8 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
 
     int56 tickCumulative0;
     int56 tickCumulative1;
+    int56 tickCumulative2;
+    int56 tickCumulative3;
 
     constructor(
         address _token0,
