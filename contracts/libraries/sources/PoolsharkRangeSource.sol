@@ -110,8 +110,8 @@ contract PoolsharkRangeSource is ITwapSource {
                                                                 : constants.blockTime / oneSecond; 
         secondsAgos[0] = 0;
         secondsAgos[1] = timeDelta;
-        secondsAgos[2] = constants.twapLength;
-        secondsAgos[3] = constants.twapLength - timeDelta;
+        secondsAgos[2] = constants.twapLength - timeDelta;
+        secondsAgos[3] = constants.twapLength;
         (int56[] memory tickSecondsAccum,,,,) = IRangePool(constants.inputPool).sample(secondsAgos);
         
           /// @dev take the smallest absolute value of 4 samples
