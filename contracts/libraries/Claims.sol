@@ -9,8 +9,6 @@ import './TickMap.sol';
 import './utils/String.sol';
 
 library Claims {
-    /////////// DEBUG FLAGS ///////////
-    bool constant debugDeltas = true;
 
     function validate(
         mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
@@ -76,8 +74,6 @@ library Claims {
                 : EpochMap.get(TickMap.next(params.claim, tickMap, constants), tickMap, constants);
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
-                //TODO: search for claim tick if necessary
-                //TODO: limit search to within 1 closest word
                 require (false, 'WrongTickClaimedAt()');
             }
         }

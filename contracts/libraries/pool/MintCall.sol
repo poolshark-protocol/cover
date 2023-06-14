@@ -58,7 +58,7 @@ library MintCall {
             cache,
             ICoverPoolStructs.CollectParams(
                 cache.syncFees,
-                params.to, //address(0) goes to msg.sender
+                params.to,
                 params.lower,
                 0, // not needed for mint collect
                 params.upper,
