@@ -33,6 +33,10 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
         tickSpacing = _tickSpacing;
         observationCardinality = 4;
         observationCardinalityNext = 4;
+        tickCumulative0 = 10;
+        tickCumulative1 = 9;
+        tickCumulative2 = 6;
+        tickCumulative3 = 5;
     }
 
     function slot0()
@@ -63,18 +67,24 @@ contract UniswapV3PoolMock is IUniswapV3Pool {
         tickCumulatives = new int56[](secondsAgos.length);
         tickCumulatives[0] = int56(tickCumulative0);
         tickCumulatives[1] = int56(tickCumulative1);
+        tickCumulatives[2] = int56(tickCumulative2);
+        tickCumulatives[3] = int56(tickCumulative3);
         secondsPerLiquidityCumulativeX128s = new uint160[](secondsAgos.length);
         secondsPerLiquidityCumulativeX128s[0] = uint160(949568451203788412348119);
-        secondsPerLiquidityCumulativeX128s[1] = uint160(949568438263103965182699);
+        secondsPerLiquidityCumulativeX128s[1] = uint160(949568451203788412348119);
+        secondsPerLiquidityCumulativeX128s[2] = uint160(949568438263103965182699);
+        secondsPerLiquidityCumulativeX128s[3] = uint160(949568438263103965182699);
     }
 
     function increaseObservationCardinalityNext(uint16 cardinalityNext) external {
         observationCardinalityNext = cardinalityNext;
     }
 
-    function setTickCumulatives(int56 _tickCumulative0, int56 _tickCumulative1) external {
+    function setTickCumulatives(int56 _tickCumulative0, int56 _tickCumulative1, int56 _tickCumulative2, int56 _tickCumulative3) external {
         tickCumulative0 = _tickCumulative0;
         tickCumulative1 = _tickCumulative1;
+        tickCumulative2 = _tickCumulative2;
+        tickCumulative3 = _tickCumulative3;
     }
 
     function setObservationCardinality(uint16 _observationCardinality, uint16 _observationCardinalityNext) external {

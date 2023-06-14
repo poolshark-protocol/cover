@@ -47,7 +47,11 @@ contract PoolsharkRangeSource is ITwapSource {
         } else if (!sampleCountEnough) {
             return (0, 0);
         }
-        return (1, _calculateAverageTick(constants));
+         // ready to initialize if we get here
+        initializable = 1;
+        int24[4] memory averageTicks = _calculateAverageTicks(constants);
+        // take the average of the 4 samples as a starting tick
+        startingTick = (averageTicks[0] + averageTicks[1] + averageTicks[2] + averageTicks[3]) / 4;
     }
 
     function factory() external view returns (address) {
@@ -74,29 +78,55 @@ contract PoolsharkRangeSource is ITwapSource {
     }
 
     function calculateAverageTick(
-        ICoverPoolStructs.Immutables memory constants
+        ICoverPoolStructs.Immutables memory constants,
+        int24 latestTick
     ) external view returns (
         int24 averageTick
     )
     {
-        return _calculateAverageTick(constants);
+        int24[4] memory averageTicks = _calculateAverageTicks(constants);
+        int24 minTickVariance = ConstantProduct.maxTick(constants.tickSpread) * 2;
+        for (uint i; i < 4; i++) {
+            int24 absTickVariance = latestTick - averageTicks[i] >= 0 ? latestTick - averageTicks[i]
+                                                                     : averageTicks[i] - latestTick;
+            if (absTickVariance <= minTickVariance) {
+                /// @dev - averageTick has the least possible variance from latestTick
+                minTickVariance = absTickVariance;
+                averageTick = averageTicks[i];
+            }
+        }
     }
 
-    function _calculateAverageTick(
+    function _calculateAverageTicks(
         ICoverPoolStructs.Immutables memory constants
     ) internal view returns (
-        int24 averageTick
+        int24[4] memory averageTicks
     )
     {
-        uint32[] memory secondsAgos = new uint32[](2);
+        uint32[] memory secondsAgos = new uint32[](4);
+        /// @dev - take 4 samples
+        /// @dev - twapLength must be >= 5 * blockTime
         secondsAgos[0] = 0;
-        secondsAgos[1] = constants.twapLength;
+        secondsAgos[1] = constants.blockTime;
+        secondsAgos[2] = constants.twapLength;
+        secondsAgos[3] = constants.twapLength - constants.blockTime;
         (int56[] memory tickSecondsAccum,,,,) = IRangePool(constants.inputPool).sample(secondsAgos);
-        averageTick = int24(((tickSecondsAccum[0] - tickSecondsAccum[1]) / (int32(secondsAgos[1]))));
-        int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
-        if (averageTick > maxAverageTick) return maxAverageTick;
+        
+          /// @dev take the smallest absolute value of 4 samples
+        averageTicks[0] = int24(((tickSecondsAccum[0] - tickSecondsAccum[2]) / (int32(secondsAgos[2] - secondsAgos[0]))));
+        averageTicks[1] = int24(((tickSecondsAccum[0] - tickSecondsAccum[3]) / (int32(secondsAgos[3] - secondsAgos[0]))));
+        averageTicks[2] = int24(((tickSecondsAccum[1] - tickSecondsAccum[2]) / (int32(secondsAgos[2] - secondsAgos[1]))));
+        averageTicks[3] = int24(((tickSecondsAccum[1] - tickSecondsAccum[3]) / (int32(secondsAgos[3] - secondsAgos[1]))));
+
+        // make sure all samples fit within min/max bounds
         int24 minAverageTick = ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread;
-        if (averageTick < minAverageTick) return minAverageTick;
+        int24 maxAverageTick = ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread;
+        for (uint i; i < 4; i++) {
+            if (averageTicks[i] < minAverageTick)
+                averageTicks[i] = minAverageTick;
+            if (averageTicks[i] > maxAverageTick)
+                averageTicks[i] = maxAverageTick;
+        }
     }
 
     function _isPoolSamplesEnough(

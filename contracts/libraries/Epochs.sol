@@ -361,7 +361,7 @@ library Epochs {
         if (auctionsElapsed < 1) {
             return (state.latestTick, true);
         }
-        newLatestTick = constants.source.calculateAverageTick(constants);
+        newLatestTick = constants.source.calculateAverageTick(constants, state.latestTick);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;
