@@ -145,6 +145,8 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
         BigNumber.from(newLatestTick).mul(10),
+        BigNumber.from(newLatestTick).mul(9),
+        BigNumber.from(newLatestTick).mul(6),
         BigNumber.from(newLatestTick).mul(5)
     )
     await txn.wait();

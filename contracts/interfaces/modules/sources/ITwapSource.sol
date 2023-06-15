@@ -12,7 +12,8 @@ interface ITwapSource {
     );
 
     function calculateAverageTick(
-        ICoverPoolStructs.Immutables memory constants
+        ICoverPoolStructs.Immutables memory constants,
+        int24 latestTick
     ) external view returns (
         int24 averageTick
     );

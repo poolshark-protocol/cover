@@ -353,14 +353,15 @@ library Epochs {
         state.lastTime = uint32(block.timestamp) - constants.genesisTime;
         // check auctions elapsed
         uint32 timeElapsed = state.lastTime - state.auctionStart;
-        int32 auctionsElapsed = int32(timeElapsed / constants.twapLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
-        // if 3/4 of twapLength has passed allow for latestTick move
-        if (timeElapsed > 3 * constants.twapLength / 4) auctionsElapsed += 1;
+        int32 auctionsElapsed = int32(timeElapsed / constants.auctionLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
+        // if 3/4 of twapLength or auctionLength has passed allow for latestTick move
+        if (timeElapsed > 3 * constants.twapLength / 4 ||
+            timeElapsed > constants.auctionLength) auctionsElapsed += 1;
 
         if (auctionsElapsed < 1) {
             return (state.latestTick, true);
         }
-        newLatestTick = constants.source.calculateAverageTick(constants);
+        newLatestTick = constants.source.calculateAverageTick(constants, state.latestTick);
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;
