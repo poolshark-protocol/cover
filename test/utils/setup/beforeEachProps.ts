@@ -15,6 +15,7 @@ import {
     CoverPoolManager,
     TickMap,
     EpochMap,
+    Token20Batcher,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -45,7 +46,7 @@ export interface BeforeEachProps {
     tokenB: Token20
     token0: Token20
     token1: Token20
-    token20: Token20
+    token20Batcher: Token20Batcher
     admin: SignerWithAddress
     alice: SignerWithAddress
     bob: SignerWithAddress
@@ -96,7 +97,7 @@ export class GetBeforeEach {
         let tokenB: Token20
         let token0: Token20
         let token1: Token20
-        let token20: Token20
+        let token20Batcher: Token20Batcher
         let admin: SignerWithAddress
         let alice: SignerWithAddress
         let bob: SignerWithAddress
@@ -125,7 +126,7 @@ export class GetBeforeEach {
             tokenB,
             token0,
             token1,
-            token20,
+            token20Batcher,
             admin,
             alice,
             bob,

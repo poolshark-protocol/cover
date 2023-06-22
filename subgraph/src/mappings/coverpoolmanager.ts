@@ -1,7 +1,7 @@
 import { safeLoadManager, safeLoadCoverPoolFactory, safeLoadVolatilityTier } from './utils/loads'
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../constants/constants'
-import { FactoryChanged, FeeToTransfer, OwnerTransfer } from '../../generated/CoverPoolManager/CoverPoolManager'
+import { FactoryChanged, FeeToTransfer, OwnerTransfer, ProtocolFeesCollected } from '../../generated/CoverPoolManager/CoverPoolManager'
 import { VolatilityTierEnabled } from '../../generated/CoverPoolManager/CoverPoolManager'
 
 export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void {
@@ -42,6 +42,10 @@ export function handleFactoryChanged(event: FactoryChanged): void {
     
     // manager.save()
     // factory.save()
+}
+
+export function handleProtocolFeesCollected(event: ProtocolFeesCollected): void {
+    
 }
 
 export function handleFeeToTransfer(event: FeeToTransfer): void {

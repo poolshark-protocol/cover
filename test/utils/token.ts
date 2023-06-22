@@ -5,10 +5,11 @@ import { Token20 } from '../../typechain'
 export async function mintSigners20(
     token: Contract,
     amount: BigNumberish,
-    signers: SignerWithAddress[]
+    signers: SignerWithAddress[],
+    addresses: string[]
 ): Promise<void> {
-    for (let signer of signers) {
-        await token.connect(hre.props.alice).mint(signer.address, amount)
+    for (let address of addresses) {
+        await token.connect(hre.props.alice).mint(address, amount)
     }
 }
 
