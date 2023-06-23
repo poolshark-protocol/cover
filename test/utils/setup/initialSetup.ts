@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { QuoteCall__factory } from '../../../typechain'
+import { QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -60,6 +60,14 @@ export class InitialSetup {
         //   ).contractAddress
         //   hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         //   hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Token20Batcher__factory,
+            'token20Batcher',
+            []
+        )
+        return
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
@@ -414,9 +422,19 @@ export class InitialSetup {
                 'readCoverPoolSetup'
             )
         ).contractAddress
+        const token20BatcherAddress = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'token20Batcher',
+                },
+                'readCoverPoolSetup'
+            )
+        ).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
+        hre.props.token20Batcher = await hre.ethers.getContractAt('Token20Batcher', token20BatcherAddress)
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
         hre.props.coverPoolFactory = await hre.ethers.getContractAt('CoverPoolFactory', coverPoolFactoryAddress)
         hre.props.uniswapV3PoolMock = await hre.ethers.getContractAt('UniswapV3PoolMock', uniswapV3PoolMockAddress)

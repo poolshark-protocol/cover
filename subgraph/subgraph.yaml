@@ -59,7 +59,7 @@ dataSources:
               - event: OwnerTransfer(indexed address,indexed address)
                 handler: handleOwnerTransfer
               - event: ProtocolFeesCollected(address[],uint128[],uint128[])
-                handler: handleProtocolFeeCollected
+                handler: handleProtocolFeesCollected
               - event: FactoryChanged(indexed address,indexed address)
                 handler: handleFactoryChanged
 templates:

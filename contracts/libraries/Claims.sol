@@ -88,7 +88,7 @@ library Claims {
                 }
             } else {
                 if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
-                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
+                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.claim), ', ', String.from(params.upper), ')'));
                 }
             }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
