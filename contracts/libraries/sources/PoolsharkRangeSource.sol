@@ -107,7 +107,7 @@ contract PoolsharkRangeSource is ITwapSource {
         /// @dev - take 4 samples
         /// @dev - twapLength must be >= 5 * blockTime
         uint32 timeDelta = constants.blockTime / oneSecond == 0 ? 2 
-                                                                : constants.blockTime / oneSecond; 
+                                                                : constants.blockTime * 2 / oneSecond; 
         secondsAgos[0] = 0;
         secondsAgos[1] = timeDelta;
         secondsAgos[2] = constants.twapLength - timeDelta;
