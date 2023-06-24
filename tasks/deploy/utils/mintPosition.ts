@@ -30,8 +30,8 @@ export class MintPosition {
         console.log('read positions')
         const token0Amount = ethers.utils.parseUnits('100', await hre.props.token0.decimals())
         const token1Amount = ethers.utils.parseUnits('100', await hre.props.token1.decimals())
-        await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice])
-        await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice])
+        await mintSigners20(hre.props.token0, token0Amount.mul(10), [hre.props.alice], [hre.props.alice.address])
+        await mintSigners20(hre.props.token1, token1Amount.mul(10), [hre.props.alice], [hre.props.alice.address])
 
         const liquidityAmount = BigNumber.from('199760153929825488153727')
 
@@ -40,19 +40,19 @@ export class MintPosition {
         // await getPrice(true)
     // 0x34e800D1456d87A5F62B774AD98cea54a3A40048
     // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
-        // await validateMint({
-        //     signer: hre.props.alice,
-        //     recipient: hre.props.alice.address,
-        //     lower: '60',
-        //     upper: '100',
-        //     amount: token1Amount,
-        //     zeroForOne: false,
-        //     balanceInDecrease: token1Amount,
-        //     liquidityIncrease: liquidityAmount,
-        //     upperTickCleared: false,
-        //     lowerTickCleared: false,
-        //     revertMessage: '',
-        // })
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '78000',
+            upper: '79000',
+            amount: token1Amount,
+            zeroForOne: true,
+            balanceInDecrease: token1Amount,
+            liquidityIncrease: liquidityAmount,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: '',
+        })
 
         //         await validateSwap({
         // signer: hre.props.alice,
@@ -65,21 +65,21 @@ export class MintPosition {
         // revertMessage:''
         // })
 
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '60',
-            claim: '60',
-            upper: '100',
-            liquidityPercent: ethers.utils.parseUnits('1', 38),
-            zeroForOne: false,
-            balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: token1Amount.sub(1),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: '',
-        })
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '60',
+        //     claim: '60',
+        //     upper: '100',
+        //     liquidityPercent: ethers.utils.parseUnits('1', 38),
+        //     zeroForOne: false,
+        //     balanceInIncrease: BN_ZERO,
+        //     balanceOutIncrease: token1Amount.sub(1),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: false,
+        //     revertMessage: '',
+        // })
 
-        // await validateSync(60)
+        // await validateSync(78240)
 
         await getPrice(false, true)
         await getLiquidity(false, true)

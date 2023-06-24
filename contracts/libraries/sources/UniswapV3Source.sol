@@ -84,7 +84,7 @@ contract UniswapV3Source is ITwapSource {
         int24 minTickVariance = ConstantProduct.maxTick(constants.tickSpread) * 2;
         for (uint i; i < 4; i++) {
             int24 absTickVariance = latestTick - averageTicks[i] >= 0 ? latestTick - averageTicks[i]
-                                                                     : averageTicks[i] - latestTick;
+                                                                      : averageTicks[i] - latestTick;
             if (absTickVariance <= minTickVariance) {
                 /// @dev - averageTick has the least possible variance from latestTick
                 minTickVariance = absTickVariance;

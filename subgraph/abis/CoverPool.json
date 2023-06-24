@@ -337,15 +337,46 @@
         "internalType": "uint160",
         "name": "newPrice",
         "type": "uint160"
+      }
+    ],
+    "name": "SwapPool0",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "bool",
-        "name": "zeroForOne",
-        "type": "bool"
+        "internalType": "uint128",
+        "name": "amountIn",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "amountOut",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "priceLimit",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "newPrice",
+        "type": "uint160"
       }
     ],
-    "name": "Swap",
+    "name": "SwapPool1",
     "type": "event"
   },
   {
@@ -407,7 +438,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "collector",
         "type": "address"

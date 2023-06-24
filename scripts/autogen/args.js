@@ -1,7 +1,7 @@
 module.exports = [
     {
         config: {
-            minAmountPerAuction: ethers.utils.parseUnits("1", 18),
+            minAmountPerAuction: ethers.utils.parseUnits('0'),
             auctionLength: "5",
             blockTime: "1000",
             syncFee: "0",
@@ -9,10 +9,10 @@ module.exports = [
             minPositionWidth: "1",
             minAmountLowerPriced: true
         },
-        twapSource: "0xfC51341F0A72e56EB3c7260e94b26A8813E423ba", // uniswapV3Source
-        curveMath: "0xBDA55A142748316b2B0fdA2776888d425994C0B7", // constantProduct
-        inputPool: "0x934CB15A67dCe0019AF2168fe00C0ba9BdEd8673", // uniswapV3PoolMock
-        owner: "0xA01906e76860870F81BD0CFD6cdaeb35ab2B23A4", // coverPoolManager
+        twapSource: "0x0765377b610233BEfC6beA29C7697A7B47839a2D", // uniswapV3Source
+        curveMath: "0x0765377b610233BEfC6beA29C7697A7B47839a2D", // constantProduct
+        inputPool: "0x117e312b6C48211Db25d3b731171A311A2E1AdA6", // uniswapV3PoolMock
+        owner: "0xaa22D9F5Fb1436c64584a6C7efB95aFde1557de1", // coverPoolManager
         token0: "0x6774be1a283Faed7ED8e40463c40Fb33A8da3461", // token0
         token1: "0xC26906E10E8BDaDeb2cf297eb56DF59775eE52c4", // token1
         tickSpread: "20", // tickSpread

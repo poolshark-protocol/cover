@@ -1,10 +1,8 @@
-import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated, StashDeltasCleared, Swap } from '../../generated/CoverPoolFactory/CoverPool'
+import { Burn, FinalDeltasAccumulated, Initialize, Mint, StashDeltasAccumulated, StashDeltasCleared } from '../../generated/CoverPoolFactory/CoverPool'
 import {
-    Address,
     BigDecimal,
     BigInt,
     Bytes,
-    ethereum,
     log,
     store,
 } from '@graphprotocol/graph-ts'
@@ -20,7 +18,7 @@ import {
 import { ONE_BI, TWO_BD, ZERO_BD } from '../constants/constants'
 import { bigInt1e38, convertTokenToDecimal } from './utils/math'
 import { safeMinus } from './utils/deltas'
-import { Sync } from '../../generated/templates/CoverPoolTemplate/CoverPool'
+import { SwapPool0, SwapPool1, Sync } from '../../generated/templates/CoverPoolTemplate/CoverPool'
 import { BIGINT_ONE, BIGINT_ZERO } from './utils/helpers'
 import { AmountType, findEthPerToken, getAdjustedAmounts, sqrtPriceX96ToTokenPrices } from './utils/price'
 import { FACTORY_ADDRESS } from '../constants/constants'
@@ -347,14 +345,111 @@ export function handleBurn(event: Burn): void {
     upperTickDeltas.save()
 }
 
-export function handleSwap(event: Swap): void {
+export function handleSwapPool0(event: SwapPool0): void {
     let msgSender = event.transaction.from
     let recipientParam = event.params.recipient
     let amountInParam = event.params.amountIn
     let amountOutParam = event.params.amountOut
     let newPriceParam = event.params.newPrice
     let priceLimitParam = event.params.priceLimit
-    let zeroForOneParam = event.params.zeroForOne
+    let zeroForOneParam = false
+    let poolAddress = event.address.toHex()
+
+    let loadCoverPool = safeLoadCoverPool(poolAddress)
+    let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
+    let loadBasePrice = safeLoadBasePrice('eth')
+
+    let pool = loadCoverPool.entity
+    let factory = loadCoverPoolFactory.entity
+    let basePrice = loadBasePrice.entity
+
+    let loadToken0 = safeLoadToken(pool.token0)
+    let loadToken1 = safeLoadToken(pool.token1)
+    let token0 = loadToken0.entity
+    let token1 = loadToken1.entity
+
+    let amount0: BigDecimal; let amount1: BigDecimal; let prices: BigDecimal[];
+    if (zeroForOneParam) {
+        let tokenIn = token0
+        let tokenOut = token1
+        amount0 = convertTokenToDecimal(amountInParam, tokenIn.decimals)
+        amount1 = convertTokenToDecimal(amountOutParam, tokenOut.decimals)
+        pool.pool1Price = newPriceParam
+        pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
+        pool.totalValueLocked1 = pool.totalValueLocked1.minus(amount1)
+        prices = sqrtPriceX96ToTokenPrices(pool.pool1Price, token0, token1)
+        pool.price1 = prices[1]
+    } else {
+        let tokenIn = token1
+        let tokenOut = token0
+        amount1 = convertTokenToDecimal(amountInParam, tokenIn.decimals)
+        amount0 = convertTokenToDecimal(amountOutParam, tokenOut.decimals)
+        pool.pool0Price = newPriceParam
+        pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
+        pool.totalValueLocked0 = pool.totalValueLocked0.minus(amount0)
+        prices = sqrtPriceX96ToTokenPrices(pool.pool0Price, token0, token1)
+        pool.price0 = prices[0]
+    }
+    pool.volumeToken0 = pool.volumeToken1.plus(amount0)
+    pool.volumeToken1 = pool.volumeToken1.plus(amount1)
+    pool.txnCount = pool.txnCount.plus(BIGINT_ONE)
+    pool.save()
+
+    // price updates
+    token0.ethPrice = findEthPerToken(token0, token1)
+    token1.ethPrice = findEthPerToken(token1, token0)
+    token0.usdPrice = token0.ethPrice.times(basePrice.USD)
+    token1.usdPrice = token1.ethPrice.times(basePrice.USD)
+
+    let oldPoolTVLEth = pool.totalValueLockedEth
+    pool.totalValueLocked0 = pool.totalValueLocked0.plus(amount0)
+    pool.totalValueLocked1 = pool.totalValueLocked1.plus(amount1)
+    token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
+    token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
+    let updateTvlRet = updateDerivedTVLAmounts(token0, token1, pool, factory, oldPoolTVLEth)
+    token0 = updateTvlRet.token0
+    token1 = updateTvlRet.token1
+    pool = updateTvlRet.pool
+    factory = updateTvlRet.factory
+
+    // update volume and fees
+    let amount0Abs = amount0.times(BigDecimal.fromString(amount0.lt(ZERO_BD) ? '-1' : '1'))
+    let amount1Abs = amount1.times(BigDecimal.fromString(amount1.lt(ZERO_BD) ? '-1' : '1'))
+    let volumeAmounts: AmountType = getAdjustedAmounts(amount0Abs, token0, amount1Abs, token1, basePrice)
+    let volumeEth = volumeAmounts.eth.div(TWO_BD)
+    let volumeUsd = volumeAmounts.usd.div(TWO_BD)
+
+    factory.volumeEthTotal = factory.volumeEthTotal.plus(volumeEth)
+    factory.volumeUsdTotal = factory.volumeUsdTotal.plus(volumeUsd)
+    pool.volumeToken0 = pool.volumeToken0.plus(amount0Abs)
+    pool.volumeToken1 = pool.volumeToken1.plus(amount1Abs)
+    pool.volumeUsd = pool.volumeUsd.plus(volumeUsd)
+    pool.volumeEth = pool.volumeEth.plus(volumeEth)
+    pool.volumeUsd = pool.volumeUsd.plus(volumeUsd)
+    pool.volumeEth = pool.volumeEth.plus(volumeEth)
+    token0.volume = token0.volume.plus(amount0Abs)
+    token0.volumeUsd = token0.volumeUsd.plus(volumeUsd)
+    token0.volumeEth = token0.volumeEth.plus(volumeEth)
+    token1.volume = token1.volume.plus(amount1Abs)
+    token1.volumeUsd = token1.volumeUsd.plus(volumeUsd)
+    token1.volumeEth = token1.volumeEth.plus(volumeEth)
+
+    basePrice.save()
+    pool.save()
+    factory.save()
+    token0.save()
+    token1.save()
+    //TODO: save swap/txn data
+}
+
+export function handleSwapPool1(event: SwapPool1): void {
+    let msgSender = event.transaction.from
+    let recipientParam = event.params.recipient
+    let amountInParam = event.params.amountIn
+    let amountOutParam = event.params.amountOut
+    let newPriceParam = event.params.newPrice
+    let priceLimitParam = event.params.priceLimit
+    let zeroForOneParam = true
     let poolAddress = event.address.toHex()
 
     let loadCoverPool = safeLoadCoverPool(poolAddress)

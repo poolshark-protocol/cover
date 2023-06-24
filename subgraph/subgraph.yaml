@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0xaD1Aff1234193c1B0A8A178fDe27Fd786b99B7b3'
+          address: '0x6b83e41BB067EFaF88aa6F83cc5c1D21d0a14714'
           abi: CoverPoolFactory
-          startBlock: 19186000
+          startBlock: 27787200
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0xA01906e76860870F81BD0CFD6cdaeb35ab2B23A4'
+          address: '0xaa22D9F5Fb1436c64584a6C7efB95aFde1557de1'
           abi: CoverPoolManager
-          startBlock: 19186000
+          startBlock: 27787200
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -95,8 +95,10 @@ templates:
                 handler: handleMint
               - event: Burn(indexed address,int24,int24,int24,bool,uint128,uint128,uint128,uint128,uint128,uint128,uint128,uint128,uint160)
                 handler: handleBurn
-              - event: Swap(indexed address,uint128,uint128,uint160,uint160,bool)
-                handler: handleSwap
+              - event: SwapPool0(indexed address,uint128,uint128,uint160,uint160)
+                handler: handleSwapPool0
+              - event: SwapPool1(indexed address,uint128,uint128,uint160,uint160)
+                handler: handleSwapPool1
               - event: Sync(uint160,uint160,uint128,uint128,uint32,uint32,int24,int24)
                 handler: handleSync
               - event: FinalDeltasAccumulated(uint128,uint128,uint32,int24,bool)

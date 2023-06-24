@@ -61,7 +61,7 @@ const config: HardhatUserConfig = {
     etherscan: { 
         apiKey: {
             arbitrumGoerli: process.env.ARBITRUM_GOERLI_API_KEY,
-            scrollAlpha: 'abc',
+            scroll_alpha: 'abc',
         },
         customChains: [
             {

@@ -31,13 +31,20 @@ abstract contract CoverPoolEvents {
         uint160 claimPriceLast
     );
 
-    event Swap(
+    event SwapPool0(
         address indexed recipient,
         uint128 amountIn,
         uint128 amountOut,
         uint160 priceLimit,
-        uint160 newPrice,
-        bool zeroForOne
+        uint160 newPrice
+    );
+
+    event SwapPool1(
+        address indexed recipient,
+        uint128 amountIn,
+        uint128 amountOut,
+        uint160 priceLimit,
+        uint160 newPrice
     );
 
     event Initialize(
@@ -85,7 +92,7 @@ abstract contract CoverPoolEvents {
     );
 
     event SyncFeesCollected(
-        address indexed collector,
+        address collector,
         uint128 token0Amount,
         uint128 token1Amount
     );
