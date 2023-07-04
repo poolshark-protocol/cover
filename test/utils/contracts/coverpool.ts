@@ -608,4 +608,5 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(
         BN_ZERO.sub(liquidityAmount)
     )
+    console.log('position liquidity change', positionAfter.liquidity.sub(positionBefore.liquidity).toString())
 }

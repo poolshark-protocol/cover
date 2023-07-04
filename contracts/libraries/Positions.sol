@@ -57,7 +57,7 @@ library Positions {
         ConstantProduct.checkTicks(params.lower, params.upper, constants.tickSpread);
 
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
-            position: position,
+            position: ICoverPoolStructs.Position(0,0,0,0,0),
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
@@ -148,7 +148,6 @@ library Positions {
         ICoverPoolStructs.Position memory
     ) {
         if (params.amount == 0) return (state, position);
-
         // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: position,
@@ -202,19 +201,17 @@ library Positions {
             (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
-
         cache.position.liquidity += uint128(params.amount);
-
         emit Mint(
-                params.to,
-                params.lower,
-                params.upper,
-                params.zeroForOne,
-                state.accumEpoch,
-                uint128(params.amountIn),
-                uint128(params.amount),
-                cache.deltas.amountInDeltaMax,
-                cache.deltas.amountOutDeltaMax
+            params.to,
+            params.lower,
+            params.upper,
+            params.zeroForOne,
+            state.accumEpoch,
+            params.amountIn,
+            params.amount,
+            cache.deltas.amountInDeltaMax,
+            cache.deltas.amountOutDeltaMax
         );
 
         return (state, cache.position);
@@ -305,6 +302,9 @@ library Positions {
         );
 
         cache.position.liquidity -= uint128(params.amount);
+        if (cache.position.liquidity == 0){
+            cache.position.accumEpochLast = 0;
+        }
         positions[params.owner][params.lower][params.upper] = cache.position;
 
         if (params.amount > 0) {

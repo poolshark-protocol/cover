@@ -134,6 +134,38 @@ type Position @entity {
     zeroForOne: Boolean!
 }
 
+type MintLog @entity {
+    id: ID!
+    txnHash: Bytes!
+    owner: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    zeroForOne: Boolean!
+    epochLast: BigInt!
+    amountIn: BigInt!
+    liquidityMinted: BigInt!
+    amountInDeltaMaxMinted: BigInt!
+    amountOutDeltaMaxMinted: BigInt!
+}
+
+type BurnLog @entity {
+    id: ID!
+    txnHash: Bytes!
+    owner: Bytes!
+    lower: BigInt!
+    upper: BigInt!
+    claim: BigInt!
+    zeroForOne: Boolean!
+    liquidityBurned: BigInt!
+    # tokenInClaimed: BigInt!
+    # tokenOutClaimed: BigInt!
+    # tokenOutBurned: BigInt!
+    # amountInDeltaMaxStashedBurned: BigInt!
+    # amountOutDeltaMaxStashedBurned: BigInt!
+    amountInDeltaMaxBurned: BigInt!
+    # amountOutDeltaMaxBurned: BigInt!
+}
+
 type Tick @entity {
     # poolAddress + index
     id: ID!

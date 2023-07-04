@@ -12,6 +12,7 @@ import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
+import 'hardhat/console.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -86,14 +87,14 @@ contract CoverPool is
     ) external override lock {
         MintCache memory cache = MintCache({
             state: globalState,
-            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
-                                        : positions1[params.to][params.lower][params.upper],
+            position: Position(0,0,0,0,0),
             constants: _immutables(),
             syncFees: SyncFees(0,0),
             liquidityMinted: 0,
             pool0: pool0,
             pool1: pool1
         });
+        console.log('position at pool', cache.position.liquidity);
         (
             cache.state,
             cache.syncFees,
