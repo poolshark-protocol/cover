@@ -67,7 +67,7 @@ export class InitialSetup {
             'token20Batcher',
             []
         )
-        return
+
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore

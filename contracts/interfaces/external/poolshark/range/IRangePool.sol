@@ -28,10 +28,6 @@ interface IRangePool {
         uint16 sampleLengthNext
     ) external;
 
-    function owner() external view returns (
-        address
-    );
-
     function poolState() external view returns (
         uint8,
         uint16,
