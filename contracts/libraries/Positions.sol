@@ -57,7 +57,7 @@ library Positions {
         ConstantProduct.checkTicks(params.lower, params.upper, constants.tickSpread);
 
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
-            position: position,
+            position: ICoverPoolStructs.Position(0,0,0,0,0),
             deltas: ICoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
@@ -148,7 +148,6 @@ library Positions {
         ICoverPoolStructs.Position memory
     ) {
         if (params.amount == 0) return (state, position);
-
         // initialize cache
         ICoverPoolStructs.PositionCache memory cache = ICoverPoolStructs.PositionCache({
             position: position,
@@ -201,20 +200,23 @@ library Positions {
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
             (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
+            // revert if either max delta is zero
+            if (cache.deltas.amountInDeltaMax == 0) {
+                require(false, 'AmountInDeltaIsZero()');
+            } else if (cache.deltas.amountOutDeltaMax == 0)
+                require(false, 'AmountOutDeltaIsZero()');
         }
-
         cache.position.liquidity += uint128(params.amount);
-
         emit Mint(
-                params.to,
-                params.lower,
-                params.upper,
-                params.zeroForOne,
-                state.accumEpoch,
-                uint128(params.amountIn),
-                uint128(params.amount),
-                cache.deltas.amountInDeltaMax,
-                cache.deltas.amountOutDeltaMax
+            params.to,
+            params.lower,
+            params.upper,
+            params.zeroForOne,
+            state.accumEpoch,
+            params.amountIn,
+            params.amount,
+            cache.deltas.amountInDeltaMax,
+            cache.deltas.amountOutDeltaMax
         );
 
         return (state, cache.position);
@@ -305,6 +307,9 @@ library Positions {
         );
 
         cache.position.liquidity -= uint128(params.amount);
+        if (cache.position.liquidity == 0){
+            cache.position.accumEpochLast = 0;
+        }
         positions[params.owner][params.lower][params.upper] = cache.position;
 
         if (params.amount > 0) {
@@ -597,6 +602,7 @@ library Positions {
     ) internal pure  
     {
         // early return if 100% of position burned
+        if (constants.minAmountPerAuction == 0) return;
         if (params.liquidityAmount == 0 || params.auctionCount == 0) return;
         // set minAmountPerAuction based on token decimals
         uint256 minAmountPerAuction; bool denomTokenIn;

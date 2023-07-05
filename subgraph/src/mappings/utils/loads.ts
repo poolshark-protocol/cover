@@ -1,5 +1,5 @@
-import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { BasePrice, CoverPool, CoverPoolFactory, CoverPoolManager, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
+import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
+import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, MintLog, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
 import { ONE_BD, ONE_BI } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -54,6 +54,70 @@ export function safeLoadToken(address: string): LoadTokenRet {
 
     return {
         entity: tokenEntity,
+        exists: exists,
+    }
+}
+
+class LoadMintLogRet {
+    entity: MintLog
+    exists: boolean
+}
+export function safeLoadMintLog(txnHash: Bytes, pool: string, owner: string, lower: BigInt, upper: BigInt, zeroForOne: boolean): LoadMintLogRet {
+    let exists = true
+
+    let mintLogId = txnHash.toString()
+                    .concat('-')
+                    .concat(pool)
+                    .concat('-')
+                    .concat(owner)
+                    .concat('-')
+                    .concat(upper.toString())
+                    .concat('-')
+                    .concat(lower.toString())
+                    .concat('-')
+                    .concat(zeroForOne.toString())
+
+    let mintLogEntity = MintLog.load(mintLogId)
+
+    if (!mintLogEntity) {
+        mintLogEntity = new MintLog(mintLogId)
+        exists = false
+    }
+
+    return {
+        entity: mintLogEntity,
+        exists: exists,
+    }
+}
+
+class LoadBurnLogRet {
+    entity: BurnLog
+    exists: boolean
+}
+export function safeLoadBurnLog(txnHash: Bytes, pool: string, owner: string, lower: BigInt, upper: BigInt, zeroForOne: boolean): LoadBurnLogRet {
+    let exists = true
+
+    let burnLogId = txnHash.toString()
+                    .concat('-')
+                    .concat(pool)
+                    .concat('-')
+                    .concat(owner)
+                    .concat('-')
+                    .concat(upper.toString())
+                    .concat('-')
+                    .concat(lower.toString())
+                    .concat('-')
+                    .concat(zeroForOne.toString())
+
+    let burnLogEntity = BurnLog.load(burnLogId)
+
+    if (!burnLogEntity) {
+        burnLogEntity = new BurnLog(burnLogId)
+        exists = false
+    }
+
+    return {
+        entity: burnLogEntity,
         exists: exists,
     }
 }

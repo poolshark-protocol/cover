@@ -142,16 +142,13 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         await mine(auctionLength)
     }
-
     let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
-        BigNumber.from(newLatestTick).mul(10),
-        BigNumber.from(newLatestTick).mul(9),
-        BigNumber.from(newLatestTick).mul(6),
-        BigNumber.from(newLatestTick).mul(5)
+        newLatestTick * 10,
+        newLatestTick * 8,
+        newLatestTick * 7,
+        newLatestTick * 5
     )
     await txn.wait();
-
-    // console.log("-- START ACCUMULATE LAST BLOCK --");
 
     /// send a "no op" swap to trigger accumulate
     const token1Balance = await hre.props.token1.balanceOf(signer.address)
@@ -554,7 +551,7 @@ export async function validateBurn(params: ValidateBurnParams) {
     let lowerTickAfter: Tick
     let upperTickAfter: Tick
     let positionAfter: Position
-    //TODO: implement expected lower/upper?
+
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
@@ -608,4 +605,5 @@ export async function validateBurn(params: ValidateBurnParams) {
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(
         BN_ZERO.sub(liquidityAmount)
     )
+    // console.log('position liquidity change', positionAfter.liquidity.sub(positionBefore.liquidity).toString())
 }

@@ -8,8 +8,10 @@ import {
 } from '@graphprotocol/graph-ts'
 import {
     safeLoadBasePrice,
+    safeLoadBurnLog,
     safeLoadCoverPool,
     safeLoadCoverPoolFactory,
+    safeLoadMintLog,
     safeLoadPosition,
     safeLoadTick,
     safeLoadTickDeltas,
@@ -91,10 +93,25 @@ export function handleMint(event: Mint): void {
     let lower = BigInt.fromI32(lowerParam)
     let upper = BigInt.fromI32(upperParam)
 
+    let loadMintLog = safeLoadMintLog(event.transaction.hash, poolAddress, ownerParam, lower, upper, zeroForOneParam)
     let loadBasePrice = safeLoadBasePrice('eth')
     let loadCoverPool = safeLoadCoverPool(poolAddress)
     let basePrice = loadBasePrice.entity
     let pool = loadCoverPool.entity
+    let mintLog = loadMintLog.entity
+
+    mintLog.txnHash = event.transaction.hash
+    mintLog.owner = Bytes.fromHexString(ownerParam) as Bytes
+    mintLog.lower = lower
+    mintLog.upper = upper
+    mintLog.zeroForOne = zeroForOneParam
+    mintLog.epochLast = epochLastParam
+    mintLog.amountIn = amountInParam
+    mintLog.liquidityMinted = liquidityMintedParam
+    mintLog.amountInDeltaMaxMinted = amountInDeltaMaxMintedParam
+    mintLog.amountOutDeltaMaxMinted = amountOutDeltaMaxMintedParam
+
+    mintLog.save()
 
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadToken0 = safeLoadToken(pool.token0)
@@ -226,6 +243,19 @@ export function handleBurn(event: Burn): void {
         upper,
         zeroForOneParam
     )
+    let loadBurnLog = safeLoadBurnLog(event.transaction.hash, poolAddress, msgSender, lower, upper, zeroForOneParam)
+    let burnLog = loadBurnLog.entity
+
+    burnLog.txnHash = event.transaction.hash
+    burnLog.owner = Bytes.fromHexString(msgSender) as Bytes
+    burnLog.lower = lower
+    burnLog.upper = upper
+    burnLog.claim = claim
+    burnLog.zeroForOne = zeroForOneParam
+    burnLog.liquidityBurned = liquidityBurnedParam
+    burnLog.amountInDeltaMaxBurned = amountInDeltaMaxBurnedParam
+
+    burnLog.save()
 
     let basePrice = loadBasePrice.entity
     let position  = loadPosition.entity

@@ -33,9 +33,8 @@ export class MintTokens {
         await hre.props.token20Batcher.mintBatch(
             [hre.props.token0.address, hre.props.token1.address], 
             [
-                '0x5FBce71b1b74d0d8511dC708ceED3250a1aBDacA', // Daniel Hill from Pshark Community
-                '0x03AC7CaA058026BaaA09a1285F2a9990892b64F0', // Nick from Arbi team
-              ], token0Amount.mul(100), {gasLimit: 20000000})
+                '0xf579Ad342290b02b7b65c88ED2aB14575ED269B5'
+            ], token0Amount.mul(10), {gasLimit: 20000000})
 
         //TODO: take in address parameter
         // const token0Balance = await hre.props.token0.balanceOf(

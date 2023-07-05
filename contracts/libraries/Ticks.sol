@@ -188,8 +188,8 @@ library Ticks {
                 }
                 ticks[lower] = tickLower;
             }
-            if (lower != ConstantProduct.minTick(constants.tickSpread) && _empty(tickLower)) {
-                TickMap.unset(lower, tickMap, constants);
+            if (lower != ConstantProduct.minTick(constants.tickSpread)) {
+                cleanup(ticks, tickMap, constants, tickLower, lower);
             }
         }
         {
@@ -202,10 +202,57 @@ library Ticks {
                 }
                 ticks[upper] = tickUpper;
             }
-            if (upper != ConstantProduct.maxTick(constants.tickSpread) && _empty(tickUpper)) {
-                TickMap.unset(upper, tickMap, constants);
+            if (upper != ConstantProduct.maxTick(constants.tickSpread)) {
+                cleanup(ticks, tickMap, constants, tickUpper, upper);
             }
         }
+    }
+
+    function cleanup(
+        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
+        ICoverPoolStructs.TickMap storage tickMap,
+        ICoverPoolStructs.Immutables memory constants,
+        ICoverPoolStructs.Tick memory tick,
+        int24 tickIndex
+    ) internal {
+        if (_empty(tick)) {
+            TickMap.unset(tickIndex, tickMap, constants);
+            delete ticks[tickIndex];
+        } else {
+            // if one of the values is 0 clear out both
+            if (tick.amountInDeltaMaxMinus == 0 || tick.amountOutDeltaMaxMinus == 0) {
+                tick.amountInDeltaMaxMinus = 0;
+                tick.amountOutDeltaMaxMinus = 0;
+            }
+            if (tick.amountInDeltaMaxStashed == 0 || tick.amountOutDeltaMaxStashed == 0) {
+                tick.amountInDeltaMaxStashed = 0;
+                tick.amountOutDeltaMaxStashed = 0;
+            }
+            if (_inactive(tick)) {
+                // zero out all values for safety
+                tick.amountInDeltaMaxMinus = 0;
+                tick.amountOutDeltaMaxMinus = 0;
+                tick.amountInDeltaMaxStashed = 0;
+                tick.amountOutDeltaMaxStashed = 0;
+                TickMap.unset(tickIndex, tickMap, constants);
+            }
+            ticks[tickIndex] = tick;
+        }
+    }
+
+    function _inactive(
+        ICoverPoolStructs.Tick memory tick
+    ) internal pure returns (
+        bool
+    ) {
+        if (tick.amountInDeltaMaxStashed > 0 && tick.amountOutDeltaMaxStashed > 0) {
+            return false;
+        } else if (tick.amountInDeltaMaxMinus > 0 && tick.amountOutDeltaMaxMinus > 0){
+            return false;
+        } else if (tick.liquidityDelta != 0) {
+            return false;
+        }
+        return true;
     }
 
     function _empty(
@@ -213,11 +260,11 @@ library Ticks {
     ) internal pure returns (
         bool
     ) {
-        if (tick.amountInDeltaMaxStashed > 0 || tick.amountOutDeltaMaxStashed > 0) {
+        if (tick.amountInDeltaMaxStashed > 0 && tick.amountOutDeltaMaxStashed > 0) {
             return false;
-        } else if (tick.amountInDeltaMaxMinus > 0 || tick.amountOutDeltaMaxMinus > 0){
+        } else if (tick.amountInDeltaMaxMinus > 0 && tick.amountOutDeltaMaxMinus > 0){
             return false;
-        } else if (tick.deltas.amountInDeltaMax > 0 || tick.deltas.amountOutDeltaMax > 0) {
+        } else if (tick.deltas.amountInDeltaMax > 0 && tick.deltas.amountOutDeltaMax > 0) {
             return false;
         } else if (tick.liquidityDelta != 0) {
             return false;

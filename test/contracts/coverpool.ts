@@ -72,9 +72,9 @@ describe('CoverPool Tests', function () {
     })
 
     this.beforeEach(async function () {
-        await mintSigners20(hre.props.token0, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
+        await mintSigners20(hre.props.token0, tokenAmount.mul(10), [hre.props.alice, hre.props.bob], [hre.props.alice.address, hre.props.bob.address])
 
-        await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob])
+        await mintSigners20(hre.props.token1, tokenAmount.mul(10), [hre.props.alice, hre.props.bob], [hre.props.alice.address, hre.props.bob.address])
 
         await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
     })
@@ -173,7 +173,7 @@ describe('CoverPool Tests', function () {
         })
     })
 
-    it('pool0 - Should mint/burn new LP position', async function () {
+    it('pool0 - Should mint/burn new LP position 71', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {
             await validateMint({
@@ -619,6 +619,83 @@ describe('CoverPool Tests', function () {
             console.log('final tick')
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+        }
+    })
+
+    it('pool1 - Should emit proper events to add and remove liquidity int128', async function () {
+        // const liquidityAmount4 = BigNumber.from('2197297704656386738')
+        // const liquidityAmount5 = BigNumber.from('666512178130645837555')
+        const liquidityAmount4 = BigNumber.from('2197297704656386735')
+        const liquidityAmount5 = BigNumber.from('666512178130645837552')
+
+        await validateSync(78240)
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '78200',
+            upper: '78280',
+            amount: BigNumber.from('439341815073912910'),
+            zeroForOne: false,
+            balanceInDecrease: BigNumber.from('110000253583051683'),
+            liquidityIncrease: liquidityAmount4,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            expectedLower: '78260',
+            revertMessage: '',
+        })
+
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '78220',
+            upper: '78280',
+            amount: BigNumber.from('100000000000000000000'),
+            zeroForOne: false,
+            balanceInDecrease: BigNumber.from('33366670549555043973'),
+            liquidityIncrease: liquidityAmount5,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            expectedLower: '78260',
+            revertMessage: '',
+        })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '78260',
+            claim: '78260',
+            upper: '78280',
+            liquidityPercent: BigNumber.from('3000000000000000000000000000000000000'),
+            zeroForOne: false,
+            balanceInIncrease: BN_ZERO,
+            balanceOutIncrease: BigNumber.from('1004300124094142869'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+        await validateBurn({
+            signer: hre.props.alice,
+            lower: '78260',
+            claim: '78260',
+            upper: '78280',
+            liquidityPercent: BigNumber.from('100000000000000000000000000000000000000'),
+            zeroForOne: false,
+            balanceInIncrease: BigNumber.from('0'),
+            balanceOutIncrease: BigNumber.from('32472370679043952786'),
+            lowerTickCleared: false,
+            upperTickCleared: false,
+            revertMessage: '',
+        })
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+        }
+        if (deltaMaxAfterCheck) {
+            console.log('claim tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('78260')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('78260')).amountOutDeltaMaxMinus.toString())
+            console.log('final tick')
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('78260')).toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('78280')).toString())
         }
     })
 
@@ -2066,7 +2143,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from('1'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            balanceOutIncrease: BigNumber.from('100000000000000000000'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -2553,7 +2630,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from('99755307984763292988257'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceOutIncrease: BigNumber.from('100000000000000000000'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -3254,7 +3331,7 @@ describe('CoverPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmount.mul(10000000), [
             hre.props.alice,
             hre.props.bob,
-        ])
+        ], [hre.props.alice.address, hre.props.bob.address])
 
         await validateMint({
             signer: hre.props.alice,
@@ -3300,8 +3377,8 @@ describe('CoverPool Tests', function () {
         await mintSigners20(hre.props.token1, tokenAmount.mul(ethers.utils.parseUnits('34', 55)), [
             hre.props.alice,
             hre.props.bob,
-        ])
-// max uint256 is x.xxE77; x.xxE70
+        ], [hre.props.alice.address, hre.props.bob.address])
+
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -3315,7 +3392,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-
+        await getTick(false, 600000, true)
         await validateSync(600000)
 
         await validateSwap({

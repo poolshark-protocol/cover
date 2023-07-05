@@ -33,6 +33,7 @@ library MintCall {
             cache.state,
             cache.constants
         );
+        cache.position = positions[msg.sender][params.lower][params.upper];
         // params.amount must be > 0 here
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,

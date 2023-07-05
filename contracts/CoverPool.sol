@@ -86,8 +86,7 @@ contract CoverPool is
     ) external override lock {
         MintCache memory cache = MintCache({
             state: globalState,
-            position: params.zeroForOne ? positions0[params.to][params.lower][params.upper]
-                                        : positions1[params.to][params.lower][params.upper],
+            position: Position(0,0,0,0,0),
             constants: _immutables(),
             syncFees: SyncFees(0,0),
             liquidityMinted: 0,
