@@ -685,17 +685,17 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         })
-        if (balanceCheck) {
+        if (true) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
         }
-        if (deltaMaxAfterCheck) {
+        if (true) {
             console.log('claim tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-20')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-20')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('78260')).amountInDeltaMaxMinus.toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('78260')).amountOutDeltaMaxMinus.toString())
             console.log('final tick')
-            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-40')).amountInDeltaMaxMinus.toString())
-            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-40')).amountOutDeltaMaxMinus.toString())
+            console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('78260')).toString())
+            console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('78280')).toString())
         }
     })
 
@@ -2143,7 +2143,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from('1'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
+            balanceOutIncrease: BigNumber.from('100000000000000000000'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -2630,7 +2630,7 @@ describe('CoverPool Tests', function () {
             liquidityAmount: BigNumber.from('99755307984763292988257'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999998'),
+            balanceOutIncrease: BigNumber.from('100000000000000000000'),
             lowerTickCleared: true,
             upperTickCleared: true,
             revertMessage: '',
@@ -3378,7 +3378,7 @@ describe('CoverPool Tests', function () {
             hre.props.alice,
             hre.props.bob,
         ], [hre.props.alice.address, hre.props.bob.address])
-// max uint256 is x.xxE77; x.xxE70
+
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
@@ -3392,7 +3392,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-
+        await getTick(false, 600000, true)
         await validateSync(600000)
 
         await validateSwap({

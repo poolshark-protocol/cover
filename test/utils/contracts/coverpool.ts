@@ -142,12 +142,12 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
                                         * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
         await mine(auctionLength)
     }
-
+    console.log('setting latest tick', newLatestTick)
     let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
-        BigNumber.from(newLatestTick).mul(10),
-        BigNumber.from(newLatestTick).mul(9),
-        BigNumber.from(newLatestTick).mul(6),
-        BigNumber.from(newLatestTick).mul(5)
+        newLatestTick * 10,
+        newLatestTick * 8,
+        newLatestTick * 7,
+        newLatestTick * 5
     )
     await txn.wait();
 

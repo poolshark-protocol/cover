@@ -94,7 +94,6 @@ contract CoverPool is
             pool0: pool0,
             pool1: pool1
         });
-        console.log('position at pool', cache.position.liquidity);
         (
             cache.state,
             cache.syncFees,
