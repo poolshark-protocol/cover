@@ -179,7 +179,7 @@ library Epochs {
             deltas0: ICoverPoolStructs.Deltas(0, 0, 0, 0), // deltas for pool0
             deltas1: ICoverPoolStructs.Deltas(0, 0, 0, 0),  // deltas for pool1
             syncFees: ICoverPoolStructs.SyncFees(0,0),
-            newLatestTick: state.latestTick == 78240 ? int24(0) : cache.newLatestTick,
+            newLatestTick: cache.newLatestTick,
             nextTickToCross0: state.latestTick, // above
             nextTickToCross1: state.latestTick, // below
             nextTickToAccum0: TickMap.previous(state.latestTick, tickMap, constants), // below
@@ -216,7 +216,7 @@ library Epochs {
             );
             /// @dev - deltas in cache updated after _accumulate
             cache.deltas0 = params.deltas;
-            // ticks0[cache.nextTickToCross0] = params.crossTick;
+            ticks0[cache.nextTickToAccum0] = params.accumTick;
             Ticks.cleanup(
                ticks0,
                tickMap,
@@ -224,7 +224,6 @@ library Epochs {
                params.crossTick,
                cache.nextTickToCross0
             );
-            ticks0[cache.nextTickToAccum0] = params.accumTick;
     
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 >= cache.stopTick0) {
@@ -283,6 +282,7 @@ library Epochs {
                 );
                 /// @dev - deltas in cache updated after _accumulate
                 cache.deltas1 = params.deltas;
+                ticks1[cache.nextTickToAccum1] = params.accumTick;
                 Ticks.cleanup(
                     ticks1,
                     tickMap,
@@ -290,7 +290,6 @@ library Epochs {
                     params.crossTick,
                     cache.nextTickToCross1
                 );
-                ticks1[cache.nextTickToAccum1] = params.accumTick;
             }
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {

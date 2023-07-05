@@ -685,11 +685,11 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         })
-        if (true) {
+        if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
             console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
         }
-        if (true) {
+        if (deltaMaxAfterCheck) {
             console.log('claim tick')
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('78260')).amountInDeltaMaxMinus.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('78260')).amountOutDeltaMaxMinus.toString())

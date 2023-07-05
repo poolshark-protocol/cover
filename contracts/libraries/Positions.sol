@@ -200,6 +200,11 @@ library Positions {
             ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
             (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
+            // revert if either max delta is zero
+            if (cache.deltas.amountInDeltaMax == 0) {
+                require(false, 'AmountInDeltaIsZero()');
+            } else if (cache.deltas.amountOutDeltaMax == 0)
+                require(false, 'AmountOutDeltaIsZero()');
         }
         cache.position.liquidity += uint128(params.amount);
         emit Mint(
@@ -597,6 +602,7 @@ library Positions {
     ) internal pure  
     {
         // early return if 100% of position burned
+        if (constants.minAmountPerAuction == 0) return;
         if (params.liquidityAmount == 0 || params.auctionCount == 0) return;
         // set minAmountPerAuction based on token decimals
         uint256 minAmountPerAuction; bool denomTokenIn;

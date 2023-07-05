@@ -102,13 +102,12 @@ contract UniswapV3Source is ITwapSource {
         uint32[] memory secondsAgos = new uint32[](4);
         /// @dev - take 4 samples
         /// @dev - twapLength must be >= 5 * blockTime
-        uint32 timeDelta = constants.blockTime / oneSecond == 0 ? 2 
+        uint32 timeDelta = (constants.blockTime / oneSecond == 0) ? 2 
                                                                 : constants.blockTime * 2 / oneSecond;
         secondsAgos[0] = 0;
         secondsAgos[1] = timeDelta;
         secondsAgos[2] = constants.twapLength - timeDelta;
         secondsAgos[3] = constants.twapLength;
-        console.log('time deltas', secondsAgos[1], secondsAgos[2], secondsAgos[3]);
         (int56[] memory tickCumulatives, ) = IUniswapV3Pool(constants.inputPool).observe(secondsAgos);
         
         // take the smallest absolute value of 4 samples
@@ -116,8 +115,6 @@ contract UniswapV3Source is ITwapSource {
         averageTicks[1] = int24(((tickCumulatives[0] - tickCumulatives[3]) / (int32(secondsAgos[3] - secondsAgos[0]))));
         averageTicks[2] = int24(((tickCumulatives[1] - tickCumulatives[2]) / (int32(secondsAgos[2] - secondsAgos[1]))));
         averageTicks[3] = int24(((tickCumulatives[1] - tickCumulatives[3]) / (int32(secondsAgos[3] - secondsAgos[1]))));
-
-        console.log('calculating average ticks', uint56(tickCumulatives[0]), uint56(tickCumulatives[2]), secondsAgos[2]);
 
         // make sure all samples fit within min/max bounds
         int24 minAverageTick = ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread;

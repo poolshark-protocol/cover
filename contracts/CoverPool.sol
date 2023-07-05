@@ -12,7 +12,6 @@ import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
-import 'hardhat/console.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
