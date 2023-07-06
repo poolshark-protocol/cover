@@ -153,17 +153,9 @@ export class ContractDeploymentsJson {
     ): ContractDeploymentsEntry {
         const functionName = 'readContractDeploymentsFile'
 
-        console.log(
-            `📄 ${callingFunction}(): Reading ${key.networkName}:${key.objectName} from contracts deployments file.`
-        )
-
         const contractDeploymentsJson = this.fileIO.readFile(
             DeployConstants.CONTRACT_DEPLOYMENTS_JSON_FILENAME,
             functionName
-        )
-
-        console.log(
-            `📄 ${callingFunction}(): Reading ${key.networkName}:${key.objectName} from contracts deployments file.`
         )
 
         let contractDeployments
@@ -191,10 +183,6 @@ export class ContractDeploymentsJson {
 
         const contractDeploymentsEntry: ContractDeploymentsEntry =
             contractDeployments[key.networkName][key.objectName]
-
-        console.log(
-            `📄 ${callingFunction}(): Reading ${key.networkName}:${key.objectName} from contracts deployments file.`
-        )
 
         return contractDeploymentsEntry
     }
