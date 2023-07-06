@@ -9,10 +9,10 @@ module.exports = [
             minPositionWidth: "1",
             minAmountLowerPriced: true
         },
-        twapSource: "0x0765377b610233BEfC6beA29C7697A7B47839a2D", // uniswapV3Source
-        curveMath: "0x0765377b610233BEfC6beA29C7697A7B47839a2D", // constantProduct
-        inputPool: "0x117e312b6C48211Db25d3b731171A311A2E1AdA6", // uniswapV3PoolMock
-        owner: "0xaa22D9F5Fb1436c64584a6C7efB95aFde1557de1", // coverPoolManager
+        twapSource: "0x38Cb2D75C1B97f112E3e91a2E97DcB9118fbF140", // uniswapV3Source
+        curveMath: "0x38Cb2D75C1B97f112E3e91a2E97DcB9118fbF140", // constantProduct
+        inputPool: "0xFb5B89C5115879529dfdBf19ab7Dd0FE38e333dB", // uniswapV3PoolMock
+        owner: "0x64BA950eed56d2341632070Cad0f6ff7afaf6372", // coverPoolManager
         token0: "0x6774be1a283Faed7ED8e40463c40Fb33A8da3461", // token0
         token1: "0xC26906E10E8BDaDeb2cf297eb56DF59775eE52c4", // token1
         tickSpread: "20", // tickSpread

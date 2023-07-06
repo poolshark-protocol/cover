@@ -60,13 +60,13 @@ export class InitialSetup {
         //   ).contractAddress
         //   hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         //   hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Token20Batcher__factory,
-            'token20Batcher',
-            []
-        )
+        // await this.deployAssist.deployContractWithRetry(
+        //     network,
+        //     // @ts-ignore
+        //     Token20Batcher__factory,
+        //     'token20Batcher',
+        //     []
+        // )
 
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -369,7 +369,7 @@ export class InitialSetup {
 
         //TODO: for coverPool2 we need a second mock pool with a different cardinality
 
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
+        await hre.props.uniswapV3PoolMock.setObservationCardinality('10', '10')
 
         return hre.nonce
     }

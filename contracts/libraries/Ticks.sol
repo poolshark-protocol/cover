@@ -215,10 +215,7 @@ library Ticks {
         ICoverPoolStructs.Tick memory tick,
         int24 tickIndex
     ) internal {
-        if (_empty(tick)) {
-            TickMap.unset(tickIndex, tickMap, constants);
-            delete ticks[tickIndex];
-        } else {
+        if (!_empty(tick)){
             // if one of the values is 0 clear out both
             if (tick.amountInDeltaMaxMinus == 0 || tick.amountOutDeltaMaxMinus == 0) {
                 tick.amountInDeltaMaxMinus = 0;
@@ -236,6 +233,11 @@ library Ticks {
                 tick.amountOutDeltaMaxStashed = 0;
                 TickMap.unset(tickIndex, tickMap, constants);
             }
+        }
+        if (_empty(tick)) {
+            TickMap.unset(tickIndex, tickMap, constants);
+            delete ticks[tickIndex];
+        } else {
             ticks[tickIndex] = tick;
         }
     }

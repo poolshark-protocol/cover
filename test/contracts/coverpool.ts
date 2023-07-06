@@ -3392,7 +3392,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
-        await getTick(false, 600000, true)
+        if (debugMode) await getTick(false, 600000, true)
         await validateSync(600000)
 
         await validateSwap({
