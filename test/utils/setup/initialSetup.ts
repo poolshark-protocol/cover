@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
+import { CoverPool__factory, QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -20,6 +20,7 @@ import {
     UniswapV3Source__factory,
     UniswapV3FactoryMock__factory,
 } from '../../../typechain'
+import { BN_ZERO, CoverPoolParams, VolatilityTier } from '../contracts/coverpool'
 
 export class InitialSetup {
     private token0Decimals = 18
@@ -227,10 +228,16 @@ export class InitialSetup {
             // @ts-ignore
             CoverPoolManager__factory,
             'coverPoolManager',
-            [
-                this.uniV3String,
-                hre.props.uniswapV3Source.address,
-                hre.props.uniswapV3Source.address
+            []
+        )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            CoverPoolFactory__factory,
+            'coverPoolFactory',
+            [   
+                hre.props.coverPoolManager.address
             ]
         )
 
@@ -282,10 +289,10 @@ export class InitialSetup {
         await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
-            CoverPoolFactory__factory,
-            'coverPoolFactory',
-            [   
-                hre.props.coverPoolManager.address
+            CoverPool__factory,
+            'coverPoolImpl',
+            [
+                hre.props.coverPoolFactory.address
             ],
             {
                 'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
@@ -298,6 +305,59 @@ export class InitialSetup {
             }
         )
 
+        console.log('cover pool impl deployed', hre.props.coverPoolImpl.address)
+
+        const enableImplTxn = await hre.props.coverPoolManager.enableImplementation(
+            this.uniV3String,
+            hre.props.coverPoolImpl.address,
+            hre.props.uniswapV3Source.address
+        )
+        await enableImplTxn.wait();
+
+        hre.nonce += 1;
+
+        const volTier1: VolatilityTier = {
+            minAmountPerAuction: BN_ZERO,
+            auctionLength: 5,
+            blockTime: 1000,
+            syncFee: 0,
+            fillFee: 0,
+            minPositionWidth: 1,
+            minAmountLowerPriced: true
+        }
+
+        const enableVolTier1 = await hre.props.coverPoolManager.enableVolatilityTier(
+            this.uniV3String,
+            500, // feeTier
+            20,  // tickSpread
+            5,   // auctionLength (seconds)
+            volTier1
+        )
+        await enableVolTier1.wait();
+
+        hre.nonce += 1;
+
+        const volTier2: VolatilityTier = {
+            minAmountPerAuction: BN_ZERO,
+            auctionLength: 10,
+            blockTime: 1000,
+            syncFee: 500,
+            fillFee: 5000,
+            minPositionWidth: 5,
+            minAmountLowerPriced: false
+        }
+
+        const enableVolTier2 = await hre.props.coverPoolManager.enableVolatilityTier(
+            this.uniV3String,
+            500, // feeTier
+            40,  // tickSpread
+            10,  // auctionLength (seconds)
+            volTier2
+        )
+        await enableVolTier2.wait();
+
+        hre.nonce += 1;
+
         const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
             hre.props.coverPoolFactory.address
         )
@@ -305,14 +365,18 @@ export class InitialSetup {
 
         hre.nonce += 1
 
+        const poolParams1: CoverPoolParams = {
+            implName: this.uniV3String,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            feeTier: 500,
+            tickSpread: 20,
+            twapLength: 5
+        }
+
         // create first cover pool
         let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '20',
-            '5'
+            poolParams1
         )
         await createPoolTxn.wait()
 
@@ -336,14 +400,18 @@ export class InitialSetup {
             [hre.props.uniswapV3PoolMock.address]
         )
 
+        const poolParams2: CoverPoolParams = {
+            implName: this.uniV3String,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            feeTier: 500,
+            tickSpread: 40,
+            twapLength: 10
+        }
+
         // create second cover pool
         createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '40',
-            '10'
+            poolParams2
         )
         await createPoolTxn.wait()
 
@@ -366,8 +434,6 @@ export class InitialSetup {
             hre.props.coverPool2,
             [hre.props.uniswapV3PoolMock.address]
         )
-
-        //TODO: for coverPool2 we need a second mock pool with a different cardinality
 
         await hre.props.uniswapV3PoolMock.setObservationCardinality('10', '10')
 
@@ -444,15 +510,19 @@ export class InitialSetup {
 
     public async createCoverPool(): Promise<void> {
 
+        const poolParams: CoverPoolParams = {
+            implName: this.uniV3String,
+            tokenIn: hre.props.token0.address,
+            tokenOut: hre.props.token1.address,
+            feeTier: 500,
+            tickSpread: 40,
+            twapLength: 5
+        }
+
         await hre.props.coverPoolFactory
           .connect(hre.props.admin)
           .createCoverPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '40',
-            '40'
+            poolParams
         )
         hre.nonce += 1
     }

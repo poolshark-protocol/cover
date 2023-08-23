@@ -4,8 +4,7 @@ pragma solidity 0.8.13;
 abstract contract CoverPoolManagerEvents {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event VolatilityTierEnabled(
-        address sourceAddress,
-        address curveAddress,
+        address implAddress,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
@@ -17,10 +16,10 @@ abstract contract CoverPoolManagerEvents {
         int16   minPositionWidth,
         bool    minLowerPriced
     );
-    event TwapSourceEnabled(
-        bytes32  sourceName,
+    event ImplementationEnabled(
+        bytes32 implName,
+        address implAddress,
         address sourceAddress,
-        address curveAddress,
         address factoryAddress
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);

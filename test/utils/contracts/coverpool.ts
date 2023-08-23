@@ -20,6 +20,50 @@ export interface PoolState {
     price: BigNumber
 }
 
+export interface VolatilityTier {
+    minAmountPerAuction: BigNumber // based on 18 decimals and then converted based on token decimals
+    auctionLength: number
+    blockTime: number  // average block time where 1e3 is 1 second
+    syncFee: number
+    fillFee: number
+    minPositionWidth: number
+    minAmountLowerPriced: boolean
+}
+
+export interface CoverImmutables {
+    source: string
+    bounds: PriceBounds
+    owner: string
+    token0: string
+    token1: string
+    poolImpl: string
+    inputPool: string
+    minAmountPerAuction: BigNumber
+    genesisTime: number
+    minPositionWidth: number
+    tickSpread: number
+    twapLength: number
+    auctionLength: number
+    blockTime: number
+    token0Decimals: number
+    token1Decimals: number
+    minAmountLowerPriced: boolean
+}
+
+export interface PriceBounds {
+    min: BigNumber
+    max: BigNumber
+}
+
+export interface CoverPoolParams {
+    implName: any // bytes
+    tokenIn: string
+    tokenOut: string
+    feeTier: number
+    tickSpread: number
+    twapLength: number
+}
+
 export interface Tick {
     liquidityDelta: BigNumber
     amountInDeltaMaxStashed: BigNumber
@@ -350,7 +394,7 @@ export async function validateMint(params: ValidateMintParams) {
     }
 
     if (revertMessage == '') {
-        console.log('MINT CALL')
+        // console.log('MINT CALL')
         const txn = await hre.props.coverPool
             .connect(params.signer)
             .mint({
@@ -509,7 +553,7 @@ export async function validateBurn(params: ValidateBurnParams) {
             upper: upper,
             zeroForOne: zeroForOne
         })
-        console.log('BURN CALL')
+        // console.log('BURN CALL')
         const burnTxn = await hre.props.coverPool
             .connect(signer)
             .burn({

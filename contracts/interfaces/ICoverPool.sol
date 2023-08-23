@@ -2,13 +2,14 @@
 pragma solidity ^0.8.13;
 
 import './ICoverPoolStructs.sol';
+import './structs/PoolsharkStructs.sol';
 
 /**
  * @title ICoverPool
  * @author Poolshark
  * @notice Defines the basic interface for a Cover Pool.
  */
-interface ICoverPool is ICoverPoolStructs {
+interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
     /**
      * @custom:struct MintParams
      */
@@ -126,49 +127,7 @@ interface ICoverPool is ICoverPoolStructs {
         BurnParams memory params
     ) external;
 
-    /**
-     * @custom:struct SwapParams
-     */
-    struct SwapParams {
-        /**
-         * @custom:field to
-         * @notice Address for the receiver of the swap output
-         */
-        address to;
-
-        /**
-         * @custom:field priceLimit
-         * @dev The Q64.96 square root price at which to stop swapping.
-         */
-        uint160 priceLimit;
-
-        /**
-         * @custom:field amount
-         * @dev The exact input amount if exactIn = true
-         * @dev The exact output amount if exactIn = false.
-         */
-        uint128 amount;
-
-        /**
-         * @custom:field zeroForOne
-         * @notice True if amount is an input amount.
-         * @notice False if amount is an output amount. 
-         */
-        bool exactIn;
-
-        /**
-         * @custom:field zeroForOne
-         * @notice True if swapping token0 for token1.
-         * @notice False if swapping in token1 for token0. 
-         */
-        bool zeroForOne;
-        
-        /**
-         * @custom:field callbackData
-         * @notice Data to be passed through to the swap callback. 
-         */
-         bytes callbackData;
-    }
+    
 
     /**
      * @notice Swaps `tokenIn` for `tokenOut`. 
@@ -187,38 +146,6 @@ interface ICoverPool is ICoverPoolStructs {
         int256 amount0Delta,
         int256 amount1Delta
     );
-
-    /**
-     * @custom:struct QuoteParams
-     */
-    struct QuoteParams {
-        /**
-         * @custom:field priceLimit
-         * @dev The Q64.96 square root price at which to stop swapping.
-         */
-        uint160 priceLimit;
-
-        /**
-         * @custom:field amount
-         * @dev The exact input amount if exactIn = true
-         * @dev The exact output amount if exactIn = false.
-         */
-        uint128 amount;
-
-        /**
-         * @custom:field zeroForOne
-         * @notice True if amount is an input amount.
-         * @notice False if amount is an output amount. 
-         */
-        bool exactIn;
-
-        /**
-         * @custom:field zeroForOne
-         * @notice True if swapping token0 for token1.
-         * @notice False if swapping in token1 for token0. 
-         */
-        bool zeroForOne;
-    }
 
     /**
      * @notice Quotes the amount of `tokenIn` for `tokenOut`. 
@@ -316,5 +243,17 @@ interface ICoverPool is ICoverPoolStructs {
     ) external returns (
         uint128 token0Fees,
         uint128 token1Fees
+    );
+
+    function immutables(
+    ) external view returns (
+        Immutables memory constants
+    );
+
+    function priceBounds(
+        int16 tickSpacing
+    ) external pure returns (
+        uint160 minPrice,
+        uint160 maxPrice
     );
 }

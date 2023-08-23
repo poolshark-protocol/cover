@@ -43,12 +43,13 @@ abstract contract CoverPositionErrors {
 
 abstract contract CoverPoolFactoryErrors {
     error OwnerOnly();
-    error InvalidPoolTokenAddress();
+    error InvalidTokenAddress();
+    error InvalidTokenDecimals();
     error PoolAlreadyExists();
     error FeeTierNotSupported();
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
-    error TwapSourceNotFound();
+    error ImplNotFound();
     error CurveMathNotFound();
     error TickSpreadNotMultipleOfTickSpacing();
     error TickSpreadNotAtLeastDoubleTickSpread();

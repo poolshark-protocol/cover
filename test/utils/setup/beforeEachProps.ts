@@ -28,6 +28,7 @@ export interface BeforeEachProps {
     coverPool2: CoverPool
     coverPoolManager: CoverPoolManager
     coverPoolFactory: CoverPoolFactory
+    coverPoolImpl: CoverPool
     uniswapV3FactoryMock: UniswapV3FactoryMock
     uniswapV3PoolMock: UniswapV3PoolMock
     tickMapLib: TickMap
@@ -79,6 +80,7 @@ export class GetBeforeEach {
         let coverPool2: CoverPool
         let coverPoolManager: CoverPoolManager
         let coverPoolFactory: CoverPoolFactory
+        let coverPoolImpl: CoverPool
         let uniswapV3FactoryMock: UniswapV3FactoryMock
         let uniswapV3PoolMock: UniswapV3PoolMock
         let tickMapLib: TickMap
@@ -108,6 +110,7 @@ export class GetBeforeEach {
             coverPool2,
             coverPoolManager,
             coverPoolFactory,
+            coverPoolImpl,
             uniswapV3FactoryMock,
             uniswapV3PoolMock,
             tickMapLib,
