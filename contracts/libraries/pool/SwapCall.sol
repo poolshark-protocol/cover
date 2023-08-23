@@ -25,10 +25,12 @@ library SwapCall {
 
     function perform(
         ICoverPool.SwapParams memory params,
-        ICoverPoolStructs.SwapCache memory cache
+        ICoverPoolStructs.SwapCache memory cache,
+        ICoverPoolStructs.GlobalState storage globalState,
+        ICoverPoolStructs.PoolState storage pool0,
+        ICoverPoolStructs.PoolState storage pool1
     ) external returns (ICoverPoolStructs.SwapCache memory) {
-        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amountIn);
-
+        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amount);
         {
             ICoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
             cache = ICoverPoolStructs.SwapCache({
@@ -39,13 +41,14 @@ library SwapCall {
                 pool1: cache.pool1,
                 price: pool.price,
                 liquidity: pool.liquidity,
-                amountIn: params.amountIn,
+                amountLeft: params.amount,
                 auctionDepth: block.timestamp - cache.constants.genesisTime - cache.state.auctionStart,
                 auctionBoost: 0,
-                input: params.amountIn,
+                input: 0,
                 output: 0,
-                inputBoosted: 0,
-                amountInDelta: 0
+                amountBoosted: 0,
+                amountInDelta: 0,
+                exactIn: true
             });
         }
         /// @dev - liquidity range is limited to one tick
@@ -59,23 +62,52 @@ library SwapCall {
             cache.pool0.amountInDelta += uint128(cache.amountInDelta);
         }
 
+        // save state to storage before callback
+        save(cache, globalState, pool0, pool1);
+    
         if (params.zeroForOne) {
-            if (cache.input + cache.syncFees.token0 > 0) {
-                SafeTransfers.transferOut(params.refundTo, cache.constants.token0, cache.input + cache.syncFees.token0);
+            if (cache.amountLeft + cache.syncFees.token0 > 0) {
+                SafeTransfers.transferOut(params.to, cache.constants.token0, cache.amountLeft + cache.syncFees.token0);
             }
             if (cache.output + cache.syncFees.token1 > 0) {
                 SafeTransfers.transferOut(params.to, cache.constants.token1, cache.output + cache.syncFees.token1);
-                emit SwapPool1(params.to, uint128(params.amountIn - cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
+                emit SwapPool1(params.to, uint128(cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
             }
         } else {
-            if (cache.input + cache.syncFees.token1 > 0) {
-                SafeTransfers.transferOut(params.refundTo, cache.constants.token1, cache.input + cache.syncFees.token1);
+            if (cache.amountLeft + cache.syncFees.token1 > 0) {
+                SafeTransfers.transferOut(params.to, cache.constants.token1, cache.amountLeft + cache.syncFees.token1);
             }
             if (cache.output + cache.syncFees.token0 > 0) {
                 SafeTransfers.transferOut(params.to, cache.constants.token0, cache.output + cache.syncFees.token0);
-                emit SwapPool0(params.to, uint128(params.amountIn - cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
+                emit SwapPool0(params.to, uint128(cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
             }
         }
         return cache;
+    }
+
+    function save(
+        ICoverPoolStructs.SwapCache memory cache,
+        ICoverPoolStructs.GlobalState storage globalState,
+        ICoverPoolStructs.PoolState storage pool0,
+        ICoverPoolStructs.PoolState storage pool1
+    ) internal {
+        globalState.latestPrice = cache.state.latestPrice;
+        globalState.liquidityGlobal = cache.state.liquidityGlobal;
+        globalState.lastTime = cache.state.lastTime;
+        globalState.auctionStart = cache.state.auctionStart;
+        globalState.accumEpoch = cache.state.accumEpoch;
+        globalState.latestTick = cache.state.latestTick;
+
+        pool0.price = cache.pool0.price;
+        pool0.liquidity = cache.pool0.liquidity;
+        pool0.amountInDelta = cache.pool0.amountInDelta;
+        pool0.amountInDeltaMaxClaimed = cache.pool0.amountInDeltaMaxClaimed;
+        pool0.amountOutDeltaMaxClaimed = cache.pool0.amountOutDeltaMaxClaimed;
+
+        pool1.price = cache.pool1.price;
+        pool1.liquidity = cache.pool1.liquidity;
+        pool1.amountInDelta = cache.pool1.amountInDelta;
+        pool1.amountInDeltaMaxClaimed = cache.pool1.amountInDeltaMaxClaimed;
+        pool1.amountOutDeltaMaxClaimed = cache.pool1.amountOutDeltaMaxClaimed;
     }
 }

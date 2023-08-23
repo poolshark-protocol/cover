@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
-import './math/FullPrecisionMath.sol';
+import './math/OverflowMath.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/modules/sources/ITwapSource.sol';
 import './TickMap.sol';
@@ -30,18 +30,18 @@ library Ticks {
         ICoverPoolStructs.SwapCache memory cache,
         ICoverPoolStructs.Immutables memory constants
     ) internal pure returns (ICoverPoolStructs.SwapCache memory) {
-        if ((zeroForOne ? priceLimit >= cache.price 
-                        : priceLimit <= cache.price) 
-            || cache.liquidity == 0 
-            || cache.input == 0
-        )
+        if ((zeroForOne ? priceLimit >= cache.price
+                        : priceLimit <= cache.price) ||
+            (cache.liquidity == 0))
+        {
             return cache;
+        }
         uint256 nextPrice = state.latestPrice;
         // determine input boost from tick auction
         cache.auctionBoost = ((cache.auctionDepth <= constants.auctionLength) ? cache.auctionDepth
                                                                               : constants.auctionLength
                              ) * 1e14 / constants.auctionLength * uint16(constants.tickSpread);
-        cache.inputBoosted = cache.input * (1e18 + cache.auctionBoost) / 1e18;
+        cache.amountBoosted = cache.amountLeft * (1e18 + cache.auctionBoost) / 1e18;
         if (zeroForOne) {
             // trade token 0 (x) for token 1 (y)
             // price decreases
@@ -49,20 +49,25 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDx = ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, false);
+            uint256 amountMax = cache.exactIn ? ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true)
+                                              : ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
             // check if all input is used
-            if (cache.inputBoosted <= maxDx) {
+            if (cache.amountBoosted <= amountMax) {
                 // calculate price after swap
-                uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
-                cache.output += ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
-                cache.price = newPrice;
-                cache.input = 0;
-                cache.amountInDelta = cache.amountIn;
-            } else if (maxDx > 0) {
-                cache.output += ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
-                cache.price = nextPrice;
-                cache.input -= maxDx * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
-                cache.amountInDelta = cache.amountIn - cache.input;
+                if (cache.exactIn) {
+                    uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.amountBoosted, zeroForOne, cache.exactIn);
+                    cache.input = cache.amountLeft;
+                    cache.output += ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
+                    cache.price = newPrice;
+                    cache.amountLeft = 0;
+                }
+            } else if (amountMax > 0) {
+                if (cache.exactIn) {
+                    cache.input = amountMax * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
+                    cache.output = ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
+                    cache.price = nextPrice;
+                    cache.amountLeft -= cache.input;
+                }
             }
         } else {
             // price increases
@@ -70,22 +75,28 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
-            uint256 maxDy = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, false);
-            if (cache.inputBoosted <= maxDy) {
+            uint256 amountMax = cache.exactIn ? ConstantProduct.getDy(cache.liquidity, uint256(cache.price), nextPrice, true)
+                                              : ConstantProduct.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
+            if (cache.amountBoosted <= amountMax) {
                 // calculate price after swap
-                uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.inputBoosted, zeroForOne);
-                cache.output += ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
-                cache.price = newPrice;
-                cache.input = 0;
-                cache.amountInDelta = cache.amountIn;
-            } else if (maxDy > 0) {
-                cache.output += ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
-                cache.price = nextPrice;
-                cache.input -= maxDy * (1e18 - cache.auctionBoost) / 1e18; 
-                cache.amountInDelta = cache.amountIn - cache.input;
+                if (cache.exactIn) {
+                    uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.amountBoosted, zeroForOne, cache.exactIn);
+                    cache.input = cache.amountLeft;
+                    cache.output += ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
+                    cache.price = newPrice;
+                    cache.amountLeft = 0;
+                }
+            } else if (amountMax > 0) {
+                if (cache.exactIn) {
+                    cache.input = amountMax * (1e18 - cache.auctionBoost) / 1e18; 
+                    cache.output = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
+                    cache.price = nextPrice;
+                    cache.amountLeft -= cache.input;
+                }
             }
         }
-        return (cache);
+        cache.amountInDelta = cache.input;
+        return cache;
     }
 
     function initialize(

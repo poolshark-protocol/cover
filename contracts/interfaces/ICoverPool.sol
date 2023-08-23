@@ -137,29 +137,37 @@ interface ICoverPool is ICoverPoolStructs {
         address to;
 
         /**
-         * @custom:field refundTo
-         * @notice Address for the receiver of any fees or refunds
-         */
-        address refundTo;
-
-        /**
          * @custom:field priceLimit
          * @dev The Q64.96 square root price at which to stop swapping.
          */
         uint160 priceLimit;
 
         /**
-         * @custom:field amountIn
-         * @dev The tokenIn amount being passed into the swap.
+         * @custom:field amount
+         * @dev The exact input amount if exactIn = true
+         * @dev The exact output amount if exactIn = false.
          */
-        uint128 amountIn;
+        uint128 amount;
 
         /**
          * @custom:field zeroForOne
-         * @notice True if swapping in token0, the first token address in lexographical order
-         * @notice False if swapping in token1, the second token address in lexographical order 
+         * @notice True if amount is an input amount.
+         * @notice False if amount is an output amount. 
+         */
+        bool exactIn;
+
+        /**
+         * @custom:field zeroForOne
+         * @notice True if swapping token0 for token1.
+         * @notice False if swapping in token1 for token0. 
          */
         bool zeroForOne;
+        
+        /**
+         * @custom:field callbackData
+         * @notice Data to be passed through to the swap callback. 
+         */
+         bytes callbackData;
     }
 
     /**
@@ -170,16 +178,14 @@ interface ICoverPool is ICoverPoolStructs {
                The pool price will decrease if `zeroForOne` is true.
                The pool price will increase if `zeroForOne` is false. 
      * @param params The parameters for the function. See SwapParams above.
-     * @return inAmount The amount of tokenIn to be spent
-     * @return outAmount The amount of tokenOut to be received
-     * @return priceAfter The Q64.96 square root price after the swap
+     * @return amount0Delta The amount of token0 spent (negative) or received (positive) by the user
+     * @return amount1Delta The amount of token1 spent (negative) or received (positive) by the user
      */
     function swap(
         SwapParams memory params
     ) external returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
+        int256 amount0Delta,
+        int256 amount1Delta
     );
 
     /**
@@ -193,15 +199,23 @@ interface ICoverPool is ICoverPoolStructs {
         uint160 priceLimit;
 
         /**
-         * @custom:field amountIn
-         * @dev The tokenIn amount being passed into the swap.
+         * @custom:field amount
+         * @dev The exact input amount if exactIn = true
+         * @dev The exact output amount if exactIn = false.
          */
-        uint128 amountIn;
+        uint128 amount;
 
         /**
          * @custom:field zeroForOne
-         * @notice True if swapping in token0, the first token address in lexographical order
-         * @notice False if swapping in token1, the second token address in lexographical order 
+         * @notice True if amount is an input amount.
+         * @notice False if amount is an output amount. 
+         */
+        bool exactIn;
+
+        /**
+         * @custom:field zeroForOne
+         * @notice True if swapping token0 for token1.
+         * @notice False if swapping in token1 for token0. 
          */
         bool zeroForOne;
     }
@@ -214,7 +228,7 @@ interface ICoverPool is ICoverPoolStructs {
                The pool price will decrease if `zeroForOne` is true.
                The pool price will increase if `zeroForOne` is false. 
      * @param params The parameters for the function. See SwapParams above.
-     * @return inAmount The amount of tokenIn to be spent
+     * @return inAmount  The amount of tokenIn to be spent
      * @return outAmount The amount of tokenOut to be received
      * @return priceAfter The Q64.96 square root price after the swap
      */
@@ -222,7 +236,7 @@ interface ICoverPool is ICoverPoolStructs {
         QuoteParams memory params
     ) external view returns (
         int256 inAmount,
-        uint256 outAmount,
+        int256 outAmount,
         uint256 priceAfter
     );
 

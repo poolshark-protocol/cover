@@ -6,7 +6,6 @@ import '../../interfaces/external/uniswap/v3/IUniswapV3Pool.sol';
 import '../../interfaces/ICoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
-import 'hardhat/console.sol';
 
 contract UniswapV3Source is ITwapSource {
     error WaitUntilBelowMaxTick();

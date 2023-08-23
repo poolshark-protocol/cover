@@ -24,13 +24,14 @@ library QuoteCall {
             pool1: cache.pool1,
             price: pool.price,
             liquidity: pool.liquidity,
-            amountIn: params.amountIn,
+            amountLeft: params.amount,
             auctionDepth: block.timestamp - cache.constants.genesisTime - cache.state.auctionStart,
             auctionBoost: 0,
-            input: params.amountIn,
+            input: 0,
             output: 0,
-            inputBoosted: 0,
-            amountInDelta: 0
+            amountBoosted: 0,
+            amountInDelta: 0,
+            exactIn: true
         });
     }
         cache = Ticks.quote(params.zeroForOne, params.priceLimit, cache.state, cache, cache.constants);

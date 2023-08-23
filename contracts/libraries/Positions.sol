@@ -6,7 +6,7 @@ import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import '../interfaces/ICoverPool.sol';
-import './math/FullPrecisionMath.sol';
+import './math/OverflowMath.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';

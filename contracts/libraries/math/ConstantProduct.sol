@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
-import './constant-product/DyDxMath.sol';
-import './constant-product/TickMath.sol';
+import './OverflowMath.sol';
+import '../../interfaces/ICoverPoolStructs.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library ConstantProduct {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
+
+    struct PriceBounds {
+        uint160 min;
+        uint160 max;
+    }
 
     /////////////////////////////////////////////////////////////
     ///////////////////////// DYDX MATH /////////////////////////
@@ -18,7 +23,14 @@ library ConstantProduct {
         uint256 priceUpper,
         bool roundUp
     ) internal pure returns (uint256 dy) {
-        return _getDy(liquidity, priceLower, priceUpper, roundUp);
+        unchecked {
+            if (liquidity == 0) return 0;
+            if (roundUp) {
+                dy = OverflowMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
+            } else {
+                dy = OverflowMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
+            }
+        }
     }
 
     function getDx(
@@ -27,35 +39,23 @@ library ConstantProduct {
         uint256 priceUpper,
         bool roundUp
     ) internal pure returns (uint256 dx) {
-        return _getDx(liquidity, priceLower, priceUpper, roundUp);
-    }
-
-    function _getDy(
-        uint256 liquidity,
-        uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
-    ) internal pure returns (uint256 dy) {
         unchecked {
+            if (liquidity == 0) return 0;
             if (roundUp) {
-                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
+                dx = OverflowMath.divRoundingUp(
+                        OverflowMath.mulDivRoundingUp(
+                            liquidity << 96, 
+                            priceUpper - priceLower,
+                            priceUpper
+                        ),
+                        priceLower
+                );
             } else {
-                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
-            }
-        }
-    }
-
-    function _getDx(
-        uint256 liquidity,
-        uint256 priceLower,
-        uint256 priceUpper,
-        bool roundUp
-    ) internal pure returns (uint256 dx) {
-        unchecked {
-            if (roundUp) {
-                dx = FullPrecisionMath.divRoundingUp(FullPrecisionMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
-            } else {
-                dx = FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
+                dx = OverflowMath.mulDiv(
+                        liquidity << 96,
+                        priceUpper - priceLower,
+                        priceUpper
+                ) / priceLower;
             }
         }
     }
@@ -68,18 +68,23 @@ library ConstantProduct {
         uint256 dx
     ) internal pure returns (uint256 liquidity) {
         unchecked {
-            if (priceUpper == currentPrice) {
-                liquidity = FullPrecisionMath.mulDiv(dy, Q96, priceUpper - priceLower);
-            } else if (currentPrice == priceLower) {
-                liquidity = FullPrecisionMath.mulDiv(
+            if (priceUpper <= currentPrice) {
+                liquidity = OverflowMath.mulDiv(dy, Q96, priceUpper - priceLower);
+            } else if (currentPrice <= priceLower) {
+                liquidity = OverflowMath.mulDiv(
                     dx,
-                    FullPrecisionMath.mulDiv(priceLower, priceUpper, Q96),
+                    OverflowMath.mulDiv(priceLower, priceUpper, Q96),
                     priceUpper - priceLower
                 );
             } else {
-                /// @dev - price should either be priceUpper or priceLower
-                require (false, 'PriceOutsideBounds()');
-            }  
+                uint256 liquidity0 = OverflowMath.mulDiv(
+                    dx,
+                    OverflowMath.mulDiv(priceUpper, currentPrice, Q96),
+                    priceUpper - currentPrice
+                );
+                uint256 liquidity1 = OverflowMath.mulDiv(dy, Q96, currentPrice - priceLower);
+                liquidity = liquidity0 < liquidity1 ? liquidity0 : liquidity1;
+            }
         }
     }
 
@@ -91,33 +96,59 @@ library ConstantProduct {
         bool roundUp
     ) internal pure returns (uint128 token0amount, uint128 token1amount) {
         if (priceUpper <= currentPrice) {
-            token1amount = uint128(_getDy(liquidityAmount, priceLower, priceUpper, roundUp));
+            token1amount = uint128(getDy(liquidityAmount, priceLower, priceUpper, roundUp));
         } else if (currentPrice <= priceLower) {
-            token0amount = uint128(_getDx(liquidityAmount, priceLower, priceUpper, roundUp));
+            token0amount = uint128(getDx(liquidityAmount, priceLower, priceUpper, roundUp));
         } else {
-            token0amount = uint128(_getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
-            token1amount = uint128(_getDy(liquidityAmount, priceLower, currentPrice, roundUp));
+            token0amount = uint128(getDx(liquidityAmount, currentPrice, priceUpper, roundUp));
+            token1amount = uint128(getDy(liquidityAmount, priceLower, currentPrice, roundUp));
         }
+        if (token0amount > uint128(type(int128).max)) require(false, 'AmountsOutOfBounds()');
+        if (token1amount > uint128(type(int128).max)) require(false, 'AmountsOutOfBounds()');
     }
 
     function getNewPrice(
         uint256 price,
         uint256 liquidity,
-        uint256 input,
-        bool zeroForOne
+        uint256 amount,
+        bool zeroForOne,
+        bool exactIn
     ) internal pure returns (
         uint256 newPrice
     ) {
-        if (zeroForOne) {
-            uint256 liquidityPadded = liquidity << 96;
-            newPrice = FullPrecisionMath.mulDivRoundingUp(
-                            liquidityPadded,
-                            price,
-                            liquidityPadded + price * input
-                       );
+        if (exactIn) {
+            if (zeroForOne) {
+                uint256 liquidityPadded = liquidity << 96;
+                newPrice = OverflowMath.mulDivRoundingUp(
+                        liquidityPadded,
+                        price,
+                        liquidityPadded + price * amount
+                    );
+            } else {
+                newPrice = price + (amount << 96) / liquidity;
+            }
         } else {
-            newPrice = price + FullPrecisionMath.mulDiv(input, Q96, liquidity);
+            if (zeroForOne) {
+                newPrice = price - 
+                        OverflowMath.divRoundingUp(amount << 96, liquidity);
+            } else {
+                uint256 liquidityPadded = uint256(liquidity) << 96;
+                newPrice = OverflowMath.mulDivRoundingUp(
+                        liquidityPadded, 
+                        price,
+                        liquidityPadded - uint256(price) * amount
+                );
+            }
         }
+    }
+
+    function getPrice(
+        uint256 sqrtPrice
+    ) internal pure returns (uint256 price) {
+        if (sqrtPrice >= 2 ** 48)
+            price = OverflowMath.mulDiv(sqrtPrice, sqrtPrice, 2 ** 96);
+        else
+            price = sqrtPrice;
     }
 
     /////////////////////////////////////////////////////////////
@@ -157,7 +188,7 @@ library ConstantProduct {
     ) internal pure returns (
         uint160 price
     ) {
-        ICoverPoolStructs.Immutables memory constants;
+        ICoverPoolStructs.Immutables  memory constants;
         constants.tickSpread = tickSpacing;
         return getPriceAtTick(minTick(tickSpacing), constants);
     }
@@ -167,7 +198,7 @@ library ConstantProduct {
     ) internal pure returns (
         uint160 price
     ) {
-        ICoverPoolStructs.Immutables memory constants;
+        ICoverPoolStructs.Immutables  memory constants;
         constants.tickSpread = tickSpacing;
         return getPriceAtTick(maxTick(tickSpacing), constants);
     }
@@ -187,7 +218,7 @@ library ConstantProduct {
 
     function checkPrice(
         uint160 price,
-        ITickMath.PriceBounds memory bounds
+        PriceBounds memory bounds
     ) internal pure {
         if (price < bounds.min || price >= bounds.max) require (false, 'PriceOutOfBounds()');
     }
@@ -242,10 +273,10 @@ library ConstantProduct {
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
     function getTickAtPrice(
         uint160 price,
-        ICoverPoolStructs.Immutables memory constants
+        ICoverPoolStructs.Immutables  memory constants
     ) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
-        if (price < constants.bounds.min || price >= constants.bounds.max)
+        if (price < constants.bounds.min || price > constants.bounds.max)
             require (false, 'PriceOutOfBounds()');
         uint256 ratio = uint256(price) << 32;
 

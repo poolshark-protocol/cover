@@ -87,7 +87,7 @@ contract CoverPool is
         MintCache memory cache = MintCache({
             state: globalState,
             position: Position(0,0,0,0,0),
-            constants: _immutables(),
+            constants: immutables(),
             syncFees: SyncFees(0,0),
             liquidityMinted: 0,
             pool0: pool0,
@@ -127,7 +127,7 @@ contract CoverPool is
             state: globalState,
             position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                         : positions1[msg.sender][params.lower][params.upper],
-            constants: _immutables(),
+            constants: immutables(),
             syncFees: SyncFees(0,0),
             pool0: pool0,
             pool1: pool1
@@ -162,16 +162,15 @@ contract CoverPool is
     function swap(
         SwapParams memory params
     ) external override lock returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
+        int256,
+        int256
     ) 
     {
         SwapCache memory cache;
         cache.pool0 = pool0;
         cache.pool1 = pool1;
         cache.state = globalState;
-        cache.constants = _immutables();
+        cache.constants = immutables();
         (
             cache.state,
             cache.syncFees,
@@ -184,25 +183,26 @@ contract CoverPool is
             cache.pool0,
             cache.pool1,
             cache.state,
-            _immutables()
+            immutables()
         );
 
-        cache = SwapCall.perform(params, cache);
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
-        globalState = cache.state;
+        cache = SwapCall.perform(
+            params,
+            cache,
+            globalState,
+            pool0,
+            pool1
+        );
 
         if (params.zeroForOne) {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-                cache.output + cache.syncFees.token1,
-                cache.price 
+                -int256(cache.input) + int128(cache.syncFees.token0),
+                int256(cache.output + cache.syncFees.token1)
             );
         } else {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-                cache.output + cache.syncFees.token0,
-                cache.price 
+                int256(cache.output + cache.syncFees.token0),
+                -int256(cache.input) + int128(cache.syncFees.token1)
             );
         }
     }
@@ -211,14 +211,14 @@ contract CoverPool is
         QuoteParams memory params
     ) external view override returns (
         int256 inAmount,
-        uint256 outAmount,
+        int256 outAmount,
         uint256 priceAfter
     ) {
         SwapCache memory cache;
         cache.pool0 = pool0;
         cache.pool1 = pool1;
         cache.state = globalState;
-        cache.constants = _immutables();
+        cache.constants = immutables();
         (
             cache.state,
             cache.syncFees,
@@ -236,15 +236,15 @@ contract CoverPool is
         cache = QuoteCall.perform(params, cache);
         if (params.zeroForOne) {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-                cache.output + cache.syncFees.token1,
-                cache.price 
+                int256(cache.input) - int128(cache.syncFees.token0),
+                int256(cache.output + cache.syncFees.token1),
+                cache.price
             );
         } else {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-                cache.output + cache.syncFees.token0,
-                cache.price 
+                int256(cache.input) - int128(cache.syncFees.token1),
+                int256(cache.output + cache.syncFees.token0),
+                cache.price
             );
         }
     }
@@ -269,7 +269,7 @@ contract CoverPool is
                 params.claim,
                 params.zeroForOne
             ),
-            _immutables()
+            immutables()
         );
     }
 
@@ -294,7 +294,7 @@ contract CoverPool is
         SafeTransfers.transferOut(feeTo, token1, token1Fees);
     }
 
-    function _immutables() private view returns (
+    function immutables() public view returns (
         Immutables memory
     ) {
         return Immutables(
@@ -318,7 +318,7 @@ contract CoverPool is
 
     function _prelock() private {
         if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
+            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, immutables());
         }
         if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
         if (globalState.unlocked == 2) revert Locked();

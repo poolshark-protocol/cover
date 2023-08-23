@@ -158,13 +158,14 @@ interface ICoverPoolStructs {
         PoolState pool1;
         uint256 price;
         uint256 liquidity;
-        uint256 amountIn;
+        uint256 amountLeft;
         uint256 input;
         uint256 output;
-        uint256 inputBoosted;
+        uint256 amountBoosted;
         uint256 auctionDepth;
         uint256 auctionBoost;
         uint256 amountInDelta;
+        bool exactIn;
     }
 
     struct PositionCache {
