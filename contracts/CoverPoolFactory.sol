@@ -8,7 +8,6 @@ import './interfaces/ICoverPoolFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
 import './base/structs/CoverPoolManagerStructs.sol';
 import './utils/CoverPoolErrors.sol';
-import 'hardhat/console.sol';
 
 contract CoverPoolFactory is 
     ICoverPoolFactory,
@@ -56,15 +55,15 @@ contract CoverPoolFactory is
             (
                 address poolImpl,
                 address twapSource
-            ) = ICoverPoolManager(owner).implementations(params.implName);
-            if (poolImpl == address(0) || twapSource == address(0)) revert ImplNotFound();
+            ) = ICoverPoolManager(owner).poolTypes(params.poolType);
+            if (poolImpl == address(0) || twapSource == address(0)) revert PoolTypeNotFound();
             constants.poolImpl = poolImpl;
             constants.source = ITwapSource(twapSource);
         }
         // get volatility tier config
         {
             VolatilityTier memory config = ICoverPoolManager(owner).volatilityTiers(
-                params.implName,
+                params.poolType,
                 params.feeTier,
                 params.tickSpread,
                 params.twapLength
@@ -95,7 +94,7 @@ contract CoverPoolFactory is
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
-        console.log('about to grab price bounds', constants.poolImpl);
+
         (
             constants.bounds.min,
             constants.bounds.max
@@ -123,32 +122,26 @@ contract CoverPoolFactory is
     }
 
     function getCoverPool(
-        bytes32 implName,
-        address tokenIn,
-        address tokenOut,
-        uint16 feeTier,
-        int16  tickSpread,
-        uint16 twapLength
+        CoverPoolParams memory params
     ) external view override returns (address) {
         // set lexographical token address ordering
-        address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
-        address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
+        address token0 = params.tokenIn < params.tokenOut ? params.tokenIn : params.tokenOut;
+        address token1 = params.tokenIn < params.tokenOut ? params.tokenOut : params.tokenIn;
 
         (
             ,
             address source
-        ) = ICoverPoolManager(owner).implementations(implName);
-        console.log('getting input pool', source);
-        address inputPool  = ITwapSource(source).getPool(token0, token1, feeTier);
-        console.log('input pool:', inputPool);
+        ) = ICoverPoolManager(owner).poolTypes(params.poolType);
+        address inputPool  = ITwapSource(source).getPool(token0, token1, params.feeTier);
+
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
                                     token0,
                                     token1,
                                     source,
                                     inputPool,
-                                    tickSpread,
-                                    twapLength
+                                    params.tickSpread,
+                                    params.twapLength
                                 ));
 
         return coverPools[key];

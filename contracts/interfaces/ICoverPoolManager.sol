@@ -7,8 +7,8 @@ import '../interfaces/ICoverPoolStructs.sol';
 interface ICoverPoolManager is ICoverPoolStructs {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
-    function implementations(
-        bytes32 implName
+    function poolTypes(
+        bytes32 poolType
     ) external view returns (
         address implAddress,
         address sourceAddress

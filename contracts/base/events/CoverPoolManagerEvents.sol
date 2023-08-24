@@ -16,8 +16,8 @@ abstract contract CoverPoolManagerEvents {
         int16   minPositionWidth,
         bool    minLowerPriced
     );
-    event ImplementationEnabled(
-        bytes32 implName,
+    event PoolTypeEnabled(
+        bytes32 poolType,
         address implAddress,
         address sourceAddress,
         address factoryAddress

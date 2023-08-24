@@ -304,10 +304,7 @@ export class InitialSetup {
                 'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
             }
         )
-
-        console.log('cover pool impl deployed', hre.props.coverPoolImpl.address)
-
-        const enableImplTxn = await hre.props.coverPoolManager.enableImplementation(
+        const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
             this.uniV3String,
             hre.props.coverPoolImpl.address,
             hre.props.uniswapV3Source.address
@@ -377,7 +374,7 @@ export class InitialSetup {
         hre.nonce += 1
 
         const poolParams1: CoverPoolParams = {
-            implName: this.uniV3String,
+            poolType: this.uniV3String,
             tokenIn: hre.props.token0.address,
             tokenOut: hre.props.token1.address,
             feeTier: 500,
@@ -394,12 +391,7 @@ export class InitialSetup {
         hre.nonce += 1
 
         let coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '20',
-            '5'
+            poolParams1
         )
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
 
@@ -412,7 +404,7 @@ export class InitialSetup {
         )
 
         const poolParams2: CoverPoolParams = {
-            implName: this.uniV3String,
+            poolType: this.uniV3String,
             tokenIn: hre.props.token0.address,
             tokenOut: hre.props.token1.address,
             feeTier: 500,
@@ -429,12 +421,7 @@ export class InitialSetup {
         hre.nonce += 1
 
         coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
-            this.uniV3String,
-            hre.props.token0.address,
-            hre.props.token1.address,
-            '500',
-            '40',
-            '10'
+            poolParams2
         )
         hre.props.coverPool2 = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
 
@@ -522,7 +509,7 @@ export class InitialSetup {
     public async createCoverPool(): Promise<void> {
 
         const poolParams: CoverPoolParams = {
-            implName: this.uniV3String,
+            poolType: this.uniV3String,
             tokenIn: hre.props.token0.address,
             tokenOut: hre.props.token1.address,
             feeTier: 500,

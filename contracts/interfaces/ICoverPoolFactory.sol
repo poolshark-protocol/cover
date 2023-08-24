@@ -5,7 +5,7 @@ import '../base/storage/CoverPoolFactoryStorage.sol';
 abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
 
     struct CoverPoolParams {
-        bytes32 implName;
+        bytes32 poolType;
         address tokenIn;
         address tokenOut;
         uint16 feeTier;
@@ -14,30 +14,18 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
     }
 
     /**
-     * @notice Creates a Cover Pool.
-     * @param params The CreatePoolParams struct referenced above.
+     * @notice Creates a new CoverPool.
+     * @param params The CoverPoolParams struct referenced above.
      */
     function createCoverPool(
         CoverPoolParams memory params
     ) external virtual returns (address pool);
 
     /**
-     * @notice Gets a Cover Pool.
-     * @param sourceName The name for the source of the pool (e.g. PSHARK-RANGE)
-     * @param tokenIn The address for the first token in the pool.
-     * @param tokenOut The address for the second token in the pool.
-     * @param fee The fee tier for the inputPool.
-     * @param tickSpread The tick spacing to be used for the Cover Pool.
-     * @param twapLength The length of the TWAP in seconds to be used for liquidity unlocks.
-     * @return pool The address for the Cover Pool. Returns address(0) if no pool found.
-     * @dev `tickSpread` must be a multiple of the `tickSpacing` for the selected feeTier
+     * @notice Fetches an existing CoverPool.
+     * @param params The CoverPoolParams struct referenced above.
      */
     function getCoverPool(
-        bytes32 sourceName,
-        address tokenIn,
-        address tokenOut,
-        uint16 fee,
-        int16 tickSpread,
-        uint16 twapLength
+        CoverPoolParams memory params
     ) external view virtual returns (address pool);
 }

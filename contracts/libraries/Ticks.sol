@@ -8,7 +8,6 @@ import './math/OverflowMath.sol';
 import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/modules/sources/ITwapSource.sol';
 import './TickMap.sol';
-import 'hardhat/console.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -109,7 +108,6 @@ library Ticks {
     ) external returns (ICoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = constants.source.initialize(constants);
-            console.log('unlocked state', state.unlocked);
             if (state.unlocked == 1) {
                 // initialize state
                 state.latestTick = (state.latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);

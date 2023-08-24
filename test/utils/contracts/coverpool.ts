@@ -56,7 +56,7 @@ export interface PriceBounds {
 }
 
 export interface CoverPoolParams {
-    implName: any // bytes
+    poolType: any // bytes
     tokenIn: string
     tokenOut: string
     feeTier: number
