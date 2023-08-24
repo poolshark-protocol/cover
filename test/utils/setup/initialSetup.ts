@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { CoverPool__factory, QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
+import { CoverPool__factory, PoolsharkRouter__factory, QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -315,6 +315,17 @@ export class InitialSetup {
         await enableImplTxn.wait();
 
         hre.nonce += 1;
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            //@ts-ignore
+            PoolsharkRouter__factory,
+            'poolRouter',
+            [
+              hre.props.coverPoolImpl.address,
+              hre.props.coverPoolFactory.address //TODO: needs to be coverPoolFactory
+            ]
+        )
 
         const volTier1: VolatilityTier = {
             minAmountPerAuction: BN_ZERO,

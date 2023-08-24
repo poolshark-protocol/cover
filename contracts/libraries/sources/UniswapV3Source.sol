@@ -6,6 +6,7 @@ import '../../interfaces/external/uniswap/v3/IUniswapV3Pool.sol';
 import '../../interfaces/ICoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
+import 'hardhat/console.sol';
 
 contract UniswapV3Source is ITwapSource {
     error WaitUntilBelowMaxTick();
@@ -36,6 +37,7 @@ contract UniswapV3Source is ITwapSource {
                 constants.inputPool,
                 blockCount
         );
+        console.log(observationsCountEnough, observationsLengthEnough);
         if (!observationsLengthEnough) {
             _increaseV3Observations(constants.inputPool, blockCount);
             return (0, 0);
@@ -134,7 +136,10 @@ contract UniswapV3Source is ITwapSource {
         bool
     )
     {
+
         (, , , uint16 observationsCount, uint16 observationsLength, , ) = IUniswapV3Pool(pool).slot0();
+                console.log('count', observationsCount, observationsLength);
+                console.log(blockCount);
         return (observationsCount >= blockCount, observationsLength >= blockCount);
     }
 

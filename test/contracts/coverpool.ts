@@ -177,7 +177,7 @@ describe('CoverPool Tests', function () {
             revertMessage: 'WaitUntilEnoughObservations()',
         })
     })
-    return
+
     it('pool0 - Should mint/burn new LP position 71', async function () {
         // process two mints
         for (let i = 0; i < 2; i++) {

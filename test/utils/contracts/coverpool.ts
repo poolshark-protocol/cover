@@ -200,25 +200,33 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     if (autoSync) {
         if (!revertMessage || revertMessage == '') {
-            txn = await hre.props.coverPool.connect(signer).swap({
-                to: signer.address,
-                priceLimit: BigNumber.from('4297706460'),
-                amount: BN_ZERO,
-                exactIn: true,
-                zeroForOne: true,
-                callbackData: ethers.utils.formatBytes32String('')
-            }, {gasLimit: 3000000})
+            txn = await hre.props.poolRouter
+                    .connect(signer)
+                    .multiCall(
+                    [hre.props.coverPool.address],  
+                    [{
+                        to: signer.address,
+                        priceLimit: BigNumber.from('4297706460'),
+                        amount: BN_ZERO,
+                        exactIn: true,
+                        zeroForOne: true,
+                        callbackData: ethers.utils.formatBytes32String('')
+                    }], {gasLimit: 3000000})
             await txn.wait()
         } else {
             await expect(
-                hre.props.coverPool.connect(signer).swap({
+                hre.props.poolRouter
+                .connect(signer)
+                .multiCall(
+                [hre.props.coverPool.address],  
+                [{
                     to: signer.address,
                     priceLimit: BigNumber.from('4297706460'),
                     amount: BN_ZERO,
                     exactIn: true,
                     zeroForOne: true,
                     callbackData: ethers.utils.formatBytes32String('')
-                }, {gasLimit: 3000000})
+                }], {gasLimit: 3000000})
             ).to.be.revertedWith(revertMessage)
             return
         }
@@ -245,11 +253,11 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (zeroForOne) {
         balanceInBefore = await hre.props.token0.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token1.balanceOf(signer.address)
-        await hre.props.token0.approve(hre.props.coverPool.address, amountIn)
+        await hre.props.token0.approve(hre.props.poolRouter.address, amountIn)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(signer.address)
-        await hre.props.token1.approve(hre.props.coverPool.address, amountIn)
+        await hre.props.token1.approve(hre.props.poolRouter.address, amountIn)
     }
 
     const poolBefore: PoolState = zeroForOne
@@ -276,17 +284,19 @@ export async function validateSwap(params: ValidateSwapParams) {
     if (revertMessage == '') {
         if (splitInto > 1) await ethers.provider.send("evm_setAutomine", [false]);
         for (let i = 0; i < splitInto; i++) {
-            console.log('SWAP CALL')
-            let txn = await hre.props.coverPool
-                .connect(signer)
-                .swap({
-                    to: signer.address,
-                    priceLimit: priceLimit,
-                    amount: amountIn.div(splitInto),
-                    exactIn: true,
-                    zeroForOne: zeroForOne,
-                    callbackData: ethers.utils.formatBytes32String('')
-                }, {gasLimit: 3000000})
+            // console.log('SWAP CALL')
+            let txn = await hre.props.poolRouter
+            .connect(signer)
+            .multiCall(
+            [hre.props.coverPool.address],  
+            [{
+              to: signer.address,
+              zeroForOne: zeroForOne,
+              amount: amountIn.div(splitInto),
+              priceLimit: priceLimit,
+              exactIn: true,
+              callbackData: ethers.utils.formatBytes32String('')
+            }], {gasLimit: 3000000})
             if (splitInto == 1) await txn.wait()
         }
         if (splitInto > 1){
@@ -295,16 +305,18 @@ export async function validateSwap(params: ValidateSwapParams) {
         } 
     } else {
         await expect(
-            hre.props.coverPool
-                .connect(signer)
-                .swap({
-                    to: signer.address,
-                    priceLimit: priceLimit,
-                    amount: amountIn,
-                    exactIn: true,
-                    zeroForOne: zeroForOne,
-                    callbackData: ethers.utils.formatBytes32String('')
-                }, {gasLimit: 3000000})
+            hre.props.poolRouter
+            .connect(signer)
+            .multiCall(
+            [hre.props.coverPool.address],  
+            [{
+              to: signer.address,
+              zeroForOne: zeroForOne,
+              amount: amountIn.div(splitInto),
+              priceLimit: priceLimit,
+              exactIn: true,
+              callbackData: ethers.utils.formatBytes32String('')
+            }], {gasLimit: 3000000})
         ).to.be.revertedWith(revertMessage)
         return
     }

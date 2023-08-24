@@ -35,7 +35,6 @@ library SwapCall {
         ICoverPoolStructs.PoolState storage pool0,
         ICoverPoolStructs.PoolState storage pool1
     ) external returns (ICoverPoolStructs.SwapCache memory) {
-        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 : cache.constants.token1, params.amount);
         {
             ICoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
             cache = ICoverPoolStructs.SwapCache({

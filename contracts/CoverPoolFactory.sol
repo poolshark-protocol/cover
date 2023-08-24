@@ -104,7 +104,7 @@ contract CoverPoolFactory is
         // launch pool and save address
         pool = constants.poolImpl.cloneDeterministic({
             salt: key,
-            data: encodeConstants(constants)
+            data: encodeCover(constants)
         });
 
         coverPools[key] = pool;
@@ -154,10 +154,10 @@ contract CoverPoolFactory is
         return coverPools[key];
     }
 
-    function encodeConstants(
+    function encodeCover(
         Immutables memory constants
     ) private pure returns (bytes memory) {
-        return abi.encodePacked(
+        bytes memory value1 = abi.encodePacked(
             constants.owner,
             constants.token0,
             constants.token1,
@@ -172,5 +172,12 @@ contract CoverPoolFactory is
             constants.twapLength,
             constants.auctionLength
         );
+        bytes memory value2 = abi.encodePacked(
+            constants.blockTime,
+            constants.token0Decimals,
+            constants.token1Decimals,
+            constants.minAmountLowerPriced
+        );
+        return abi.encodePacked(value1, value2);
     }
 }
