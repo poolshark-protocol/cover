@@ -16,47 +16,42 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
-    // curveName => curveAddress
-    mapping(bytes32 => address) internal _curveMaths;
     // sourceName => sourceAddress
     mapping(bytes32 => address) internal _twapSources;
+    mapping(bytes32 => address) internal _poolTypes;
     // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
     mapping(bytes32 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
-    constructor(
-        bytes32 sourceName,
-        address sourceAddress,
-        address curveAddress
-    ) {
+    constructor() {
         owner = msg.sender;
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
 
-        // create initial volatility tiers
-        _volatilityTiers[sourceName][500][20][5] = VolatilityTier({
-           minAmountPerAuction: 0,
-           auctionLength: 5,
-           blockTime: 1000,
-           syncFee: 0,
-           fillFee: 0,
-           minPositionWidth: 1,
-           minAmountLowerPriced: true
-        });
-        _volatilityTiers[sourceName][500][40][10] = VolatilityTier({
-           minAmountPerAuction: 0,
-           auctionLength: 10,
-           blockTime: 1000,
-           syncFee: 500,
-           fillFee: 5000,
-           minPositionWidth: 5,
-           minAmountLowerPriced: false
-        });
-        emit VolatilityTierEnabled(sourceAddress, curveAddress, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
-        emit VolatilityTierEnabled(sourceAddress, curveAddress, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
-    
-        _twapSources[sourceName] = sourceAddress;
-        _curveMaths[sourceName] = curveAddress;
-        emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
+        // _implementations[implName] = sourceAddress;
+        // _twapSources[implName] = sourceAddress;
+        // emit ImplementationEnabled(implName, implAddress, sourceAddress, ITwapSource(sourceAddress).factory());
+
+        // // create initial volatility tiers
+        // _volatilityTiers[implName][500][20][5] = VolatilityTier({
+        //    minAmountPerAuction: 0,
+        //    auctionLength: 5,
+        //    blockTime: 1000,
+        //    syncFee: 0,
+        //    fillFee: 0,
+        //    minPositionWidth: 1,
+        //    minAmountLowerPriced: true
+        // });
+        // _volatilityTiers[implName][500][40][10] = VolatilityTier({
+        //    minAmountPerAuction: 0,
+        //    auctionLength: 10,
+        //    blockTime: 1000,
+        //    syncFee: 500,
+        //    fillFee: 5000,
+        //    minPositionWidth: 5,
+        //    minAmountLowerPriced: false
+        // });
+        // emit VolatilityTierEnabled(implAddress, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
+        // emit VolatilityTierEnabled(implAddress, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
     }
 
     /**
@@ -106,44 +101,45 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit OwnerTransfer(oldFeeTo, newFeeTo);
     }
 
-    function enableTwapSource(
-        bytes32 sourceName,
-        address sourceAddress,
-        address curveAddress
+    function enablePoolType(
+        bytes32 poolType,
+        address implAddress,
+        address sourceAddress
     ) external onlyOwner {
-        if (sourceName[0] == bytes32("")) require (false, 'TwapSourceNameInvalid()');
-        if (sourceAddress == address(0)) require (false, 'TwapSourceAddressZero()');
-        if (curveAddress == address(0)) require (false, 'CurveMathAddressZero()');
-        if (_twapSources[sourceName] != address(0)) require (false, 'TwapSourceAlreadyExists()');
-        _twapSources[sourceName] = sourceAddress;
-        _curveMaths[sourceName] = curveAddress;
-        emit TwapSourceEnabled(sourceName, sourceAddress, curveAddress, ITwapSource(sourceAddress).factory());
+        if (poolType[0] == bytes32("")) require (false, 'TwapSourceNameInvalid()');
+        if (implAddress == address(0) || sourceAddress == address(0)) require (false, 'TwapSourceAddressZero()');
+        if (_twapSources[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
+        if (_poolTypes[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
+        _poolTypes[poolType] = implAddress;
+        _twapSources[poolType] = sourceAddress;
+        emit PoolTypeEnabled(poolType, implAddress, sourceAddress, ITwapSource(sourceAddress).factory());
     }
 
     function enableVolatilityTier(
-        bytes32 sourceName,
+        bytes32 implName,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
-        uint128 minAmountPerAuction,
-        uint16  auctionLength,
-        uint16  blockTime,
-        uint16  syncFee,
-        uint16  fillFee,
-        int16   minPositionWidth,
-        bool    minLowerPriced
+        VolatilityTier memory volTier
+        // uint128 minAmountPerAuction,
+        // uint16  auctionLength,
+        // uint16  blockTime,
+        // uint16  syncFee,
+        // uint16  fillFee,
+        // int16   minPositionWidth,
+        // bool    minLowerPriced
     ) external onlyOwner {
-        if (_volatilityTiers[sourceName][feeTier][tickSpread][twapLength].auctionLength != 0) {
+        if (_volatilityTiers[implName][feeTier][tickSpread][twapLength].auctionLength != 0) {
             require (false, 'VolatilityTierAlreadyEnabled()');
-        } else if (auctionLength == 0 || minAmountPerAuction == 0 || minPositionWidth <= 0) {
+        } else if (volTier.auctionLength == 0 ||  volTier.minPositionWidth <= 0) {
             require (false, 'VolatilityTierCannotBeZero()');
-        } else if (twapLength < 5 * blockTime / oneSecond) {
+        } else if (twapLength < 5 * volTier.blockTime / oneSecond) {
             require (false, 'VoltatilityTierTwapTooShort()');
-        } else if (syncFee > 10000 || fillFee > 10000) {
+        } else if (volTier.syncFee > 10000 || volTier.fillFee > 10000) {
             require (false, 'ProtocolFeeCeilingExceeded()');
         }
-        address sourceAddress = _twapSources[sourceName];
-        address curveAddress = _curveMaths[sourceName];
+        address sourceAddress = _twapSources[implName];
+        address implAddress = _poolTypes[implName];
         {
             // check fee tier exists
             if (sourceAddress == address(0)) require (false, 'TwapSourceNotFound()');
@@ -160,34 +156,25 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             }
         }
         // twapLength * blockTime should never overflow uint16
-        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength] = VolatilityTier(
-            minAmountPerAuction,
-            auctionLength,
-            blockTime,
-            syncFee,
-            fillFee,
-            minPositionWidth,
-            minLowerPriced
-        );
+        _volatilityTiers[implName][feeTier][tickSpread][twapLength] = volTier;
 
         emit VolatilityTierEnabled(
-            sourceAddress,
-            curveAddress,
+            implAddress,
             feeTier,
             tickSpread,
             twapLength,
-            minAmountPerAuction,
-            auctionLength,
-            blockTime,
-            syncFee,
-            fillFee,
-            minPositionWidth,
-            minLowerPriced
+            volTier.minAmountPerAuction,
+            volTier.auctionLength,
+            volTier.blockTime,
+            volTier.syncFee,
+            volTier.fillFee,
+            volTier.minPositionWidth,
+            volTier.minAmountLowerPriced
         );
     }
 
     function modifyVolatilityTierFees(
-        bytes32 sourceName,
+        bytes32 implName,
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength,
@@ -197,8 +184,8 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         if (syncFee > 10000 || fillFee > 10000) {
             require (false, 'ProtocolFeeCeilingExceeded()');
         }
-        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].syncFee = syncFee;
-        _volatilityTiers[sourceName][feeTier][tickSpread][twapLength].fillFee = fillFee;
+        _volatilityTiers[implName][feeTier][tickSpread][twapLength].syncFee = syncFee;
+        _volatilityTiers[implName][feeTier][tickSpread][twapLength].fillFee = fillFee;
     }
 
     function setFactory(
@@ -250,24 +237,24 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         emit ProtocolFeesModified(modifyPools, syncFees, fillFees, setFees, token0Fees, token1Fees);
     }
 
-    function twapSources(
-        bytes32 sourceName
+    function poolTypes(
+        bytes32 poolType
     ) external view returns (
-        address sourceAddress,
-        address curveAddress
+        address implAddress,
+        address sourceAddress
     ) {
-        return (_twapSources[sourceName], _curveMaths[sourceName]);
+        return (_poolTypes[poolType], _twapSources[poolType]);
     }
 
     function volatilityTiers(
-        bytes32 sourceName,
+        bytes32 implName,
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength
     ) external view returns (
         VolatilityTier memory config
     ) {
-        config = _volatilityTiers[sourceName][feeTier][tickSpread][twapLength];
+        config = _volatilityTiers[implName][feeTier][tickSpread][twapLength];
     }
     
     /**

@@ -98,6 +98,9 @@ contract RangePoolMock is IRangePool {
         secondsPerLiquidityAccum[1] = uint160(949568451203788412348119);
         secondsPerLiquidityAccum[2] = uint160(949568438263103965182699);
         secondsPerLiquidityAccum[3] = uint160(949568438263103965182699);
+        averagePrice;
+        averageLiquidity;
+        averageTick;
     }
 
     function increaseSampleLength(uint16 cardinalityNext) external {

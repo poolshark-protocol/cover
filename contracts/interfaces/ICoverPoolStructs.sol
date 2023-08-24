@@ -60,10 +60,12 @@ interface ICoverPoolStructs {
     struct Immutables {
         ITwapSource source;
         ICurveMath.PriceBounds bounds;
+        address owner;
         address token0;
         address token1;
+        address poolImpl;
         address inputPool;
-        uint256 minAmountPerAuction;
+        uint128 minAmountPerAuction;
         uint32 genesisTime;
         int16  minPositionWidth;
         int16  tickSpread;
@@ -73,6 +75,16 @@ interface ICoverPoolStructs {
         uint8 token0Decimals;
         uint8 token1Decimals;
         bool minAmountLowerPriced;
+    }
+
+    struct VolatilityTier {
+        uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
+        uint16  auctionLength;
+        uint16  blockTime; // average block time where 1e3 is 1 second
+        uint16  syncFee;
+        uint16  fillFee;
+        int16   minPositionWidth;
+        bool    minAmountLowerPriced;
     }
 
     struct ProtocolFees {
@@ -158,13 +170,16 @@ interface ICoverPoolStructs {
         PoolState pool1;
         uint256 price;
         uint256 liquidity;
-        uint256 amountIn;
+        uint256 amountLeft;
         uint256 input;
         uint256 output;
-        uint256 inputBoosted;
+        uint256 amountBoosted;
         uint256 auctionDepth;
         uint256 auctionBoost;
         uint256 amountInDelta;
+        int256 amount0Delta;
+        int256 amount1Delta;
+        bool exactIn;
     }
 
     struct PositionCache {

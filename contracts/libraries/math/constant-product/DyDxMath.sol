@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import '../../../interfaces/modules/curves/IDyDxMath.sol';
-import '../../../libraries/math/FullPrecisionMath.sol';
+import '../../../libraries/math/OverflowMath.sol';
 
 /// @notice Math library that facilitates ranged liquidity calculations.
 library DyDxMath
@@ -35,9 +35,9 @@ library DyDxMath
     ) internal pure returns (uint256 dy) {
         unchecked {
             if (roundUp) {
-                dy = FullPrecisionMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
+                dy = OverflowMath.mulDivRoundingUp(liquidity, priceUpper - priceLower, Q96);
             } else {
-                dy = FullPrecisionMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
+                dy = OverflowMath.mulDiv(liquidity, priceUpper - priceLower, Q96);
             }
         }
     }
@@ -50,9 +50,9 @@ library DyDxMath
     ) internal pure returns (uint256 dx) {
         unchecked {
             if (roundUp) {
-                dx = FullPrecisionMath.divRoundingUp(FullPrecisionMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
+                dx = OverflowMath.divRoundingUp(OverflowMath.mulDivRoundingUp(liquidity << 96, priceUpper - priceLower, priceUpper), priceLower);
             } else {
-                dx = FullPrecisionMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
+                dx = OverflowMath.mulDiv(liquidity << 96, priceUpper - priceLower, priceUpper) / priceLower;
             }
         }
     }
@@ -66,11 +66,11 @@ library DyDxMath
     ) internal pure returns (uint256 liquidity) {
         unchecked {
             if (priceUpper == currentPrice) {
-                liquidity = FullPrecisionMath.mulDiv(dy, Q96, priceUpper - priceLower);
+                liquidity = OverflowMath.mulDiv(dy, Q96, priceUpper - priceLower);
             } else if (currentPrice == priceLower) {
-                liquidity = FullPrecisionMath.mulDiv(
+                liquidity = OverflowMath.mulDiv(
                     dx,
-                    FullPrecisionMath.mulDiv(priceLower, priceUpper, Q96),
+                    OverflowMath.mulDiv(priceLower, priceUpper, Q96),
                     priceUpper - priceLower
                 );
             } else {
@@ -107,13 +107,13 @@ library DyDxMath
     ) {
         if (zeroForOne) {
             uint256 liquidityPadded = liquidity << 96;
-            newPrice = FullPrecisionMath.mulDivRoundingUp(
+            newPrice = OverflowMath.mulDivRoundingUp(
                             liquidityPadded,
                             price,
                             liquidityPadded + price * input
                        );
         } else {
-            newPrice = price + FullPrecisionMath.mulDiv(input, Q96, liquidity);
+            newPrice = price + OverflowMath.mulDiv(input, Q96, liquidity);
         }
     }
 }

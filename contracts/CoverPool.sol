@@ -4,7 +4,8 @@ pragma solidity ^0.8.13;
 import './interfaces/ICoverPool.sol';
 import './interfaces/ICoverPoolManager.sol';
 import './base/storage/CoverPoolStorage.sol';
-import './base/structs/CoverPoolFactoryStructs.sol';
+import './base/storage/CoverPoolImmutables.sol';
+import './interfaces/structs/PoolsharkStructs.sol';
 import './utils/CoverPoolErrors.sol';
 import './libraries/Epochs.sol';
 import './libraries/pool/SwapCall.sol';
@@ -17,26 +18,11 @@ import './libraries/math/ConstantProduct.sol';
 /// @notice Poolshark Cover Pool Implementation
 contract CoverPool is
     ICoverPool,
-    CoverPoolFactoryStructs,
-    CoverPoolStorage
+    CoverPoolStorage,
+    CoverPoolImmutables
 {
-    address public immutable owner;
-    address public immutable token0;
-    address public immutable token1;
-    address public immutable twapSource;
-    address public immutable inputPool; 
-    uint160 public immutable minPrice;
-    uint160 public immutable maxPrice;
-    uint128 public immutable minAmountPerAuction;
-    uint32  public immutable genesisTime;
-    int16   public immutable minPositionWidth;
-    int16   public immutable tickSpread;
-    uint16  public immutable twapLength;
-    uint16  public immutable auctionLength;
-    uint16  public immutable blockTime;
-    uint8   internal immutable token0Decimals;
-    uint8   internal immutable token1Decimals;
-    bool    public immutable minAmountLowerPriced;
+    address public immutable factory;
+    address public immutable original;
 
     modifier ownerOnly() {
         _onlyOwner();
@@ -50,35 +36,10 @@ contract CoverPool is
     }
 
     constructor(
-        CoverPoolParams memory params
+        address factory_
     ) {
-        // set addresses
-        owner      = params.owner;
-        twapSource = params.twapSource;
-        inputPool  = params.inputPool;
-        token0     = params.token0;
-        token1     = params.token1;
-        
-        // set token decimals
-        token0Decimals = ERC20(token0).decimals();
-        token1Decimals = ERC20(token1).decimals();
-        if (token0Decimals > 18 || token1Decimals > 18
-          || token0Decimals < 6 || token1Decimals < 6) {
-            revert InvalidTokenDecimals();
-        }
-
-        // set other immutables
-        auctionLength = params.config.auctionLength;
-        blockTime = params.config.blockTime;
-        minPositionWidth = params.config.minPositionWidth;
-        tickSpread    = params.tickSpread;
-        twapLength    = params.twapLength;
-        genesisTime   = uint32(block.timestamp);
-        minAmountPerAuction = params.config.minAmountPerAuction;
-        minAmountLowerPriced = params.config.minAmountLowerPriced;
-
-        // set price boundaries
-        (minPrice, maxPrice) = ConstantProduct.priceBounds(tickSpread);
+        original = address(this);
+        factory = factory_;
     }
 
     function mint(
@@ -87,7 +48,7 @@ contract CoverPool is
         MintCache memory cache = MintCache({
             state: globalState,
             position: Position(0,0,0,0,0),
-            constants: _immutables(),
+            constants: immutables(),
             syncFees: SyncFees(0,0),
             liquidityMinted: 0,
             pool0: pool0,
@@ -127,7 +88,7 @@ contract CoverPool is
             state: globalState,
             position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
                                         : positions1[msg.sender][params.lower][params.upper],
-            constants: _immutables(),
+            constants: immutables(),
             syncFees: SyncFees(0,0),
             pool0: pool0,
             pool1: pool1
@@ -162,16 +123,15 @@ contract CoverPool is
     function swap(
         SwapParams memory params
     ) external override lock returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
+        int256,
+        int256
     ) 
     {
         SwapCache memory cache;
         cache.pool0 = pool0;
         cache.pool1 = pool1;
         cache.state = globalState;
-        cache.constants = _immutables();
+        cache.constants = immutables();
         (
             cache.state,
             cache.syncFees,
@@ -184,25 +144,26 @@ contract CoverPool is
             cache.pool0,
             cache.pool1,
             cache.state,
-            _immutables()
+            immutables()
         );
 
-        cache = SwapCall.perform(params, cache);
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
-        globalState = cache.state;
+        cache = SwapCall.perform(
+            params,
+            cache,
+            globalState,
+            pool0,
+            pool1
+        );
 
         if (params.zeroForOne) {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-                cache.output + cache.syncFees.token1,
-                cache.price 
+                -int256(cache.input) + int128(cache.syncFees.token0),
+                int256(cache.output + cache.syncFees.token1)
             );
         } else {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-                cache.output + cache.syncFees.token0,
-                cache.price 
+                int256(cache.output + cache.syncFees.token0),
+                -int256(cache.input) + int128(cache.syncFees.token1)
             );
         }
     }
@@ -211,14 +172,14 @@ contract CoverPool is
         QuoteParams memory params
     ) external view override returns (
         int256 inAmount,
-        uint256 outAmount,
+        int256 outAmount,
         uint256 priceAfter
     ) {
         SwapCache memory cache;
         cache.pool0 = pool0;
         cache.pool1 = pool1;
         cache.state = globalState;
-        cache.constants = _immutables();
+        cache.constants = immutables();
         (
             cache.state,
             cache.syncFees,
@@ -236,15 +197,15 @@ contract CoverPool is
         cache = QuoteCall.perform(params, cache);
         if (params.zeroForOne) {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token0),
-                cache.output + cache.syncFees.token1,
-                cache.price 
+                int256(cache.input) - int128(cache.syncFees.token0),
+                int256(cache.output + cache.syncFees.token1),
+                cache.price
             );
         } else {
             return (
-                int128(params.amountIn) - int256(cache.input) - int128(cache.syncFees.token1),
-                cache.output + cache.syncFees.token0,
-                cache.price 
+                int256(cache.input) - int128(cache.syncFees.token1),
+                int256(cache.output + cache.syncFees.token0),
+                cache.price
             );
         }
     }
@@ -269,7 +230,7 @@ contract CoverPool is
                 params.claim,
                 params.zeroForOne
             ),
-            _immutables()
+            immutables()
         );
     }
 
@@ -287,38 +248,46 @@ contract CoverPool is
         }
         token0Fees = globalState.protocolFees.token0;
         token1Fees = globalState.protocolFees.token1;
-        address feeTo = ICoverPoolManager(owner).feeTo();
+        address feeTo = ICoverPoolManager(owner()).feeTo();
         globalState.protocolFees.token0 = 0;
         globalState.protocolFees.token1 = 0;
-        SafeTransfers.transferOut(feeTo, token0, token0Fees);
-        SafeTransfers.transferOut(feeTo, token1, token1Fees);
+        SafeTransfers.transferOut(feeTo, token0(), token0Fees);
+        SafeTransfers.transferOut(feeTo, token1(), token1Fees);
     }
 
-    function _immutables() private view returns (
+    function immutables() public view returns (
         Immutables memory
     ) {
         return Immutables(
-            ITwapSource(twapSource),
-            ITickMath.PriceBounds(minPrice, maxPrice),
-            token0,
-            token1,
-            inputPool,
-            minAmountPerAuction,
-            genesisTime,
-            minPositionWidth,
-            tickSpread,
-            twapLength,
-            auctionLength,
-            blockTime,
-            token0Decimals,
-            token1Decimals,
-            minAmountLowerPriced
+            ITwapSource(twapSource()),
+            ITickMath.PriceBounds(minPrice(), maxPrice()),
+            owner(),
+            token0(),
+            token1(),
+            original,
+            inputPool(),
+            minAmountPerAuction(),
+            genesisTime(),
+            minPositionWidth(),
+            tickSpread(),
+            twapLength(),
+            auctionLength(),
+            blockTime(),
+            token0Decimals(),
+            token1Decimals(),
+            minAmountLowerPriced()
         );
+    }
+
+    function priceBounds(
+        int16 tickSpacing
+    ) external pure returns (uint160, uint160) {
+        return ConstantProduct.priceBounds(tickSpacing);
     }
 
     function _prelock() private {
         if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, _immutables());
+            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, immutables());
         }
         if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
         if (globalState.unlocked == 2) revert Locked();
@@ -330,6 +299,6 @@ contract CoverPool is
     }
 
     function _onlyOwner() private view {
-        if (msg.sender != owner) revert OwnerOnly();
+        if (msg.sender != owner()) revert OwnerOnly();
     }
 }

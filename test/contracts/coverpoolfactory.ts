@@ -32,44 +32,44 @@ describe('CoverPoolFactory Tests', function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
-                .createCoverPool(
-                    uniV3String,
-                    '0x0000000000000000000000000000000000000000',
-                    '0x0000000000000000000000000000000000000000',
-                    '500',
-                    '20',
-                    '5'
-                )
-        ).to.be.revertedWith('InvalidPoolTokenAddress()')
+                .createCoverPool({
+                    poolType: uniV3String,
+                    tokenIn: '0x0000000000000000000000000000000000000000',
+                    tokenOut: '0x0000000000000000000000000000000000000000',
+                    feeTier: '500',
+                    tickSpread: '20',
+                    twapLength: '5'
+            })
+        ).to.be.revertedWith('InvalidTokenAddress()')
     })
 
     it('Should not create pool with invalid twap source', async function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
-                .createCoverPool(
-                    ethers.utils.formatBytes32String('test'),
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '500',
-                    '20',
-                    '5'
-                )
-        ).to.be.revertedWith('TwapSourceNotFound()')
+                .createCoverPool({
+                    poolType: ethers.utils.formatBytes32String('test'),
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    feeTier: '500',
+                    tickSpread: '20',
+                    twapLength: '5'
+                })
+        ).to.be.revertedWith('PoolTypeNotFound()')
     })
 
     it('Should not create pool if the pair already exists', async function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
-                .createCoverPool(
-                    uniV3String,
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '500',
-                    '20',
-                    '5'
-                )
+                .createCoverPool({
+                    poolType: uniV3String,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    feeTier: '500',
+                    tickSpread: '20',
+                    twapLength: '5'
+                })
         ).to.be.revertedWith('PoolAlreadyExists()')
     })
 
@@ -77,14 +77,14 @@ describe('CoverPoolFactory Tests', function () {
         await expect(
             hre.props.coverPoolFactory
                 .connect(hre.props.admin)
-                .createCoverPool(
-                    uniV3String,
-                    hre.props.token1.address,
-                    hre.props.token0.address,
-                    '2000',
-                    '20',
-                    '5'
-                )
+                .createCoverPool({
+                    poolType: uniV3String,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    feeTier: '2000',
+                    tickSpread: '20',
+                    twapLength: '5'
+                })
         ).to.be.revertedWith('VolatilityTierNotSupported()')
     })
 })

@@ -2,13 +2,14 @@
 pragma solidity ^0.8.13;
 
 import './ICoverPoolStructs.sol';
+import './structs/PoolsharkStructs.sol';
 
 /**
  * @title ICoverPool
  * @author Poolshark
  * @notice Defines the basic interface for a Cover Pool.
  */
-interface ICoverPool is ICoverPoolStructs {
+interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
     /**
      * @custom:struct MintParams
      */
@@ -126,41 +127,7 @@ interface ICoverPool is ICoverPoolStructs {
         BurnParams memory params
     ) external;
 
-    /**
-     * @custom:struct SwapParams
-     */
-    struct SwapParams {
-        /**
-         * @custom:field to
-         * @notice Address for the receiver of the swap output
-         */
-        address to;
-
-        /**
-         * @custom:field refundTo
-         * @notice Address for the receiver of any fees or refunds
-         */
-        address refundTo;
-
-        /**
-         * @custom:field priceLimit
-         * @dev The Q64.96 square root price at which to stop swapping.
-         */
-        uint160 priceLimit;
-
-        /**
-         * @custom:field amountIn
-         * @dev The tokenIn amount being passed into the swap.
-         */
-        uint128 amountIn;
-
-        /**
-         * @custom:field zeroForOne
-         * @notice True if swapping in token0, the first token address in lexographical order
-         * @notice False if swapping in token1, the second token address in lexographical order 
-         */
-        bool zeroForOne;
-    }
+    
 
     /**
      * @notice Swaps `tokenIn` for `tokenOut`. 
@@ -170,41 +137,15 @@ interface ICoverPool is ICoverPoolStructs {
                The pool price will decrease if `zeroForOne` is true.
                The pool price will increase if `zeroForOne` is false. 
      * @param params The parameters for the function. See SwapParams above.
-     * @return inAmount The amount of tokenIn to be spent
-     * @return outAmount The amount of tokenOut to be received
-     * @return priceAfter The Q64.96 square root price after the swap
+     * @return amount0Delta The amount of token0 spent (negative) or received (positive) by the user
+     * @return amount1Delta The amount of token1 spent (negative) or received (positive) by the user
      */
     function swap(
         SwapParams memory params
     ) external returns (
-        int256 inAmount,
-        uint256 outAmount,
-        uint256 priceAfter
+        int256 amount0Delta,
+        int256 amount1Delta
     );
-
-    /**
-     * @custom:struct QuoteParams
-     */
-    struct QuoteParams {
-        /**
-         * @custom:field priceLimit
-         * @dev The Q64.96 square root price at which to stop swapping.
-         */
-        uint160 priceLimit;
-
-        /**
-         * @custom:field amountIn
-         * @dev The tokenIn amount being passed into the swap.
-         */
-        uint128 amountIn;
-
-        /**
-         * @custom:field zeroForOne
-         * @notice True if swapping in token0, the first token address in lexographical order
-         * @notice False if swapping in token1, the second token address in lexographical order 
-         */
-        bool zeroForOne;
-    }
 
     /**
      * @notice Quotes the amount of `tokenIn` for `tokenOut`. 
@@ -214,7 +155,7 @@ interface ICoverPool is ICoverPoolStructs {
                The pool price will decrease if `zeroForOne` is true.
                The pool price will increase if `zeroForOne` is false. 
      * @param params The parameters for the function. See SwapParams above.
-     * @return inAmount The amount of tokenIn to be spent
+     * @return inAmount  The amount of tokenIn to be spent
      * @return outAmount The amount of tokenOut to be received
      * @return priceAfter The Q64.96 square root price after the swap
      */
@@ -222,7 +163,7 @@ interface ICoverPool is ICoverPoolStructs {
         QuoteParams memory params
     ) external view returns (
         int256 inAmount,
-        uint256 outAmount,
+        int256 outAmount,
         uint256 priceAfter
     );
 
@@ -302,5 +243,17 @@ interface ICoverPool is ICoverPoolStructs {
     ) external returns (
         uint128 token0Fees,
         uint128 token1Fees
+    );
+
+    function immutables(
+    ) external view returns (
+        Immutables memory constants
+    );
+
+    function priceBounds(
+        int16 tickSpacing
+    ) external pure returns (
+        uint160 minPrice,
+        uint160 maxPrice
     );
 }

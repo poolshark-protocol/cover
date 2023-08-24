@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import '../base/structs/CoverPoolManagerStructs.sol';
+import '../interfaces/ICoverPoolStructs.sol';
 
 /// @notice CoverPoolManager interface
-interface ICoverPoolManager is CoverPoolManagerStructs {
+interface ICoverPoolManager is ICoverPoolStructs {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
-    function twapSources(
-        bytes32 sourceName
+    function poolTypes(
+        bytes32 poolType
     ) external view returns (
-        address sourceAddress,
-        address curveAddress
+        address implAddress,
+        address sourceAddress
     );
     function volatilityTiers(
-        bytes32 sourceName,
+        bytes32 implName,
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength

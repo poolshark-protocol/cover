@@ -6,7 +6,6 @@ import '../../interfaces/external/uniswap/v3/IUniswapV3Pool.sol';
 import '../../interfaces/ICoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
-import 'hardhat/console.sol';
 
 contract UniswapV3Source is ITwapSource {
     error WaitUntilBelowMaxTick();
@@ -135,6 +134,7 @@ contract UniswapV3Source is ITwapSource {
         bool
     )
     {
+
         (, , , uint16 observationsCount, uint16 observationsLength, , ) = IUniswapV3Pool(pool).slot0();
         return (observationsCount >= blockCount, observationsLength >= blockCount);
     }

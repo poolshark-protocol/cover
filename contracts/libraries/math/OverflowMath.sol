@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 /// @notice Math library that facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision.
-library FullPrecisionMath {
+library OverflowMath {
 
     // @dev no underflow or overflow checks
     function divRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
