@@ -74,30 +74,30 @@ export class InitialSetup {
             // @ts-ignore
             Token20__factory,
             'tokenA',
-            ['Token20A', 'TOKEN20A', this.token0Decimals]
-        )
-
-        await this.deployAssist.deployContractWithRetry(
+            ['Wrapped Ether', 'WETH', this.token0Decimals]
+          )
+      
+          await this.deployAssist.deployContractWithRetry(
             network,
             // @ts-ignore
             Token20__factory,
             'tokenB',
-            ['Token20B', 'TOKEN20B', this.token1Decimals]
-        )
+            ['Dai Stablecoin', 'DAI', this.token1Decimals]
+          )
 
-        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address)
+        const tokenOrder = hre.props.tokenA.address.localeCompare(hre.props.tokenB.address) < 0
         let token0Args
         let token1Args
-        if (tokenOrder < 0) {
+        if (tokenOrder) {
             hre.props.token0 = hre.props.tokenA
             hre.props.token1 = hre.props.tokenB
-            token0Args = ['Token20A', 'TOKEN20A', this.token0Decimals]
-            token1Args = ['Token20B', 'TOKEN20B', this.token1Decimals]
+            token0Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
+            token1Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
         } else {
             hre.props.token0 = hre.props.tokenB
             hre.props.token1 = hre.props.tokenA
-            token0Args = ['Token20B', 'TOKEN20B', this.token1Decimals]
-            token1Args = ['Token20A', 'TOKEN20A', this.token0Decimals]
+            token0Args = ['Dai Stablecoin', 'DAI', this.token1Decimals]
+            token1Args = ['Wrapped Ether', 'WETH', this.token0Decimals]
         }
         this.deployAssist.saveContractDeployment(
             network,
@@ -513,7 +513,7 @@ export class InitialSetup {
             tokenIn: hre.props.token0.address,
             tokenOut: hre.props.token1.address,
             feeTier: 500,
-            tickSpread: 40,
+            tickSpread: 20,
             twapLength: 5
         }
 

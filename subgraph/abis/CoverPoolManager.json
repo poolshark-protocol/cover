@@ -61,6 +61,37 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bytes32",
+        "name": "poolType",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "implAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sourceAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "factoryAddress",
+        "type": "address"
+      }
+    ],
+    "name": "PoolTypeEnabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address[]",
         "name": "collectPools",
         "type": "address[]"
@@ -129,45 +160,8 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "sourceName",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
         "internalType": "address",
-        "name": "sourceAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "curveAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "factoryAddress",
-        "type": "address"
-      }
-    ],
-    "name": "TwapSourceEnabled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sourceAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "curveAddress",
+        "name": "implAddress",
         "type": "address"
       },
       {

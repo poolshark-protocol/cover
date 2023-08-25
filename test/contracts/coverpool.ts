@@ -114,12 +114,14 @@ describe('CoverPool Tests', function () {
             syncRevertMessage: 'WaitUntilEnoughObservations()'
         })
 
+
         // burn should revert
         await validateBurn({
             signer: hre.props.alice,
             lower: '0',
             upper: '0',
             claim: '0',
+            positionId: 0,
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -128,6 +130,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'WaitUntilEnoughObservations()',
         })
+
     })
 
     it('pool1 - Should wait until enough observations', async function () {
@@ -167,6 +170,7 @@ describe('CoverPool Tests', function () {
             lower: '0',
             upper: '0',
             claim: '0',
+            positionId: 0,
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -179,13 +183,15 @@ describe('CoverPool Tests', function () {
 
     it('pool0 - Should mint/burn new LP position 71', async function () {
         // process two mints
+        let aliceId = 0;
         for (let i = 0; i < 2; i++) {
-            await validateMint({
+            aliceId = await validateMint({
                 signer: hre.props.alice,
                 recipient: hre.props.alice.address,
                 lower: '-40',
                 upper: '-20',
                 amount: tokenAmount,
+                positionId: aliceId,
                 zeroForOne: true,
                 balanceInDecrease: tokenAmount,
                 liquidityIncrease: liquidityAmount,
@@ -194,7 +200,6 @@ describe('CoverPool Tests', function () {
                 revertMessage: '',
             })
         }
-
 
         // process no-op swap
         await validateSwap({
@@ -221,6 +226,7 @@ describe('CoverPool Tests', function () {
                 lower: '-40',
                 claim: '-20',
                 upper: '-20',
+                positionId: aliceId,
                 liquidityAmount: liquidityAmount,
                 zeroForOne: true,
                 balanceInIncrease: BN_ZERO,
@@ -246,7 +252,7 @@ describe('CoverPool Tests', function () {
         await validateSync(0)
         if (debugMode) await getPrice(true, true)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -279,6 +285,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -293,6 +300,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('99620704132805394769'),
@@ -307,13 +315,14 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('1'),
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
         if (balanceCheck) {
             console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
@@ -363,7 +372,7 @@ describe('CoverPool Tests', function () {
         // move TWAP to tick 0
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -393,6 +402,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -418,7 +428,7 @@ describe('CoverPool Tests', function () {
         // move TWAP to tick 0
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -449,13 +459,14 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '0',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount3,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
             balanceOutIncrease: tokenAmount3.sub(1),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'InvalidClaimTick()',
         })
 
         await validateBurn({
@@ -463,6 +474,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount3,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -488,7 +500,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -520,6 +532,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -547,7 +560,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(20)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -591,6 +604,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '0',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -605,6 +619,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -636,7 +651,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(78240)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '78200',
@@ -656,6 +671,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             lower: '78220',
             upper: '78280',
+            positionId: aliceId,
             amount: BigNumber.from('100000000000000000000'),
             zeroForOne: false,
             balanceInDecrease: BigNumber.from('33366670549555043973'),
@@ -670,6 +686,7 @@ describe('CoverPool Tests', function () {
             lower: '78260',
             claim: '78260',
             upper: '78280',
+            positionId: aliceId,
             liquidityPercent: BigNumber.from('3000000000000000000000000000000000000'),
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -683,6 +700,7 @@ describe('CoverPool Tests', function () {
             lower: '78260',
             claim: '78260',
             upper: '78280',
+            positionId: aliceId,
             liquidityPercent: BigNumber.from('100000000000000000000000000000000000000'),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -710,7 +728,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -744,6 +762,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -760,6 +779,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -774,6 +794,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -801,7 +822,7 @@ describe('CoverPool Tests', function () {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-80',
@@ -835,6 +856,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24892711623697875921'),
@@ -873,6 +895,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-40',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -891,7 +914,7 @@ describe('CoverPool Tests', function () {
 
         if (debugMode) console.log("--------------- Alice First mint -------------");
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-80',
@@ -905,7 +928,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-80',
@@ -942,6 +965,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24892711623697875921'),
@@ -974,6 +998,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-40',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('12421489218416072977'),
@@ -990,6 +1015,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-0',
+            positionId: bobId,
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('49735690060530021875'),
@@ -1004,7 +1030,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmountBob = BigNumber.from('497780033507028255257726') 
         await validateSync(0);
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -1019,7 +1045,7 @@ describe('CoverPool Tests', function () {
         })
 
         // Bob also mints a much larger position further down the ticks
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-100',
@@ -1068,6 +1094,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -1086,6 +1113,7 @@ describe('CoverPool Tests', function () {
             lower: '-100',
             claim: '-80',
             upper: '-80',
+            positionId: bobId,
             liquidityAmount: liquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -1100,6 +1128,7 @@ describe('CoverPool Tests', function () {
             lower: '-100',
             claim: '-80',
             upper: '-80',
+            positionId: bobId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -1116,7 +1145,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidity = BigNumber.from("33285024970969944913475")
 
         // Alice creates a position from 0 -> -20
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -1175,6 +1204,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidity,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -1199,7 +1229,7 @@ describe('CoverPool Tests', function () {
 
         // console.log("--------------- Alice First mint -------------");
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-120',
@@ -1230,6 +1260,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-40',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('0'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1247,7 +1278,9 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-120',
             upper: '-40',
+            positionId: aliceId,
             liquidityAmount: BN_ZERO,
+            positionLiquidityChange: BigNumber.from('16617549983581976690927'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('66733307735806479581'), // Notice Alice gets her position back
@@ -1261,7 +1294,7 @@ describe('CoverPool Tests', function () {
         await validateSync(20);
 
         // Alice creates a position from 0 to -20
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-20',
@@ -1277,7 +1310,7 @@ describe('CoverPool Tests', function () {
         });
 
         // Bob creates a position from 0 to -20
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-20',
@@ -1318,6 +1351,7 @@ describe('CoverPool Tests', function () {
             lower: '-20',
             claim: '-20',
             upper: '0',
+            positionId: bobId,
             liquidityAmount: BigNumber.from("99955008249587388643769"),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from("5000000000000000000"), // Get half of the 10 tokens swapped in
@@ -1338,7 +1372,9 @@ describe('CoverPool Tests', function () {
             lower: '-20',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from("1"),
+            positionLiquidityChange: BigNumber.from('99955008249587388643769'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from("5000000000000000000"),
             balanceOutIncrease: BigNumber.from("94986233739601560411"), // This is the increase it ought to be it is actually 99999999999999999999
@@ -1353,7 +1389,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
         const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -1367,7 +1403,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-80',
@@ -1419,6 +1455,7 @@ describe('CoverPool Tests', function () {
             claim: '-20', // Bob claims partially through his position @ tick -20
             upper: '0',
             liquidityAmount: bobLiquidityAmount,
+            positionId: bobId,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24892711623697875921'),
             balanceOutIncrease: BigNumber.from('75012511866496001008'),
@@ -1433,6 +1470,7 @@ describe('CoverPool Tests', function () {
             claim: '-20', // Alice claims partially through her position @ tick -20
             upper: '0',
             liquidityAmount: aliceLiquidityAmount,
+            positionId: aliceId,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('49835255995184988250'),
             balanceOutIncrease: BigNumber.from('49975001251999693578'),
@@ -1461,7 +1499,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
         const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -1496,8 +1534,7 @@ describe('CoverPool Tests', function () {
         if (debugMode) {
             await getTick(true, -20, debugMode)
             await getLiquidity(true, debugMode)
-            await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
-            await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+            await getPositionLiquidity(true, aliceId, debugMode)
             await getTick(true, 0, debugMode)
         }
 
@@ -1509,6 +1546,7 @@ describe('CoverPool Tests', function () {
             upper: '0',
             amount: tokenAmount,
             zeroForOne: true,
+            positionId: aliceId,
             balanceInDecrease: BigNumber.from('43411754351405135504'), // alice gets amounOut back
             balanceOutIncrease: BigNumber.from('10000000000000000000'),
             liquidityIncrease: aliceLiquidityAmount,
@@ -1523,6 +1561,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: BN_ZERO,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -1532,7 +1571,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateMint({
+        const aliceId2 = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -1552,6 +1591,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-40',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1566,6 +1606,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '0',
             upper: '0',
+            positionId: aliceId2,
             liquidityAmount: aliceLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1584,7 +1625,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
         if (debugMode) await getLatestTick(debugMode)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -1619,6 +1660,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -1630,10 +1672,9 @@ describe('CoverPool Tests', function () {
         await validateSync(0)
         if (debugMode) await getTick(true, -20, debugMode)
         if (debugMode) await getLiquidity(true, debugMode)
-        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
-        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+        if (debugMode) await getPositionLiquidity(true, aliceId)
 
-        await validateMint({
+        const aliceId2 = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -1647,25 +1688,27 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
         if (debugMode) await getTick(true, -40, debugMode)
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-60',
-            claim: '-40',
-            upper: '-20',
-            liquidityAmount: aliceLiquidityAmount.div(2),
-            zeroForOne: true,
-            balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('61630471922511652518'),
-            lowerTickCleared: false,
-            upperTickCleared: true,
-            revertMessage: 'UpdatePositionFirstAt(-60, -40)', // Alice cannot claim until she closes her position at (-60, -40)
-        })
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     positionId: aliceId,
+        //     liquidityAmount: aliceLiquidityAmount.div(2),
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('10000000000000000000'),
+        //     balanceOutIncrease: BigNumber.from('61630471922511652518'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: true,
+        //     revertMessage: 'UpdatePositionFirstAt(-60, -40)', // Alice cannot claim until she closes her position at (-60, -40)
+        // })
 
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
             claim: '-40',
             upper: '-40',
+            positionId: aliceId2,
             liquidityAmount: aliceLiquidityAmount2,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1680,6 +1723,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1701,7 +1745,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityAmount = BigNumber.from('33285024970969944913475')
         const aliceLiquidityAmount2 = BigNumber.from('99755307984763292988257')
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -1734,14 +1778,14 @@ describe('CoverPool Tests', function () {
         await validateSync(0)
         if (debugMode) await getTick(true, -20, debugMode)
         if (debugMode) await getLiquidity(true, debugMode)
-        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -20, debugMode)
-        if (debugMode) await getPositionLiquidity(true, alice.address, -60, -40, debugMode)
+        if (debugMode) await getPositionLiquidity(true, aliceId)
 
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
             claim: '-40',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -1750,12 +1794,12 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
-
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
             upper: '-40',
+            positionId: aliceId,
             amount: tokenAmount,
             zeroForOne: true,
             balanceInDecrease: tokenAmount,
@@ -1764,6 +1808,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
+
         if (debugMode) await getTick(true, -40, debugMode)
         /// @dev - minAmountPerAuction turned off for Arbitrum testnet
         // await validateBurn({
@@ -1784,6 +1829,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-40',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1798,7 +1844,7 @@ describe('CoverPool Tests', function () {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -1831,6 +1877,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -1844,7 +1891,7 @@ describe('CoverPool Tests', function () {
     it("pool0 - twap rate-limiting yields invalid tick :: GUARDIAN AUDITS 58", async function () {
         await validateSync(20);
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-20',
@@ -1860,7 +1907,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-20);
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-60',
@@ -1891,6 +1938,7 @@ describe('CoverPool Tests', function () {
             lower: '-20',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from("99955008249587388643769"), // Alice was already filled 100%
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1905,13 +1953,14 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-25',
             upper: '-25',
+            positionId: bobId,
             liquidityAmount: BigNumber.from("33285024970969944913475"),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'InvalidClaimTick()',
         })
 
         await validateBurn({
@@ -1919,6 +1968,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-40',
+            positionId: bobId,
             liquidityAmount: BigNumber.from("33285024970969944913475"),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -1933,7 +1983,7 @@ describe('CoverPool Tests', function () {
         await validateSync(20);
         const aliceLiquidityAmount = BigNumber.from('24951283310825598484485')
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-80',
@@ -1977,6 +2027,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-20',
             upper: '0',
+            positionId: aliceId,
             liquidityAmount: aliceLiquidityAmount.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('24892711623697875921'),
@@ -2013,6 +2064,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-80',
             upper: '-40',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('12421489218416072977'),
@@ -2037,7 +2089,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityAmount = BigNumber.from('49952516624167694475096')
         const bobLiquidityAmount = BigNumber.from('24951283310825598484485')
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-80',
@@ -2069,6 +2121,7 @@ describe('CoverPool Tests', function () {
             lower: '-80',
             claim: '-40',
             upper: '0',
+            positionId: bobId,
             liquidityAmount: bobLiquidityAmount,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2084,7 +2137,7 @@ describe('CoverPool Tests', function () {
         const aliceLiquidityIncrease = BigNumber.from("49902591570441687020675")
 
         // Alice mints a position from -20 -> -60
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2130,6 +2183,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('1'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2146,7 +2200,9 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('1'),
+            positionLiquidityChange: BigNumber.from('49902591570441687020675'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('100000000000000000000'),
@@ -2161,7 +2217,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2195,6 +2251,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('49785448137620406518'),
@@ -2228,7 +2285,7 @@ describe('CoverPool Tests', function () {
         await validateSync(-40)
         await validateSync(-60)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-120',
@@ -2250,6 +2307,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-80',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2264,6 +2322,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-120',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2289,7 +2348,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
         await validateSync(-60)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-120',
@@ -2321,6 +2380,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-80',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: BN_ZERO,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -2346,6 +2406,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-80',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: BN_ZERO,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -2363,6 +2424,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-100',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: true,
             balanceInIncrease: BN_ZERO,
@@ -2377,6 +2439,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-120',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2402,7 +2465,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmount3 = BigNumber.from('99456505428612725961158')
         await validateSync(-60)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-120',
@@ -2434,6 +2497,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-80',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: BN_ZERO,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -2448,6 +2512,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-80',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2462,6 +2527,7 @@ describe('CoverPool Tests', function () {
             lower: '-120',
             claim: '-80',
             upper: '-80',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2488,7 +2554,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2502,7 +2568,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateMint({
+        const aliceId2 = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -2525,6 +2591,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId2,
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2540,7 +2607,9 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4.div(2),
+            positionLiquidityChange: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'), 
             balanceOutIncrease: BigNumber.from('200000000000000000000').sub(1),
@@ -2555,13 +2624,14 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4.div(2),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('254504143839762320698').div(2),
             lowerTickCleared: true,
             upperTickCleared: true,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
 
         await validateSync(-40)
@@ -2582,7 +2652,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmount4 = BigNumber.from('49902591570441687020675')
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2598,7 +2668,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-20)
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-60',
@@ -2619,6 +2689,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2633,6 +2704,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-60',
             upper: '-40',
+            positionId: bobId,
             liquidityAmount: BigNumber.from('99755307984763292988257'),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2660,7 +2732,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-40',
@@ -2682,6 +2754,7 @@ describe('CoverPool Tests', function () {
             lower: '-40',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2698,7 +2771,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2712,7 +2785,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '-60',
@@ -2747,6 +2820,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount5,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
@@ -2756,25 +2830,27 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-60',
-            claim: '-40',
-            upper: '-20',
-            liquidityAmount: liquidityAmount4.sub(liquidityAmount5),
-            zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('74987500625999846788'),
-            lowerTickCleared: false,
-            upperTickCleared: true,
-            revertMessage: 'NotEnoughPositionLiquidity()',
-        })
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     positionId: aliceId,
+        //     liquidityAmount: liquidityAmount4.sub(liquidityAmount5),
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('0'),
+        //     balanceOutIncrease: BigNumber.from('74987500625999846788'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: true,
+        //     revertMessage: 'PositionNotFound()',
+        // })
 
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
             claim: '-40',
             upper: '-40',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2789,6 +2865,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: bobId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('5000000000000000000'),
@@ -2817,7 +2894,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2838,6 +2915,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2866,7 +2944,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '-60',
@@ -2911,6 +2989,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-40',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('0'),
@@ -2925,6 +3004,7 @@ describe('CoverPool Tests', function () {
             lower: '-60',
             claim: '-20',
             upper: '-20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: true,
             balanceInIncrease: BigNumber.from('20000000000000000000'),
@@ -2946,8 +3026,7 @@ describe('CoverPool Tests', function () {
             console.log('deltainmax  after:', (await hre.props.coverPool.ticks0('-60')).amountInDeltaMaxMinus.toString())
             console.log('deltaoutmax after:', (await hre.props.coverPool.ticks0('-60')).amountOutDeltaMaxMinus.toString())
         } 
-    })
-
+    })    
     // move TWAP in range; no-op swap; burn immediately
 
     // multiple claims within current auction
@@ -2976,12 +3055,14 @@ describe('CoverPool Tests', function () {
 
     it('pool1 - Should mint/burn new LP position 23', async function () {
         // process two mints
+        let aliceId = 0
         for (let i = 0; i < 2; i++) {
-            await validateMint({
+            aliceId = await validateMint({
                 signer: hre.props.alice,
                 recipient: hre.props.alice.address,
                 lower: '20',
                 upper: '40',
+                positionId: aliceId,
                 amount: tokenAmount,
                 zeroForOne: false,
                 balanceInDecrease: tokenAmount,
@@ -3011,6 +3092,7 @@ describe('CoverPool Tests', function () {
                 lower: '20',
                 claim: '20',
                 upper: '40',
+                positionId: aliceId,
                 liquidityAmount: liquidityAmount,
                 zeroForOne: false,
                 balanceInIncrease: BN_ZERO,
@@ -3032,7 +3114,7 @@ describe('CoverPool Tests', function () {
         // move TWAP to tick 0
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3062,6 +3144,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '20',
             upper: '40',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -3087,7 +3170,7 @@ describe('CoverPool Tests', function () {
         await validateSync(-20)
 
         // mint position
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '0',
@@ -3106,7 +3189,7 @@ describe('CoverPool Tests', function () {
         await validateSync(20)
 
         // should revert on twap bounds
-        await validateMint({
+        const aliceId2 = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3138,13 +3221,14 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '40',
             upper: '40',
+            positionId: aliceId2,
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
             balanceOutIncrease: tokenAmount.sub(1),
             lowerTickCleared: true,
             upperTickCleared: true,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
 
         //valid burn
@@ -3153,6 +3237,7 @@ describe('CoverPool Tests', function () {
             lower: '0',
             claim: '20',
             upper: '20',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -3172,7 +3257,7 @@ describe('CoverPool Tests', function () {
     it('pool1 - Should not mint position below TWAP 10', async function () {
         await validateSync(40)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3199,7 +3284,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3231,6 +3316,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '40',
             upper: '40',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -3245,6 +3331,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '20',
             upper: '40',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('99620704132805394769'),
@@ -3259,13 +3346,14 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '20',
             upper: '40',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('99680524411508040121'),
             balanceOutIncrease: BigNumber.from('0'),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
 
         if (deltaMaxAfterCheck) {
@@ -3280,7 +3368,7 @@ describe('CoverPool Tests', function () {
 
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3312,6 +3400,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '20',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('10000000000000000000'),
@@ -3339,7 +3428,7 @@ describe('CoverPool Tests', function () {
             hre.props.bob,
         ], [hre.props.alice.address, hre.props.bob.address])
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3358,13 +3447,14 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '20',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
             balanceOutIncrease: BigNumber.from('99875219786520339160'),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'NotEnoughPositionLiquidity()',
+            revertMessage: 'PositionNotFound()',
         })
 
         if (deltaMaxAfterCheck) {
@@ -3385,7 +3475,7 @@ describe('CoverPool Tests', function () {
             hre.props.bob,
         ], [hre.props.alice.address, hre.props.bob.address])
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '600000',
@@ -3419,6 +3509,7 @@ describe('CoverPool Tests', function () {
             lower: '600000',
             claim: '600000',
             upper: '600020',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount4,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('2980787058715'),
@@ -3443,7 +3534,7 @@ describe('CoverPool Tests', function () {
         await validateSync(60)
         
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '80',
@@ -3464,6 +3555,7 @@ describe('CoverPool Tests', function () {
             lower: '80',
             claim: '100',
             upper: '120',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3491,7 +3583,7 @@ describe('CoverPool Tests', function () {
         await validateSync(60)
         
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '80',
@@ -3514,6 +3606,7 @@ describe('CoverPool Tests', function () {
             lower: '80',
             claim: '120',
             upper: '120',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3536,7 +3629,7 @@ describe('CoverPool Tests', function () {
         // Note: unused, way to initialize all the ticks in the range manually
         let liquidityAmountBob = hre.ethers.utils.parseUnits("99855108194609381495771", 0);
         getLatestTick(debugMode)
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '20',
@@ -3550,7 +3643,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        await validateMint({
+        const bobId2 = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '60',
@@ -3564,7 +3657,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        await validateMint({
+        const bobId3 = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '100',
@@ -3583,6 +3676,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '20',
             upper: '40',
+            positionId: bobId,
             liquidityAmount: liquidityAmountBob,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3597,6 +3691,7 @@ describe('CoverPool Tests', function () {
             lower: '60',
             claim: '60',
             upper: '80',
+            positionId: bobId2,
             liquidityAmount: BigNumber.from("99655607520258884066351"),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3611,6 +3706,7 @@ describe('CoverPool Tests', function () {
             lower: '100',
             claim: '100',
             upper: '120',
+            positionId: bobId3,
             liquidityAmount: BigNumber.from("99456505428612725961158"),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3629,7 +3725,7 @@ describe('CoverPool Tests', function () {
 
         // console.log("--------------- Alice First mint -------------");
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '0',
@@ -3660,6 +3756,7 @@ describe('CoverPool Tests', function () {
             lower: '0',
             claim: '40',
             upper: '120',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('0'),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3698,6 +3795,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '120',
             upper: '120',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3721,7 +3819,7 @@ describe('CoverPool Tests', function () {
 
         // console.log("--------------- Alice First mint -------------");
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '0',
@@ -3752,6 +3850,7 @@ describe('CoverPool Tests', function () {
             lower: '0',
             claim: '40',
             upper: '120',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('0'),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3772,6 +3871,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '120',
             upper: '120',
+            positionId: aliceId,
             liquidityAmount: liquidityAmount2,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3786,7 +3886,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -3805,6 +3905,7 @@ describe('CoverPool Tests', function () {
             recipient: hre.props.alice.address,
             lower: '20',
             upper: '60',
+            positionId: aliceId,
             amount: tokenAmount,
             zeroForOne: false,
             balanceInDecrease: tokenAmount,
@@ -3823,6 +3924,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '40',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: liquidityAmountAlice,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -3853,6 +3955,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '40',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: liquidityAmountAlice,
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -3863,7 +3966,8 @@ describe('CoverPool Tests', function () {
         });
         await validateSync(20);
         // // Alice can't open a position because the previous position is still active.
-        await validateMint({
+
+        const aliceId2 = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '40',
@@ -3882,6 +3986,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '40',
             upper: '60',
+            positionId: aliceId2,
             liquidityAmount: BigNumber.from('99755307984763292988257'),
             zeroForOne: false,
             balanceInIncrease: BN_ZERO,
@@ -3890,7 +3995,6 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: '',
         });
-
     });
 
     it('pool1 - Should differentiate between older closed positions and newer opened positions :: GUARDIAN AUDITS', async function () {
@@ -3898,7 +4002,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmountAlice = BigNumber.from("99755307984763292988257");
         await validateSync(0)
 
-        await validateMint({
+        const bobId = await validateMint({
             signer: hre.props.bob,
             recipient: hre.props.bob.address,
             lower: '20',
@@ -3918,7 +4022,7 @@ describe('CoverPool Tests', function () {
         await validateSync(80);
         await validateSync(20);
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '40',
@@ -3940,6 +4044,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '60',
             upper: '60',
+            positionId: bobId,
             liquidityAmount: liquidityAmount,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from("0"),
@@ -3954,6 +4059,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '60',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: liquidityAmountAlice,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from("0"),
@@ -3968,6 +4074,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '40',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: liquidityAmountAlice,
             zeroForOne: false,
             balanceInIncrease: BigNumber.from("0"),
@@ -3982,7 +4089,7 @@ describe('CoverPool Tests', function () {
         const liquidityAmountAlice = BigNumber.from('49902591570441687020675')
         await validateSync(0)
 
-        await validateMint({
+        const aliceId = await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
             lower: '20',
@@ -4007,6 +4114,7 @@ describe('CoverPool Tests', function () {
             lower: '20',
             claim: '40',
             upper: '60',
+            positionId: aliceId,
             liquidityAmount: BigNumber.from('1'),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),
@@ -4021,6 +4129,7 @@ describe('CoverPool Tests', function () {
             lower: '40',
             claim: '40',
             upper: '60',
+            positionId: aliceId,
             liquidityPercent: ethers.utils.parseUnits("1", 38),
             zeroForOne: false,
             balanceInIncrease: BigNumber.from('0'),

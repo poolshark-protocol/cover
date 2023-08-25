@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0xF8dc31019369D9346Fc9FF00E3D073288282dA7F'
+          address: '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'
           abi: CoverPoolFactory
-          startBlock: 29495500
+          startBlock: 36320900
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -31,15 +31,15 @@ dataSources:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: PoolCreated(address,address,address,indexed address,indexed address,uint16,indexed int16,uint16)
+              - event: PoolCreated(address,indexed address,indexed address,address,address,indexed address,uint16,int16,uint16)
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x64BA950eed56d2341632070Cad0f6ff7afaf6372'
+          address: '0x00F68a260Eb15Bb9DF3e0B9035154549ca410688'
           abi: CoverPoolManager
-          startBlock: 29495500
+          startBlock: 36320900
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -52,7 +52,7 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
-              - event: VolatilityTierEnabled(address,address,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
+              - event: VolatilityTierEnabled(address,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
                 handler: handleFeeToTransfer

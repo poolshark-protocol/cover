@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './modules/curves/ICurveMath.sol';
 import './modules/sources/ITwapSource.sol';
 
 interface ICoverPoolStructs {
@@ -12,6 +11,7 @@ interface ICoverPoolStructs {
         uint32   lastTime;         /// @dev last block checked
         uint32   auctionStart;     /// @dev last block price reference was updated
         uint32   accumEpoch;       /// @dev number of times this pool has been synced
+        uint32   positionIdNext;
         int24    latestTick;       /// @dev latest updated inputPool price tick
         uint16   syncFee;
         uint16   fillFee;
@@ -49,17 +49,20 @@ interface ICoverPoolStructs {
         uint128 amountOutDeltaMax; /// @dev - max unfilled
     }
 
-    struct Position {
+    struct CoverPosition {
+        address owner;
         uint160 claimPriceLast;    /// @dev - highest price claimed at
         uint128 liquidity;         /// @dev - expected amount to be used not actual
         uint128 amountIn;          /// @dev - token amount already claimed; balance
         uint128 amountOut;         /// @dev - necessary for non-custodial positions
         uint32  accumEpochLast;    /// @dev - last epoch this position was updated at
+        int24 lower;
+        int24 upper;
     }
 
     struct Immutables {
         ITwapSource source;
-        ICurveMath.PriceBounds bounds;
+        PriceBounds bounds;
         address owner;
         address token0;
         address token1;
@@ -92,6 +95,11 @@ interface ICoverPoolStructs {
         uint128 token1;
     }
 
+    struct PriceBounds {
+        uint160 min;
+        uint160 max;
+    }
+
     struct SyncFees {
         uint128 token0;
         uint128 token1;
@@ -100,6 +108,7 @@ interface ICoverPoolStructs {
     struct CollectParams {
         SyncFees syncFees;
         address to;
+        uint32 positionId;
         int24 lower;
         int24 claim;
         int24 upper;
@@ -119,6 +128,7 @@ interface ICoverPoolStructs {
         address to;
         uint128 amount;
         uint128 amountIn;
+        uint32 positionId;
         int24 lower;
         int24 upper;
         bool zeroForOne;
@@ -128,6 +138,7 @@ interface ICoverPoolStructs {
         address owner;
         address to;
         uint128 amount;
+        uint32 positionId;
         int24 lower;
         int24 upper;
         bool zeroForOne;
@@ -137,6 +148,7 @@ interface ICoverPoolStructs {
         address owner;
         address to;
         uint128 amount;
+        uint32 positionId;
         int24 lower;
         int24 upper;
         int24 claim;
@@ -145,7 +157,7 @@ interface ICoverPoolStructs {
 
     struct MintCache {
         GlobalState state;
-        Position position;
+        CoverPosition position;
         Immutables constants;
         SyncFees syncFees;
         PoolState pool0;
@@ -155,7 +167,7 @@ interface ICoverPoolStructs {
 
     struct BurnCache {
         GlobalState state;
-        Position position;
+        CoverPosition position;
         Immutables constants;
         SyncFees syncFees;
         PoolState pool0;
@@ -182,8 +194,8 @@ interface ICoverPoolStructs {
         bool exactIn;
     }
 
-    struct PositionCache {
-        Position position;
+    struct CoverPositionCache {
+        CoverPosition position;
         Deltas deltas;
         uint160 priceLower;
         uint160 priceUpper;
@@ -202,7 +214,7 @@ interface ICoverPoolStructs {
         uint256 amountOutUnfilledMax; // considers the range covered by each update
         Tick claimTick;
         Tick finalTick;
-        Position position;
+        CoverPosition position;
         uint160 priceLower;
         uint160 priceClaim;
         uint160 priceUpper;

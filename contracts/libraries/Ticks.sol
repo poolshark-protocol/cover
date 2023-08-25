@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/ICoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './math/OverflowMath.sol';
-import '../interfaces/modules/curves/ICurveMath.sol';
 import '../interfaces/modules/sources/ITwapSource.sol';
 import './TickMap.sol';
 
@@ -114,6 +112,7 @@ library Ticks {
                 state.latestPrice = ConstantProduct.getPriceAtTick(state.latestTick, constants);
                 state.auctionStart = uint32(block.timestamp - constants.genesisTime);
                 state.accumEpoch = 1;
+                state.positionIdNext = 1;
 
                 // initialize ticks
                 TickMap.set(ConstantProduct.minTick(constants.tickSpread), tickMap, constants);

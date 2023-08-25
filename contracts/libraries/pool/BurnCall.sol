@@ -28,11 +28,15 @@ library BurnCall {
         ICoverPoolStructs.BurnCache memory cache,
         ICoverPoolStructs.TickMap storage tickMap,
         mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
+        mapping(uint256 => ICoverPoolStructs.CoverPosition)
             storage positions
     ) external returns (ICoverPoolStructs.BurnCache memory) {
+        cache.position = positions[params.positionId];
+        if (cache.position.owner != msg.sender) {
+            require(false, 'PositionNotFound()');
+        }
        if (cache.position.claimPriceLast > 0
-            || params.claim != (params.zeroForOne ? params.upper : params.lower) 
+            || params.claim != (params.zeroForOne ? cache.position.upper : cache.position.lower) 
             || params.claim == cache.state.latestTick)
         {
             // if position has been crossed into
@@ -51,8 +55,9 @@ library BurnCall {
                         msg.sender,
                         params.to,
                         params.burnPercent,
-                        params.lower,
-                        params.upper,
+                        params.positionId,
+                        cache.position.lower,
+                        cache.position.upper,
                         params.claim,
                         params.zeroForOne
                     ),
@@ -73,8 +78,9 @@ library BurnCall {
                         msg.sender,
                         params.to,
                         params.burnPercent,
-                        params.lower,
-                        params.upper,
+                        params.positionId,
+                        cache.position.lower,
+                        cache.position.upper,
                         params.claim,
                         params.zeroForOne
                     ),
@@ -92,8 +98,9 @@ library BurnCall {
                     msg.sender,
                     params.to,
                     params.burnPercent,
-                    params.lower,
-                    params.upper,
+                    params.positionId,
+                    cache.position.lower,
+                    cache.position.upper,
                     params.zeroForOne
                 ),
                 cache.constants
@@ -105,9 +112,10 @@ library BurnCall {
             ICoverPoolStructs.CollectParams(
                 cache.syncFees,
                 params.to, //address(0) goes to msg.sender
-                params.lower,
+                params.positionId,
+                cache.position.lower,
                 params.claim,
-                params.upper,
+                cache.position.upper,
                 params.zeroForOne
             )
         );
