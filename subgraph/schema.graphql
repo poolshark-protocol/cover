@@ -116,6 +116,7 @@ type Position @entity {
     # poolAddress + owner + lower + upper
     id: ID!
     pool: CoverPool!
+    positionId: BigInt!
     txnHash: Bytes!
     createdBy: Bytes!
     createdAtTimestamp: BigInt!

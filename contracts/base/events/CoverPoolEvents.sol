@@ -17,8 +17,7 @@ abstract contract CoverPoolEvents {
 
     event Burn(
         address indexed to,
-        int24 lower,
-        int24 upper,
+        uint32 positionId,
         int24 claim,
         bool zeroForOne,
         uint128 liquidityBurned,
