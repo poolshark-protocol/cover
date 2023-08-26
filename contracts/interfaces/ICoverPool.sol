@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
-import './ICoverPoolStructs.sol';
+import './structs/CoverPoolStructs.sol';
 import './structs/PoolsharkStructs.sol';
 
 /**
@@ -9,7 +9,7 @@ import './structs/PoolsharkStructs.sol';
  * @author Poolshark
  * @notice Defines the basic interface for a Cover Pool.
  */
-interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
+interface ICoverPool is CoverPoolStructs, PoolsharkStructs {
     /**
      * @custom:struct MintParams
      */

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/ICoverPool.sol';
 import '../Ticks.sol';
 
@@ -10,13 +10,13 @@ library QuoteCall {
 
     function perform(
         ICoverPool.QuoteParams memory params,
-        ICoverPoolStructs.SwapCache memory cache
+        CoverPoolStructs.SwapCache memory cache
     ) external view returns (
-        ICoverPoolStructs.SwapCache memory
+        CoverPoolStructs.SwapCache memory
     ) {
     {
-        ICoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
-        cache = ICoverPoolStructs.SwapCache({
+        CoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
+        cache = CoverPoolStructs.SwapCache({
             state: cache.state,
             syncFees: cache.syncFees,
             constants: cache.constants,

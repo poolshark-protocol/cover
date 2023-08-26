@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 import '../utils/CoverPoolErrors.sol';
 import './math/OverflowMath.sol';
 import '../interfaces/modules/sources/ITwapSource.sol';
@@ -24,10 +24,10 @@ library Ticks {
     function quote(
         bool zeroForOne,
         uint160 priceLimit,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.SwapCache memory cache,
-        ICoverPoolStructs.Immutables memory constants
-    ) internal pure returns (ICoverPoolStructs.SwapCache memory) {
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.SwapCache memory cache,
+        CoverPoolStructs.Immutables memory constants
+    ) internal pure returns (CoverPoolStructs.SwapCache memory) {
         if ((zeroForOne ? priceLimit >= cache.price
                         : priceLimit <= cache.price) ||
             (cache.liquidity == 0))
@@ -98,12 +98,12 @@ library Ticks {
     }
 
     function initialize(
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.PoolState storage pool0,
-        ICoverPoolStructs.PoolState storage pool1,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.Immutables memory constants 
-    ) external returns (ICoverPoolStructs.GlobalState memory) {
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.PoolState storage pool0,
+        CoverPoolStructs.PoolState storage pool1,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.Immutables memory constants 
+    ) external returns (CoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = constants.source.initialize(constants);
             if (state.unlocked == 1) {
@@ -138,10 +138,10 @@ library Ticks {
     }
 
     function insert(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.Immutables memory constants,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.Immutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -153,8 +153,8 @@ library Ticks {
             require (false, 'LiquidityOverflow()');
 
         // load ticks into memory to reduce reads/writes
-        ICoverPoolStructs.Tick memory tickLower = ticks[lower];
-        ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
+        CoverPoolStructs.Tick memory tickLower = ticks[lower];
+        CoverPoolStructs.Tick memory tickUpper = ticks[upper];
 
         // sets bit in map
         TickMap.set(lower, tickMap, constants);
@@ -178,9 +178,9 @@ library Ticks {
     }
 
     function remove(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -189,7 +189,7 @@ library Ticks {
         bool removeUpper
     ) external {
         {
-            ICoverPoolStructs.Tick memory tickLower = ticks[lower];
+            CoverPoolStructs.Tick memory tickLower = ticks[lower];
             if (removeLower) {
                 if (isPool0) {
                     tickLower.liquidityDelta += int128(amount);
@@ -203,7 +203,7 @@ library Ticks {
             }
         }
         {
-            ICoverPoolStructs.Tick memory tickUpper = ticks[upper];
+            CoverPoolStructs.Tick memory tickUpper = ticks[upper];
             if (removeUpper) {
                 if (isPool0) {
                     tickUpper.liquidityDelta -= int128(amount);
@@ -219,10 +219,10 @@ library Ticks {
     }
 
     function cleanup(
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants,
-        ICoverPoolStructs.Tick memory tick,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants,
+        CoverPoolStructs.Tick memory tick,
         int24 tickIndex
     ) internal {
         if (!_empty(tick)){
@@ -253,7 +253,7 @@ library Ticks {
     }
 
     function _inactive(
-        ICoverPoolStructs.Tick memory tick
+        CoverPoolStructs.Tick memory tick
     ) internal pure returns (
         bool
     ) {
@@ -268,7 +268,7 @@ library Ticks {
     }
 
     function _empty(
-        ICoverPoolStructs.Tick memory tick
+        CoverPoolStructs.Tick memory tick
     ) internal pure returns (
         bool
     ) {
@@ -276,9 +276,11 @@ library Ticks {
             return false;
         } else if (tick.amountInDeltaMaxMinus > 0 && tick.amountOutDeltaMaxMinus > 0){
             return false;
-        } else if (tick.deltas.amountInDeltaMax > 0 && tick.deltas.amountOutDeltaMax > 0) {
-            return false;
         } else if (tick.liquidityDelta != 0) {
+            return false;
+        } else if (tick.deltas0.amountInDeltaMax > 0 && tick.deltas0.amountOutDeltaMax > 0) {
+            return false;
+        } else if (tick.deltas1.amountInDeltaMax > 0 && tick.deltas1.amountOutDeltaMax > 0) {
             return false;
         }
         return true;

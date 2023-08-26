@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 import 'hardhat/console.sol';
@@ -22,12 +22,12 @@ library MintCall {
 
     function perform(
         ICoverPool.MintParams memory params,
-        ICoverPoolStructs.MintCache memory cache,
-        ICoverPoolStructs.TickMap storage tickMap,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        CoverPoolStructs.MintCache memory cache,
+        CoverPoolStructs.TickMap storage tickMap,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions
-    ) external returns (ICoverPoolStructs.MintCache memory) {
+    ) external returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
             // load existing position
             cache.position = positions[params.positionId];
@@ -44,7 +44,7 @@ library MintCall {
         if (params.positionId == 0 ||                       // new position
                 params.lower != cache.position.lower ||     // lower mismatch
                 params.upper != cache.position.upper) {     // upper mismatch
-            ICoverPoolStructs.CoverPosition memory newPosition;
+            CoverPoolStructs.CoverPosition memory newPosition;
             newPosition.owner = params.to;
             newPosition.lower = params.lower;
             newPosition.upper = params.upper;
@@ -64,7 +64,7 @@ library MintCall {
             ticks,
             tickMap,
             cache.state,
-            ICoverPoolStructs.AddParams(
+            CoverPoolStructs.AddParams(
                 params.to,
                 uint128(cache.liquidityMinted),
                 params.amount,
@@ -77,7 +77,7 @@ library MintCall {
         );
         Collect.mint(
             cache,
-            ICoverPoolStructs.CollectParams(
+            CoverPoolStructs.CollectParams(
                 cache.syncFees,
                 params.to,
                 params.positionId,

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.13;
 
 import './math/ConstantProduct.sol';
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 
 library EpochMap {
     function set(
         int24  tick,
         uint256 epoch,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external {
         (
             uint256 tickIndex,
@@ -29,8 +29,8 @@ library EpochMap {
 
     function unset(
         int24 tick,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external {
         (
             uint256 tickIndex,
@@ -48,8 +48,8 @@ library EpochMap {
 
     function get(
         int24 tick,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external view returns (
         uint32 epoch
     ) {
@@ -70,7 +70,7 @@ library EpochMap {
 
     function getIndices(
         int24 tick,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.Immutables memory constants
     ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -92,7 +92,7 @@ library EpochMap {
 
     function _tick (
         uint256 tickIndex,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.Immutables memory constants
     ) internal pure returns (
         int24 tick
     ) {

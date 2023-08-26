@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/IERC20Minimal.sol';
 import '../../interfaces/callbacks/ICoverPoolSwapCallback.sol';
 import '../Epochs.sol';
@@ -30,14 +30,14 @@ library SwapCall {
 
     function perform(
         ICoverPool.SwapParams memory params,
-        ICoverPoolStructs.SwapCache memory cache,
-        ICoverPoolStructs.GlobalState storage globalState,
-        ICoverPoolStructs.PoolState storage pool0,
-        ICoverPoolStructs.PoolState storage pool1
-    ) external returns (ICoverPoolStructs.SwapCache memory) {
+        CoverPoolStructs.SwapCache memory cache,
+        CoverPoolStructs.GlobalState storage globalState,
+        CoverPoolStructs.PoolState storage pool0,
+        CoverPoolStructs.PoolState storage pool1
+    ) external returns (CoverPoolStructs.SwapCache memory) {
         {
-            ICoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
-            cache = ICoverPoolStructs.SwapCache({
+            CoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
+            cache = CoverPoolStructs.SwapCache({
                 state: cache.state,
                 syncFees: cache.syncFees,
                 constants: cache.constants,
@@ -119,10 +119,10 @@ library SwapCall {
     }
 
     function save(
-        ICoverPoolStructs.SwapCache memory cache,
-        ICoverPoolStructs.GlobalState storage globalState,
-        ICoverPoolStructs.PoolState storage pool0,
-        ICoverPoolStructs.PoolState storage pool1
+        CoverPoolStructs.SwapCache memory cache,
+        CoverPoolStructs.GlobalState storage globalState,
+        CoverPoolStructs.PoolState storage pool0,
+        CoverPoolStructs.PoolState storage pool1
     ) internal {
         globalState.latestPrice = cache.state.latestPrice;
         globalState.liquidityGlobal = cache.state.liquidityGlobal;
@@ -146,7 +146,7 @@ library SwapCall {
 
     function balance(
         ICoverPool.SwapParams memory params,
-        ICoverPoolStructs.SwapCache memory cache
+        CoverPoolStructs.SwapCache memory cache
     ) private view returns (uint256) {
         (
             bool success,

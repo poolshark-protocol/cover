@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 import './math/ConstantProduct.sol';
 
 library TickMap {
     function set(
         int24 tick,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external returns (
         bool exists
     )    
@@ -33,8 +33,8 @@ library TickMap {
 
     function unset(
         int24 tick,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external {
         (
             uint256 tickIndex,
@@ -53,8 +53,8 @@ library TickMap {
 
     function previous(
         int24 tick,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external view returns (
         int24 previousTick
     ) {
@@ -83,8 +83,8 @@ library TickMap {
 
     function next(
         int24 tick,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.Immutables memory constants
     ) external view returns (
         int24 nextTick
     ) {
@@ -118,7 +118,7 @@ library TickMap {
 
     function getIndices(
         int24 tick,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.Immutables memory constants
     ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -138,7 +138,7 @@ library TickMap {
 
     function _tick (
         uint256 tickIndex,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.Immutables memory constants
     ) internal pure returns (
         int24 tick
     ) {

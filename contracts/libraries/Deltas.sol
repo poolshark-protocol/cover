@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 import './math/ConstantProduct.sol';
 
 library Deltas {
@@ -130,13 +130,13 @@ library Deltas {
     }
 
     function transfer(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Deltas memory toDeltas,
+        CoverPoolStructs.Deltas memory fromDeltas,
+        CoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
     ) external pure returns (
-        ICoverPoolStructs.Deltas memory,
-        ICoverPoolStructs.Deltas memory
+        CoverPoolStructs.Deltas memory,
+        CoverPoolStructs.Deltas memory
     ) {
         {
             uint128 amountInDeltaChange = uint128(uint256(fromDeltas.amountInDelta) * percentInTransfer / 1e38);
@@ -162,13 +162,13 @@ library Deltas {
     }
 
     function transferMax(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Deltas memory toDeltas,
+        CoverPoolStructs.Deltas memory fromDeltas,
+        CoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
     ) external pure returns (
-        ICoverPoolStructs.Deltas memory,
-        ICoverPoolStructs.Deltas memory
+        CoverPoolStructs.Deltas memory,
+        CoverPoolStructs.Deltas memory
     ) {
         {
             uint128 amountInDeltaMaxChange = uint128(uint256(fromDeltas.amountInDeltaMax) * percentInTransfer / 1e38);
@@ -194,10 +194,10 @@ library Deltas {
     }
 
     function burnMaxCache(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Tick memory burnTick
+        CoverPoolStructs.Deltas memory fromDeltas,
+        CoverPoolStructs.Tick memory burnTick
     ) external pure returns (
-        ICoverPoolStructs.Deltas memory
+        CoverPoolStructs.Deltas memory
     ) {
         fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
                                          < burnTick.amountInDeltaMaxMinus) ? fromDeltas.amountInDeltaMax
@@ -212,10 +212,10 @@ library Deltas {
     }
 
     function burnMaxMinus(
-        ICoverPoolStructs.Tick memory fromTick,
-        ICoverPoolStructs.Deltas memory burnDeltas
+        CoverPoolStructs.Tick memory fromTick,
+        CoverPoolStructs.Deltas memory burnDeltas
     ) external pure returns (
-        ICoverPoolStructs.Tick memory
+        CoverPoolStructs.Tick memory
     ) {
         fromTick.amountInDeltaMaxMinus -= (fromTick.amountInDeltaMaxMinus
                                             < burnDeltas.amountInDeltaMax) ? fromTick.amountInDeltaMaxMinus
@@ -230,11 +230,11 @@ library Deltas {
     }
 
     function burnMaxPool(
-        ICoverPoolStructs.PoolState memory pool,
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
+        CoverPoolStructs.PoolState memory pool,
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params
     ) external pure returns (
-        ICoverPoolStructs.PoolState memory
+        CoverPoolStructs.PoolState memory
     )
     {
         uint128 amountInMaxClaimedBefore; uint128 amountOutMaxClaimedBefore;
@@ -254,107 +254,154 @@ library Deltas {
         return pool;
     }
 
+    struct FromLocals {
+        CoverPoolStructs.Deltas fromDeltas;
+        uint256 percentOnTick;
+        uint128 amountInDeltaChange;
+        uint128 amountOutDeltaChange;
+    }
+
     function from(
-        ICoverPoolStructs.Tick memory fromTick,
-        ICoverPoolStructs.Deltas memory toDeltas
+        CoverPoolStructs.Tick memory fromTick,
+        CoverPoolStructs.Deltas memory toDeltas,
+        bool isPool0
     ) external pure returns (
-        ICoverPoolStructs.Tick memory,
-        ICoverPoolStructs.Deltas memory
+        CoverPoolStructs.Tick memory,
+        CoverPoolStructs.Deltas memory
     ) {
-        uint256 percentOnTick = uint256(fromTick.deltas.amountInDeltaMax) * 1e38 / (uint256(fromTick.deltas.amountInDeltaMax) + uint256(fromTick.amountInDeltaMaxStashed));
+        FromLocals memory locals;
+        locals.fromDeltas = isPool0 ? fromTick.deltas0 
+                                    : fromTick.deltas1;
+        locals.percentOnTick = uint256(locals.fromDeltas.amountInDeltaMax) * 1e38 / (uint256(locals.fromDeltas.amountInDeltaMax) + uint256(fromTick.amountInDeltaMaxStashed));
         {
-            uint128 amountInDeltaChange = uint128(uint256(fromTick.deltas.amountInDelta) * percentOnTick / 1e38);
-            fromTick.deltas.amountInDelta -= amountInDeltaChange;
-            toDeltas.amountInDelta += amountInDeltaChange;
-            toDeltas.amountInDeltaMax += fromTick.deltas.amountInDeltaMax;
-            fromTick.deltas.amountInDeltaMax = 0;
+            locals.amountInDeltaChange = uint128(uint256(locals.fromDeltas.amountInDelta) * locals.percentOnTick / 1e38);
+            locals.fromDeltas.amountInDelta -= locals.amountInDeltaChange;
+            toDeltas.amountInDelta += locals.amountInDeltaChange;
+            toDeltas.amountInDeltaMax += locals.fromDeltas.amountInDeltaMax;
+            locals.fromDeltas.amountInDeltaMax = 0;
         }
-        percentOnTick = uint256(fromTick.deltas.amountOutDeltaMax) * 1e38 / (uint256(fromTick.deltas.amountOutDeltaMax) + uint256(fromTick.amountOutDeltaMaxStashed));
+        locals.percentOnTick = uint256(locals.fromDeltas.amountOutDeltaMax) * 1e38 / (uint256(locals.fromDeltas.amountOutDeltaMax) + uint256(fromTick.amountOutDeltaMaxStashed));
         {
-            uint128 amountOutDeltaChange = uint128(uint256(fromTick.deltas.amountOutDelta) * percentOnTick / 1e38);
-            fromTick.deltas.amountOutDelta -= amountOutDeltaChange;
-            toDeltas.amountOutDelta += amountOutDeltaChange;
-            toDeltas.amountOutDeltaMax += fromTick.deltas.amountOutDeltaMax;
-            fromTick.deltas.amountOutDeltaMax = 0;
+            locals.amountOutDeltaChange = uint128(uint256(locals.fromDeltas.amountOutDelta) * locals.percentOnTick / 1e38);
+            locals.fromDeltas.amountOutDelta -= locals.amountOutDeltaChange;
+            toDeltas.amountOutDelta += locals.amountOutDeltaChange;
+            toDeltas.amountOutDeltaMax += locals.fromDeltas.amountOutDeltaMax;
+            locals.fromDeltas.amountOutDeltaMax = 0;
+        }
+        if (isPool0) {
+            fromTick.deltas0 = locals.fromDeltas;
+        } else {
+            fromTick.deltas1 = locals.fromDeltas;
         }
         return (fromTick, toDeltas);
     }
 
     function to(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Tick memory toTick
+        CoverPoolStructs.Deltas memory fromDeltas,
+        CoverPoolStructs.Tick memory toTick,
+        bool isPool0
     ) external pure returns (
-        ICoverPoolStructs.Deltas memory,
-        ICoverPoolStructs.Tick memory
+        CoverPoolStructs.Deltas memory,
+        CoverPoolStructs.Tick memory
     ) {
-        toTick.deltas.amountInDelta     += fromDeltas.amountInDelta;
-        toTick.deltas.amountInDeltaMax  += fromDeltas.amountInDeltaMax;
-        toTick.deltas.amountOutDelta    += fromDeltas.amountOutDelta;
-        toTick.deltas.amountOutDeltaMax += fromDeltas.amountOutDeltaMax;
-        fromDeltas = ICoverPoolStructs.Deltas(0,0,0,0);
+        CoverPoolStructs.Deltas memory toDeltas = isPool0 ? toTick.deltas0 
+                                                          : toTick.deltas1;
+        toDeltas.amountInDelta     += fromDeltas.amountInDelta;
+        toDeltas.amountInDeltaMax  += fromDeltas.amountInDeltaMax;
+        toDeltas.amountOutDelta    += fromDeltas.amountOutDelta;
+        toDeltas.amountOutDeltaMax += fromDeltas.amountOutDeltaMax;
+        if (isPool0) {
+            toTick.deltas0 = toDeltas;
+        } else {
+            toTick.deltas1 = toDeltas;
+        }
+        fromDeltas = CoverPoolStructs.Deltas(0,0,0,0);
         return (fromDeltas, toTick);
     }
 
     function stash(
-        ICoverPoolStructs.Deltas memory fromDeltas,
-        ICoverPoolStructs.Tick memory toTick
+        CoverPoolStructs.Deltas memory fromDeltas,
+        CoverPoolStructs.Tick memory toTick,
+        bool isPool0
     ) external pure returns (
-        ICoverPoolStructs.Deltas memory,
-        ICoverPoolStructs.Tick memory
+        CoverPoolStructs.Deltas memory,
+        CoverPoolStructs.Tick memory
     ) {
+        CoverPoolStructs.Deltas memory toDeltas = isPool0 ? toTick.deltas0 
+                                                          : toTick.deltas1;
         // store deltas on tick
-        toTick.deltas.amountInDelta     += fromDeltas.amountInDelta;
-        toTick.deltas.amountOutDelta    += fromDeltas.amountOutDelta;
+        toDeltas.amountInDelta     += fromDeltas.amountInDelta;
+        toDeltas.amountOutDelta    += fromDeltas.amountOutDelta;
         // store delta maxes on stashed deltas
         toTick.amountInDeltaMaxStashed  += fromDeltas.amountInDeltaMax;
         toTick.amountOutDeltaMaxStashed += fromDeltas.amountOutDeltaMax;
-        fromDeltas = ICoverPoolStructs.Deltas(0,0,0,0);
+        if (isPool0) {
+            toTick.deltas0 = toDeltas;
+        } else {
+            toTick.deltas1 = toDeltas;
+        }
+        fromDeltas = CoverPoolStructs.Deltas(0,0,0,0);
         return (fromDeltas, toTick);
     }
 
+    struct UnstashLocals {
+        CoverPoolStructs.Deltas fromDeltas;
+        uint256 totalDeltaMax;
+        uint256 percentStashed;
+        uint128 amountInDeltaChange;
+        uint128 amountOutDeltaChange;
+    }
+
     function unstash(
-        ICoverPoolStructs.Tick memory fromTick,
-        ICoverPoolStructs.Deltas memory toDeltas
+        CoverPoolStructs.Tick memory fromTick,
+        CoverPoolStructs.Deltas memory toDeltas,
+        bool isPool0
     ) external pure returns (
-        ICoverPoolStructs.Tick memory,
-        ICoverPoolStructs.Deltas memory
+        CoverPoolStructs.Tick memory,
+        CoverPoolStructs.Deltas memory
     ) {
         toDeltas.amountInDeltaMax  += fromTick.amountInDeltaMaxStashed;
         toDeltas.amountOutDeltaMax += fromTick.amountOutDeltaMaxStashed;
+
+        UnstashLocals memory locals;
+        locals.fromDeltas = isPool0 ? fromTick.deltas0 : fromTick.deltas1;
+        locals.totalDeltaMax = uint256(fromTick.amountInDeltaMaxStashed) + uint256(locals.fromDeltas.amountInDeltaMax);
         
-        uint256 totalDeltaMax = uint256(fromTick.amountInDeltaMaxStashed) + uint256(fromTick.deltas.amountInDeltaMax);
-        
-        if (totalDeltaMax > 0) {
-            uint256 percentStashed = uint256(fromTick.amountInDeltaMaxStashed) * 1e38 / totalDeltaMax;
-            uint128 amountInDeltaChange = uint128(uint256(fromTick.deltas.amountInDelta) * percentStashed / 1e38);
-            fromTick.deltas.amountInDelta -= amountInDeltaChange;
+        if (locals.totalDeltaMax > 0) {
+            uint256 percentStashed = uint256(fromTick.amountInDeltaMaxStashed) * 1e38 / locals.totalDeltaMax;
+            uint128 amountInDeltaChange = uint128(uint256(locals.fromDeltas.amountInDelta) * percentStashed / 1e38);
+            locals.fromDeltas.amountInDelta -= amountInDeltaChange;
             toDeltas.amountInDelta += amountInDeltaChange;
         }
         
-        totalDeltaMax = uint256(fromTick.amountOutDeltaMaxStashed) + uint256(fromTick.deltas.amountOutDeltaMax);
+        locals.totalDeltaMax = uint256(fromTick.amountOutDeltaMaxStashed) + uint256(locals.fromDeltas.amountOutDeltaMax);
         
-        if (totalDeltaMax > 0) {
-            uint256 percentStashed = uint256(fromTick.amountOutDeltaMaxStashed) * 1e38 / totalDeltaMax;
-            uint128 amountOutDeltaChange = uint128(uint256(fromTick.deltas.amountOutDelta) * percentStashed / 1e38);
-            fromTick.deltas.amountOutDelta -= amountOutDeltaChange;
+        if (locals.totalDeltaMax > 0) {
+            uint256 percentStashed = uint256(fromTick.amountOutDeltaMaxStashed) * 1e38 / locals.totalDeltaMax;
+            uint128 amountOutDeltaChange = uint128(uint256(locals.fromDeltas.amountOutDelta) * percentStashed / 1e38);
+            locals.fromDeltas.amountOutDelta -= amountOutDeltaChange;
             toDeltas.amountOutDelta += amountOutDeltaChange;
         }
-
+        if (isPool0) {
+            fromTick.deltas0 = locals.fromDeltas;
+        } else {
+            fromTick.deltas1 = locals.fromDeltas;
+        }
         fromTick.amountInDeltaMaxStashed = 0;
         fromTick.amountOutDeltaMaxStashed = 0;
         return (fromTick, toDeltas);
     }
 
     function update(
-        ICoverPoolStructs.Tick memory tick,
+        CoverPoolStructs.Tick memory tick,
         uint128 amount,
         uint160 priceLower,
         uint160 priceUpper,
         bool   isPool0,
         bool   isAdded
     ) external pure returns (
-        ICoverPoolStructs.Tick memory,
-        ICoverPoolStructs.Deltas memory
+        CoverPoolStructs.Tick memory,
+        CoverPoolStructs.Deltas memory
     ) {
         // update max deltas
         uint128 amountInDeltaMax; uint128 amountOutDeltaMax;
@@ -377,6 +424,6 @@ library Deltas {
                                                                                           : tick.amountInDeltaMaxMinus;
             tick.amountOutDeltaMaxMinus -= tick.amountOutDeltaMaxMinus > amountOutDeltaMax ? amountOutDeltaMax                                                                           : tick.amountOutDeltaMaxMinus;
         }
-        return (tick, ICoverPoolStructs.Deltas(0,0,amountInDeltaMax, amountOutDeltaMax));
+        return (tick, CoverPoolStructs.Deltas(0,0,amountInDeltaMax, amountOutDeltaMax));
     }
 }

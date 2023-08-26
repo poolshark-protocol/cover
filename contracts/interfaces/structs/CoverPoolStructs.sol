@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import './modules/sources/ITwapSource.sol';
+import '../modules/sources/ITwapSource.sol';
 
-interface ICoverPoolStructs {
+interface CoverPoolStructs {
     struct GlobalState {
         ProtocolFees protocolFees;
         uint160  latestPrice;      /// @dev price of latestTick
@@ -34,8 +34,9 @@ interface ICoverPoolStructs {
     }
 
     struct Tick {
-        Deltas deltas;                    
-        int128  liquidityDelta;
+        Deltas deltas0;
+        Deltas deltas1;                    
+        int128 liquidityDelta;
         uint128 amountInDeltaMaxMinus;
         uint128 amountOutDeltaMaxMinus;
         uint128 amountInDeltaMaxStashed;

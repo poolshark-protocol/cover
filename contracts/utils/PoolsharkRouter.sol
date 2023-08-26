@@ -10,7 +10,7 @@ import '../external/solady/LibClone.sol';
 
 contract PoolsharkRouter is
     ICoverPoolSwapCallback,
-    ICoverPoolStructs,
+    CoverPoolStructs,
     PoolsharkStructs
 {
     using SafeCast for uint256;
@@ -47,7 +47,7 @@ contract PoolsharkRouter is
         int256 amount1Delta,
         bytes calldata data
     ) external override {
-        ICoverPoolStructs.Immutables memory constants = ICoverPool(msg.sender).immutables();
+        CoverPoolStructs.Immutables memory constants = ICoverPool(msg.sender).immutables();
 
         // generate key for pool
         bytes32 key = keccak256(abi.encode(
