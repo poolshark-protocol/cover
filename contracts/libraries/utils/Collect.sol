@@ -36,7 +36,7 @@ library Collect {
 
     function burn(
         ICoverPoolStructs.BurnCache memory cache,
-        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
+        mapping(uint256 => ICoverPoolStructs.CoverPosition)
             storage positions,
         ICoverPoolStructs.CollectParams memory params
         
@@ -44,8 +44,8 @@ library Collect {
         params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
 
         // store amounts for transferOut
-        uint128 amountIn  = positions[msg.sender][params.lower][params.upper].amountIn;
-        uint128 amountOut = positions[msg.sender][params.lower][params.upper].amountOut;
+        uint128 amountIn  = positions[params.positionId].amountIn;
+        uint128 amountOut = positions[params.positionId].amountOut;
 
         // factor in sync fees
         if (params.zeroForOne) {
@@ -58,11 +58,11 @@ library Collect {
 
         /// zero out balances and transfer out
         if (amountIn > 0) {
-            positions[msg.sender][params.lower][params.upper].amountIn = 0;
+            positions[params.positionId].amountIn = 0;
             SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token1 : cache.constants.token0, amountIn);
         } 
         if (amountOut > 0) {
-            positions[msg.sender][params.lower][params.upper].amountOut = 0;
+            positions[params.positionId].amountOut = 0;
             SafeTransfers.transferOut(params.to, params.zeroForOne ? cache.constants.token0 : cache.constants.token1, amountOut);
         }
     }

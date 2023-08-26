@@ -82,6 +82,7 @@ export function handleMint(event: Mint): void {
     let lowerParam = event.params.lower
     let upperParam = event.params.upper 
     let zeroForOneParam = event.params.zeroForOne
+    let positionIdParam = event.params.positionId
     let epochLastParam = event.params.epochLast
     let amountInParam = event.params.amountIn
     let liquidityMintedParam = event.params.liquidityMinted
@@ -120,7 +121,7 @@ export function handleMint(event: Mint): void {
     let token0 = loadToken0.entity
     let token1 = loadToken1.entity
 
-    let loadPosition = safeLoadPosition(poolAddress, ownerParam, lower, upper, zeroForOneParam)
+    let loadPosition = safeLoadPosition(poolAddress, positionIdParam)
     let loadLowerTick = safeLoadTick(poolAddress, lower)
     let loadUpperTick = safeLoadTick(poolAddress, upper)
     let loadLowerTickDeltas = safeLoadTickDeltas(poolAddress, lower, zeroForOneParam)
@@ -152,7 +153,6 @@ export function handleMint(event: Mint): void {
         position.createdBy = msgSender
         position.createdAtTimestamp = event.block.timestamp
         position.txnHash = event.transaction.hash
-        position.pool = poolAddress
     }
     position.liquidity = position.liquidity.plus(liquidityMintedParam)
     position.amountInDeltaMax = position.amountInDeltaMax.plus(amountInDeltaMaxMintedParam)
@@ -208,9 +208,8 @@ export function handleMint(event: Mint): void {
 }
 
 export function handleBurn(event: Burn): void {
-    let lowerParam = event.params.lower
+    let positionIdParam = event.params.positionId
     let claimParam = event.params.claim
-    let upperParam = event.params.upper
     let zeroForOneParam = event.params.zeroForOne
     let liquidityBurnedParam = event.params.liquidityBurned
     let tokenInClaimedParam = event.params.tokenInClaimed
@@ -224,19 +223,19 @@ export function handleBurn(event: Burn): void {
     let poolAddress = event.address.toHex()
     let msgSender = event.transaction.from.toHex()
 
-    let lower = BigInt.fromI32(lowerParam)
+    let loadPosition = safeLoadPosition(
+        poolAddress,
+        positionIdParam
+    )
+    let position = loadPosition.entity
+
+    let lower = position.lower
     let claim = BigInt.fromI32(claimParam)
-    let upper = BigInt.fromI32(upperParam)
+    let upper = position.upper
 
     let loadBasePrice = safeLoadBasePrice('eth')
     let loadCoverPool = safeLoadCoverPool(poolAddress)
-    let loadPosition = safeLoadPosition(
-        poolAddress,
-        msgSender,
-        lower,
-        upper,
-        zeroForOneParam
-    )
+
     let loadBurnLog = safeLoadBurnLog(event.transaction.hash, poolAddress, msgSender, lower, upper, zeroForOneParam)
     let burnLog = loadBurnLog.entity
 
@@ -252,7 +251,6 @@ export function handleBurn(event: Burn): void {
     burnLog.save()
 
     let basePrice = loadBasePrice.entity
-    let position  = loadPosition.entity
     let pool      = loadCoverPool.entity
 
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
@@ -275,13 +273,6 @@ export function handleBurn(event: Burn): void {
     if (position.liquidity == liquidityBurnedParam) {
         store.remove('Position', position.id)
     } else {
-        // update id if position is shrunk
-        if (claim != (zeroForOneParam ? upper : lower))
-            position.id = poolAddress
-            .concat(msgSender)
-            .concat(zeroForOneParam ? lower.toString() : claim.toString())
-            .concat(zeroForOneParam ? claim.toString() : upper.toString())
-            .concat(zeroForOneParam.toString())
         position.liquidity = position.liquidity.minus(liquidityBurnedParam)
         position.claimPriceLast = claimPriceLastParam
         // update position delta maxes

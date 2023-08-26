@@ -47,7 +47,7 @@ contract CoverPool is
     ) external override lock {
         MintCache memory cache = MintCache({
             state: globalState,
-            position: Position(0,0,0,0,0),
+            position: CoverPosition(address(0),0,0,0,0,0,0,0),
             constants: immutables(),
             syncFees: SyncFees(0,0),
             liquidityMinted: 0,
@@ -86,8 +86,7 @@ contract CoverPool is
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache = BurnCache({
             state: globalState,
-            position: params.zeroForOne ? positions0[msg.sender][params.lower][params.upper]
-                                        : positions1[msg.sender][params.lower][params.upper],
+            position: CoverPosition(address(0),0,0,0,0,0,0,0),
             constants: immutables(),
             syncFees: SyncFees(0,0),
             pool0: pool0,
@@ -213,7 +212,7 @@ contract CoverPool is
     function snapshot(
        SnapshotParams memory params 
     ) external view override returns (
-        Position memory
+        CoverPosition memory
     ) {
         return Positions.snapshot(
             params.zeroForOne ? positions0 : positions1,
@@ -225,8 +224,8 @@ contract CoverPool is
                 params.owner,
                 params.owner,
                 params.burnPercent,
-                params.lower,
-                params.upper,
+                params.positionId,
+                0, 0,
                 params.claim,
                 params.zeroForOne
             ),
@@ -260,7 +259,7 @@ contract CoverPool is
     ) {
         return Immutables(
             ITwapSource(twapSource()),
-            ITickMath.PriceBounds(minPrice(), maxPrice()),
+            PriceBounds(minPrice(), maxPrice()),
             owner(),
             token0(),
             token1(),

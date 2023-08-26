@@ -9,27 +9,33 @@
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "twapSource",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "inputPool",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "token0",
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "token1",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "poolImpl",
         "type": "address"
       },
       {
@@ -39,7 +45,7 @@
         "type": "uint16"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "int16",
         "name": "tickSpread",
         "type": "int16"

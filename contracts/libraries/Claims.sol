@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import './Deltas.sol';
 import '../interfaces/ICoverPoolStructs.sol';
-import '../interfaces/modules/curves/ICurveMath.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
@@ -11,8 +10,6 @@ import './utils/String.sol';
 library Claims {
 
     function validate(
-        mapping(address => mapping(int24 => mapping(int24 => ICoverPoolStructs.Position)))
-            storage positions,
         ICoverPoolStructs.TickMap storage tickMap,
         ICoverPoolStructs.GlobalState memory state,
         ICoverPoolStructs.PoolState memory pool,
@@ -81,16 +78,6 @@ library Claims {
             // check accumEpochLast on claim tick
             if (claimTickEpoch <= cache.position.accumEpochLast)
                 require (false, 'WrongTickClaimedAt()');
-            // prevent position overwriting at claim tick
-            if (params.zeroForOne) {
-                if (positions[params.owner][params.lower][params.claim].liquidity > 0) {
-                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.claim), ')'));
-                }
-            } else {
-                if (positions[params.owner][params.claim][params.upper].liquidity > 0) {
-                    require (false, string.concat('UpdatePositionFirstAt(', String.from(params.claim), ', ', String.from(params.upper), ')'));
-                }
-            }
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
         return cache;

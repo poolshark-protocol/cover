@@ -146,11 +146,11 @@ class LoadVolatilityTierRet {
     entity: VolatilityTier
     exists: boolean
 }
-export function safeLoadVolatilityTier(twapSource: string, feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt): LoadVolatilityTierRet {
+export function safeLoadVolatilityTier(poolImpl: string, feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt): LoadVolatilityTierRet {
     let exists = true
 
     let volatilityTierId = 
-                            twapSource
+                            poolImpl
                             .concat('-')                        
                             .concat(feeTier.toString())
                             .concat('-')
@@ -273,25 +273,20 @@ class LoadPositionRet {
 }
 export function safeLoadPosition(
     poolAddress: string,
-    owner: string,
-    lower: BigInt,
-    upper: BigInt,
-    zeroForOne: boolean
+    positionId: BigInt
 ): LoadPositionRet {
     let exists = true
     let fromToken: string
 
-    let positionId = poolAddress
-        .concat(owner)
-        .concat(lower.toString())
-        .concat(upper.toString())
-        .concat(zeroForOne.toString())
+    let coverPositionId = poolAddress
+        .concat(positionId.toString())
 
-    let positionEntity = Position.load(positionId)
+    let positionEntity = Position.load(coverPositionId)
 
     if (!positionEntity) {
-        positionEntity = new Position(positionId)
-        positionEntity.epochLast = ONE_BI
+        positionEntity = new Position(coverPositionId)
+        positionEntity.pool = poolAddress
+        positionEntity.positionId = positionId
         exists = false
     }
 

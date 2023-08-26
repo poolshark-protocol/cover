@@ -27,6 +27,12 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
         uint128 amount;
 
         /**
+         * @custom:field positionId
+         * @notice 0 if creating a new position; id of previous if adding liquidity
+         */
+        uint32 positionId;
+
+        /**
          * @custom:field lower
          * @notice The lower price tick for the position range
          */
@@ -79,10 +85,10 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
         uint128 burnPercent;
 
         /**
-         * @custom:field lower
-         * @notice The lower price tick for the existing position range
+         * @custom:field positionId
+         * @notice 0 if creating a new position; id of previous if adding liquidity
          */
-        int24 lower;
+        uint32 positionId;
 
         /**
          * @custom:field claim
@@ -91,12 +97,6 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
          * @notice if `zeroForOne` is false, claim tick progresses from lower => upper
          */
         int24 claim;
-
-        /**
-         * @custom:field upper
-         * @notice The upper price tick for the existing position range
-         */
-        int24 upper;
 
         /**
          * @custom:field zeroForOne
@@ -125,9 +125,7 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
      */
     function burn(
         BurnParams memory params
-    ) external;
-
-    
+    ) external; 
 
     /**
      * @notice Swaps `tokenIn` for `tokenOut`. 
@@ -173,9 +171,15 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
     struct SnapshotParams {
         /**
          * @custom:field to
-         * @notice Address for the owner of the position
+         * @notice Address of the position owner
          */
         address owner;
+
+        /**
+         * @custom:field positionId
+         * @notice id of position
+         */
+        uint32 positionId;
 
         /**
          * @custom:field burnPercent
@@ -187,24 +191,12 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
         uint128 burnPercent;
 
         /**
-         * @custom:field lower
-         * @notice The lower price tick for the existing position range
-         */
-        int24 lower;
-        
-        /**
          * @custom:field claim
          * @notice The most recent tick crossed in this range
          * @notice if `zeroForOne` is true, claim tick progresses from upper => lower
          * @notice if `zeroForOne` is false, claim tick progresses from lower => upper
          */
         int24 claim;
-
-        /**
-         * @custom:field upper
-         * @notice The upper price tick for the existing position range
-         */
-        int24 upper;
 
         /**
          * @custom:field zeroForOne
@@ -223,7 +215,7 @@ interface ICoverPool is ICoverPoolStructs, PoolsharkStructs {
     function snapshot(
         SnapshotParams memory params
     ) external view returns (
-        Position memory position
+        CoverPosition memory position
     );
 
     /**

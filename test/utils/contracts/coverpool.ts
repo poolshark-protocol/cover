@@ -95,6 +95,7 @@ export interface ValidateMintParams {
     collectRevertMessage?: string
     expectedLower?: string
     expectedUpper?: string
+    positionId?: number
 }
 
 export interface ValidateSwapParams {
@@ -115,6 +116,7 @@ export interface ValidateBurnParams {
     lower: string
     upper: string
     claim: string
+    positionId: number
     liquidityAmount?: BigNumber
     liquidityPercent?: BigNumber
     zeroForOne: boolean
@@ -125,6 +127,7 @@ export interface ValidateBurnParams {
     expectedLower?: string
     expectedUpper?: string
     compareSnapshot?: boolean
+    positionLiquidityChange?: BigNumber,
     revertMessage: string
 }
 
@@ -163,9 +166,9 @@ export async function getTick(isPool0: boolean, tickIndex: number, print: boolea
     return tick
 }
 
-export async function getPositionLiquidity(isPool0: boolean, owner: string, lower: number, upper: number, print: boolean = false): Promise<BigNumber> {
-    let positionLiquidity: BigNumber = isPool0 ? (await hre.props.coverPool.positions0(owner, lower, upper)).liquidity
-                                               : (await hre.props.coverPool.positions1(owner, lower, upper)).liquidity;
+export async function getPositionLiquidity(isPool0: boolean, positionId: number, print: boolean = false): Promise<BigNumber> {
+    let positionLiquidity: BigNumber = isPool0 ? (await hre.props.coverPool.positions0(positionId)).liquidity
+                                               : (await hre.props.coverPool.positions1(positionId)).liquidity;
     if (print) {
         console.log('position liquidity:', positionLiquidity.toString())
     }
@@ -351,7 +354,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     // expect(priceAfter).to.be.equal(finalPrice);
 }
 
-export async function validateMint(params: ValidateMintParams) {
+export async function validateMint(params: ValidateMintParams): Promise<number> {
     const signer = params.signer
     const recipient = params.recipient
     const lower = BigNumber.from(params.lower)
@@ -367,6 +370,10 @@ export async function validateMint(params: ValidateMintParams) {
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const balanceOutIncrease = params.balanceOutIncrease ? BigNumber.from(params.balanceOutIncrease) : 0
+    const positionId = params.positionId ? params.positionId : 0
+    let expectedPositionId = (params.positionId && params.positionId > 0) ? params.positionId 
+                                                                            : (await hre.props.coverPool.globalState()).positionIdNext
+    if (expectedPositionId == 0) expectedPositionId = 1
 
     let balanceInBefore
     let balanceOutBefore
@@ -391,17 +398,13 @@ export async function validateMint(params: ValidateMintParams) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
         positionBefore  = await hre.props.coverPool.positions0(
-            recipient,
-            lower,
-            expectedUpper ? expectedUpper : upper
+            expectedPositionId
         )
     } else {
         lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
         positionBefore  = await hre.props.coverPool.positions1(
-            recipient,
-            expectedLower ? expectedLower : lower,
-            upper
+            expectedPositionId
         )
     }
 
@@ -412,6 +415,7 @@ export async function validateMint(params: ValidateMintParams) {
             .mint({
                 to: recipient,
                 amount: amountDesired,
+                positionId: positionId,
                 lower: lower,
                 upper: upper,
                 zeroForOne: zeroForOne
@@ -423,13 +427,14 @@ export async function validateMint(params: ValidateMintParams) {
                 .connect(params.signer)
                 .mint({
                     to: params.signer.address,
+                    positionId: positionId,
                     lower: lower,
                     upper: upper,
                     amount: amountDesired,
                     zeroForOne: zeroForOne
                 })
         ).to.be.revertedWith(revertMessage)
-        return
+        return expectedPositionId
     }
 
     let balanceInAfter
@@ -452,17 +457,13 @@ export async function validateMint(params: ValidateMintParams) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
         positionAfter = await hre.props.coverPool.positions0(
-            recipient,
-            lower,
-            expectedUpper ? expectedUpper : upper
+            expectedPositionId
         )
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
         positionAfter = await hre.props.coverPool.positions1(
-            recipient,
-            expectedLower ? expectedLower : lower,
-            upper
+            expectedPositionId
         )
     }
 
@@ -502,9 +503,12 @@ export async function validateMint(params: ValidateMintParams) {
     }
     const positionLiquidityChange = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityIncrease
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(positionLiquidityChange)
+
+    return expectedPositionId
 }
 
 export async function validateBurn(params: ValidateBurnParams) {
+
     const signer = params.signer
     const lower = BigNumber.from(params.lower)
     const upper = BigNumber.from(params.upper)
@@ -520,6 +524,8 @@ export async function validateBurn(params: ValidateBurnParams) {
     const expectedUpper = params.expectedUpper ? BigNumber.from(params.expectedUpper) : null
     const expectedLower = params.expectedLower ? BigNumber.from(params.expectedLower) : null
     const compareSnapshot = params.compareSnapshot ? params.compareSnapshot : true
+    const positionId = BigNumber.from(params.positionId.toString())
+
 
     let balanceInBefore
     let balanceOutBefore
@@ -535,15 +541,17 @@ export async function validateBurn(params: ValidateBurnParams) {
     let upperTickBefore: Tick
     let positionBefore: Position
     let positionSnapshot: Position
+
     if (zeroForOne) {
         lowerTickBefore = await hre.props.coverPool.ticks0(lower)
         upperTickBefore = await hre.props.coverPool.ticks0(upper)
-        positionBefore = await hre.props.coverPool.positions0(signer.address, lower, upper)
+        positionBefore = await hre.props.coverPool.positions0(positionId)
     } else {
         lowerTickBefore = await hre.props.coverPool.ticks1(lower)
         upperTickBefore = await hre.props.coverPool.ticks1(upper)
-        positionBefore = await hre.props.coverPool.positions1(signer.address, lower, upper)
+        positionBefore = await hre.props.coverPool.positions1(positionId)
     }
+
     if (liquidityAmount) {
         if (positionBefore.liquidity.gt(BN_ZERO)) {
             liquidityPercent = liquidityAmount.mul(ethers.utils.parseUnits("1",38)).div(positionBefore.liquidity)
@@ -556,13 +564,13 @@ export async function validateBurn(params: ValidateBurnParams) {
     } else {
         liquidityAmount = liquidityPercent.mul(positionBefore.liquidity).div(ethers.utils.parseUnits("1",38))
     }
+
     if (revertMessage == '') {
         positionSnapshot = await hre.props.coverPool.snapshot({
             owner: signer.address,
             burnPercent: liquidityPercent,
-            lower: lower,
+            positionId: positionId,
             claim: claim,
-            upper: upper,
             zeroForOne: zeroForOne
         })
         // console.log('BURN CALL')
@@ -570,9 +578,8 @@ export async function validateBurn(params: ValidateBurnParams) {
             .connect(signer)
             .burn({
                 to: signer.address,
-                lower: lower,
+                positionId: positionId,
                 claim: claim,
-                upper: upper,
                 zeroForOne: zeroForOne,
                 burnPercent: liquidityPercent,
                 sync: true
@@ -584,9 +591,8 @@ export async function validateBurn(params: ValidateBurnParams) {
                 .connect(signer)
                 .burn({
                     to: signer.address,
-                    lower: lower,
+                    positionId: positionId,
                     claim: claim,
-                    upper: upper,
                     zeroForOne: zeroForOne,
                     burnPercent: liquidityPercent,
                     sync: true
@@ -619,11 +625,11 @@ export async function validateBurn(params: ValidateBurnParams) {
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks0(lower)
         upperTickAfter = await hre.props.coverPool.ticks0(upper)
-        positionAfter = await hre.props.coverPool.positions0(signer.address, lower, expectedUpper ? expectedUpper : claim)
+        positionAfter = await hre.props.coverPool.positions0(positionId)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks1(lower)
         upperTickAfter = await hre.props.coverPool.ticks1(upper)
-        positionAfter = await hre.props.coverPool.positions1(signer.address, expectedLower ? expectedLower : claim, upper)
+        positionAfter = await hre.props.coverPool.positions1(positionId)
     }
     //dependent on zeroForOne
     if (zeroForOne) {
@@ -666,8 +672,9 @@ export async function validateBurn(params: ValidateBurnParams) {
             )
         }
     }
+    const positionLiquidityAmount = params.positionLiquidityChange ? params.positionLiquidityChange : liquidityAmount
     expect(positionAfter.liquidity.sub(positionBefore.liquidity)).to.be.equal(
-        BN_ZERO.sub(liquidityAmount)
+        BN_ZERO.sub(positionLiquidityAmount)
     )
     // console.log('position liquidity change', positionAfter.liquidity.sub(positionBefore.liquidity).toString())
 }

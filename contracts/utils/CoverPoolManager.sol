@@ -26,32 +26,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         owner = msg.sender;
         feeTo = msg.sender;
         emit OwnerTransfer(address(0), msg.sender);
-
-        // _implementations[implName] = sourceAddress;
-        // _twapSources[implName] = sourceAddress;
-        // emit ImplementationEnabled(implName, implAddress, sourceAddress, ITwapSource(sourceAddress).factory());
-
-        // // create initial volatility tiers
-        // _volatilityTiers[implName][500][20][5] = VolatilityTier({
-        //    minAmountPerAuction: 0,
-        //    auctionLength: 5,
-        //    blockTime: 1000,
-        //    syncFee: 0,
-        //    fillFee: 0,
-        //    minPositionWidth: 1,
-        //    minAmountLowerPriced: true
-        // });
-        // _volatilityTiers[implName][500][40][10] = VolatilityTier({
-        //    minAmountPerAuction: 0,
-        //    auctionLength: 10,
-        //    blockTime: 1000,
-        //    syncFee: 500,
-        //    fillFee: 5000,
-        //    minPositionWidth: 5,
-        //    minAmountLowerPriced: false
-        // });
-        // emit VolatilityTierEnabled(implAddress, 500, 20, 5, 1e18, 5, 1000, 0, 0, 1, true);
-        // emit VolatilityTierEnabled(implAddress, 500, 40, 10, 1e18, 10, 1000, 500, 5000, 5, false);
+        emit FeeToTransfer(address(0), msg.sender);
     }
 
     /**
@@ -98,7 +73,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function _transferFeeTo(address newFeeTo) internal virtual {
         address oldFeeTo = feeTo;
         feeTo = newFeeTo;
-        emit OwnerTransfer(oldFeeTo, newFeeTo);
+        emit FeeToTransfer(oldFeeTo, newFeeTo);
     }
 
     function enablePoolType(
@@ -121,13 +96,6 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         int16   tickSpread,
         uint16  twapLength,
         VolatilityTier memory volTier
-        // uint128 minAmountPerAuction,
-        // uint16  auctionLength,
-        // uint16  blockTime,
-        // uint16  syncFee,
-        // uint16  fillFee,
-        // int16   minPositionWidth,
-        // bool    minLowerPriced
     ) external onlyOwner {
         if (_volatilityTiers[implName][feeTier][tickSpread][twapLength].auctionLength != 0) {
             require (false, 'VolatilityTierAlreadyEnabled()');
