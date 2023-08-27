@@ -625,7 +625,7 @@ export async function validateBurn(params: ValidateBurnParams) {
 
     if (zeroForOne) {
         lowerTickAfter = await hre.props.coverPool.ticks(lower)
-        upperTickAfter = await hre.props.coverPool.ticks(upper)
+        upperTickAfter = await hre.props.coverPool.ticks(expectedUpper ? expectedUpper : upper)
         positionAfter = await hre.props.coverPool.positions0(positionId)
     } else {
         lowerTickAfter = await hre.props.coverPool.ticks(lower)
