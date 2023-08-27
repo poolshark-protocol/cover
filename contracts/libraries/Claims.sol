@@ -27,9 +27,9 @@ library Claims {
         }
         // if the position has not been crossed into at all
         else if (params.zeroForOne ? params.claim == params.upper 
-                                        && EpochMap.get(params.upper, tickMap, constants) <= cache.position.accumEpochLast
+                                        && EpochMap.get(params.upper, params.zeroForOne, tickMap, constants) <= cache.position.accumEpochLast
                                      : params.claim == params.lower 
-                                        && EpochMap.get(params.lower, tickMap, constants) <= cache.position.accumEpochLast
+                                        && EpochMap.get(params.lower, params.zeroForOne, tickMap, constants) <= cache.position.accumEpochLast
         ) {
             cache.earlyReturn = true;
             return cache;
@@ -58,7 +58,7 @@ library Claims {
         ) require (false, 'InvalidClaimTick()'); /// @dev - wrong claim tick
         if (params.claim < params.lower || params.claim > params.upper) require (false, 'InvalidClaimTick()');
 
-        uint32 claimTickEpoch = EpochMap.get(params.claim, tickMap, constants);
+        uint32 claimTickEpoch = EpochMap.get(params.claim, params.zeroForOne, tickMap, constants);
 
         // validate claim tick
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -67,8 +67,8 @@ library Claims {
         } else {
             // zero fill or partial fill
             uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(TickMap.previous(params.claim, tickMap, constants), tickMap, constants)
-                : EpochMap.get(TickMap.next(params.claim, tickMap, constants), tickMap, constants);
+                ? EpochMap.get(TickMap.previous(params.claim, tickMap, constants), params.zeroForOne, tickMap, constants)
+                : EpochMap.get(TickMap.next(params.claim, tickMap, constants), params.zeroForOne, tickMap, constants);
             ///@dev - next accumEpoch should not be greater
             if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
                 require (false, 'WrongTickClaimedAt()');
