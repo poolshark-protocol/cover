@@ -3581,7 +3581,6 @@ describe('CoverPool Tests', function () {
         await validateSync(20)
         await validateSync(40)
         await validateSync(60)
-        
 
         const aliceId = await validateMint({
             signer: hre.props.alice,
@@ -3598,10 +3597,10 @@ describe('CoverPool Tests', function () {
         })
 
         await validateSync(100)
-        await getTick(false, 100, true)
+        if (debugMode) await getTick(false, 100, true)
         await validateSync(60)
 
-        await getTick(false, 120, true)
+        if (debugMode) await getTick(false, 120, true)
 
         await validateBurn({
             signer: hre.props.alice,
