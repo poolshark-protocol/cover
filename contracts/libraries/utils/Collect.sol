@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Epochs.sol';
 import '../Positions.sol';
 import '../utils/SafeTransfers.sol';
 
 library Collect {
     function mint(
-        ICoverPoolStructs.MintCache memory cache,
-        ICoverPoolStructs.CollectParams memory params
+        CoverPoolStructs.MintCache memory cache,
+        CoverPoolStructs.CollectParams memory params
     ) internal {
         if (params.syncFees.token0 == 0 && params.syncFees.token1 == 0) return;
         // store amounts for transferOut
@@ -35,10 +35,10 @@ library Collect {
     }
 
     function burn(
-        ICoverPoolStructs.BurnCache memory cache,
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        CoverPoolStructs.BurnCache memory cache,
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions,
-        ICoverPoolStructs.CollectParams memory params
+        CoverPoolStructs.CollectParams memory params
         
     ) internal {
         params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;

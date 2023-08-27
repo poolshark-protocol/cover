@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import './Ticks.sol';
 import './Deltas.sol';
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 import '../interfaces/ICoverPool.sol';
 import './math/OverflowMath.sol';
 import './Claims.sol';
@@ -43,10 +43,10 @@ library Positions {
     );
 
     function resize(
-        ICoverPoolStructs.CoverPosition memory position,
+        CoverPoolStructs.CoverPosition memory position,
         ICoverPool.MintParams memory params,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.Immutables memory constants
     ) internal pure returns (
         ICoverPool.MintParams memory,
         uint256
@@ -54,9 +54,9 @@ library Positions {
     {
         ConstantProduct.checkTicks(params.lower, params.upper, constants.tickSpread);
 
-        ICoverPoolStructs.CoverPositionCache memory cache = ICoverPoolStructs.CoverPositionCache({
+        CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: position,
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            deltas: CoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
@@ -117,7 +117,7 @@ library Positions {
 
         // enforce minimum amount per auction
         _size(
-            ICoverPoolStructs.SizeParams(
+            CoverPoolStructs.SizeParams(
                 cache.priceLower,
                 cache.priceUpper,
                 uint128(position.liquidity + cache.liquidityMinted),
@@ -135,21 +135,21 @@ library Positions {
     }
 
     function add(
-       ICoverPoolStructs.CoverPosition memory position,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.AddParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+       CoverPoolStructs.CoverPosition memory position,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.AddParams memory params,
+        CoverPoolStructs.Immutables memory constants
     ) internal returns (
-        ICoverPoolStructs.GlobalState memory,
-        ICoverPoolStructs.CoverPosition memory
+        CoverPoolStructs.GlobalState memory,
+        CoverPoolStructs.CoverPosition memory
     ) {
         if (params.amount == 0) return (state, position);
         // initialize cache
-        ICoverPoolStructs.CoverPositionCache memory cache = ICoverPoolStructs.CoverPositionCache({
+        CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: position,
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            deltas: CoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: 0,
             auctionCount: 0,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
@@ -195,7 +195,7 @@ library Positions {
 
         {
             // update max deltas
-            ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            CoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
             (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
             // revert if either max delta is zero
@@ -222,20 +222,20 @@ library Positions {
     }
 
     function remove(
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.RemoveParams memory params,
-        ICoverPoolStructs.Immutables memory constants
-    ) internal returns (uint128, ICoverPoolStructs.GlobalState memory) {
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.RemoveParams memory params,
+        CoverPoolStructs.Immutables memory constants
+    ) internal returns (uint128, CoverPoolStructs.GlobalState memory) {
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
-        ICoverPoolStructs.CoverPositionCache memory cache = ICoverPoolStructs.CoverPositionCache({
+        CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: positions[params.positionId],
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
+            deltas: CoverPoolStructs.Deltas(0,0,0,0),
             requiredStart: params.zeroForOne ? state.latestTick - int24(constants.tickSpread) * constants.minPositionWidth
                                              : state.latestTick + int24(constants.tickSpread) * constants.minPositionWidth,
             auctionCount: uint24((params.upper - params.lower) / constants.tickSpread),
@@ -253,7 +253,7 @@ library Positions {
             require (false, 'NotEnoughPositionLiquidity()');
         } else {
             _size(
-                ICoverPoolStructs.SizeParams(
+                CoverPoolStructs.SizeParams(
                     cache.priceLower,
                     cache.priceUpper,
                     cache.position.liquidity - params.amount,
@@ -294,7 +294,7 @@ library Positions {
 
         {
             // update max deltas
-            ICoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
+            CoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
             (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, false);
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
         }
@@ -332,21 +332,21 @@ library Positions {
     }
 
     function update(
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState memory pool,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.PoolState memory pool,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.Immutables memory constants
     ) internal returns (
-            ICoverPoolStructs.GlobalState memory,
-            ICoverPoolStructs.PoolState memory,
+            CoverPoolStructs.GlobalState memory,
+            CoverPoolStructs.PoolState memory,
             int24
         )
     {
-        ICoverPoolStructs.UpdatePositionCache memory cache;
+        CoverPoolStructs.UpdatePositionCache memory cache;
         (
             cache,
             state
@@ -456,18 +456,18 @@ library Positions {
     }
 
     function snapshot(
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState memory pool,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.PoolState memory pool,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.Immutables memory constants
     ) external view returns (
-        ICoverPoolStructs.CoverPosition memory
+        CoverPoolStructs.CoverPosition memory
     ) {
-        ICoverPoolStructs.UpdatePositionCache memory cache;
+        CoverPoolStructs.UpdatePositionCache memory cache;
         (
             cache,
             state
@@ -521,23 +521,23 @@ library Positions {
     }
 
     function _deltas(
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState memory pool,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.PoolState memory pool,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.Immutables memory constants
     ) internal view returns (
-        ICoverPoolStructs.UpdatePositionCache memory,
-        ICoverPoolStructs.GlobalState memory
+        CoverPoolStructs.UpdatePositionCache memory,
+        CoverPoolStructs.GlobalState memory
     ) {
-        ICoverPoolStructs.UpdatePositionCache memory cache;
+        CoverPoolStructs.UpdatePositionCache memory cache;
         cache.position = positions[params.positionId];
         params.lower = cache.position.lower;
         params.upper = cache.position.upper;
-        cache = ICoverPoolStructs.UpdatePositionCache({
+        cache = CoverPoolStructs.UpdatePositionCache({
             position: cache.position,
             pool: pool,
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
@@ -553,8 +553,8 @@ library Positions {
             earlyReturn: false,
             removeLower: true,
             removeUpper: true,
-            deltas: ICoverPoolStructs.Deltas(0,0,0,0),
-            finalDeltas: ICoverPoolStructs.Deltas(0,0,0,0)
+            deltas: CoverPoolStructs.Deltas(0,0,0,0),
+            finalDeltas: CoverPoolStructs.Deltas(0,0,0,0)
         });
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
             params.amount = 1e38;
@@ -575,7 +575,7 @@ library Positions {
         }
         if (params.amount > 0)
             _size(
-                ICoverPoolStructs.SizeParams(
+                CoverPoolStructs.SizeParams(
                     cache.priceLower,
                     cache.priceUpper,
                     cache.position.liquidity - params.amount,
@@ -608,8 +608,8 @@ library Positions {
     }
 
     function _size(
-        ICoverPoolStructs.SizeParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.SizeParams memory params,
+        CoverPoolStructs.Immutables memory constants
     ) internal pure  
     {
         // early return if 100% of position burned
@@ -681,14 +681,14 @@ library Positions {
     }
 
     function _checkpoint(
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState memory pool,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.Immutables memory constants,
-        ICoverPoolStructs.UpdatePositionCache memory cache
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.PoolState memory pool,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.Immutables memory constants,
+        CoverPoolStructs.UpdatePositionCache memory cache
     ) internal pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory,
-        ICoverPoolStructs.UpdateParams memory
+        CoverPoolStructs.UpdatePositionCache memory,
+        CoverPoolStructs.UpdateParams memory
     ) {
         // update claimPriceLast
         cache.priceClaim = ConstantProduct.getPriceAtTick(params.claim, constants);

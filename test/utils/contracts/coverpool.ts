@@ -68,7 +68,8 @@ export interface Tick {
     liquidityDelta: BigNumber
     amountInDeltaMaxStashed: BigNumber
     amountOutDeltaMaxStashed: BigNumber
-    deltas: Deltas
+    deltas0: Deltas
+    deltas1: Deltas
 }
 
 export interface Deltas {
@@ -158,8 +159,8 @@ export async function getPrice(isPool0: boolean, print: boolean = false): Promis
 }
 
 export async function getTick(isPool0: boolean, tickIndex: number, print: boolean = false): Promise<Tick> {
-    let tick: Tick = isPool0 ? (await hre.props.coverPool.ticks0(tickIndex))
-                             : (await hre.props.coverPool.ticks1(tickIndex));
+    let tick: Tick = isPool0 ? (await hre.props.coverPool.ticks(tickIndex))
+                             : (await hre.props.coverPool.ticks(tickIndex));
     if (print) {
         console.log(tickIndex,'tick:', tick.toString())
     }
@@ -395,14 +396,14 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     let upperTickBefore: Tick
     let positionBefore: Position
     if (zeroForOne) {
-        lowerTickBefore = await hre.props.coverPool.ticks0(lower)
-        upperTickBefore = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
+        lowerTickBefore = await hre.props.coverPool.ticks(lower)
+        upperTickBefore = await hre.props.coverPool.ticks(expectedUpper ? expectedUpper : upper)
         positionBefore  = await hre.props.coverPool.positions0(
             expectedPositionId
         )
     } else {
-        lowerTickBefore = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-        upperTickBefore = await hre.props.coverPool.ticks1(upper)
+        lowerTickBefore = await hre.props.coverPool.ticks(expectedLower ? expectedLower : lower)
+        upperTickBefore = await hre.props.coverPool.ticks(upper)
         positionBefore  = await hre.props.coverPool.positions1(
             expectedPositionId
         )
@@ -454,14 +455,14 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
     let upperTickAfter: Tick
     let positionAfter: Position
     if (zeroForOne) {
-        lowerTickAfter = await hre.props.coverPool.ticks0(lower)
-        upperTickAfter = await hre.props.coverPool.ticks0(expectedUpper ? expectedUpper : upper)
+        lowerTickAfter = await hre.props.coverPool.ticks(lower)
+        upperTickAfter = await hre.props.coverPool.ticks(expectedUpper ? expectedUpper : upper)
         positionAfter = await hre.props.coverPool.positions0(
             expectedPositionId
         )
     } else {
-        lowerTickAfter = await hre.props.coverPool.ticks1(expectedLower ? expectedLower : lower)
-        upperTickAfter = await hre.props.coverPool.ticks1(upper)
+        lowerTickAfter = await hre.props.coverPool.ticks(expectedLower ? expectedLower : lower)
+        upperTickAfter = await hre.props.coverPool.ticks(upper)
         positionAfter = await hre.props.coverPool.positions1(
             expectedPositionId
         )
@@ -543,12 +544,12 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionSnapshot: Position
 
     if (zeroForOne) {
-        lowerTickBefore = await hre.props.coverPool.ticks0(lower)
-        upperTickBefore = await hre.props.coverPool.ticks0(upper)
+        lowerTickBefore = await hre.props.coverPool.ticks(lower)
+        upperTickBefore = await hre.props.coverPool.ticks(upper)
         positionBefore = await hre.props.coverPool.positions0(positionId)
     } else {
-        lowerTickBefore = await hre.props.coverPool.ticks1(lower)
-        upperTickBefore = await hre.props.coverPool.ticks1(upper)
+        lowerTickBefore = await hre.props.coverPool.ticks(lower)
+        upperTickBefore = await hre.props.coverPool.ticks(upper)
         positionBefore = await hre.props.coverPool.positions1(positionId)
     }
 
@@ -623,12 +624,12 @@ export async function validateBurn(params: ValidateBurnParams) {
     let positionAfter: Position
 
     if (zeroForOne) {
-        lowerTickAfter = await hre.props.coverPool.ticks0(lower)
-        upperTickAfter = await hre.props.coverPool.ticks0(upper)
+        lowerTickAfter = await hre.props.coverPool.ticks(lower)
+        upperTickAfter = await hre.props.coverPool.ticks(upper)
         positionAfter = await hre.props.coverPool.positions0(positionId)
     } else {
-        lowerTickAfter = await hre.props.coverPool.ticks1(lower)
-        upperTickAfter = await hre.props.coverPool.ticks1(upper)
+        lowerTickAfter = await hre.props.coverPool.ticks(lower)
+        upperTickAfter = await hre.props.coverPool.ticks(upper)
         positionAfter = await hre.props.coverPool.positions1(positionId)
     }
     //dependent on zeroForOne

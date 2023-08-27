@@ -3,17 +3,16 @@ pragma solidity ^0.8.13;
 
 import './CoverPool.sol';
 import './external/solady/LibClone.sol';
-import './interfaces/ICoverPoolStructs.sol';
+import './interfaces/structs/CoverPoolStructs.sol';
 import './interfaces/ICoverPoolFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
-import './base/structs/CoverPoolManagerStructs.sol';
 import './utils/CoverPoolErrors.sol';
 
 contract CoverPoolFactory is 
     ICoverPoolFactory,
     CoverPoolFactoryEvents,
     CoverPoolFactoryErrors,
-    ICoverPoolStructs
+    CoverPoolStructs
 {
     using LibClone for address;
 

@@ -60,8 +60,7 @@ contract CoverPool is
             cache.pool0, 
             cache.pool1
         ) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
+            ticks,
             tickMap,
             cache.pool0,
             cache.pool1,
@@ -72,7 +71,7 @@ contract CoverPool is
             params,
             cache,
             tickMap,
-            params.zeroForOne ? ticks0 : ticks1,
+            ticks,
             params.zeroForOne ? positions0 : positions1
         );
         pool0 = cache.pool0;
@@ -99,8 +98,7 @@ contract CoverPool is
                 cache.pool0,
                 cache.pool1
             ) = Epochs.syncLatest(
-                ticks0,
-                ticks1,
+                ticks,
                 tickMap,
                 cache.pool0,
                 cache.pool1,
@@ -111,7 +109,7 @@ contract CoverPool is
             params, 
             cache, 
             tickMap,
-            params.zeroForOne ? ticks0 : ticks1,
+            ticks,
             params.zeroForOne ? positions0 : positions1
         );
         pool0 = cache.pool0;
@@ -137,8 +135,7 @@ contract CoverPool is
             cache.pool0,
             cache.pool1
         ) = Epochs.syncLatest(
-            ticks0,
-            ticks1,
+            ticks,
             tickMap,
             cache.pool0,
             cache.pool1,
@@ -185,8 +182,7 @@ contract CoverPool is
             cache.pool0,
             cache.pool1
         ) = Epochs.simulateSync(
-            ticks0,
-            ticks1,
+            ticks,
             tickMap,
             cache.pool0,
             cache.pool1,
@@ -216,7 +212,7 @@ contract CoverPool is
     ) {
         return Positions.snapshot(
             params.zeroForOne ? positions0 : positions1,
-            params.zeroForOne ? ticks0 : ticks1,
+            ticks,
             tickMap,
             globalState,
             params.zeroForOne ? pool0 : pool1,

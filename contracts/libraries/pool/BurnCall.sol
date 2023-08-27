@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
 
@@ -25,12 +25,12 @@ library BurnCall {
 
     function perform(
         ICoverPool.BurnParams memory params,
-        ICoverPoolStructs.BurnCache memory cache,
-        ICoverPoolStructs.TickMap storage tickMap,
-        mapping(int24 => ICoverPoolStructs.Tick) storage ticks,
-        mapping(uint256 => ICoverPoolStructs.CoverPosition)
+        CoverPoolStructs.BurnCache memory cache,
+        CoverPoolStructs.TickMap storage tickMap,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions
-    ) external returns (ICoverPoolStructs.BurnCache memory) {
+    ) external returns (CoverPoolStructs.BurnCache memory) {
         cache.position = positions[params.positionId];
         if (cache.position.owner != msg.sender) {
             require(false, 'PositionNotFound()');
@@ -51,7 +51,7 @@ library BurnCall {
                     tickMap,
                     cache.state,
                     cache.pool0,
-                    ICoverPoolStructs.UpdateParams(
+                    CoverPoolStructs.UpdateParams(
                         msg.sender,
                         params.to,
                         params.burnPercent,
@@ -74,7 +74,7 @@ library BurnCall {
                     tickMap,
                     cache.state,
                     cache.pool1,
-                    ICoverPoolStructs.UpdateParams(
+                    CoverPoolStructs.UpdateParams(
                         msg.sender,
                         params.to,
                         params.burnPercent,
@@ -94,7 +94,7 @@ library BurnCall {
                 ticks,
                 tickMap,
                 cache.state,
-                ICoverPoolStructs.RemoveParams(
+                CoverPoolStructs.RemoveParams(
                     msg.sender,
                     params.to,
                     params.burnPercent,
@@ -109,7 +109,7 @@ library BurnCall {
         Collect.burn(
             cache,
             positions,
-            ICoverPoolStructs.CollectParams(
+            CoverPoolStructs.CollectParams(
                 cache.syncFees,
                 params.to, //address(0) goes to msg.sender
                 params.positionId,

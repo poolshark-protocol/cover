@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import './Deltas.sol';
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 import './EpochMap.sol';
 import './TickMap.sol';
 import './utils/String.sol';
@@ -10,14 +10,14 @@ import './utils/String.sol';
 library Claims {
 
     function validate(
-        ICoverPoolStructs.TickMap storage tickMap,
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.PoolState memory pool,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.PoolState memory pool,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.Immutables memory constants
     ) external view returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
         if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
@@ -84,14 +84,14 @@ library Claims {
     }
 
     function getDeltas(
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache
         if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
-            (cache.claimTick, cache.deltas) = Deltas.from(cache.claimTick, cache.deltas);
+            (cache.claimTick, cache.deltas) = Deltas.from(cache.claimTick, cache.deltas, params.zeroForOne);
         } else {
             /// @dev - deltas are applied once per each tick claimed at
             /// @dev - deltas should never be applied if position is not crossed into
@@ -101,21 +101,21 @@ library Claims {
                                || (params.zeroForOne ? cache.position.claimPriceLast > cache.priceClaim
                                                      : cache.position.claimPriceLast < cache.priceClaim && cache.position.claimPriceLast != 0);
             if (transferDeltas) {
-                (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas);
+                (cache.claimTick, cache.deltas) = Deltas.unstash(cache.claimTick, cache.deltas, params.zeroForOne);
             }
         } /// @dev - deltas transfer from claim tick are replaced after applying changes
         return cache;
     }
 
     function applyDeltas(
-        ICoverPoolStructs.GlobalState memory state,
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
+        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         uint256 percentInDelta; uint256 percentOutDelta;
-        if(cache.deltas.amountInDeltaMax > 0) { //TODO: if this is zero for some reason we can just give 100% of amountInDelta
+        if(cache.deltas.amountInDeltaMax > 0) {
             percentInDelta = uint256(cache.amountInFilledMax) * 1e38 / uint256(cache.deltas.amountInDeltaMax);
             percentInDelta = percentInDelta > 1e38 ? 1e38 : percentInDelta;
             if (cache.deltas.amountOutDeltaMax > 0) {
@@ -139,24 +139,25 @@ library Claims {
         if (params.claim != (params.zeroForOne ? params.lower : params.upper)) {
             // burn deltas on final tick of position
             cache.finalTick = Deltas.burnMaxMinus(cache.finalTick, cache.finalDeltas);
+            // update deltas on claim tick
             if (params.claim == (params.zeroForOne ? params.upper : params.lower)) {
-                (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+                (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick, params.zeroForOne);
             } else {
-                (cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick);
+                (cache.deltas, cache.claimTick) = Deltas.stash(cache.deltas, cache.claimTick, params.zeroForOne);
             }
         } else {
-            (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick);
+            (cache.deltas, cache.claimTick) = Deltas.to(cache.deltas, cache.claimTick, params.zeroForOne);
         }
         return cache;
     }
 
     /// @dev - calculate claim portion of partially claimed previous auction
     function section1(
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.Immutables memory constants
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
         if(cache.position.claimPriceLast == 0) {
@@ -181,7 +182,6 @@ library Claims {
                                       : cache.priceLower,
                     params.zeroForOne
                 );
-                //TODO: modify delta max on claim tick and lower : upper tick
                 cache.amountInFilledMax    += amountInFilledMax;
                 cache.amountOutUnfilledMax += amountOutUnfilledMax;
             }
@@ -194,10 +194,10 @@ library Claims {
 
     /// @dev - calculate claim from position start up to claim tick
     function section2(
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
         if (params.zeroForOne ? cache.priceClaim < cache.position.claimPriceLast 
@@ -221,11 +221,11 @@ library Claims {
 
     /// @dev - calculate claim from current auction unfilled section
     function section3(
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState memory pool
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.PoolState memory pool
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 3 - current auction unfilled section
         if (params.amount > 0) {
@@ -251,11 +251,11 @@ library Claims {
 
     /// @dev - calculate claim from position start up to claim tick
     function section4(
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params,
-        ICoverPoolStructs.PoolState memory pool
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params,
+        CoverPoolStructs.PoolState memory pool
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 4 - current auction filled section
         {
@@ -313,10 +313,10 @@ library Claims {
 
     /// @dev - calculate claim from position start up to claim tick
     function section5(
-        ICoverPoolStructs.UpdatePositionCache memory cache,
-        ICoverPoolStructs.UpdateParams memory params
+        CoverPoolStructs.UpdatePositionCache memory cache,
+        CoverPoolStructs.UpdateParams memory params
     ) external pure returns (
-        ICoverPoolStructs.UpdatePositionCache memory
+        CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 5 - burned liquidity past claim tick
         {

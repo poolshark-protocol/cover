@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import '../../interfaces/external/poolshark/range/IRangePoolManager.sol';
 import '../../interfaces/external/poolshark/range/IRangePoolFactory.sol';
 import '../../interfaces/external/poolshark/range/IRangePool.sol';
-import '../../interfaces/ICoverPoolStructs.sol';
+import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
 
@@ -26,7 +26,7 @@ contract PoolsharkRangeSource is ITwapSource {
     }
 
     function initialize(
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.Immutables memory constants
     ) external returns (
         uint8 initializable,
         int24 startingTick
@@ -78,7 +78,7 @@ contract PoolsharkRangeSource is ITwapSource {
     }
 
     function calculateAverageTick(
-        ICoverPoolStructs.Immutables memory constants,
+        CoverPoolStructs.Immutables memory constants,
         int24 latestTick
     ) external view returns (
         int24 averageTick
@@ -98,7 +98,7 @@ contract PoolsharkRangeSource is ITwapSource {
     }
 
     function _calculateAverageTicks(
-        ICoverPoolStructs.Immutables memory constants
+        CoverPoolStructs.Immutables memory constants
     ) internal view returns (
         int24[4] memory averageTicks
     )

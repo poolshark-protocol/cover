@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import '../interfaces/ICoverPoolStructs.sol';
+import '../interfaces/structs/CoverPoolStructs.sol';
 
 /// @notice CoverPoolManager interface
-interface ICoverPoolManager is ICoverPoolStructs {
+interface ICoverPoolManager is CoverPoolStructs {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
     function poolTypes(
