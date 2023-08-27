@@ -88,11 +88,11 @@ library Claims {
                 uint32 endTickAccumEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, constants);
                 if (endTickAccumEpoch > cache.position.accumEpochLast) {
                     // set claim to final tick
-                    params.amount = cache.position.liquidity;
                     params.claim = cache.position.upper;
                     cache.priceClaim = cache.priceUpper;
-                    // force user to remove all liquidity
                     cache.claimTick = cache.finalTick;
+                    // force user to remove all liquidity
+                    params.amount = cache.position.liquidity;
                 } else {
                     int24 claimTickNext = TickMap.next(params.claim, tickMap, constants);
                     uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
@@ -109,7 +109,6 @@ library Claims {
                 require (false, 'WrongTickClaimedAt()');
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
-
         return (params, cache);
     }
 
