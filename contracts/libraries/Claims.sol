@@ -86,7 +86,7 @@ library Claims {
     function getDeltas(
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) external view returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache

@@ -41,6 +41,7 @@ interface CoverPoolStructs {
         uint128 amountOutDeltaMaxMinus;
         uint128 amountInDeltaMaxStashed;
         uint128 amountOutDeltaMaxStashed;
+        bool pool0Stash;
     }
 
     struct Deltas {

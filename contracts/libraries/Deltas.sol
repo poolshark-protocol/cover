@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import '../interfaces/structs/CoverPoolStructs.sol';
 import './math/ConstantProduct.sol';
-
 library Deltas {
 
     function max(
@@ -337,8 +336,10 @@ library Deltas {
         toTick.amountOutDeltaMaxStashed += fromDeltas.amountOutDeltaMax;
         if (isPool0) {
             toTick.deltas0 = toDeltas;
+            toTick.pool0Stash = true;
         } else {
             toTick.deltas1 = toDeltas;
+            toTick.pool0Stash = false;
         }
         fromDeltas = CoverPoolStructs.Deltas(0,0,0,0);
         return (fromDeltas, toTick);
@@ -368,19 +369,19 @@ library Deltas {
         locals.totalDeltaMax = uint256(fromTick.amountInDeltaMaxStashed) + uint256(locals.fromDeltas.amountInDeltaMax);
         
         if (locals.totalDeltaMax > 0) {
-            uint256 percentStashed = uint256(fromTick.amountInDeltaMaxStashed) * 1e38 / locals.totalDeltaMax;
-            uint128 amountInDeltaChange = uint128(uint256(locals.fromDeltas.amountInDelta) * percentStashed / 1e38);
-            locals.fromDeltas.amountInDelta -= amountInDeltaChange;
-            toDeltas.amountInDelta += amountInDeltaChange;
+            locals.percentStashed = uint256(fromTick.amountInDeltaMaxStashed) * 1e38 / locals.totalDeltaMax;
+            locals.amountInDeltaChange = uint128(uint256(locals.fromDeltas.amountInDelta) * locals.percentStashed / 1e38);
+            locals.fromDeltas.amountInDelta -= locals.amountInDeltaChange;
+            toDeltas.amountInDelta += locals.amountInDeltaChange;
         }
         
         locals.totalDeltaMax = uint256(fromTick.amountOutDeltaMaxStashed) + uint256(locals.fromDeltas.amountOutDeltaMax);
         
         if (locals.totalDeltaMax > 0) {
-            uint256 percentStashed = uint256(fromTick.amountOutDeltaMaxStashed) * 1e38 / locals.totalDeltaMax;
-            uint128 amountOutDeltaChange = uint128(uint256(locals.fromDeltas.amountOutDelta) * percentStashed / 1e38);
-            locals.fromDeltas.amountOutDelta -= amountOutDeltaChange;
-            toDeltas.amountOutDelta += amountOutDeltaChange;
+            locals.percentStashed = uint256(fromTick.amountOutDeltaMaxStashed) * 1e38 / locals.totalDeltaMax;
+            locals.amountOutDeltaChange = uint128(uint256(locals.fromDeltas.amountOutDelta) * locals.percentStashed / 1e38);
+            locals.fromDeltas.amountOutDelta -= locals.amountOutDeltaChange;
+            toDeltas.amountOutDelta += locals.amountOutDeltaChange;
         }
         if (isPool0) {
             fromTick.deltas0 = locals.fromDeltas;
@@ -389,6 +390,7 @@ library Deltas {
         }
         fromTick.amountInDeltaMaxStashed = 0;
         fromTick.amountOutDeltaMaxStashed = 0;
+
         return (fromTick, toDeltas);
     }
 

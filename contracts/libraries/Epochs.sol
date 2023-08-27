@@ -201,9 +201,9 @@ library Epochs {
                 deltas: cache.deltas0,
                 crossTick: ticks[cache.nextTickToCross0],
                 accumTick: ticks[cache.nextTickToAccum0],
-                updateAccumDeltas: cache.newLatestTick > state.latestTick
-                                            ? cache.nextTickToAccum0 == cache.stopTick0
-                                            : cache.nextTickToAccum0 >= cache.stopTick0,
+                updateAccumDeltas: cache.newLatestTick > state.latestTick                // check twap move up or down
+                                            ? cache.nextTickToAccum0 == cache.stopTick0  // move up - true at stop tick
+                                            : cache.nextTickToAccum0 >= cache.stopTick0, // move down - at or above stop tick
                 isPool0: true
             });
             params = _accumulate(
@@ -267,9 +267,9 @@ library Epochs {
                     deltas: cache.deltas1,
                     crossTick: ticks[cache.nextTickToCross1],
                     accumTick: ticks[cache.nextTickToAccum1],
-                    updateAccumDeltas: cache.newLatestTick > state.latestTick
-                                                ? cache.nextTickToAccum1 <= cache.stopTick1
-                                                : cache.nextTickToAccum1 == cache.stopTick1,
+                    updateAccumDeltas: cache.newLatestTick > state.latestTick                   // check twap move up or down
+                                                ? cache.nextTickToAccum1 <= cache.stopTick1     // move up - below or at
+                                                : cache.nextTickToAccum1 == cache.stopTick1,    // move down - at
                     isPool0: false
                 });
                 params = _accumulate(
@@ -522,7 +522,8 @@ library Epochs {
     ) internal returns (
         CoverPoolStructs.AccumulateParams memory
     ) {
-        if (params.crossTick.amountInDeltaMaxStashed > 0) {
+        if (params.isPool0 == params.crossTick.pool0Stash &&
+                params.crossTick.amountInDeltaMaxStashed > 0) {
             /// @dev - else we migrate carry deltas onto cache
             // add carry amounts to cache
             (params.crossTick, params.deltas) = Deltas.unstash(params.crossTick, params.deltas, params.isPool0);

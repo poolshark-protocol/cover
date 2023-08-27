@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';
-import 'hardhat/console.sol';
 
 library MintCall {
     event Mint(
