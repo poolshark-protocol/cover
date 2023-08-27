@@ -91,11 +91,12 @@ library Claims {
                         require(false, 'WrongTickClaimedAt()');
                     }
                 }
-            }
-            uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
-            ///@dev - next accumEpoch should not be greater
-            if (claimTickNextEpoch > cache.position.accumEpochLast) {
-                require (false, 'WrongTickClaimedAt()');
+            } else {
+                uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
+                ///@dev - next accumEpoch should not be greater
+                if (claimTickNextEpoch > cache.position.accumEpochLast) {
+                    require (false, 'WrongTickClaimedAt()');
+                }
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
