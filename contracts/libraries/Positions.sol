@@ -168,10 +168,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
+                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), params.zeroForOne, tickMap, constants)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
+                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), params.zeroForOne, tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
                 require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
@@ -267,10 +267,10 @@ library Positions {
             if (
                 params.zeroForOne
                     ? state.latestTick < params.upper ||
-                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), tickMap, constants)
+                        EpochMap.get(TickMap.previous(params.upper, tickMap, constants), params.zeroForOne, tickMap, constants)
                             > cache.position.accumEpochLast
                     : state.latestTick > params.lower ||
-                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), tickMap, constants)
+                        EpochMap.get(TickMap.next(params.lower, tickMap, constants), params.zeroForOne, tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
                 require (false, 'WrongTickClaimedAt()');

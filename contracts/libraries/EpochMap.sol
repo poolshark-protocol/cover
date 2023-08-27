@@ -8,9 +8,10 @@ library EpochMap {
     function set(
         int24  tick,
         uint256 epoch,
+        bool zeroForOne,
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.Immutables memory constants
-    ) external {
+    ) internal {
         (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -18,39 +19,26 @@ library EpochMap {
             uint256 volumeIndex
         ) = getIndices(tick, constants);
         // assert epoch isn't bigger than max uint32
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        uint256 epochValue = zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex]
+                                        : tickMap.epochs1[volumeIndex][blockIndex][wordIndex];
         // clear previous value
         epochValue &=  ~(((1 << 9) - 1) << ((tickIndex & 0x7) * 32));
         // add new value to word
         epochValue |= epoch << ((tickIndex & 0x7) * 32);
         // store word in map
-        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
-    }
-
-    function unset(
-        int24 tick,
-        CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
-    ) external {
-        (
-            uint256 tickIndex,
-            uint256 wordIndex,
-            uint256 blockIndex,
-            uint256 volumeIndex
-        ) = getIndices(tick, constants);
-
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
-        // clear previous value
-        epochValue &= ~(1 << (tickIndex & 0x7 * 32) - 1);
-        // store word in map
-        tickMap.epochs[volumeIndex][blockIndex][wordIndex] = epochValue;
+        if (zeroForOne) {
+            tickMap.epochs0[volumeIndex][blockIndex][wordIndex] = epochValue;
+        } else {
+            tickMap.epochs1[volumeIndex][blockIndex][wordIndex] = epochValue;
+        }
     }
 
     function get(
         int24 tick,
+        bool zeroForOne,
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.Immutables memory constants
-    ) external view returns (
+    ) internal view returns (
         uint32 epoch
     ) {
         (
@@ -60,7 +48,8 @@ library EpochMap {
             uint256 volumeIndex
         ) = getIndices(tick, constants);
 
-        uint256 epochValue = tickMap.epochs[volumeIndex][blockIndex][wordIndex];
+        uint256 epochValue = zeroForOne ? tickMap.epochs0[volumeIndex][blockIndex][wordIndex]
+                                        : tickMap.epochs1[volumeIndex][blockIndex][wordIndex];
         // right shift so first 8 bits are epoch value
         epochValue >>= ((tickIndex & 0x7) * 32);
         // clear other bits
