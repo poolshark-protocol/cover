@@ -146,7 +146,7 @@ library Ticks {
         int24 upper,
         uint128 amount,
         bool isPool0
-    ) external {
+    ) internal {
         /// @dev - validation of ticks is in Positions.validate
         if (amount > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
         if ((uint128(type(int128).max) - state.liquidityGlobal) < amount)
@@ -161,15 +161,15 @@ library Ticks {
 
         // updates liquidity values
         if (isPool0) {
-                tickLower.liquidityDelta -= int128(amount);
+            tickLower.liquidityDelta -= int128(amount);
         } else {
-                tickLower.liquidityDelta += int128(amount);
+            tickLower.liquidityDelta += int128(amount);
         }
 
         TickMap.set(upper, tickMap, constants);
 
         if (isPool0) {
-                tickUpper.liquidityDelta += int128(amount);
+            tickUpper.liquidityDelta += int128(amount);
         } else {
             tickUpper.liquidityDelta -= int128(amount);
         }
@@ -187,7 +187,7 @@ library Ticks {
         bool isPool0,
         bool removeLower,
         bool removeUpper
-    ) external {
+    ) internal {
         {
             CoverPoolStructs.Tick memory tickLower = ticks[lower];
             if (removeLower) {
