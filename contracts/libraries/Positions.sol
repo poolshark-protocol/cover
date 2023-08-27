@@ -348,6 +348,7 @@ library Positions {
     {
         CoverPoolStructs.UpdatePositionCache memory cache;
         (
+            params,
             cache,
             state
         ) = _deltas(
@@ -469,6 +470,7 @@ library Positions {
     ) {
         CoverPoolStructs.UpdatePositionCache memory cache;
         (
+            params,
             cache,
             state
         ) = _deltas(
@@ -530,6 +532,7 @@ library Positions {
         CoverPoolStructs.UpdateParams memory params,
         CoverPoolStructs.Immutables memory constants
     ) internal view returns (
+        CoverPoolStructs.UpdateParams memory,
         CoverPoolStructs.UpdatePositionCache memory,
         CoverPoolStructs.GlobalState memory
     ) {
@@ -543,9 +546,7 @@ library Positions {
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceClaim: ConstantProduct.getPriceAtTick(params.claim, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
-            priceSpread: ConstantProduct.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
-                                                                          : params.claim + constants.tickSpread,
-                                                        constants),
+            priceSpread: 0,
             amountInFilledMax: 0,
             amountOutUnfilledMax: 0,
             claimTick: ticks[params.claim],
@@ -562,7 +563,7 @@ library Positions {
         params.amount = _convert(cache.position.liquidity, params.amount);
 
         // check claim is valid
-        cache = Claims.validate(
+        (params, cache) = Claims.validate(
             tickMap,
             state,
             cache.pool,
@@ -571,8 +572,11 @@ library Positions {
             constants
         );
         if (cache.earlyReturn) {
-            return (cache, state);
+            return (params, cache, state);
         }
+        cache.priceSpread = ConstantProduct.getPriceAtTick(params.zeroForOne ? params.claim - constants.tickSpread 
+                                                                             : params.claim + constants.tickSpread,
+                                                           constants);
         if (params.amount > 0)
             _size(
                 CoverPoolStructs.SizeParams(
@@ -604,7 +608,7 @@ library Positions {
         // adjust position amounts based on deltas
         cache = Claims.applyDeltas(state, cache, params);
 
-        return (cache, state);
+        return (params, cache, state);
     }
 
     function _size(

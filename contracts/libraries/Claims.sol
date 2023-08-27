@@ -17,14 +17,15 @@ library Claims {
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.Immutables memory constants
     ) external view returns (
+        CoverPoolStructs.UpdateParams memory,
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // validate position liquidity
-        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
         if (cache.position.liquidity == 0) {
             cache.earlyReturn = true;
-            return cache;
+            return (params, cache);
         }
+        if (params.amount > cache.position.liquidity) require (false, 'NotEnoughPositionLiquidity()');
         // if the position has not been crossed into at all
         else if (params.zeroForOne ? params.claim == params.upper 
                                         && EpochMap.get(params.upper, params.zeroForOne, tickMap, constants) <= cache.position.accumEpochLast
@@ -32,7 +33,7 @@ library Claims {
                                         && EpochMap.get(params.lower, params.zeroForOne, tickMap, constants) <= cache.position.accumEpochLast
         ) {
             cache.earlyReturn = true;
-            return cache;
+            return (params, cache);
         }
         // early return if no update and amount burned is 0
         if (
@@ -43,7 +44,7 @@ library Claims {
             ) && params.claim == state.latestTick
         ) { if (params.amount == 0 && cache.position.claimPriceLast == pool.price) {
                 cache.earlyReturn = true;
-                return cache;
+                return (params, cache);
             } 
         } /// @dev - nothing to update if pool price hasn't moved
         
@@ -65,37 +66,40 @@ library Claims {
              if (claimTickEpoch <= cache.position.accumEpochLast)
                 require (false, 'WrongTickClaimedAt()');
         } else {
-            // zero fill or partial fill
-            int24 claimTickNext = params.zeroForOne ? TickMap.previous(params.claim, tickMap, constants)
-                                                    : TickMap.next(params.claim, tickMap, constants);
-            
-            if (params.zeroForOne ? claimTickNext < params.lower
-                                  : claimTickNext > params.upper) {
-                // check end tick 
-                if (params.zeroForOne) {
-                    uint32 endTickAccumEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, constants);
-                    if (endTickAccumEpoch > cache.position.accumEpochLast) {
-                        params.claim = cache.position.lower;
-                        cache.priceClaim = cache.priceLower;
-                        cache.claimTick = cache.finalTick;
-                    } else {
-                        require(false, 'WrongTickClaimedAt()');
-                    }
+            // check end tick 
+            if (params.zeroForOne) {
+                uint32 endTickAccumEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, constants);
+                if (endTickAccumEpoch > cache.position.accumEpochLast) {
+                    // set claim to final tick
+                    params.claim = cache.position.lower;
+                    cache.priceClaim = cache.priceLower;
+                    cache.claimTick = cache.finalTick;
+                    // force user to remove all liquidity
+                    params.amount = cache.position.liquidity;
                 } else {
-                    uint32 endTickAccumEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, constants);
-                    if (endTickAccumEpoch > cache.position.accumEpochLast) {
-                        params.claim = cache.position.upper;
-                        cache.priceClaim = cache.priceUpper;
-                        cache.claimTick = cache.finalTick;
-                    } else {
-                        require(false, 'WrongTickClaimedAt()');
+                    int24 claimTickNext = TickMap.previous(params.claim, tickMap, constants);
+                    uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
+                    ///@dev - next accumEpoch should not be greater
+                    if (claimTickNextEpoch > cache.position.accumEpochLast) {
+                        require (false, 'WrongTickClaimedAt()');
                     }
                 }
             } else {
-                uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
-                ///@dev - next accumEpoch should not be greater
-                if (claimTickNextEpoch > cache.position.accumEpochLast) {
-                    require (false, 'WrongTickClaimedAt()');
+                uint32 endTickAccumEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, constants);
+                if (endTickAccumEpoch > cache.position.accumEpochLast) {
+                    // set claim to final tick
+                    params.amount = cache.position.liquidity;
+                    params.claim = cache.position.upper;
+                    cache.priceClaim = cache.priceUpper;
+                    // force user to remove all liquidity
+                    cache.claimTick = cache.finalTick;
+                } else {
+                    int24 claimTickNext = TickMap.next(params.claim, tickMap, constants);
+                    uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
+                    ///@dev - next accumEpoch should not be greater
+                    if (claimTickNextEpoch > cache.position.accumEpochLast) {
+                        require (false, 'WrongTickClaimedAt()');
+                    }
                 }
             }
         }
@@ -106,7 +110,7 @@ library Claims {
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
 
-        return cache;
+        return (params, cache);
     }
 
     function getDeltas(

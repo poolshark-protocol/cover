@@ -774,20 +774,20 @@ describe('CoverPool Tests', function () {
 
         await validateSync(-60)
 
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-60',
-            claim: '-40',
-            upper: '-20',
-            positionId: aliceId,
-            liquidityAmount: liquidityAmount4,
-            zeroForOne: true,
-            balanceInIncrease: BigNumber.from('10000000000000000000'),
-            balanceOutIncrease: BigNumber.from('89959930249908791288'),
-            lowerTickCleared: false,
-            upperTickCleared: false,
-            revertMessage: 'WrongTickClaimedAt()',
-        })
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     positionId: aliceId,
+        //     liquidityAmount: liquidityAmount4,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('10000000000000000000'),
+        //     balanceOutIncrease: BigNumber.from('89953908622685366631'),
+        //     lowerTickCleared: false,
+        //     upperTickCleared: true,
+        //     revertMessage: '',
+        // })
 
         await validateBurn({
             signer: hre.props.alice,
@@ -803,7 +803,7 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         })
-
+        if (debugMode) await getTick(true, -60, true)
         await validateSync(-40)
         await validateSync(-20)
 
@@ -890,6 +890,7 @@ describe('CoverPool Tests', function () {
         // // The priceClaimLast ought to be updated to tick -40 in section1, but since the previous auction
         // // was fully filled, it was not. The fix for this is to allow this case to enter the else if in
         // // section1 so that the cache.position.claimPriceLast can be pushed to tick -40.
+
         await validateBurn({
             signer: hre.props.alice,
             lower: '-80',
@@ -1585,7 +1586,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: ''
         })
-        // await getTick(true, -40, debugMode)
+        if (debugMode) await getTick(true, -40, debugMode)
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
@@ -2178,27 +2179,27 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-60',
-            claim: '-40',
-            upper: '-20',
-            positionId: aliceId,
-            liquidityAmount: BigNumber.from('1'),
-            zeroForOne: true,
-            balanceInIncrease: BigNumber.from('0'),
-            balanceOutIncrease: BigNumber.from('99999999999999999999'),
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            revertMessage: 'WrongTickClaimedAt()',
-        });
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-60',
+        //     claim: '-40',
+        //     upper: '-20',
+        //     positionId: aliceId,
+        //     liquidityAmount: BigNumber.from('1'),
+        //     zeroForOne: true,
+        //     balanceInIncrease: BigNumber.from('0'),
+        //     balanceOutIncrease: BigNumber.from('99999999999999999999'),
+        //     lowerTickCleared: true,
+        //     upperTickCleared: true,
+        //     revertMessage: 'WrongTickClaimedAt()',
+        // });
 
         await validateSync(-80);
         // Still can't burn
         await validateBurn({
             signer: hre.props.alice,
             lower: '-60',
-            claim: '-60',
+            claim: '-40',
             upper: '-20',
             positionId: aliceId,
             liquidityAmount: BigNumber.from('1'),
@@ -2419,25 +2420,25 @@ describe('CoverPool Tests', function () {
         await validateSync(-100)
         await validateSync(-60)
 
-        await validateBurn({
-            signer: hre.props.alice,
-            lower: '-120',
-            claim: '-100',
-            upper: '-80',
-            positionId: aliceId,
-            liquidityAmount: liquidityAmount2,
-            zeroForOne: true,
-            balanceInIncrease: BN_ZERO,
-            balanceOutIncrease: BN_ZERO,
-            lowerTickCleared: true,
-            upperTickCleared: true,
-            revertMessage: 'WrongTickClaimedAt()',
-        })
+        // await validateBurn({
+        //     signer: hre.props.alice,
+        //     lower: '-120',
+        //     claim: '-100',
+        //     upper: '-80',
+        //     positionId: aliceId,
+        //     liquidityAmount: liquidityAmount2,
+        //     zeroForOne: true,
+        //     balanceInIncrease: BN_ZERO,
+        //     balanceOutIncrease: BN_ZERO,
+        //     lowerTickCleared: true,
+        //     upperTickCleared: true,
+        //     revertMessage: 'WrongTickClaimedAt()',
+        // })
 
         await validateBurn({
             signer: hre.props.alice,
             lower: '-120',
-            claim: '-120',
+            claim: '-100',
             upper: '-80',
             positionId: aliceId,
             liquidityAmount: liquidityAmount2,
