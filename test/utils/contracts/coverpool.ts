@@ -183,7 +183,6 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
     const oldLatestTick: number = globalState.latestTick
     const tickSpread: number = await hre.props.coverPool.tickSpread()
 
-    // //TODO: wait number of blocks equal to (twapMove * auctionLength)
     if (newLatestTick != oldLatestTick && hre.network.name == 'hardhat') {
         // mine until end of auction
         const auctionLength: number = await hre.props.coverPool.auctionLength()
@@ -339,7 +338,8 @@ export async function validateSwap(params: ValidateSwapParams) {
 
     expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(balanceInDecrease)
     expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(balanceOutIncrease)
-    //TODO: validate quote amount
+    /// @dev - quoted amount changes because swap happens on a new block with a new timestamp
+    // we would need to use the router to do a quote and then a swap in the same block
     // expect(balanceInBefore.sub(balanceInAfter)).to.be.equal(amountInQuoted)
     // expect(balanceOutAfter.sub(balanceOutBefore)).to.be.equal(amountOutQuoted)
 

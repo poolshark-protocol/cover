@@ -279,7 +279,6 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         })
 
-
         await validateBurn({
             signer: hre.props.alice,
             lower: '-40',

@@ -34,7 +34,10 @@ library SwapCall {
         CoverPoolStructs.GlobalState storage globalState,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1
-    ) external returns (CoverPoolStructs.SwapCache memory) {
+    ) external returns (
+        int256,
+        int256
+    ) {
         {
             CoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
             cache = CoverPoolStructs.SwapCache({
@@ -57,29 +60,15 @@ library SwapCall {
                 exactIn: true
             });
         }
-        /// @dev - liquidity range is limited to one tick
+
+        // call quote
         cache = Ticks.quote(params.zeroForOne, params.priceLimit, cache.state, cache, cache.constants);
 
-        if (params.zeroForOne) {
-            cache.pool1.price = uint160(cache.price);
-            cache.pool1.amountInDelta += uint128(cache.amountInDelta);
-        } else {
-            cache.pool0.price = uint160(cache.price);
-            cache.pool0.amountInDelta += uint128(cache.amountInDelta);
-        }
-
         // save state to storage before callback
-        save(cache, globalState, pool0, pool1);
+        save(params, cache, globalState, pool0, pool1);
 
         // calculate amount deltas
-        cache.amount0Delta = params.zeroForOne ? -int256(cache.input) 
-                                               : int256(cache.output);
-        cache.amount1Delta = params.zeroForOne ? int256(cache.output) 
-                                               : -int256(cache.input);
-        
-        // factor in sync fees
-        cache.amount0Delta += int128(cache.syncFees.token0);
-        cache.amount1Delta += int128(cache.syncFees.token1);
+        cache = calculateDeltas(params, cache);
 
         // transfer swap output
         SafeTransfers.transferOut(
@@ -115,15 +104,29 @@ library SwapCall {
             emit SwapPool0(params.to, uint128(cache.input), uint128(cache.output), uint160(cache.price), params.priceLimit);
         }
 
-        return cache;
+        return (
+            cache.amount0Delta,
+            cache.amount1Delta
+        );
     }
 
     function save(
+        ICoverPool.SwapParams memory params,
         CoverPoolStructs.SwapCache memory cache,
         CoverPoolStructs.GlobalState storage globalState,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1
     ) internal {
+        // save pool changes to cache
+        if (params.zeroForOne) {
+            cache.pool1.price = uint160(cache.price);
+            cache.pool1.amountInDelta += uint128(cache.amountInDelta);
+        } else {
+            cache.pool0.price = uint160(cache.price);
+            cache.pool0.amountInDelta += uint128(cache.amountInDelta);
+        }
+
+        // save global state changes to storage
         globalState.latestPrice = cache.state.latestPrice;
         globalState.liquidityGlobal = cache.state.liquidityGlobal;
         globalState.lastTime = cache.state.lastTime;
@@ -131,12 +134,14 @@ library SwapCall {
         globalState.accumEpoch = cache.state.accumEpoch;
         globalState.latestTick = cache.state.latestTick;
 
+        // save pool0 changes to storage
         pool0.price = cache.pool0.price;
         pool0.liquidity = cache.pool0.liquidity;
         pool0.amountInDelta = cache.pool0.amountInDelta;
         pool0.amountInDeltaMaxClaimed = cache.pool0.amountInDeltaMaxClaimed;
         pool0.amountOutDeltaMaxClaimed = cache.pool0.amountOutDeltaMaxClaimed;
 
+        // save pool1 changes to storage
         pool1.price = cache.pool1.price;
         pool1.liquidity = cache.pool1.liquidity;
         pool1.amountInDelta = cache.pool1.amountInDelta;
@@ -161,5 +166,24 @@ library SwapCall {
                                 );
         if(!success || data.length < 32) require(false, 'InvalidERC20ReturnData()');
         return abi.decode(data, (uint256));
+    }
+
+    function calculateDeltas(
+        ICoverPool.SwapParams memory params,
+        CoverPoolStructs.SwapCache memory cache
+    ) internal pure returns (
+        CoverPoolStructs.SwapCache memory
+    ) {
+        // calculate amount deltas
+        cache.amount0Delta = params.zeroForOne ? -int256(cache.input) 
+                                               : int256(cache.output);
+        cache.amount1Delta = params.zeroForOne ? int256(cache.output) 
+                                               : -int256(cache.input);
+        
+        // factor in sync fees
+        cache.amount0Delta += int128(cache.syncFees.token0);
+        cache.amount1Delta += int128(cache.syncFees.token1);
+
+        return cache;
     }
 }

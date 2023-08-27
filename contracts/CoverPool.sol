@@ -143,25 +143,13 @@ contract CoverPool is
             immutables()
         );
 
-        cache = SwapCall.perform(
+        return SwapCall.perform(
             params,
             cache,
             globalState,
             pool0,
             pool1
         );
-
-        if (params.zeroForOne) {
-            return (
-                -int256(cache.input) + int128(cache.syncFees.token0),
-                int256(cache.output + cache.syncFees.token1)
-            );
-        } else {
-            return (
-                int256(cache.output + cache.syncFees.token0),
-                -int256(cache.input) + int128(cache.syncFees.token1)
-            );
-        }
     }
 
     function quote(
@@ -189,20 +177,7 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-        cache = QuoteCall.perform(params, cache);
-        if (params.zeroForOne) {
-            return (
-                int256(cache.input) - int128(cache.syncFees.token0),
-                int256(cache.output + cache.syncFees.token1),
-                cache.price
-            );
-        } else {
-            return (
-                int256(cache.input) - int128(cache.syncFees.token1),
-                int256(cache.output + cache.syncFees.token0),
-                cache.price
-            );
-        }
+        return QuoteCall.perform(params, cache);
     }
 
     function snapshot(

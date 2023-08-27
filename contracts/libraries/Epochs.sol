@@ -407,7 +407,6 @@ library Epochs {
         CoverPoolStructs.AccumulateCache memory,
         CoverPoolStructs.PoolState memory
     ) {
-        //TODO: add syncing fee
         if (pool.liquidity == 0) {
             return (cache, pool);
         }
