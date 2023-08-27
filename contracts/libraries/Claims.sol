@@ -66,12 +66,37 @@ library Claims {
                 require (false, 'WrongTickClaimedAt()');
         } else {
             // zero fill or partial fill
-            uint32 claimTickNextAccumEpoch = params.zeroForOne
-                ? EpochMap.get(TickMap.previous(params.claim, tickMap, constants), params.zeroForOne, tickMap, constants)
-                : EpochMap.get(TickMap.next(params.claim, tickMap, constants), params.zeroForOne, tickMap, constants);
-            ///@dev - next accumEpoch should not be greater
-            if (claimTickNextAccumEpoch > cache.position.accumEpochLast) {
-                require (false, 'WrongTickClaimedAt()');
+            int24 claimTickNext = params.zeroForOne ? TickMap.previous(params.claim, tickMap, constants)
+                                                    : TickMap.next(params.claim, tickMap, constants);
+            
+            if (params.zeroForOne ? claimTickNext < params.lower
+                                  : claimTickNext > params.upper) {
+                // check end tick 
+                if (params.zeroForOne) {
+                    uint32 endTickAccumEpoch = EpochMap.get(cache.position.lower, params.zeroForOne, tickMap, constants);
+                    if (endTickAccumEpoch > cache.position.accumEpochLast) {
+                        params.claim = cache.position.lower;
+                        cache.priceClaim = cache.priceLower;
+                        cache.claimTick = cache.finalTick;
+                    } else {
+                        require(false, 'WrongTickClaimedAt()');
+                    }
+                } else {
+                    uint32 endTickAccumEpoch = EpochMap.get(cache.position.upper, params.zeroForOne, tickMap, constants);
+                    if (endTickAccumEpoch > cache.position.accumEpochLast) {
+                        params.claim = cache.position.upper;
+                        cache.priceClaim = cache.priceUpper;
+                        cache.claimTick = cache.finalTick;
+                    } else {
+                        require(false, 'WrongTickClaimedAt()');
+                    }
+                }
+            } else {
+                uint32 claimTickNextEpoch = EpochMap.get(claimTickNext, params.zeroForOne, tickMap, constants);
+                ///@dev - next accumEpoch should not be greater
+                if (claimTickNextEpoch > cache.position.accumEpochLast) {
+                    require (false, 'WrongTickClaimedAt()');
+                }
             }
         }
         if (params.claim != params.upper && params.claim != params.lower) {
@@ -80,6 +105,7 @@ library Claims {
                 require (false, 'WrongTickClaimedAt()');
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
+
         return cache;
     }
 
