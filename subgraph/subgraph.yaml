@@ -1,6 +1,6 @@
 specVersion: 0.0.4
 description: Poolshark is a Directional Liquidity AMM allowing LPs to capture directional strength.
-repository: https://github.com/poolsharks-protocol/poolshark-cover-pool
+repository: https://github.com/poolshark-protocol/cover
 schema:
     file: ./schema.graphql
 dataSources:
@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'
+          address: '0x71621f34a927ff263Bf53787F74Ac7afD8D4F73D'
           abi: CoverPoolFactory
-          startBlock: 36320900
+          startBlock: 37370657
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x00F68a260Eb15Bb9DF3e0B9035154549ca410688'
+          address: '0x370156Cc3B867bC56660075c18E0b05fc03682F4'
           abi: CoverPoolManager
-          startBlock: 36320900
+          startBlock: 37370647
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6

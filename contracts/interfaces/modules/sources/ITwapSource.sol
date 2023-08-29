@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
+import '../../structs/PoolsharkStructs.sol';
 import '../../structs/CoverPoolStructs.sol';
 
 interface ITwapSource {
     function initialize(
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external returns (
         uint8 initializable,
         int24 startingTick
     );
 
     function calculateAverageTick(
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         int24 latestTick
     ) external view returns (
         int24 averageTick

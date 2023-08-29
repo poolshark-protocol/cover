@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
+import './PoolsharkStructs.sol';
 import '../modules/sources/ITwapSource.sol';
 
-interface CoverPoolStructs {
+interface CoverPoolStructs is PoolsharkStructs {
     struct GlobalState {
         ProtocolFees protocolFees;
         uint160  latestPrice;      /// @dev price of latestTick
@@ -63,26 +64,6 @@ interface CoverPoolStructs {
         int24 upper;
     }
 
-    struct Immutables {
-        ITwapSource source;
-        PriceBounds bounds;
-        address owner;
-        address token0;
-        address token1;
-        address poolImpl;
-        address inputPool;
-        uint128 minAmountPerAuction;
-        uint32 genesisTime;
-        int16  minPositionWidth;
-        int16  tickSpread;
-        uint16 twapLength;
-        uint16 auctionLength;
-        uint16 blockTime;
-        uint8 token0Decimals;
-        uint8 token1Decimals;
-        bool minAmountLowerPriced;
-    }
-
     struct VolatilityTier {
         uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
         uint16  auctionLength;
@@ -96,11 +77,6 @@ interface CoverPoolStructs {
     struct ProtocolFees {
         uint128 token0;
         uint128 token1;
-    }
-
-    struct PriceBounds {
-        uint160 min;
-        uint160 max;
     }
 
     struct SyncFees {
@@ -161,7 +137,7 @@ interface CoverPoolStructs {
     struct MintCache {
         GlobalState state;
         CoverPosition position;
-        Immutables constants;
+        CoverImmutables constants;
         SyncFees syncFees;
         PoolState pool0;
         PoolState pool1;
@@ -171,7 +147,7 @@ interface CoverPoolStructs {
     struct BurnCache {
         GlobalState state;
         CoverPosition position;
-        Immutables constants;
+        CoverImmutables constants;
         SyncFees syncFees;
         PoolState pool0;
         PoolState pool1;
@@ -180,7 +156,7 @@ interface CoverPoolStructs {
     struct SwapCache {
         GlobalState state;
         SyncFees syncFees;
-        Immutables constants;
+        CoverImmutables constants;
         PoolState pool0;
         PoolState pool1;
         uint256 price;

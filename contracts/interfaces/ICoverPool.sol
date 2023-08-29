@@ -2,14 +2,13 @@
 pragma solidity ^0.8.13;
 
 import './structs/CoverPoolStructs.sol';
-import './structs/PoolsharkStructs.sol';
 
 /**
  * @title ICoverPool
  * @author Poolshark
  * @notice Defines the basic interface for a Cover Pool.
  */
-interface ICoverPool is CoverPoolStructs, PoolsharkStructs {
+interface ICoverPool is CoverPoolStructs {
     /**
      * @custom:struct MintParams
      */
@@ -239,7 +238,7 @@ interface ICoverPool is CoverPoolStructs, PoolsharkStructs {
 
     function immutables(
     ) external view returns (
-        Immutables memory constants
+        CoverImmutables memory constants
     );
 
     function priceBounds(
