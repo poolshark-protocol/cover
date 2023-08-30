@@ -4,6 +4,50 @@ pragma solidity 0.8.13;
 import '../modules/sources/ITwapSource.sol';
 
 interface PoolsharkStructs {
+    struct LimitImmutables {
+        address owner;
+        address poolImpl;
+        address factory;
+        PriceBounds bounds;
+        address token0;
+        address token1;
+        address poolToken;
+        uint32 genesisTime;
+        int16 tickSpacing;
+        uint16 swapFee;
+    }
+
+    struct CoverImmutables {
+        ITwapSource source;
+        PriceBounds bounds;
+        address owner;
+        address token0;
+        address token1;
+        address poolImpl;
+        address inputPool;
+        uint128 minAmountPerAuction;
+        uint32 genesisTime;
+        int16  minPositionWidth;
+        int16  tickSpread;
+        uint16 twapLength;
+        uint16 auctionLength;
+        uint16 blockTime;
+        uint8 token0Decimals;
+        uint8 token1Decimals;
+        bool minAmountLowerPriced;
+    }
+
+    struct PriceBounds {
+        uint160 min;
+        uint160 max;
+    }
+
+    struct QuoteResults {
+        address pool;
+        int256 amountIn;
+        int256 amountOut;
+        uint160 priceAfter;
+    }
 
     /**
      * @custom:struct QuoteParams
@@ -79,50 +123,5 @@ interface PoolsharkStructs {
          * @notice Data to be passed through to the swap callback. 
          */
          bytes callbackData;
-    }
-
-    struct CoverImmutables {
-        ITwapSource source;
-        PriceBounds bounds;
-        address owner;
-        address token0;
-        address token1;
-        address poolImpl;
-        address inputPool;
-        uint128 minAmountPerAuction;
-        uint32 genesisTime;
-        int16  minPositionWidth;
-        int16  tickSpread;
-        uint16 twapLength;
-        uint16 auctionLength;
-        uint16 blockTime;
-        uint8 token0Decimals;
-        uint8 token1Decimals;
-        bool minAmountLowerPriced;
-    }
-
-    struct LimitImmutables {
-        address owner;
-        address poolImpl;
-        address factory;
-        PriceBounds bounds;
-        address token0;
-        address token1;
-        address poolToken;
-        uint32 genesisTime;
-        int16 tickSpacing;
-        uint16 swapFee;
-    }
-
-    struct PriceBounds {
-        uint160 min;
-        uint160 max;
-    }
-
-    struct QuoteResults {
-        address pool;
-        int256 amountIn;
-        int256 amountOut;
-        uint160 priceAfter;
     }
 }

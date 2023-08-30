@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import '../../structs/PoolsharkStructs.sol';
-import '../../structs/CoverPoolStructs.sol';
 
 interface ITwapSource {
     function initialize(

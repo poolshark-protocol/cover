@@ -5,4 +5,19 @@ import '../interfaces/structs/PoolsharkStructs.sol';
 
 interface ILimitPool is PoolsharkStructs {
     function immutables() external view returns (LimitImmutables memory);
+    
+    function swap(
+        SwapParams memory params
+    ) external returns (
+        int256 amount0,
+        int256 amount1
+    );
+
+    function quote(
+        QuoteParams memory params
+    ) external view returns (
+        int256 inAmount,
+        int256 outAmount,
+        uint160 priceAfter
+    );
 }

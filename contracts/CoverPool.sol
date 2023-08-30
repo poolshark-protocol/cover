@@ -24,6 +24,10 @@ contract CoverPool is
     address public immutable factory;
     address public immutable original;
 
+    event SimulateMint(bytes b);
+    event SimulateMint(bytes4 b);
+    event SimulateMint(bool b);
+
     modifier ownerOnly() {
         _onlyOwner();
         _;
@@ -223,6 +227,79 @@ contract CoverPool is
         globalState.protocolFees.token1 = 0;
         SafeTransfers.transferOut(feeTo, token0(), token0Fees);
         SafeTransfers.transferOut(feeTo, token1(), token1Fees);
+    }
+
+     function getResizedTicksForMint(
+        MintParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionCreated){
+        MintCache memory cache;
+        {
+            cache.state = globalState;
+            cache.constants = immutables();
+        }
+
+        try MintCall.getResizedTicks(
+            params,
+            cache,
+            tickMap,
+            ticks,
+            params.zeroForOne ? positions0 : positions1
+        ) {
+        } catch (bytes memory data) {
+            emit SimulateMint(data);
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            
+            // SimulateMint error
+            if (sig == hex"5cc1f67b") {
+                (, lower, upper, positionCreated) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+            else {
+                lower = -8388608;
+                upper = -8388608;
+                positionCreated = false;
+            }
+        }
+    }
+
+    function getResizedTicksForBurn(
+        BurnParams memory params
+    ) external returns (int24 lower, int24 upper, bool positionExists){
+        if (params.to == address(0)) revert CollectToZeroAddress();
+        BurnCache memory cache;
+        cache.state = globalState;
+        cache.constants = immutables();
+
+        try BurnCall.getResizedTicks(
+            params,
+            cache,
+            tickMap,
+            ticks,
+            params.zeroForOne ? positions0 : positions1
+        ) {
+        } catch (bytes memory data) {
+            bytes4 sig;
+            assembly {
+                sig := mload(add(data, 0x20))
+            }
+            // SimulateBurn error
+            if (sig == hex"97dd6e0a") {
+                (, lower, upper, positionExists) = abi.decode(abi.encodePacked(bytes28(0), data),(bytes32,int24,int24,bool));
+            }
+             else {
+                lower = -8388608;
+                upper = -8388608;
+                positionExists = false;
+            }
+        }
+    }
+
+    function getGlobalState() public view returns(
+        GlobalState memory
+    ) {
+        return globalState;
     }
 
     function immutables() public view returns (

@@ -2,8 +2,8 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
-import '../interfaces/ICoverPool.sol';
 import '../interfaces/ILimitPool.sol';
+import '../interfaces/ICoverPool.sol';
 import '../interfaces/callbacks/ILimitPoolSwapCallback.sol';
 import '../interfaces/callbacks/ICoverPoolSwapCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
@@ -12,9 +12,9 @@ import '../interfaces/structs/PoolsharkStructs.sol';
 import '../external/solady/LibClone.sol';
 
 contract PoolsharkRouter is
+    PoolsharkStructs,
     ILimitPoolSwapCallback,
-    ICoverPoolSwapCallback,
-    CoverPoolStructs
+    ICoverPoolSwapCallback
 {
     using SafeCast for uint256;
     using SafeCast for int256;
@@ -64,17 +64,7 @@ contract PoolsharkRouter is
         // compute address
         address predictedAddress = LibClone.predictDeterministicAddress(
             constants.poolImpl,
-            abi.encodePacked(
-                constants.owner,
-                constants.token0,
-                constants.token1,
-                constants.poolToken,
-                constants.bounds.min,
-                constants.bounds.max,
-                constants.genesisTime,
-                constants.tickSpacing,
-                constants.swapFee
-            ),
+            encodeLimit(constants),
             key,
             limitPoolFactory
         );
@@ -203,7 +193,6 @@ contract PoolsharkRouter is
                 }
                 params[i+1].amount = params[0].amount;
             }
-
             unchecked {
                 ++i;
             }
@@ -269,6 +258,22 @@ contract PoolsharkRouter is
                     ++sorted;
                 }
             }
+    }
+
+    function encodeLimit(
+        LimitImmutables memory constants
+    ) private pure returns (bytes memory) {
+        return abi.encodePacked(
+                constants.owner,
+                constants.token0,
+                constants.token1,
+                constants.poolToken,
+                constants.bounds.min,
+                constants.bounds.max,
+                constants.genesisTime,
+                constants.tickSpacing,
+                constants.swapFee
+        );
     }
 
     function encodeCover(

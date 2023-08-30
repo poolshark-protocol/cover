@@ -19,6 +19,8 @@ library MintCall {
         uint128 amountOutDeltaMaxMinted
     );
 
+    error SimulateMint(int24 lower, int24 upper, bool positionCreated);
+
     function perform(
         ICoverPool.MintParams memory params,
         CoverPoolStructs.MintCache memory cache,
@@ -88,5 +90,83 @@ library MintCall {
         );
         positions[params.positionId] = cache.position;
         return cache;
+    }
+
+        // Echidna funcs
+    function getResizedTicks(
+        ICoverPool.MintParams memory params,
+        CoverPoolStructs.MintCache memory cache,
+        CoverPoolStructs.TickMap storage tickMap,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
+            storage positions
+    ) external {
+        bool positionCreated = false;
+        if (params.positionId > 0) {
+            // load existing position
+            cache.position = positions[params.positionId];
+            if (cache.position.owner != msg.sender)
+                require(false, 'PositionNotFound()');
+        }
+        // assume cache.state is already set
+
+        // resize position
+        (params, cache.liquidityMinted) = Positions.resize(
+            cache.position,
+            params, 
+            cache.state,
+            cache.constants
+        );
+
+        if (params.positionId == 0 ||                       // new position
+                params.lower != cache.position.lower ||     // lower mismatch
+                params.upper != cache.position.upper) {     // upper mismatch
+            CoverPoolStructs.CoverPosition memory newPosition;
+            newPosition.owner = params.to;
+            newPosition.lower = params.lower;
+            newPosition.upper = params.upper;
+            // use new position in cache
+            cache.position = newPosition;
+            params.positionId = cache.state.positionIdNext;
+            cache.state.positionIdNext += 1;
+        }
+
+        // transfer in token amount
+        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
+                                                   : cache.constants.token1,
+                                 params.amount
+                                );
+
+        (cache.state, cache.position) = Positions.add(
+            cache.position,
+            ticks,
+            tickMap,
+            cache.state,
+            CoverPoolStructs.AddParams(
+                params.to,
+                uint128(cache.liquidityMinted),
+                params.amount,
+                params.positionId,
+                params.lower,
+                params.upper,
+                params.zeroForOne
+            ),
+            cache.constants
+        );
+        positionCreated = true;
+        Collect.mint(
+            cache,
+            CoverPoolStructs.CollectParams(
+                cache.syncFees,
+                params.to,
+                params.positionId,
+                params.lower,
+                0, // not needed for mint collect
+                params.upper,
+                params.zeroForOne
+            )
+        );
+
+        revert SimulateMint(params.lower, params.upper, positionCreated);
     }
 }

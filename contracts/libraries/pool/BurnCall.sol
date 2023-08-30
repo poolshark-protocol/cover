@@ -23,6 +23,8 @@ library BurnCall {
         uint160 claimPriceLast
     );
 
+    error SimulateBurn(int24 lower, int24 upper, bool positionExists);
+
     function perform(
         ICoverPool.BurnParams memory params,
         CoverPoolStructs.BurnCache memory cache,
@@ -35,7 +37,7 @@ library BurnCall {
         if (cache.position.owner != msg.sender) {
             require(false, 'PositionNotFound()');
         }
-       if (cache.position.claimPriceLast > 0
+        if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? cache.position.upper : cache.position.lower) 
             || params.claim == cache.state.latestTick)
         {
@@ -120,5 +122,115 @@ library BurnCall {
             )
         );
         return cache;
+    }
+
+    // Echidna funcs
+    function getResizedTicks(
+        ICoverPool.BurnParams memory params,
+        CoverPoolStructs.BurnCache memory cache,
+        CoverPoolStructs.TickMap storage tickMap,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        mapping(uint256 => CoverPoolStructs.CoverPosition)
+            storage positions
+    ) external {
+        // check for invalid receiver
+        if (params.to == address(0))
+            require(false, 'CollectToZeroAddress()');
+        cache.position = positions[params.positionId];
+        if (cache.position.owner != msg.sender) {
+            require(false, 'PositionNotFound()');
+        }
+
+        if (cache.position.claimPriceLast > 0
+            || params.claim != (params.zeroForOne ? cache.position.upper : cache.position.lower) 
+            || params.claim == cache.state.latestTick)
+        {
+            // if position has been crossed into
+            if (params.zeroForOne) {
+                (
+                    cache.state,
+                    cache.pool0,
+                    params.claim
+                ) = Positions.update(
+                    positions,
+                    ticks,
+                    tickMap,
+                    cache.state,
+                    cache.pool0,
+                    CoverPoolStructs.UpdateParams(
+                        msg.sender,
+                        params.to,
+                        params.burnPercent,
+                        params.positionId,
+                        cache.position.lower,
+                        cache.position.upper,
+                        params.claim,
+                        params.zeroForOne
+                    ),
+                    cache.constants
+                );
+            } else {
+                (
+                    cache.state,
+                    cache.pool1,
+                    params.claim
+                ) = Positions.update(
+                    positions,
+                    ticks,
+                    tickMap,
+                    cache.state,
+                    cache.pool1,
+                    CoverPoolStructs.UpdateParams(
+                        msg.sender,
+                        params.to,
+                        params.burnPercent,
+                        params.positionId,
+                        cache.position.lower,
+                        cache.position.upper,
+                        params.claim,
+                        params.zeroForOne
+                    ),
+                    cache.constants
+                );
+            }
+        } else {
+            // if position hasn't been crossed into
+            (, cache.state) = Positions.remove(
+                positions,
+                ticks,
+                tickMap,
+                cache.state,
+                CoverPoolStructs.RemoveParams(
+                    msg.sender,
+                    params.to,
+                    params.burnPercent,
+                    params.positionId,
+                    cache.position.lower,
+                    cache.position.upper,
+                    params.zeroForOne
+                ),
+                cache.constants
+            );
+        }
+
+        int24 lower = cache.position.lower;
+        int24 upper = cache.position.upper;
+        bool positionExists = cache.position.liquidity != 0;
+
+        Collect.burn(
+            cache,
+            positions,
+            CoverPoolStructs.CollectParams(
+                cache.syncFees,
+                params.to, //address(0) goes to msg.sender
+                params.positionId,
+                cache.position.lower,
+                params.claim,
+                cache.position.upper,
+                params.zeroForOne
+            )
+        );
+
+        revert SimulateBurn(lower, upper, positionExists);
     }
 }
