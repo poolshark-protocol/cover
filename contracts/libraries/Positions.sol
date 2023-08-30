@@ -46,7 +46,7 @@ library Positions {
         CoverPoolStructs.CoverPosition memory position,
         ICoverPool.MintParams memory params,
         CoverPoolStructs.GlobalState memory state,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal pure returns (
         ICoverPool.MintParams memory,
         uint256
@@ -140,7 +140,7 @@ library Positions {
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.AddParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal returns (
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.CoverPosition memory
@@ -228,7 +228,7 @@ library Positions {
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.RemoveParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal returns (uint128, CoverPoolStructs.GlobalState memory) {
         // validate burn percentage
         if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
@@ -339,7 +339,7 @@ library Positions {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal returns (
             CoverPoolStructs.GlobalState memory,
             CoverPoolStructs.PoolState memory,
@@ -464,7 +464,7 @@ library Positions {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external view returns (
         CoverPoolStructs.CoverPosition memory
     ) {
@@ -530,7 +530,7 @@ library Positions {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal view returns (
         CoverPoolStructs.UpdateParams memory,
         CoverPoolStructs.UpdatePositionCache memory,
@@ -613,7 +613,7 @@ library Positions {
 
     function _size(
         CoverPoolStructs.SizeParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal pure  
     {
         // early return if 100% of position burned
@@ -688,7 +688,7 @@ library Positions {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         CoverPoolStructs.UpdatePositionCache memory cache
     ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory,

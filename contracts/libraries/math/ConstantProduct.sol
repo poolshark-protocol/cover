@@ -188,7 +188,7 @@ library ConstantProduct {
     ) internal pure returns (
         uint160 price
     ) {
-        CoverPoolStructs.Immutables  memory constants;
+        PoolsharkStructs.CoverImmutables  memory constants;
         constants.tickSpread = tickSpacing;
         return getPriceAtTick(minTick(tickSpacing), constants);
     }
@@ -198,7 +198,7 @@ library ConstantProduct {
     ) internal pure returns (
         uint160 price
     ) {
-        CoverPoolStructs.Immutables  memory constants;
+        PoolsharkStructs.CoverImmutables  memory constants;
         constants.tickSpread = tickSpacing;
         return getPriceAtTick(maxTick(tickSpacing), constants);
     }
@@ -230,7 +230,7 @@ library ConstantProduct {
     /// at the given tick.
     function getPriceAtTick(
         int24 tick,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal pure returns (
         uint160 price
     ) {
@@ -273,7 +273,7 @@ library ConstantProduct {
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio.
     function getTickAtPrice(
         uint160 price,
-        CoverPoolStructs.Immutables  memory constants
+        PoolsharkStructs.CoverImmutables  memory constants
     ) internal pure returns (int24 tick) {
         // Second inequality must be < because the price can never reach the price at the max tick.
         if (price < constants.bounds.min || price > constants.bounds.max)

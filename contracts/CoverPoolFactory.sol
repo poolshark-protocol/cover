@@ -31,7 +31,7 @@ contract CoverPoolFactory is
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
             revert InvalidTokenAddress();
         }
-        Immutables memory constants;
+        CoverImmutables memory constants;
         constants.owner = owner;
         // sort tokens by address
         constants.token0 = params.tokenIn < params.tokenOut ? params.tokenIn : params.tokenOut;
@@ -147,7 +147,7 @@ contract CoverPoolFactory is
     }
 
     function encodeCover(
-        Immutables memory constants
+        CoverImmutables memory constants
     ) private pure returns (bytes memory) {
         bytes memory value1 = abi.encodePacked(
             constants.owner,

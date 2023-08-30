@@ -21,7 +21,7 @@ contract UniswapV3Source is ITwapSource {
     }
 
     function initialize(
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external returns (
         uint8 initializable,
         int24 startingTick
@@ -73,7 +73,7 @@ contract UniswapV3Source is ITwapSource {
     }
 
     function calculateAverageTick(
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         int24 latestTick
     ) external view returns (
         int24 averageTick
@@ -93,7 +93,7 @@ contract UniswapV3Source is ITwapSource {
     }
 
     function _calculateAverageTicks(
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal view returns (
         int24[4] memory averageTicks
     )

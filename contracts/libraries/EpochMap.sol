@@ -10,7 +10,7 @@ library EpochMap {
         uint256 epoch,
         bool zeroForOne,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal {
         (
             uint256 tickIndex,
@@ -37,7 +37,7 @@ library EpochMap {
         int24 tick,
         bool zeroForOne,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal view returns (
         uint32 epoch
     ) {
@@ -59,7 +59,7 @@ library EpochMap {
 
     function getIndices(
         int24 tick,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -81,7 +81,7 @@ library EpochMap {
 
     function _tick (
         uint256 tickIndex,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal pure returns (
         int24 tick
     ) {
