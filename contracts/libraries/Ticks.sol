@@ -26,7 +26,7 @@ library Ticks {
         uint160 priceLimit,
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.SwapCache memory cache,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal pure returns (CoverPoolStructs.SwapCache memory) {
         if ((zeroForOne ? priceLimit >= cache.price
                         : priceLimit <= cache.price) ||
@@ -102,7 +102,7 @@ library Ticks {
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1,
         CoverPoolStructs.GlobalState memory state,
-        CoverPoolStructs.Immutables memory constants 
+        PoolsharkStructs.CoverImmutables memory constants 
     ) external returns (CoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = constants.source.initialize(constants);
@@ -141,7 +141,7 @@ library Ticks {
         mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.GlobalState memory state,
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -180,7 +180,7 @@ library Ticks {
     function remove(
         mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         int24 lower,
         int24 upper,
         uint128 amount,
@@ -221,7 +221,7 @@ library Ticks {
     function cleanup(
         mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         CoverPoolStructs.Tick memory tick,
         int24 tickIndex
     ) internal {

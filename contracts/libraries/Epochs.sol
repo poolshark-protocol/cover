@@ -55,7 +55,7 @@ library Epochs {
         CoverPoolStructs.PoolState memory pool0,
         CoverPoolStructs.PoolState memory pool1,
         CoverPoolStructs.GlobalState memory state,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external view returns (
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.SyncFees memory,
@@ -150,7 +150,7 @@ library Epochs {
         CoverPoolStructs.PoolState memory pool0,
         CoverPoolStructs.PoolState memory pool1,
         CoverPoolStructs.GlobalState memory state,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external returns (
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.SyncFees memory,
@@ -351,7 +351,7 @@ library Epochs {
 
     function _syncTick(
         CoverPoolStructs.GlobalState memory state,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal view returns(
         int24 newLatestTick,
         bool
@@ -401,7 +401,7 @@ library Epochs {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.AccumulateCache memory cache,
         CoverPoolStructs.PoolState memory pool,
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         bool isPool0
     ) internal pure returns (
         CoverPoolStructs.AccumulateCache memory,
@@ -597,7 +597,7 @@ library Epochs {
     function _cross(
         int128 liquidityDelta,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants,
+        PoolsharkStructs.CoverImmutables memory constants,
         int24 nextTickToCross,
         int24 nextTickToAccum,
         uint128 currentLiquidity,

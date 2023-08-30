@@ -160,12 +160,12 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x33c27C689068578acCa750CbFeA5F025471278ea",
+            "contractAddress": "0x379CBEa9234cAe9e106bC2a86b39610dC56dbAe2",
             "constructorArguments": [
-                "0x9eF9c1abd0d4B3aC9f93aDCF1FEEDd4f38626fac",
+                "0x658e23AffE417B8b67ae56e2EF2d88B8aa85a1E0",
                 "0xD1f805fB8206FFE1B76E16c002a34739BE66f977"
             ],
-            "created": "2023-08-24T13:50:03.562Z"
+            "created": "2023-08-30T17:09:07.136Z"
         }
     },
     "scroll_alpha": {

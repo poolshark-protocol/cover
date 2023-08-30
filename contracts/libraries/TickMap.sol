@@ -8,7 +8,7 @@ library TickMap {
     function set(
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external returns (
         bool exists
     )    
@@ -34,7 +34,7 @@ library TickMap {
     function unset(
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external {
         (
             uint256 tickIndex,
@@ -54,7 +54,7 @@ library TickMap {
     function previous(
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external view returns (
         int24 previousTick
     ) {
@@ -84,7 +84,7 @@ library TickMap {
     function next(
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external view returns (
         int24 nextTick
     ) {
@@ -118,7 +118,7 @@ library TickMap {
 
     function getIndices(
         int24 tick,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) public pure returns (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -138,7 +138,7 @@ library TickMap {
 
     function _tick (
         uint256 tickIndex,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) internal pure returns (
         int24 tick
     ) {

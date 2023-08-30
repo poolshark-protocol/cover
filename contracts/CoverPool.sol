@@ -226,9 +226,9 @@ contract CoverPool is
     }
 
     function immutables() public view returns (
-        Immutables memory
+        CoverImmutables memory
     ) {
-        return Immutables(
+        return CoverImmutables(
             ITwapSource(twapSource()),
             PriceBounds(minPrice(), maxPrice()),
             owner(),

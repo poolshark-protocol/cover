@@ -15,7 +15,7 @@ library Claims {
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
         CoverPoolStructs.UpdatePositionCache memory cache,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external view returns (
         CoverPoolStructs.UpdateParams memory,
         CoverPoolStructs.UpdatePositionCache memory
@@ -184,7 +184,7 @@ library Claims {
     function section1(
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params,
-        CoverPoolStructs.Immutables memory constants
+        PoolsharkStructs.CoverImmutables memory constants
     ) external pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {

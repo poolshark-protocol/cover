@@ -9,7 +9,7 @@ import './structs/PoolsharkStructs.sol';
  * @author Poolshark
  * @notice Defines the basic interface for a Cover Pool.
  */
-interface ICoverPool is CoverPoolStructs, PoolsharkStructs {
+interface ICoverPool is CoverPoolStructs {
     /**
      * @custom:struct MintParams
      */
@@ -239,7 +239,7 @@ interface ICoverPool is CoverPoolStructs, PoolsharkStructs {
 
     function immutables(
     ) external view returns (
-        Immutables memory constants
+        CoverImmutables memory constants
     );
 
     function priceBounds(
