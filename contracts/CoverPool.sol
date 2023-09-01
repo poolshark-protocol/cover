@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
-import './interfaces/ICoverPool.sol';
-import './interfaces/ICoverPoolManager.sol';
+import './interfaces/cover/ICoverPool.sol';
+import './interfaces/cover/ICoverPoolManager.sol';
 import './base/storage/CoverPoolStorage.sol';
 import './base/storage/CoverPoolImmutables.sol';
 import './interfaces/structs/PoolsharkStructs.sol';

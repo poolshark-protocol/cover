@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import '../../interfaces/structs/CoverPoolStructs.sol';
-import '../../interfaces/ICoverPool.sol';
+import '../../interfaces/cover/ICoverPool.sol';
 import '../Ticks.sol';
 
 library QuoteCall {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.13;
 
-import '../interfaces/ICoverPool.sol';
-import '../interfaces/ICoverPoolFactory.sol';
-import '../interfaces/ICoverPoolManager.sol';
+import '../interfaces/cover/ICoverPool.sol';
+import '../interfaces/cover/ICoverPoolFactory.sol';
+import '../interfaces/cover/ICoverPoolManager.sol';
 import '../base/events/CoverPoolManagerEvents.sol';
 
 /**

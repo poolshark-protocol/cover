@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import './Ticks.sol';
 import './Deltas.sol';
 import '../interfaces/structs/CoverPoolStructs.sol';
-import '../interfaces/ICoverPool.sol';
+import '../interfaces/cover/ICoverPool.sol';
 import './math/OverflowMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
