@@ -11,6 +11,9 @@ import './interfaces/structs/PoolsharkStructs.sol';
 import './test/UniswapV3FactoryMock.sol';
 import './libraries/sources/UniswapV3Source.sol';
 
+//TODO: make sure no assertions fail
+//TODO: add the ability to change the TWAP randomly
+
 // Fuzz CoverPool functionality
 contract EchidnaPool {
 
