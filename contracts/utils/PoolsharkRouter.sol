@@ -163,6 +163,20 @@ contract PoolsharkRouter is
         }
     }
 
+    function multiCall(
+        address[] memory pools,
+        SwapParams[] memory params 
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
+            ICoverPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function multiSwapSplit(
         address[] memory pools,
         SwapParams[] memory params 
