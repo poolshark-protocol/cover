@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import '../../interfaces/external/poolshark/range/IRangePoolManager.sol';
 import '../../interfaces/external/poolshark/range/IRangePoolFactory.sol';

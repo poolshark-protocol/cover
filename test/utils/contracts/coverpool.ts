@@ -206,7 +206,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
             txn = await hre.props.poolRouter
                     .connect(signer)
                     .multiCall(
-                    [hre.props.coverPool.address],  
+                    [hre.props.coverPool.address], 
                     [{
                         to: signer.address,
                         priceLimit: BigNumber.from('4297706460'),

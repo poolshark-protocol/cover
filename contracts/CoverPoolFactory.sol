@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 import './CoverPool.sol';
 import './external/solady/LibClone.sol';
 import './interfaces/structs/CoverPoolStructs.sol';
-import './interfaces/ICoverPoolFactory.sol';
+import './interfaces/cover/ICoverPoolFactory.sol';
 import './base/events/CoverPoolFactoryEvents.sol';
 import './utils/CoverPoolErrors.sol';
 
