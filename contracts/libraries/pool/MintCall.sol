@@ -28,7 +28,7 @@ library MintCall {
         mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions
-    ) external returns (CoverPoolStructs.MintCache memory) {
+    ) internal returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
             // load existing position
             cache.position = positions[params.positionId];
@@ -92,7 +92,7 @@ library MintCall {
         return cache;
     }
 
-        // Echidna funcs
+    // Echidna funcs
     function getResizedTicks(
         ICoverPool.MintParams memory params,
         CoverPoolStructs.MintCache memory cache,

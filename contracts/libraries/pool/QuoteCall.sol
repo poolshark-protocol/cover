@@ -10,7 +10,7 @@ library QuoteCall {
     function perform(
         ICoverPool.QuoteParams memory params,
         CoverPoolStructs.SwapCache memory cache
-    ) external view returns (
+    ) internal view returns (
         int256,
         int256,
         uint256

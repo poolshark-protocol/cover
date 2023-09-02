@@ -8,7 +8,6 @@ import './TickMap.sol';
 import './utils/String.sol';
 
 library Claims {
-
     function validate(
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.GlobalState memory state,
@@ -16,7 +15,7 @@ library Claims {
         CoverPoolStructs.UpdateParams memory params,
         CoverPoolStructs.UpdatePositionCache memory cache,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external view returns (
+    ) internal view returns (
         CoverPoolStructs.UpdateParams memory,
         CoverPoolStructs.UpdatePositionCache memory
     ) {
@@ -115,7 +114,7 @@ library Claims {
     function getDeltas(
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // transfer deltas into cache
@@ -140,7 +139,7 @@ library Claims {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         uint256 percentInDelta; uint256 percentOutDelta;
@@ -185,7 +184,7 @@ library Claims {
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // delta check complete - update CPL for new position
@@ -225,7 +224,7 @@ library Claims {
     function section2(
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 2 - position start up to claim tick
@@ -253,7 +252,7 @@ library Claims {
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params,
         CoverPoolStructs.PoolState memory pool
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 3 - current auction unfilled section
@@ -283,7 +282,7 @@ library Claims {
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params,
         CoverPoolStructs.PoolState memory pool
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 4 - current auction filled section
@@ -344,7 +343,7 @@ library Claims {
     function section5(
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.UpdatePositionCache memory
     ) {
         // section 5 - burned liquidity past claim tick

@@ -32,7 +32,7 @@ library BurnCall {
         mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions
-    ) external returns (CoverPoolStructs.BurnCache memory) {
+    ) internal returns (CoverPoolStructs.BurnCache memory) {
         cache.position = positions[params.positionId];
         if (cache.position.owner != msg.sender) {
             require(false, 'PositionNotFound()');
@@ -140,7 +140,6 @@ library BurnCall {
         if (cache.position.owner != msg.sender) {
             require(false, 'PositionNotFound()');
         }
-
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? cache.position.upper : cache.position.lower) 
             || params.claim == cache.state.latestTick)
@@ -170,28 +169,28 @@ library BurnCall {
                     cache.constants
                 );
             } else {
-                (
-                    cache.state,
-                    cache.pool1,
-                    params.claim
-                ) = Positions.update(
-                    positions,
-                    ticks,
-                    tickMap,
-                    cache.state,
-                    cache.pool1,
-                    CoverPoolStructs.UpdateParams(
-                        msg.sender,
-                        params.to,
-                        params.burnPercent,
-                        params.positionId,
-                        cache.position.lower,
-                        cache.position.upper,
-                        params.claim,
-                        params.zeroForOne
-                    ),
-                    cache.constants
-                );
+                // (
+                //     cache.state,
+                //     cache.pool1,
+                //     params.claim
+                // ) = Positions.update(
+                //     positions,
+                //     ticks,
+                //     tickMap,
+                //     cache.state,
+                //     cache.pool1,
+                //     CoverPoolStructs.UpdateParams(
+                //         msg.sender,
+                //         params.to,
+                //         params.burnPercent,
+                //         params.positionId,
+                //         cache.position.lower,
+                //         cache.position.upper,
+                //         params.claim,
+                //         params.zeroForOne
+                //     ),
+                //     cache.constants
+                // );
             }
         } else {
             // if position hasn't been crossed into

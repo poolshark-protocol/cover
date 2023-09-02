@@ -10,7 +10,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool   isPool0
-    ) public pure returns (
+    ) internal pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -51,7 +51,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool   isPool0
-    ) public pure returns (
+    ) internal pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -92,7 +92,7 @@ library Deltas {
         uint160 priceStart,
         uint160 priceEnd,
         bool isPool0
-    ) public pure returns (
+    ) internal pure returns (
         uint128 amountInDeltaMax,
         uint128 amountOutDeltaMax
     ) {
@@ -133,7 +133,7 @@ library Deltas {
         CoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Deltas memory,
         CoverPoolStructs.Deltas memory
     ) {
@@ -165,7 +165,7 @@ library Deltas {
         CoverPoolStructs.Deltas memory toDeltas,
         uint256 percentInTransfer,
         uint256 percentOutTransfer
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Deltas memory,
         CoverPoolStructs.Deltas memory
     ) {
@@ -195,7 +195,7 @@ library Deltas {
     function burnMaxCache(
         CoverPoolStructs.Deltas memory fromDeltas,
         CoverPoolStructs.Tick memory burnTick
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Deltas memory
     ) {
         fromDeltas.amountInDeltaMax -= (fromDeltas.amountInDeltaMax 
@@ -213,7 +213,7 @@ library Deltas {
     function burnMaxMinus(
         CoverPoolStructs.Tick memory fromTick,
         CoverPoolStructs.Deltas memory burnDeltas
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Tick memory
     ) {
         fromTick.amountInDeltaMaxMinus -= (fromTick.amountInDeltaMaxMinus
@@ -232,7 +232,7 @@ library Deltas {
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdatePositionCache memory cache,
         CoverPoolStructs.UpdateParams memory params
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.PoolState memory
     )
     {
@@ -264,7 +264,7 @@ library Deltas {
         CoverPoolStructs.Tick memory fromTick,
         CoverPoolStructs.Deltas memory toDeltas,
         bool isPool0
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Tick memory,
         CoverPoolStructs.Deltas memory
     ) {
@@ -299,7 +299,7 @@ library Deltas {
         CoverPoolStructs.Deltas memory fromDeltas,
         CoverPoolStructs.Tick memory toTick,
         bool isPool0
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Deltas memory,
         CoverPoolStructs.Tick memory
     ) {
@@ -322,7 +322,7 @@ library Deltas {
         CoverPoolStructs.Deltas memory fromDeltas,
         CoverPoolStructs.Tick memory toTick,
         bool isPool0
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Deltas memory,
         CoverPoolStructs.Tick memory
     ) {
@@ -357,7 +357,7 @@ library Deltas {
         CoverPoolStructs.Tick memory fromTick,
         CoverPoolStructs.Deltas memory toDeltas,
         bool isPool0
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Tick memory,
         CoverPoolStructs.Deltas memory
     ) {
@@ -401,7 +401,7 @@ library Deltas {
         uint160 priceUpper,
         bool   isPool0,
         bool   isAdded
-    ) external pure returns (
+    ) internal pure returns (
         CoverPoolStructs.Tick memory,
         CoverPoolStructs.Deltas memory
     ) {

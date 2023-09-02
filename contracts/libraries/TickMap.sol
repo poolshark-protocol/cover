@@ -9,7 +9,7 @@ library TickMap {
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external returns (
+    ) internal returns (
         bool exists
     )    
     {
@@ -35,7 +35,7 @@ library TickMap {
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external {
+    ) internal {
         (
             uint256 tickIndex,
             uint256 wordIndex,
@@ -55,7 +55,7 @@ library TickMap {
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external view returns (
+    ) internal view returns (
         int24 previousTick
     ) {
         unchecked {
@@ -85,7 +85,7 @@ library TickMap {
         int24 tick,
         CoverPoolStructs.TickMap storage tickMap,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external view returns (
+    ) internal view returns (
         int24 nextTick
     ) {
         unchecked {

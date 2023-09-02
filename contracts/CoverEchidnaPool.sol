@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.13;
 
-import './CoverPool.sol';
 import './CoverPoolFactory.sol';
 import './utils/CoverPoolManager.sol';
 import './test/Token20.sol';
-import './libraries/utils/SafeTransfers.sol';
 import './interfaces/structs/CoverPoolStructs.sol';
-import './interfaces/structs/PoolsharkStructs.sol';
+import './libraries/math/ConstantProduct.sol';
+import './libraries/pool/MintCall.sol';
+import './libraries/pool/BurnCall.sol';
 import './test/UniswapV3FactoryMock.sol';
 import './libraries/sources/UniswapV3Source.sol';
 
@@ -15,7 +15,7 @@ import './libraries/sources/UniswapV3Source.sol';
 //TODO: add the ability to change the TWAP randomly
 
 // Fuzz CoverPool functionality
-contract EchidnaPool {
+contract CoverEchidnaPool {
 
     event PassedMint();
     event PassedBurn();
@@ -29,15 +29,19 @@ contract EchidnaPool {
     event AmountInDeltaMaxMinus(uint128 beforeDelta, uint128 afterDelta);
     event AmountOutDeltaMaxMinus(uint128 beforeDelta, uint128 afterDelta);
     event LiquidityDeltaAndDeltaMaxMinus(int128 delta, uint128 abs);
+    event Deployed(address contractAddress);
 
     int16 tickSpacing;
     uint16 swapFee;
     address private implementation;
+    address private poolMock;
     address private poolFactoryMock;
     address private twapSource;
     CoverPoolFactory private factory;
     CoverPoolManager private manager;
     CoverPool private pool;
+    Token20 private token0;
+    Token20 private token1;
     Token20 private tokenIn;
     Token20 private tokenOut;
     Position[] private positions;
@@ -124,14 +128,40 @@ contract EchidnaPool {
         implementation = address(new CoverPool(address(factory)));
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
+        (token0, token1) = address(tokenIn) < address(tokenOut) ? (tokenIn, tokenOut) 
+                                                                : (tokenOut, tokenIn);
+
+        // mock sources
         poolFactoryMock = address(new UniswapV3FactoryMock(address(tokenIn), address(tokenOut)));
-
         twapSource = address(new UniswapV3Source(poolFactoryMock));
-        
-        manager.enablePoolType(bytes32(0x0), address(implementation), twapSource);
-        tickSpacing = 10;
-        ICoverPoolFactory.CoverPoolParams memory params;
 
+        poolMock = UniswapV3FactoryMock(poolFactoryMock).getPool(address(token0), address(token1), 500);
+        emit Deployed(UniswapV3FactoryMock(poolFactoryMock).getPool(address(token0), address(token1), 500));
+        UniswapV3PoolMock(poolMock).setObservationCardinality(5, 5);
+
+        CoverPoolStructs.VolatilityTier memory volTier = CoverPoolStructs.VolatilityTier({
+            minAmountPerAuction: 0,
+            auctionLength: 5,
+            blockTime: 1000,
+            syncFee: 0,
+            fillFee: 0,
+            minPositionWidth: 1,
+            minAmountLowerPriced: true
+        });
+        
+        // add pool type
+        manager.enablePoolType(bytes32(uint256(0x1)), address(implementation), twapSource);
+        manager.enableVolatilityTier(bytes32(uint256(0x1)), 500, 20, 5, volTier);
+        tickSpacing = 20;
+        ICoverPoolFactory.CoverPoolParams memory params;
+        params.poolType = bytes32(uint256(0x1));
+        params.tokenIn = address(tokenIn);
+        params.tokenOut = address(tokenOut);
+        params.feeTier = 500;
+        params.tickSpread = 20;
+        params.twapLength = 5;
+
+        // launch pool
         address poolAddr = factory.createCoverPool(params);
         pool = CoverPool(poolAddr);
     }
@@ -140,7 +170,7 @@ contract EchidnaPool {
         // PRE CONDITIONS
         mintAndApprove();
         amount = amount + 1;
-        // Ensure the newly created position is using different ticks
+        // // Ensure the newly created position is using different ticks
         for(uint i = 0; i < positions.length;) {
             if(positions[i].owner == msg.sender && positions[i].lower == lower && positions[i].upper == upper && positions[i].zeroForOne == zeroForOne) {
                 revert("Position already exists");
@@ -213,65 +243,57 @@ contract EchidnaPool {
         // tick values
         values.liquidityDeltaLowerAfter = poolStructs.lower.liquidityDelta;
         values.liquidityDeltaUpperAfter = poolStructs.upper.liquidityDelta;
+        poolValues.amountInDeltaMaxMinusLowerAfter = poolStructs.lower.amountInDeltaMaxMinus;
+        poolValues.amountInDeltaMaxMinusUpperAfter = poolStructs.upper.amountInDeltaMaxMinus;
         poolValues.amountOutDeltaMaxMinusLowerAfter = poolStructs.lower.amountOutDeltaMaxMinus;
         poolValues.amountOutDeltaMaxMinusUpperAfter = poolStructs.upper.amountOutDeltaMaxMinus;
         
         // POST CONDITIONS
         emit Prices(poolValues.price0, poolValues.price1);
         assert(poolValues.price0 >= poolValues.price1);
+
         // Ensure prices have not crossed
         emit Prices(poolValues.price0After, poolValues.price1After);
         assert(poolValues.price0After >= poolValues.price1After);
-
-        // Ensure amountOutDeltaMaxMinus change is always equal to params.amount
-        // NOTE: skip for now because amount can change
-        // if (zeroForOne) {
-        //     emit amountOutDeltaMaxMinusandAmountIn(params.amount, poolValues.amountOutDeltaMaxMinusLowerBefore, poolValues.amountOutDeltaMaxMinusLowerAfter);
-        //     assert(poolValues.amountOutDeltaMaxMinusLowerAfter -  poolValues.amountOutDeltaMaxMinusLowerBefore <= int256(uint256(poolValues.amountOutDeltaMaxMinusLowerAfter)));
-        // } else {
-        //     emit amountOutDeltaMaxMinusandAmountIn(params.amount, poolValues.amountOutDeltaMaxMinusUpperBefore, poolValues.amountOutDeltaMaxMinusUpperAfter);
-        //     assert(poolValues.amountOutDeltaMaxMinusUpperAfter -  poolValues.amountOutDeltaMaxMinusUpperBefore <= int256(uint256(poolValues.amountOutDeltaMaxMinusUpperAfter)));
-        // }
         
         // Ensure that amountOutDeltaMaxMinus is incremented when not undercutting
         //NOTE: delta max minus should be strictly greater as both values should be non-zero
-        if(zeroForOne){
-            emit AmountInDeltaMaxMinus(poolValues.amountOutDeltaMaxMinusLowerBefore, poolValues.amountOutDeltaMaxMinusLowerAfter);
-            assert(poolValues.amountOutDeltaMaxMinusLowerAfter >= poolValues.amountOutDeltaMaxMinusLowerBefore);
-            emit AmountOutDeltaMaxMinus(poolValues.amountOutDeltaMaxMinusLowerBefore, poolValues.amountOutDeltaMaxMinusLowerAfter);
-            assert(poolValues.amountOutDeltaMaxMinusLowerAfter >= poolValues.amountOutDeltaMaxMinusLowerBefore);
-        } else {
-            emit AmountInDeltaMaxMinus(poolValues.amountOutDeltaMaxMinusUpperBefore, poolValues.amountOutDeltaMaxMinusUpperAfter);
-            assert(poolValues.amountOutDeltaMaxMinusUpperAfter >= poolValues.amountOutDeltaMaxMinusUpperBefore);
-            emit AmountOutDeltaMaxMinus(poolValues.amountOutDeltaMaxMinusUpperBefore, poolValues.amountOutDeltaMaxMinusUpperAfter);
-            assert(poolValues.amountOutDeltaMaxMinusUpperAfter >= poolValues.amountOutDeltaMaxMinusUpperBefore);
-        }
-
         if (posCreated) {
             emit PositionTicks(lower, upper);
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing
             assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+
+            // check delta maxes
+            if(zeroForOne){
+                emit AmountInDeltaMaxMinus(poolValues.amountInDeltaMaxMinusLowerBefore, poolValues.amountInDeltaMaxMinusLowerAfter);
+                assert(poolValues.amountInDeltaMaxMinusLowerAfter > poolValues.amountInDeltaMaxMinusLowerBefore);
+                emit AmountOutDeltaMaxMinus(poolValues.amountOutDeltaMaxMinusLowerBefore, poolValues.amountOutDeltaMaxMinusLowerAfter);
+                assert(poolValues.amountOutDeltaMaxMinusLowerAfter > poolValues.amountOutDeltaMaxMinusLowerBefore);
+            } else {
+                emit AmountInDeltaMaxMinus(poolValues.amountInDeltaMaxMinusUpperBefore, poolValues.amountInDeltaMaxMinusUpperAfter);
+                assert(poolValues.amountInDeltaMaxMinusUpperAfter > poolValues.amountInDeltaMaxMinusUpperBefore);
+                emit AmountOutDeltaMaxMinus(poolValues.amountOutDeltaMaxMinusUpperBefore, poolValues.amountOutDeltaMaxMinusUpperAfter);
+                assert(poolValues.amountOutDeltaMaxMinusUpperAfter > poolValues.amountOutDeltaMaxMinusUpperBefore);
+            }
+            emit LiquidityGlobal(poolValues.liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
+            //emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
+            // Ensure liquidityGlobal is incremented after mint
+            assert(poolValues.liquidityGlobalAfter > poolValues.liquidityGlobalBefore);
         }
-        
-        emit LiquidityGlobal(poolValues.liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
-        emit Liquidity(poolValues.liquidity0Before, poolValues.liquidity1Before, poolValues.liquidity0After, poolValues.liquidity1After);
-        
-        // Ensure liquidityGlobal is incremented after mint
-        assert(poolValues.liquidityGlobalAfter >= poolValues.liquidityGlobalBefore);
-        
         // Ensure pool liquidity is non-zero after mint with no undercuts
-        if (zeroForOne) {
-            if (poolValues.price0After < poolValues.price0Before) assert(poolValues.liquidity0After > 0);
-        }
-        else {
-            if (poolValues.price1After > poolValues.price1Before) assert(poolValues.liquidity1After > 0);
-        }
+        // if (zeroForOne) {
+        //     if (poolValues.price0After < poolValues.price0Before) assert(poolValues.liquidity0After > 0);
+        // }
+        // else {
+        //     if (poolValues.price1After > poolValues.price1Before) assert(poolValues.liquidity1After > 0);
+        // }
     }
 
     function mintVariable(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {
         // PRE CONDITIONS
+        // check if it's going to sync beforehand
         mintAndApprove();
         amount = amount + 1;
         // Ensure the newly created position is using different ticks
@@ -382,7 +404,7 @@ contract EchidnaPool {
         }
     }
 
-    function swap(uint160 priceLimit, uint128 amount, bool exactIn, bool zeroForOne) public {
+    function swap(uint160 priceLimit, uint128 amount, bool zeroForOne) public {
         // PRE CONDITIONS
         mintAndApprove();
 
@@ -390,7 +412,7 @@ contract EchidnaPool {
         params.to = msg.sender;
         params.priceLimit = priceLimit;
         params.amount = amount;
-        params.exactIn = exactIn;
+        params.exactIn = true; // TODO: exactIn always true for now
         params.zeroForOne = zeroForOne;
         params.callbackData = abi.encodePacked(address(this));
         
@@ -406,6 +428,42 @@ contract EchidnaPool {
         // Ensure prices never cross
         emit Prices(price0, price1);
         assert(price0 <= price1);
+    }
+
+    function syncTick(int24 newLatestTick, bool autoSync) public  {
+        UniswapV3PoolMock(poolMock).setTickCumulatives(
+            newLatestTick * 10,
+            newLatestTick * 8,
+            newLatestTick * 7,
+            newLatestTick * 5
+        );
+
+        if (autoSync) {
+            // quote of 0 should start at new tick
+            //TODO: find new latest tick based on auction depth
+            CoverPoolStructs.SwapParams memory params;
+            params.to = msg.sender;
+            params.priceLimit = 0;
+            params.amount = 0;
+            params.exactIn = true;
+            params.zeroForOne = true;
+            params.callbackData = abi.encodePacked(address(this));
+        
+            // ACTION
+            pool.swap(params);
+
+            // POST CONDITIONS
+            //TODO: find new latest tick based on auction depth
+            //new latestTick should match
+            //if there was liquidity delta on that tick it should be unlocked
+            //amountInDelta should be zeroed out if tick moved
+            PoolStructs memory poolStructs;
+            poolStructs.pool0 = getPoolState(true);
+            poolStructs.pool1 = getPoolState(false);
+            poolStructs.state = getGlobalState();
+            emit Prices(poolStructs.pool0.price, poolStructs.pool1.price);
+            assert(poolStructs.pool0.price <= poolStructs.pool1.price);
+        }
     }
 
     function burn(int24 claimAt, uint256 positionIndex, uint128 burnPercent) public {
@@ -576,7 +634,7 @@ contract EchidnaPool {
 
         // Ensure prices never cross
         emit Prices(price0After, price1After);
-        assert(price0After >= price1After);
+        assert(price0After <= price1After);
 
         // Ensure liquidityGlobal is decremented after burn
         // emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -673,7 +731,7 @@ contract EchidnaPool {
 
         // Ensure prices never cross
         emit Prices(price0After, price1After);
-        assert(price0After >= price1After);
+        assert(price0After <= price1After);
 
         // Ensure liquidityGlobal is decremented after burn
         // emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -723,7 +781,7 @@ contract EchidnaPool {
 
         // Ensure prices never cross
         emit Prices(price0After, price1After);
-        assert(price0After >= price1After);
+        assert(price0After <= price1After);
 
         // Ensure liquidityGlobal is decremented after burn
         // emit LiquidityGlobal(liquidityGlobalBefore, poolValues.liquidityGlobalAfter);

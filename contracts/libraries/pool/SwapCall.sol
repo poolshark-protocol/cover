@@ -34,7 +34,7 @@ library SwapCall {
         CoverPoolStructs.GlobalState storage globalState,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1
-    ) external returns (
+    ) internal returns (
         int256,
         int256
     ) {

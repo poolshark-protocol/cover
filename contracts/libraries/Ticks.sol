@@ -103,7 +103,7 @@ library Ticks {
         CoverPoolStructs.PoolState storage pool1,
         CoverPoolStructs.GlobalState memory state,
         PoolsharkStructs.CoverImmutables memory constants 
-    ) external returns (CoverPoolStructs.GlobalState memory) {
+    ) internal returns (CoverPoolStructs.GlobalState memory) {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = constants.source.initialize(constants);
             if (state.unlocked == 1) {

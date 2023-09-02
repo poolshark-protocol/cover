@@ -39,7 +39,6 @@ library Collect {
         mapping(uint256 => CoverPoolStructs.CoverPosition)
             storage positions,
         CoverPoolStructs.CollectParams memory params
-        
     ) internal {
         params.zeroForOne ? params.upper = params.claim : params.lower = params.claim;
 

@@ -56,7 +56,7 @@ library Epochs {
         CoverPoolStructs.PoolState memory pool1,
         CoverPoolStructs.GlobalState memory state,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external view returns (
+    ) internal view returns (
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.SyncFees memory,
         CoverPoolStructs.PoolState memory,
@@ -151,7 +151,7 @@ library Epochs {
         CoverPoolStructs.PoolState memory pool1,
         CoverPoolStructs.GlobalState memory state,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external returns (
+    ) internal returns (
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.SyncFees memory,
         CoverPoolStructs.PoolState memory,

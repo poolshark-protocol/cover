@@ -465,7 +465,7 @@ library Positions {
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external view returns (
+    ) internal view returns (
         CoverPoolStructs.CoverPosition memory
     ) {
         CoverPoolStructs.UpdatePositionCache memory cache;

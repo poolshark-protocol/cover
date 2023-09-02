@@ -156,7 +156,9 @@ contract CoverPoolFactory is
             constants.source,
             constants.inputPool,
             constants.bounds.min,
-            constants.bounds.max,
+            constants.bounds.max
+        );
+        bytes memory value2 = abi.encodePacked(
             constants.minAmountPerAuction,
             constants.genesisTime,
             constants.minPositionWidth,
@@ -164,12 +166,12 @@ contract CoverPoolFactory is
             constants.twapLength,
             constants.auctionLength
         );
-        bytes memory value2 = abi.encodePacked(
+        bytes memory value3 = abi.encodePacked(
             constants.blockTime,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
         );
-        return abi.encodePacked(value1, value2);
+        return abi.encodePacked(value1, value2, value3);
     }
 }
