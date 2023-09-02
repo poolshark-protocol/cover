@@ -236,8 +236,22 @@ contract CoverPool is
         {
             cache.state = globalState;
             cache.constants = immutables();
+            cache.pool0 = pool0;
+            cache.pool1 = pool1;
         }
-
+        (
+            cache.state,
+            cache.syncFees,
+            cache.pool0,
+            cache.pool1
+        ) = Epochs.simulateSync(
+            ticks,
+            tickMap,
+            cache.pool0,
+            cache.pool1,
+            cache.state,
+            cache.constants
+        );
         try MintCall.getResizedTicks(
             params,
             cache,
@@ -269,9 +283,25 @@ contract CoverPool is
     ) external returns (int24 lower, int24 upper, bool positionExists){
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache;
-        cache.state = globalState;
-        cache.constants = immutables();
-
+        {
+            cache.state = globalState;
+            cache.constants = immutables();
+            cache.pool0 = pool0;
+            cache.pool1 = pool1;
+        }
+        (
+            cache.state,
+            cache.syncFees,
+            cache.pool0,
+            cache.pool1
+        ) = Epochs.simulateSync(
+            ticks,
+            tickMap,
+            cache.pool0,
+            cache.pool1,
+            cache.state,
+            cache.constants
+        );
         try BurnCall.getResizedTicks(
             params,
             cache,

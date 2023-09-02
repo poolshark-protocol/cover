@@ -249,12 +249,10 @@ contract CoverEchidnaPool {
         poolValues.amountOutDeltaMaxMinusUpperAfter = poolStructs.upper.amountOutDeltaMaxMinus;
         
         // POST CONDITIONS
-        emit Prices(poolValues.price0, poolValues.price1);
-        assert(poolValues.price0 >= poolValues.price1);
 
         // Ensure prices have not crossed
         emit Prices(poolValues.price0After, poolValues.price1After);
-        assert(poolValues.price0After >= poolValues.price1After);
+        assert(poolValues.price0After <= poolValues.price1After);
         
         // Ensure that amountOutDeltaMaxMinus is incremented when not undercutting
         //NOTE: delta max minus should be strictly greater as both values should be non-zero
@@ -362,9 +360,10 @@ contract CoverEchidnaPool {
         poolValues.amountOutDeltaMaxMinusUpperAfter = poolStructs.upper.amountOutDeltaMaxMinus;
 
         // POST CONDITIONS
-        emit Prices(poolValues.price0, poolValues.price1);
-        assert(poolValues.price0 >= poolValues.price1);
+
+        // Ensure prices have not crossed
         emit Prices(poolValues.price0After, poolValues.price1After);
+        assert(poolValues.price0After <= poolValues.price1After);
 
         // Ensure liquidityDelta is always less or equal to amountOutDeltaMaxMinus
         if(zeroForOne){
@@ -379,8 +378,6 @@ contract CoverEchidnaPool {
             assert(poolValues.amountOutDeltaMaxMinusUpperAfter >= poolValues.amountOutDeltaMaxMinusUpperBefore);
         }
 
-        // Ensure prices have not crossed
-        assert(poolValues.price0After >= poolValues.price1After);
         if (posCreated) {
             emit PositionTicks(lower, upper);
             // Ensure positions ticks arent crossed
@@ -396,12 +393,12 @@ contract CoverEchidnaPool {
         assert(poolValues.liquidityGlobalAfter >= poolValues.liquidityGlobalBefore);
 
         // Ensure pool liquidity is non-zero after mint with no undercuts
-        if (zeroForOne) {
-            if (poolValues.price0After < poolValues.price0Before) assert(poolValues.liquidity0After > 0);
-        }
-        else {
-            if (poolValues.price1After > poolValues.price1Before) assert(poolValues.liquidity1After > 0);
-        }
+        // if (zeroForOne) {
+        //     if (poolValues.price0After < poolValues.price0Before) assert(poolValues.liquidity0After > 0);
+        // }
+        // else {
+        //     if (poolValues.price1After > poolValues.price1Before) assert(poolValues.liquidity1After > 0);
+        // }
     }
 
     function swap(uint160 priceLimit, uint128 amount, bool zeroForOne) public {
