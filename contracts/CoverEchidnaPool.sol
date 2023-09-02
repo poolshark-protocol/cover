@@ -240,12 +240,14 @@ contract CoverEchidnaPool {
         poolValues.liquidity1After = poolStructs.pool1.liquidity;
         poolValues.liquidityGlobalAfter = poolStructs.state.liquidityGlobal;
 
-        // tick values
+        // lower tick
         values.liquidityDeltaLowerAfter = poolStructs.lower.liquidityDelta;
-        values.liquidityDeltaUpperAfter = poolStructs.upper.liquidityDelta;
         poolValues.amountInDeltaMaxMinusLowerAfter = poolStructs.lower.amountInDeltaMaxMinus;
-        poolValues.amountInDeltaMaxMinusUpperAfter = poolStructs.upper.amountInDeltaMaxMinus;
         poolValues.amountOutDeltaMaxMinusLowerAfter = poolStructs.lower.amountOutDeltaMaxMinus;
+
+        // upper tick
+        values.liquidityDeltaUpperAfter = poolStructs.upper.liquidityDelta;
+        poolValues.amountInDeltaMaxMinusUpperAfter = poolStructs.upper.amountInDeltaMaxMinus;
         poolValues.amountOutDeltaMaxMinusUpperAfter = poolStructs.upper.amountOutDeltaMaxMinus;
         
         // POST CONDITIONS
@@ -856,7 +858,7 @@ contract CoverEchidnaPool {
             tick.deltas0,
             tick.deltas1,
             tick.liquidityDelta,
-            tick.amountOutDeltaMaxMinus,
+            tick.amountInDeltaMaxMinus,
             tick.amountOutDeltaMaxMinus,
             tick.amountInDeltaMaxStashed,
             tick.amountOutDeltaMaxStashed,

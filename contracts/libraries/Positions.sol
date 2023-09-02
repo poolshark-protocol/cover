@@ -42,6 +42,8 @@ library Positions {
         uint160 claimPriceLast
     );
 
+    error SimulateMint(int24 lower, int24 upper, bool positionCreated);
+
     function resize(
         CoverPoolStructs.CoverPosition memory position,
         ICoverPool.MintParams memory params,
@@ -200,9 +202,14 @@ library Positions {
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
             // revert if either max delta is zero
             if (cache.deltas.amountInDeltaMax == 0) {
-                require(false, 'AmountInDeltaIsZero()');
-            } else if (cache.deltas.amountOutDeltaMax == 0)
-                require(false, 'AmountOutDeltaIsZero()');
+                // require(false, 'AmountInDeltaIsZero()');
+                bool posCreated = false;
+                revert SimulateMint(params.lower, params.upper, posCreated);
+            } else if (cache.deltas.amountOutDeltaMax == 0) {
+                // require(false, 'AmountOutDeltaIsZero()');
+                bool posCreated = false;
+                revert SimulateMint(params.lower, params.upper, posCreated);
+            }
         }
         cache.position.liquidity += uint128(params.amount);
         emit Mint(
