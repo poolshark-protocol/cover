@@ -12,6 +12,10 @@ library EchidnaAssertions {
     event LiquidityUnlock(int128 liquidity);
     event PoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount);
     event LiquidityDelta(int128 liquidityDelta);
+    event TickDivisibleByTickSpacing(int24 tick, int16 tickSpacing);
+    event TickWithinBounds(int24 tick, int24 minTick, int24 maxTick);
+    event InfiniteLoop0(int24 accumTick, int24 crossTick);
+    event InfiniteLoop1(int24 accumTick, int24 crossTick);
 
     function assertLiquidityGlobalUnderflows(uint128 liquidityGlobal, uint128 amount, string memory location) internal {
         emit LiquidityGlobalUnderflow(liquidityGlobal, amount, location);
@@ -46,5 +50,26 @@ library EchidnaAssertions {
     function assertPoolBalanceExceeded(uint256 poolBalance, uint256 outputAmount) internal {
         emit PoolBalanceExceeded(poolBalance, outputAmount);
         assert(poolBalance >= outputAmount);
+    }
+
+    function assertTickDivisibleByTickSpacing(int24 tick, int16 tickSpacing) internal {
+        emit TickDivisibleByTickSpacing(tick, tickSpacing);
+        assert(tick % tickSpacing == 0);
+    }
+
+    function assertTickWithinBounds(int24 tick, int24 minTick, int24 maxTick) internal {
+        emit TickWithinBounds(tick, minTick, maxTick);
+        assert(tick >= minTick);
+        assert(tick <= maxTick);
+    }
+
+    function assertInfiniteLoop0(int24 accumTick, int24 crossTick) internal {
+        emit InfiniteLoop0(accumTick, crossTick);
+        assert(accumTick != crossTick);
+    }
+
+    function assertInfiniteLoop1(int24 accumTick, int24 crossTick) internal {
+        emit InfiniteLoop1(accumTick, crossTick);
+        assert(accumTick != crossTick);
     }
 }

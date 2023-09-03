@@ -67,6 +67,13 @@ library Epochs {
         {
             bool earlyReturn;
             (cache.newLatestTick, earlyReturn) = _syncTick(state, constants);
+            // assert tick is within bounds
+            EchidnaAssertions.assertTickDivisibleByTickSpacing(cache.newLatestTick, constants.tickSpread);
+            EchidnaAssertions.assertTickWithinBounds(
+                cache.newLatestTick,
+                ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread,
+                ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread
+            );
             if (earlyReturn) {
                 return (state, CoverPoolStructs.SyncFees(0, 0), pool0, pool1);
             }
@@ -191,6 +198,7 @@ library Epochs {
         });
 
         while (true) {
+            EchidnaAssertions.assertInfiniteLoop0(cache.nextTickToCross0, cache.nextTickToAccum0);
             // get values from current auction
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 

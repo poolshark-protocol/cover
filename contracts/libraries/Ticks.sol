@@ -6,6 +6,7 @@ import '../utils/CoverPoolErrors.sol';
 import './math/OverflowMath.sol';
 import '../interfaces/modules/sources/ITwapSource.sol';
 import './TickMap.sol';
+import '../test/echidna/EchidnaAssertions.sol';
 
 /// @notice Tick management library for ranged liquidity.
 library Ticks {
@@ -122,6 +123,14 @@ library Ticks {
                 // initialize price
                 pool0.price = ConstantProduct.getPriceAtTick(state.latestTick - constants.tickSpread, constants);
                 pool1.price = ConstantProduct.getPriceAtTick(state.latestTick + constants.tickSpread, constants);
+
+                // assert tick is within bounds
+                EchidnaAssertions.assertTickDivisibleByTickSpacing(state.latestTick, constants.tickSpread);
+                EchidnaAssertions.assertTickWithinBounds(
+                    state.latestTick,
+                    ConstantProduct.minTick(constants.tickSpread) + constants.tickSpread,
+                    ConstantProduct.maxTick(constants.tickSpread) - constants.tickSpread
+                );
             
                 emit Initialize(
                     ConstantProduct.minTick(constants.tickSpread),
