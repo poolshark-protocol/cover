@@ -158,7 +158,7 @@ contract CoverPool is
 
     function quote(
         QuoteParams memory params
-    ) external view override returns (
+    ) external override returns (
         int256 inAmount,
         int256 outAmount,
         uint256 priceAfter

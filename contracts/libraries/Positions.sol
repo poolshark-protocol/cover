@@ -8,6 +8,7 @@ import '../interfaces/ICoverPool.sol';
 import './math/OverflowMath.sol';
 import './Claims.sol';
 import './EpochMap.sol';
+import '../test/echidna/EchidnaAssertions.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
@@ -257,6 +258,7 @@ library Positions {
         // early return if no liquidity to remove
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
+            EchidnaAssertions.assertLiquidityUnderflows(cache.position.liquidity, params.amount, 'PS-1');
             require (false, 'NotEnoughPositionLiquidity()');
         } else {
             _size(
@@ -297,6 +299,7 @@ library Positions {
         );
 
         // update liquidity global
+        EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, params.amount, 'PS-2');
         state.liquidityGlobal -= params.amount;
 
         {
@@ -311,7 +314,6 @@ library Positions {
                 ? ConstantProduct.getDx(params.amount, cache.priceLower, cache.priceUpper, false)
                 : ConstantProduct.getDy(params.amount, cache.priceLower, cache.priceUpper, false)
         );
-
         cache.position.liquidity -= uint128(params.amount);
         if (cache.position.liquidity == 0) {
             cache.position.owner = address(0);
@@ -383,7 +385,10 @@ library Positions {
         // update pool liquidity
         if (state.latestTick == params.claim
             && params.claim != (params.zeroForOne ? params.lower : params.upper)
-        ) pool.liquidity -= params.amount;
+        ) {
+            EchidnaAssertions.assertLiquidityUnderflows(pool.liquidity, params.amount, 'PS-3');
+            pool.liquidity -= params.amount;
+        } 
         
         if (params.amount > 0) {
             if (params.claim == (params.zeroForOne ? params.lower : params.upper)) {
@@ -406,8 +411,10 @@ library Positions {
                 cache.removeUpper
             );
             // update position liquidity
+            EchidnaAssertions.assertLiquidityUnderflows(cache.position.liquidity, params.amount, 'PS-4');
             cache.position.liquidity -= uint128(params.amount);
             // update global liquidity
+            EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, params.amount, 'PS-5');
             state.liquidityGlobal -= params.amount;
         }
 
@@ -423,9 +430,11 @@ library Positions {
             if (params.zeroForOne ? params.claim == params.lower 
                                   : params.claim == params.upper) {
                 // subtract remaining position liquidity out from global
+                EchidnaAssertions.assertLiquidityGlobalUnderflows(state.liquidityGlobal, cache.position.liquidity, 'PS-6');
                 state.liquidityGlobal -= cache.position.liquidity;
                 cache.position.liquidity = 0;
             }
+            //TODO: unnecessary delete for pre-final tick claim
             delete positions[params.positionId];
         }
         // clear position values
@@ -524,6 +533,7 @@ library Positions {
         uint128
     ) {
         // convert percentage to liquidity amount
+        //TODO: just set to 100%
         if (percent > 1e38) require (false, 'InvalidBurnPercentage()');
         if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);

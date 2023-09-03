@@ -70,6 +70,10 @@ library SwapCall {
         // calculate amount deltas
         cache = calculateDeltas(params, cache);
 
+        EchidnaAssertions.assertPoolBalanceExceeded(
+            (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)),
+            cache.output
+        );
         // transfer swap output
         SafeTransfers.transferOut(
             params.to,
@@ -108,6 +112,22 @@ library SwapCall {
             cache.amount0Delta,
             cache.amount1Delta
         );
+    }
+
+    function balance(
+        address token
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = token.staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 
     function save(

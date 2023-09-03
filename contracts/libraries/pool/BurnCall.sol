@@ -169,28 +169,28 @@ library BurnCall {
                     cache.constants
                 );
             } else {
-                // (
-                //     cache.state,
-                //     cache.pool1,
-                //     params.claim
-                // ) = Positions.update(
-                //     positions,
-                //     ticks,
-                //     tickMap,
-                //     cache.state,
-                //     cache.pool1,
-                //     CoverPoolStructs.UpdateParams(
-                //         msg.sender,
-                //         params.to,
-                //         params.burnPercent,
-                //         params.positionId,
-                //         cache.position.lower,
-                //         cache.position.upper,
-                //         params.claim,
-                //         params.zeroForOne
-                //     ),
-                //     cache.constants
-                // );
+                (
+                    cache.state,
+                    cache.pool1,
+                    params.claim
+                ) = Positions.update(
+                    positions,
+                    ticks,
+                    tickMap,
+                    cache.state,
+                    cache.pool1,
+                    CoverPoolStructs.UpdateParams(
+                        msg.sender,
+                        params.to,
+                        params.burnPercent,
+                        params.positionId,
+                        cache.position.lower,
+                        cache.position.upper,
+                        params.claim,
+                        params.zeroForOne
+                    ),
+                    cache.constants
+                );
             }
         } else {
             // if position hasn't been crossed into

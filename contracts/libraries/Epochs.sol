@@ -7,6 +7,7 @@ import './Deltas.sol';
 import './Ticks.sol';
 import './TickMap.sol';
 import './EpochMap.sol';
+import '../test/echidna/EchidnaAssertions.sol';
 
 library Epochs {
     event Sync(
@@ -56,7 +57,7 @@ library Epochs {
         CoverPoolStructs.PoolState memory pool1,
         CoverPoolStructs.GlobalState memory state,
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal view returns (
+    ) internal returns (
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.SyncFees memory,
         CoverPoolStructs.PoolState memory,
@@ -541,6 +542,7 @@ library Epochs {
             if (params.accumTick.amountInDeltaMaxMinus > 0) {
                 // calculate percent of deltas left on tick
                 if (params.deltas.amountInDeltaMax > 0 && params.deltas.amountOutDeltaMax > 0) {
+                    /// @dev - during mint it is ensured both of these values will be nonzero
                     uint256 percentInOnTick  = uint256(params.accumTick.amountInDeltaMaxMinus)  * 1e38 / (params.deltas.amountInDeltaMax);
                     uint256 percentOutOnTick = uint256(params.accumTick.amountOutDeltaMaxMinus) * 1e38 / (params.deltas.amountOutDeltaMax);
                     // transfer deltas to the accum tick
@@ -602,7 +604,7 @@ library Epochs {
         int24 nextTickToAccum,
         uint128 currentLiquidity,
         bool zeroForOne
-    ) internal view returns (
+    ) internal returns (
         uint128,
         int24,
         int24
@@ -611,8 +613,10 @@ library Epochs {
         nextTickToCross = nextTickToAccum;
 
         if (liquidityDelta > 0) {
+            EchidnaAssertions.assertLiquidityOverflows(currentLiquidity, uint128(liquidityDelta), "EP-1");
             currentLiquidity += uint128(liquidityDelta);
         } else {
+            EchidnaAssertions.assertLiquidityUnderflows(currentLiquidity, uint128(-liquidityDelta), "TKS-1");
             currentLiquidity -= uint128(-liquidityDelta);
         }
         if (zeroForOne) {

@@ -170,7 +170,8 @@ contract CoverEchidnaPool {
         // PRE CONDITIONS
         mintAndApprove();
         amount = amount + 1;
-        // // Ensure the newly created position is using different ticks
+        
+        // Ensure the newly created position is using different ticks
         for(uint i = 0; i < positions.length;) {
             if(positions[i].owner == msg.sender && positions[i].lower == lower && positions[i].upper == upper && positions[i].zeroForOne == zeroForOne) {
                 revert("Position already exists");
@@ -787,17 +788,15 @@ contract CoverEchidnaPool {
         // assert(poolValues.liquidityGlobalAfter == liquidityGlobalBefore);
     }
 
-    function poolsharkSwapCallback(
+    function coverPoolSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
         bytes calldata data
     ) external {
-        address token0 = CoverPool(pool).token0();
-        address token1 = CoverPool(pool).token1();
         if (amount0Delta < 0) {
-            SafeTransfers.transferInto(token0, address(pool), uint256(-amount0Delta));
+            SafeTransfers.transferInto(address(token0), address(pool), uint256(-amount0Delta));
         } else {
-            SafeTransfers.transferInto(token1, address(pool), uint256(-amount1Delta));
+            SafeTransfers.transferInto(address(token1), address(pool), uint256(-amount1Delta));
         }
         data;
     }

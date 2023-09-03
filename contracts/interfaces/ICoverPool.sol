@@ -158,7 +158,7 @@ interface ICoverPool is CoverPoolStructs {
      */
     function quote(
         QuoteParams memory params
-    ) external view returns (
+    ) external returns (
         int256 inAmount,
         int256 outAmount,
         uint256 priceAfter
