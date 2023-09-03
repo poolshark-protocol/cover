@@ -1,9 +1,8 @@
-# ssh -i ~/Downloads/alpha-key.pem ec2-user@44.211.253.196
+# ssh -i ~/Downloads/alpha-key.pem ec2-user@3.91.149.159
 sudo su
 yum install git -y
-yum install python3-pip
-pip3 install crytic-compile
-pip3 install slither-analyzer --user
+yum install python3-pip -y
+pip3 install crytic-compile slither-analyzer
 mkdir ~/git
 cd ~/git
 git clone -b echidna https://github.com/poolshark-protocol/cover.git
