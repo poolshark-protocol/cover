@@ -65,11 +65,11 @@ library EchidnaAssertions {
 
     function assertInfiniteLoop0(int24 accumTick, int24 crossTick) internal {
         emit InfiniteLoop0(accumTick, crossTick);
-        assert(accumTick != crossTick);
+        assert(accumTick < crossTick);
     }
 
     function assertInfiniteLoop1(int24 accumTick, int24 crossTick) internal {
         emit InfiniteLoop1(accumTick, crossTick);
-        assert(accumTick != crossTick);
+        assert(accumTick > crossTick);
     }
 }

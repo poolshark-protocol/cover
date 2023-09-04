@@ -197,8 +197,8 @@ library Epochs {
                 : state.latestTick + constants.tickSpread
         });
 
-        while (true) {
-            EchidnaAssertions.assertInfiniteLoop0(cache.nextTickToCross0, cache.nextTickToAccum0);
+        while (cache.nextTickToCross0 != cache.nextTickToAccum0) {
+            EchidnaAssertions.assertInfiniteLoop0(cache.nextTickToAccum0, cache.nextTickToCross0);
             // get values from current auction
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
@@ -265,6 +265,7 @@ library Epochs {
 
         while (true) {
             // rollover deltas pool1
+            EchidnaAssertions.assertInfiniteLoop1(cache.nextTickToAccum1, cache.nextTickToCross1);
             (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // accumulate deltas pool1
             if (cache.nextTickToAccum1 < cache.stopTick1 
