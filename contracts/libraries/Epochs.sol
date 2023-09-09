@@ -377,10 +377,13 @@ library Epochs {
         // check auctions elapsed
         uint32 timeElapsed = state.lastTime - state.auctionStart;
         int32 auctionsElapsed;
+
+        // handle int32 overflow
         if (timeElapsed / constants.auctionLength <= uint32(type(int32).max))
             auctionsElapsed = int32(timeElapsed / constants.auctionLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
         else
             auctionsElapsed = type(int32).max - 1;
+
         // if 3/4 of twapLength or auctionLength has passed allow for latestTick move
         if (timeElapsed > 3 * constants.twapLength / 4 ||
             timeElapsed > constants.auctionLength) auctionsElapsed += 1;
@@ -399,7 +402,13 @@ library Epochs {
         }
 
         // rate-limiting tick move
-        int24 maxLatestTickMove = int24(constants.tickSpread * auctionsElapsed);
+        int24 maxLatestTickMove;
+        
+        // handle int24 overflow
+        if (auctionsElapsed > type(int24).max / constants.tickSpread)
+            maxLatestTickMove = type(int24).max / constants.tickSpread * constants.tickSpread;
+        else
+            maxLatestTickMove = int24(constants.tickSpread * auctionsElapsed);
 
         /// @dev - latestTick can only move based on auctionsElapsed 
         if (newLatestTick > state.latestTick) {
