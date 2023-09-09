@@ -188,7 +188,7 @@ library Epochs {
                 ? cache.newLatestTick
                 : state.latestTick + constants.tickSpread
         });
-        while (cache.nextTickToCross0 > ConstantProduct.minTick(constants.tickSpread)) {
+        while (cache.nextTickToCross0 != cache.nextTickToAccum0) {
             // get values from current auction
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
@@ -253,7 +253,7 @@ library Epochs {
             ticks[cache.stopTick0] = stopTick0;
         }
 
-        while (cache.nextTickToCross1 < ConstantProduct.maxTick(constants.tickSpread)) {
+        while (cache.nextTickToCross1 != cache.nextTickToAccum1) {
             // rollover deltas pool1
             (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // accumulate deltas pool1
