@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
-import './structs/CoverPoolStructs.sol';
+import '../structs/CoverPoolStructs.sol';
+import '../structs/PoolsharkStructs.sol';
 
 /**
  * @title ICoverPool

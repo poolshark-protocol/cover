@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.13;
+pragma solidity 0.8.13;
 
 interface IUniswapV3Pool {
     /// @notice This is to be used at hedge pool initialization in case the cardinality is too low for the hedge pool.
