@@ -19,6 +19,7 @@ import {
     CoverImmutables,
 } from '../utils/contracts/coverpool'
 import { gBefore } from '../utils/hooks.test'
+const { mine } = require("@nomicfoundation/hardhat-network-helpers");
 
 alice: SignerWithAddress
 describe('CoverPool Tests', function () {
@@ -179,6 +180,24 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'WaitUntilEnoughObservations()',
         })
+    })
+
+    it('pool0 - Should not encounter infinite loop at min bounds', async function () {
+        await validateSync(-1_000_000, true)
+        await mine(463588)
+        await validateSync(15, true)
+        await getLatestTick(true)
+        await validateSync(0, true)
+        await getLatestTick(true)
+    })
+
+    it('pool1 - Should not encounter infinite loop at max bounds', async function () {
+        await validateSync(1_000_000, true)
+        await mine(463588)
+        await validateSync(15, true)
+        await getLatestTick(true)
+        await validateSync(0, true)
+        await getLatestTick(true)
     })
 
     it('pool0 - Should mint/burn new LP position 71', async function () {

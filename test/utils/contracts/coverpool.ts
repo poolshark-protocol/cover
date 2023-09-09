@@ -182,13 +182,16 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
     const globalState = (await hre.props.coverPool.globalState())
     const oldLatestTick: number = globalState.latestTick
     const tickSpread: number = await hre.props.coverPool.tickSpread()
+    console.log('tick spread', tickSpread)
 
     if (newLatestTick != oldLatestTick && hre.network.name == 'hardhat') {
         // mine until end of auction
-        const auctionLength: number = await hre.props.coverPool.auctionLength()
-                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
+        const auctionLength: number = Math.trunc(await hre.props.coverPool.auctionLength()
+                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread);
+        console.log('auction length', auctionLength)
         await mine(auctionLength)
     }
+    console.log('set tick cumulatives')
     let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
         newLatestTick * 10,
         newLatestTick * 8,
@@ -203,6 +206,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     if (autoSync) {
         if (!revertMessage || revertMessage == '') {
+            console.log('swap')
             txn = await hre.props.poolRouter
                     .connect(signer)
                     .multiCall(
@@ -235,7 +239,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
         }
         await txn.wait()
     }
-    // console.log("-- END ACCUMULATE LAST BLOCK --");
+    console.log("-- END ACCUMULATE LAST BLOCK --");
     /// check tick status after
 }
 
