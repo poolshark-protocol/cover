@@ -90,7 +90,7 @@ library Epochs {
                 : state.latestTick + constants.tickSpread
         });
 
-        while (cache.nextTickToCross0 > ConstantProduct.minTick(constants.tickSpread)) {
+        while (cache.nextTickToCross0 != cache.nextTickToAccum0) {
             // rollover and calculate sync fees
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             // keep looping until accumulation reaches stopTick0 
@@ -107,7 +107,7 @@ library Epochs {
             } else break;
         }
 
-        while (cache.nextTickToCross1 < ConstantProduct.maxTick(constants.tickSpread)) {
+        while (cache.nextTickToCross1 != cache.nextTickToAccum1) {
             (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {
