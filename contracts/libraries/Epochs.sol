@@ -34,6 +34,11 @@ library Epochs {
         bool isPool0
     );
 
+    event MaxLatestTickMove(
+        int24 maxLatestTickMove,
+        int24 newLatestTick
+    );
+
     event StashDeltasAccumulated(
         uint128 amountInDelta,
         uint128 amountOutDelta,
@@ -360,7 +365,7 @@ library Epochs {
     function _syncTick(
         CoverPoolStructs.GlobalState memory state,
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal view returns(
+    ) internal returns(
         int24 newLatestTick,
         bool
     ) {
@@ -404,6 +409,7 @@ library Epochs {
             if (state.latestTick - newLatestTick > maxLatestTickMove)
                 newLatestTick = state.latestTick - maxLatestTickMove;
         }
+        emit MaxLatestTickMove(maxLatestTickMove, newLatestTick);
         return (newLatestTick, false);
     }
 
