@@ -1,6 +1,10 @@
 RESOLUTION:
 
-need to debug this and understand why the infinite loop is happening
+We were always going past the `stopTick` previously.
+
+When hitting the tick bounds, we will not go past the `stopTick`.
+
+Therefore, a check was added to see if `nextTickToAccum != nextTickToCross` for all while loops.
 
 Call sequence:
     swap(980894718067304232046370528254581,10201099543122663887362171840986,false)
