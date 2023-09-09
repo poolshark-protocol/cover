@@ -90,7 +90,7 @@ library Epochs {
                 : state.latestTick + constants.tickSpread
         });
 
-        while (true) {
+        while (cache.nextTickToCross0 != cache.nextTickToAccum0) {
             // rollover and calculate sync fees
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             // keep looping until accumulation reaches stopTick0 
@@ -107,7 +107,7 @@ library Epochs {
             } else break;
         }
 
-        while (true) {
+        while (cache.nextTickToCross1 != cache.nextTickToAccum1) {
             (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // keep looping until accumulation reaches stopTick1 
             if (cache.nextTickToAccum1 <= cache.stopTick1) {
@@ -188,8 +188,7 @@ library Epochs {
                 ? cache.newLatestTick
                 : state.latestTick + constants.tickSpread
         });
-
-        while (true) {
+        while (cache.nextTickToCross0 != cache.nextTickToAccum0) {
             // get values from current auction
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
@@ -254,7 +253,7 @@ library Epochs {
             ticks[cache.stopTick0] = stopTick0;
         }
 
-        while (true) {
+        while (cache.nextTickToCross1 != cache.nextTickToAccum1) {
             // rollover deltas pool1
             (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // accumulate deltas pool1
@@ -363,11 +362,14 @@ library Epochs {
         state.lastTime = uint32(block.timestamp) - constants.genesisTime;
         // check auctions elapsed
         uint32 timeElapsed = state.lastTime - state.auctionStart;
-        int32 auctionsElapsed = int32(timeElapsed / constants.auctionLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
+        int32 auctionsElapsed;
+        if (timeElapsed / constants.auctionLength <= uint32(type(int32).max))
+            auctionsElapsed = int32(timeElapsed / constants.auctionLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
+        else
+            auctionsElapsed = type(int32).max - 1;
         // if 3/4 of twapLength or auctionLength has passed allow for latestTick move
         if (timeElapsed > 3 * constants.twapLength / 4 ||
             timeElapsed > constants.auctionLength) auctionsElapsed += 1;
-
         if (auctionsElapsed < 1) {
             return (state.latestTick, true);
         }
@@ -393,7 +395,6 @@ library Epochs {
             if (state.latestTick - newLatestTick > maxLatestTickMove)
                 newLatestTick = state.latestTick - maxLatestTickMove;
         }
-
         return (newLatestTick, false);
     }
 

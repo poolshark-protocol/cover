@@ -185,8 +185,8 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     if (newLatestTick != oldLatestTick && hre.network.name == 'hardhat') {
         // mine until end of auction
-        const auctionLength: number = await hre.props.coverPool.auctionLength()
-                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread;
+        const auctionLength: number = Math.trunc(await hre.props.coverPool.auctionLength()
+                                        * Math.abs(newLatestTick - oldLatestTick) / tickSpread);
         await mine(auctionLength)
     }
     let txn = await hre.props.uniswapV3PoolMock.connect(signer).setTickCumulatives(
@@ -235,7 +235,6 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
         }
         await txn.wait()
     }
-    // console.log("-- END ACCUMULATE LAST BLOCK --");
     /// check tick status after
 }
 
