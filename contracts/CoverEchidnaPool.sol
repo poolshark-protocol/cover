@@ -66,6 +66,9 @@ contract CoverEchidnaPool {
         uint128 liquidityGlobalBefore;
         uint128 liquidityGlobalAfter;
 
+        int24 latestTickBefore;
+        int24 latestTickAfter;
+
         // CoverPoolStructs.PoolState pool0Before;
         // CoverPoolStructs.PoolState pool1Before;
         // CoverPoolStructs.GlobalState stateBefore;
@@ -111,6 +114,7 @@ contract CoverEchidnaPool {
         CoverPoolStructs.PoolState pool0;
         CoverPoolStructs.PoolState pool1;
         CoverPoolStructs.GlobalState state;
+        PoolsharkStructs.CoverImmutables constants;
     }
 
     modifier tickPreconditions(int24 lower, int24 upper) {
@@ -431,6 +435,14 @@ contract CoverEchidnaPool {
     }
 
     function syncTick(int24 newLatestTick, bool autoSync) public  {
+        PoolStructs memory poolStructs;
+        poolStructs.state = getGlobalState();
+        poolStructs.constants = pool.immutables();
+        if (newLatestTick < poolStructs.state.latestTick)
+            newLatestTick = poolStructs.state.latestTick - poolStructs.constants.tickSpread;
+        else if (newLatestTick > poolStructs.state.latestTick)
+            newLatestTick = poolStructs.state.latestTick + poolStructs.constants.tickSpread;
+
         UniswapV3PoolMock(poolMock).setTickCumulatives(
             newLatestTick * 10,
             newLatestTick * 8,
@@ -457,7 +469,6 @@ contract CoverEchidnaPool {
             //new latestTick should match
             //if there was liquidity delta on that tick it should be unlocked
             //amountInDelta should be zeroed out if tick moved
-            PoolStructs memory poolStructs;
             poolStructs.pool0 = getPoolState(true);
             poolStructs.pool1 = getPoolState(false);
             poolStructs.state = getGlobalState();
