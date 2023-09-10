@@ -22,6 +22,7 @@ library Ticks {
         uint160 pool1Price
     );
 
+    //TODO: ensure amountInDelta is always cleared out
     function quote(
         bool zeroForOne,
         uint160 priceLimit,

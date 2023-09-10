@@ -108,6 +108,7 @@ library Claims {
                 require (false, 'WrongTickClaimedAt()');
             /// @dev - user cannot add liquidity if auction is active; checked for in Positions.validate()
         }
+        //TODO: maybe check that the claim tick epoch is greater than the position epoch
         return (params, cache);
     }
 
