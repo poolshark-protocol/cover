@@ -333,7 +333,7 @@ library Epochs {
         }
         
         // set auction start as an offset of the pool genesis block
-        state.auctionStart = uint32(block.timestamp) - constants.genesisTime;
+        state.auctionStart = uint32(block.timestamp - constants.genesisTime);
 
         // emit sync event
         emit Sync(pool0.price, pool1.price, pool0.liquidity, pool1.liquidity, state.auctionStart, state.accumEpoch, state.latestTick, cache.newLatestTick);
@@ -356,17 +356,22 @@ library Epochs {
         bool
     ) {
         // update last block checked
-        if(state.lastTime == uint32(block.timestamp) - constants.genesisTime) {
+        if (block.timestamp - constants.genesisTime > type(uint32).max)
+            require(false, 'MaxBlockTimestampExceeded()');
+        if(state.lastTime == block.timestamp - constants.genesisTime) {
             return (state.latestTick, true);
         }
-        state.lastTime = uint32(block.timestamp) - constants.genesisTime;
+        state.lastTime = uint32(block.timestamp - constants.genesisTime);
         // check auctions elapsed
         uint32 timeElapsed = state.lastTime - state.auctionStart;
         int32 auctionsElapsed;
+
+        // handle int32 overflow
         if (timeElapsed / constants.auctionLength <= uint32(type(int32).max))
             auctionsElapsed = int32(timeElapsed / constants.auctionLength) - 1; /// @dev - subtract 1 for 3/4 twapLength check
         else
             auctionsElapsed = type(int32).max - 1;
+
         // if 3/4 of twapLength or auctionLength has passed allow for latestTick move
         if (timeElapsed > 3 * constants.twapLength / 4 ||
             timeElapsed > constants.auctionLength) auctionsElapsed += 1;
@@ -385,7 +390,14 @@ library Epochs {
         }
 
         // rate-limiting tick move
-        int24 maxLatestTickMove = int24(constants.tickSpread * auctionsElapsed);
+        int24 maxLatestTickMove;
+        
+        // handle int24 overflow
+        if (auctionsElapsed <= type(int24).max / constants.tickSpread) {
+            maxLatestTickMove = int24(constants.tickSpread * auctionsElapsed);
+        } else {
+            maxLatestTickMove = type(int24).max / constants.tickSpread * constants.tickSpread;
+        }
 
         /// @dev - latestTick can only move based on auctionsElapsed 
         if (newLatestTick > state.latestTick) {
