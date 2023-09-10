@@ -4159,4 +4159,22 @@ describe('CoverPool Tests', function () {
             revertMessage: "",
         });
     });
+
+    // it('pool0 - Should handle a block timestamp under the max uint32', async function () {
+    //     await validateSync(0, true)
+    //     await validateSync(32, false)
+    //     await mine(4_290_900_000)
+    //     await getLatestTick(true)
+    //     await validateSync(32, true)
+    //     await getLatestTick(true)
+    // })
+
+    it('pool0 - Should handle exceeding the max block.timestamp', async function () {
+        await validateSync(0, true)
+        await validateSync(32, false)
+        await mine(463_588_888_888)
+        // await getLatestTick(true)
+        await validateSync(32, true, 'MaxBlockTimestampExceeded()')
+        // await getLatestTick(true)
+    })
 })
