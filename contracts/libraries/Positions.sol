@@ -145,7 +145,8 @@ library Positions {
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.CoverPosition memory
     ) {
-        if (params.amount == 0) return (state, position);
+        if (params.amount == 0)
+            require(false, 'NoLiquidityBeingAdded()');
         // initialize cache
         CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: position,

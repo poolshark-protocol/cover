@@ -182,22 +182,40 @@ describe('CoverPool Tests', function () {
         })
     })
 
+    it('pool0 - Should not mint position when amountInDeltaMax is zero', async function () {
+        await validateMint({
+            signer: hre.props.alice,
+            recipient: hre.props.alice.address,
+            lower: '-887260',
+            upper: '3000',
+            amount: BigNumber.from('1'),
+            zeroForOne: true,
+            balanceInDecrease: BigNumber.from('1'),
+            liquidityIncrease: BN_ZERO,
+            upperTickCleared: false,
+            lowerTickCleared: false,
+            revertMessage: 'NoLiquidityBeingAdded()'
+        })
+    })
+
     it('pool0 - Should not encounter infinite loop at min bounds', async function () {
         await validateSync(-1_000_000, true)
+
         await mine(463588)
+
         await validateSync(15, true)
-        await getLatestTick(true)
+
         await validateSync(0, true)
-        await getLatestTick(true)
     })
 
     it('pool1 - Should not encounter infinite loop at max bounds', async function () {
         await validateSync(1_000_000, true)
+
         await mine(463588)
+
         await validateSync(15, true)
-        await getLatestTick(true)
+
         await validateSync(0, true)
-        await getLatestTick(true)
     })
 
     it('pool0 - Should mint/burn new LP position 71', async function () {
