@@ -118,6 +118,13 @@ library Positions {
         if (cache.auctionCount < uint16(constants.minPositionWidth)) require (false, 'InvalidPositionWidth()');
         if (cache.liquidityMinted > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
 
+        // enforce non-zero liquidity added
+        if (cache.liquidityMinted == 0) {
+            bool posCreated = false;
+            revert SimulateMint(params.lower, params.upper, posCreated);
+            // require(false, 'NoLiquidityBeingAdded()');
+        }
+
         // enforce minimum amount per auction
         _size(
             CoverPoolStructs.SizeParams(
@@ -148,7 +155,6 @@ library Positions {
         CoverPoolStructs.GlobalState memory,
         CoverPoolStructs.CoverPosition memory
     ) {
-        if (params.amount == 0) return (state, position);
         // initialize cache
         CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: position,
@@ -177,7 +183,9 @@ library Positions {
                         EpochMap.get(TickMap.next(params.lower, tickMap, constants), params.zeroForOne, tickMap, constants)
                             > cache.position.accumEpochLast
             ) {
-                require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
+                bool posCreated = false;
+                revert SimulateMint(params.lower, params.upper, posCreated);
+                // require (false, string.concat('UpdatePositionFirstAt(', String.from(params.lower), ', ', String.from(params.upper), ')'));
             }
         }
         
@@ -239,7 +247,7 @@ library Positions {
         PoolsharkStructs.CoverImmutables memory constants
     ) internal returns (uint128, CoverPoolStructs.GlobalState memory) {
         // validate burn percentage
-        if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
+        if (params.amount > 1e38) params.amount = 1e38;
         // initialize cache
         CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: positions[params.positionId],
