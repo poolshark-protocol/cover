@@ -6,12 +6,15 @@ import './Deltas.sol';
 import '../interfaces/structs/CoverPoolStructs.sol';
 import '../interfaces/cover/ICoverPool.sol';
 import './math/OverflowMath.sol';
+import './utils/SafeCast.sol';
 import './Claims.sol';
 import './EpochMap.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
+
+    using SafeCast for uint256;
 
     event Mint(
         address indexed to,
@@ -115,6 +118,11 @@ library Positions {
         if (cache.auctionCount < uint16(constants.minPositionWidth)) require (false, 'InvalidPositionWidth()');
         if (cache.liquidityMinted > uint128(type(int128).max)) require (false, 'LiquidityOverflow()');
 
+        // enforce non-zero liquidity added
+        if (cache.liquidityMinted == 0) {
+            require(false, 'NoLiquidityBeingAdded()');
+        }
+
         // enforce minimum amount per auction
         _size(
             CoverPoolStructs.SizeParams(
@@ -156,7 +164,7 @@ library Positions {
             priceLower: ConstantProduct.getPriceAtTick(params.lower, constants),
             priceUpper: ConstantProduct.getPriceAtTick(params.upper, constants),
             priceAverage: 0,
-            liquidityMinted: 0,
+            liquidityMinted: params.amount,
             denomTokenIn: true
         });
         /// call if claim != lower and liquidity being added
@@ -187,17 +195,25 @@ library Positions {
             constants,
             params.lower,
             params.upper,
-            uint128(params.amount),
+            uint128(cache.liquidityMinted),
             params.zeroForOne
         );
 
-        // update liquidity global
-        state.liquidityGlobal += params.amount;
+        // update liquidity
+        cache.position.liquidity += cache.liquidityMinted.toUint128();
+        state.liquidityGlobal += cache.liquidityMinted.toUint128();
 
         {
             // update max deltas
             CoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
-            (finalTick, cache.deltas) = Deltas.update(finalTick, params.amount, cache.priceLower, cache.priceUpper, params.zeroForOne, true);
+            (finalTick, cache.deltas) = Deltas.update(
+                finalTick,
+                cache.liquidityMinted.toUint128(),
+                cache.priceLower, 
+                cache.priceUpper,
+                params.zeroForOne,
+                true
+            );
             ticks[params.zeroForOne ? params.lower : params.upper] = finalTick;
             // revert if either max delta is zero
             if (cache.deltas.amountInDeltaMax == 0) {
@@ -205,7 +221,7 @@ library Positions {
             } else if (cache.deltas.amountOutDeltaMax == 0)
                 require(false, 'AmountOutDeltaIsZero()');
         }
-        cache.position.liquidity += uint128(params.amount);
+
         emit Mint(
             params.to,
             params.lower,
@@ -231,8 +247,6 @@ library Positions {
         CoverPoolStructs.RemoveParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
     ) internal returns (uint128, CoverPoolStructs.GlobalState memory) {
-        // validate burn percentage
-        if (params.amount > 1e38) require (false, 'InvalidBurnPercentage()');
         // initialize cache
         CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: positions[params.positionId],
@@ -246,8 +260,10 @@ library Positions {
             liquidityMinted: 0,
             denomTokenIn: true
         });
+
         // convert percentage to liquidity amount
         params.amount = _convert(cache.position.liquidity, params.amount);
+
         // early return if no liquidity to remove
         if (params.amount == 0) return (0, state);
         if (params.amount > cache.position.liquidity) {
@@ -518,7 +534,7 @@ library Positions {
         uint128
     ) {
         // convert percentage to liquidity amount
-        if (percent > 1e38) require (false, 'InvalidBurnPercentage()');
+        if (percent > 1e38) percent = 1e38;
         if (liquidity == 0 && percent > 0) require (false, 'NotEnoughPositionLiquidity()');
         return uint128(uint256(liquidity) * uint256(percent) / 1e38);
     }
