@@ -31,19 +31,21 @@ contract CoverEchidnaPool {
     event LiquidityDeltaAndDeltaMaxMinus(int128 delta, uint128 abs);
     event Deployed(address contractAddress);
 
-    int16 tickSpacing;
-    uint16 swapFee;
-    address private implementation;
-    address private poolMock;
-    address private poolFactoryMock;
-    address private twapSource;
-    CoverPoolFactory private factory;
-    CoverPoolManager private manager;
-    CoverPool private pool;
-    Token20 private token0;
-    Token20 private token1;
-    Token20 private tokenIn;
-    Token20 private tokenOut;
+    int16 private constant tickSpread = 20;
+    int16 private constant MAX_TICK_JUMP = 200; // i.e. 10 * tickSpread
+    int24 private constant MAX_TICK = 887260;
+    int24 private constant MIN_TICK = -MAX_TICK;
+    address private immutable implementation;
+    address private immutable poolMock;
+    address private immutable poolFactoryMock;
+    address private immutable twapSource;
+    CoverPoolFactory private immutable factory;
+    CoverPoolManager private immutable manager;
+    CoverPool private immutable pool;
+    Token20 private immutable token0;
+    Token20 private immutable token1;
+    Token20 private immutable tokenIn;
+    Token20 private immutable tokenOut;
     Position[] private positions;
 
     struct LiquidityDeltaValues {
@@ -119,10 +121,10 @@ contract CoverEchidnaPool {
 
     modifier tickPreconditions(int24 lower, int24 upper) {
         require(lower < upper);
-        require(upper < 887272);
-        require(lower > -887272);
-        require(lower % tickSpacing == 0);
-        require(upper % tickSpacing == 0);
+        require(upper <= MAX_TICK);
+        require(lower >= MIN_TICK);
+        require(lower % tickSpread == 0);
+        require(upper % tickSpread == 0);
         _;
     }
 
@@ -156,7 +158,6 @@ contract CoverEchidnaPool {
         // add pool type
         manager.enablePoolType(bytes32(uint256(0x1)), address(implementation), twapSource);
         manager.enableVolatilityTier(bytes32(uint256(0x1)), 500, 20, 5, volTier);
-        tickSpacing = 20;
         ICoverPoolFactory.CoverPoolParams memory params;
         params.poolType = bytes32(uint256(0x1));
         params.tokenIn = address(tokenIn);
@@ -262,13 +263,12 @@ contract CoverEchidnaPool {
         assert(poolValues.price0After <= poolValues.price1After);
         
         // Ensure that amountOutDeltaMaxMinus is incremented when not undercutting
-        //NOTE: delta max minus should be strictly greater as both values should be non-zero
         if (posCreated) {
             emit PositionTicks(lower, upper);
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing
-            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+            assert((lower % tickSpread == 0) && (upper % tickSpread == 0));
 
             // check delta maxes
             if(zeroForOne){
@@ -390,7 +390,7 @@ contract CoverEchidnaPool {
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing
-            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+            assert((lower % tickSpread == 0) && (upper % tickSpread == 0));
         }
         
         emit LiquidityGlobal(poolValues.liquidityGlobalBefore, poolValues.liquidityGlobalAfter);
@@ -438,10 +438,12 @@ contract CoverEchidnaPool {
         PoolStructs memory poolStructs;
         poolStructs.state = getGlobalState();
         poolStructs.constants = pool.immutables();
-        if (newLatestTick < poolStructs.state.latestTick)
-            newLatestTick = poolStructs.state.latestTick - poolStructs.constants.tickSpread;
-        else if (newLatestTick > poolStructs.state.latestTick)
-            newLatestTick = poolStructs.state.latestTick + poolStructs.constants.tickSpread;
+
+        // gate tick jump
+        if (newLatestTick < poolStructs.state.latestTick - MAX_TICK_JUMP)
+            newLatestTick = poolStructs.state.latestTick - MAX_TICK_JUMP;
+        else if (newLatestTick > poolStructs.state.latestTick + MAX_TICK_JUMP)
+            newLatestTick = poolStructs.state.latestTick + MAX_TICK_JUMP;
 
         UniswapV3PoolMock(poolMock).setTickCumulatives(
             newLatestTick * 10,
@@ -482,7 +484,7 @@ contract CoverEchidnaPool {
         positionIndex = positionIndex % positions.length;
         Position memory pos = positions[positionIndex];
         require(claimAt >= pos.lower && claimAt <= pos.upper);
-        require(claimAt % tickSpacing == 0);
+        require(claimAt % tickSpread == 0);
         PoolStructs memory poolStructs;
         PoolValues memory poolValues;
 
@@ -519,7 +521,7 @@ contract CoverEchidnaPool {
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing
-            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+            assert((lower % tickSpread == 0) && (upper % tickSpread == 0));
         }
 
         poolStructs.pool0 = getPoolState(true);
@@ -551,7 +553,7 @@ contract CoverEchidnaPool {
         positionIndex = positionIndex % positions.length;
         Position memory pos = positions[positionIndex];
         claimAt = pos.lower + (claimAt % (pos.upper - pos.lower));
-        require(claimAt % tickSpacing == 0);
+        require(claimAt % tickSpread == 0);
 
         // PoolValues memory poolValues;
         PoolStructs memory poolStructs;
@@ -585,7 +587,7 @@ contract CoverEchidnaPool {
             // Ensure positions ticks arent crossed
             assert(lower < upper);
             // Ensure minted ticks on proper tick spacing
-            assert((lower % tickSpacing == 0) && (upper % tickSpacing == 0));
+            assert((lower % tickSpread == 0) && (upper % tickSpread == 0));
         }
 
         // POST CONDITIONS

@@ -63,13 +63,13 @@ library EchidnaAssertions {
         assert(tick <= maxTick);
     }
 
-    function assertInfiniteLoop0(int24 accumTick, int24 crossTick) internal {
+    function assertInfiniteLoop0(int24 accumTick, int24 crossTick, int24 minTick) internal {
         emit InfiniteLoop0(accumTick, crossTick);
-        assert(accumTick < crossTick);
+        assert(accumTick < crossTick || (accumTick == crossTick && accumTick == minTick));
     }
 
-    function assertInfiniteLoop1(int24 accumTick, int24 crossTick) internal {
+    function assertInfiniteLoop1(int24 accumTick, int24 crossTick, int24 maxTick) internal {
         emit InfiniteLoop1(accumTick, crossTick);
-        assert(accumTick > crossTick);
+        assert(accumTick > crossTick || (accumTick == crossTick && accumTick == maxTick));
     }
 }

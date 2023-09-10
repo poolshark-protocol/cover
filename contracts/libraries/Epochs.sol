@@ -202,8 +202,7 @@ library Epochs {
                 : state.latestTick + constants.tickSpread
         });
         while (cache.nextTickToCross0 != cache.nextTickToAccum0) {
-            EchidnaAssertions.assertInfiniteLoop0(cache.nextTickToAccum0, cache.nextTickToCross0);
-            // get values from current auction
+            // rollover deltas
             (cache, pool0) = _rollover(state, cache, pool0, constants, true);
             if (cache.nextTickToAccum0 > cache.stopTick0 
                  && ticks[cache.nextTickToAccum0].amountInDeltaMaxMinus > 0) {
@@ -234,7 +233,6 @@ library Epochs {
                params.crossTick,
                cache.nextTickToCross0
             );
-    
             // keep looping until accumulation reaches stopTick0 
             if (cache.nextTickToAccum0 >= cache.stopTick0) {
                 (pool0.liquidity, cache.nextTickToCross0, cache.nextTickToAccum0) = _cross(
@@ -246,6 +244,7 @@ library Epochs {
                     pool0.liquidity,
                     true
                 );
+                EchidnaAssertions.assertInfiniteLoop0(cache.nextTickToAccum0, cache.nextTickToCross0, ConstantProduct.minTick(constants.tickSpread));
             } else break;
         }
         // pool0 checkpoint
@@ -268,7 +267,6 @@ library Epochs {
         }
         while (cache.nextTickToCross1 != cache.nextTickToAccum1) {
             // rollover deltas pool1
-            EchidnaAssertions.assertInfiniteLoop1(cache.nextTickToAccum1, cache.nextTickToCross1);
             (cache, pool1) = _rollover(state, cache, pool1, constants, false);
             // accumulate deltas pool1
             if (cache.nextTickToAccum1 < cache.stopTick1 
@@ -312,6 +310,7 @@ library Epochs {
                     pool1.liquidity,
                     false
                 );
+                EchidnaAssertions.assertInfiniteLoop1(cache.nextTickToAccum1, cache.nextTickToCross1, ConstantProduct.maxTick(constants.tickSpread));
             } else break;
         }
         // pool1 checkpoint
@@ -393,17 +392,22 @@ library Epochs {
             return (state.latestTick, true);
         }
         newLatestTick = constants.source.calculateAverageTick(constants, state.latestTick);
+
         /// @dev - shift up/down one quartile to put pool ahead of TWAP
         if (newLatestTick > state.latestTick)
              newLatestTick += constants.tickSpread / 4;
         else if (newLatestTick <= state.latestTick - 3 * constants.tickSpread / 4)
              newLatestTick -= constants.tickSpread / 4;
-        newLatestTick = newLatestTick / constants.tickSpread * constants.tickSpread; // even multiple of tickSpread
+        
+        // make newLatestTick an even multiple of tickSpread
+        newLatestTick = newLatestTick / constants.tickSpread * constants.tickSpread;
+
+        // if unchanged return early
         if (newLatestTick == state.latestTick) {
             return (state.latestTick, true);
         }
 
-        // rate-limiting tick move
+        // rate-limit tick move
         int24 maxLatestTickMove;
         
         // handle int24 overflow
