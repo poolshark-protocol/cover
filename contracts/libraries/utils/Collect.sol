@@ -27,7 +27,6 @@ library Collect {
         }
 
         /// zero out balances and transfer out
-        //TODO: subtract out sync fees from transferred in amounts
         if (amountIn > 0) {
             EchidnaAssertions.assertPoolBalanceExceeded(
                 (params.zeroForOne ? balance(cache.constants.token1) : balance(cache.constants.token0)),

@@ -208,6 +208,8 @@ library Positions {
         cache.position.liquidity += cache.liquidityMinted.toUint128();
         state.liquidityGlobal += cache.liquidityMinted.toUint128();
 
+        //TODO: assert divisible by tick spacing
+
         {
             // update max deltas
             CoverPoolStructs.Tick memory finalTick = ticks[params.zeroForOne ? params.lower : params.upper];
