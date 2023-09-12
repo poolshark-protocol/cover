@@ -30,7 +30,6 @@ contract CoverPool is
         _;
     }
 
-    
     modifier canoncialOnly() {
         _onlyCanoncialClones();
         _;
@@ -77,16 +76,16 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-        cache = MintCall.perform(
-            params,
-            cache,
-            tickMap,
+        MintCall.perform(
+            params.zeroForOne ? positions0 : positions1,
             ticks,
-            params.zeroForOne ? positions0 : positions1
+            tickMap,
+            globalState,
+            pool0,
+            pool1,
+            params,
+            cache
         );
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
-        globalState = cache.state;
     }
 
     function burn(

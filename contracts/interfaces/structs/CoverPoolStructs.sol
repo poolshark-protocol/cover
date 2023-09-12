@@ -64,8 +64,6 @@ interface CoverPoolStructs is PoolsharkStructs {
         int24 upper;
     }
 
-
-
     struct VolatilityTier {
         uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
         uint16  auctionLength;
