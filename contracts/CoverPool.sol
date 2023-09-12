@@ -13,6 +13,7 @@ import './libraries/pool/QuoteCall.sol';
 import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
+import './external/solady/LibClone.sol';
 
 
 /// @notice Poolshark Cover Pool Implementation
@@ -26,6 +27,12 @@ contract CoverPool is
 
     modifier ownerOnly() {
         _onlyOwner();
+        _;
+    }
+
+    
+    modifier canoncialOnly() {
+        _onlyCanoncialClones();
         _;
     }
 
@@ -44,7 +51,10 @@ contract CoverPool is
 
     function mint(
         MintParams memory params
-    ) external override lock {
+    ) external override
+        lock
+        canoncialOnly
+    {
         MintCache memory cache = MintCache({
             state: globalState,
             position: CoverPosition(address(0),0,0,0,0,0,0,0),
@@ -81,7 +91,10 @@ contract CoverPool is
 
     function burn(
         BurnParams memory params
-    ) external override lock {
+    ) external override
+        lock
+        canoncialOnly
+    {
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache = BurnCache({
             state: globalState,
@@ -119,7 +132,10 @@ contract CoverPool is
 
     function swap(
         SwapParams memory params
-    ) external override lock returns (
+    ) external override
+        lock
+        canoncialOnly
+    returns (
         int256,
         int256
     ) 
@@ -208,7 +224,10 @@ contract CoverPool is
         uint16 syncFee,
         uint16 fillFee,
         bool setFees
-    ) external override ownerOnly returns (
+    ) external override
+        ownerOnly
+        canoncialOnly
+    returns (
         uint128 token0Fees,
         uint128 token1Fees
     ) {
@@ -266,6 +285,55 @@ contract CoverPool is
 
     function _postlock() private {
         globalState.unlocked = 1;
+    }
+
+    function _onlyCanoncialClones() private view {
+        // compute pool key
+        bytes32 key = keccak256(abi.encode(
+                                    token0(),
+                                    token1(),
+                                    twapSource(),
+                                    inputPool(),
+                                    tickSpread(),
+                                    twapLength()
+                                ));
+        
+        // compute canonical pool address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            original,
+            encodeCover(immutables()),
+            key,
+            factory
+        );
+        // only allow delegateCall from canonical clones
+        if (address(this) != predictedAddress) require(false, 'NoDelegateCall()');
+    }
+
+    function encodeCover(
+        CoverImmutables memory constants
+    ) private pure returns (bytes memory) {
+        bytes memory value1 = abi.encodePacked(
+            constants.owner,
+            constants.token0,
+            constants.token1,
+            constants.source,
+            constants.inputPool,
+            constants.bounds.min,
+            constants.bounds.max,
+            constants.minAmountPerAuction,
+            constants.genesisTime,
+            constants.minPositionWidth,
+            constants.tickSpread,
+            constants.twapLength,
+            constants.auctionLength
+        );
+        bytes memory value2 = abi.encodePacked(
+            constants.blockTime,
+            constants.token0Decimals,
+            constants.token1Decimals,
+            constants.minAmountLowerPriced
+        );
+        return abi.encodePacked(value1, value2);
     }
 
     function _onlyOwner() private view {
