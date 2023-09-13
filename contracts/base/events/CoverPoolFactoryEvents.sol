@@ -4,11 +4,10 @@ pragma solidity 0.8.13;
 abstract contract CoverPoolFactoryEvents {
     event PoolCreated(
         address pool,
-        address indexed twapSource,
         address indexed inputPool,
         address token0,
         address token1,
-        address indexed poolImpl,
+        bytes32 indexed poolType,
         uint16 fee,
         int16 tickSpread,
         uint16 twapLength

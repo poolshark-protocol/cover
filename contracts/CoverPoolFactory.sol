@@ -126,11 +126,10 @@ contract CoverPoolFactory is
 
         emit PoolCreated(
             pool,
-            address(constants.source),
             constants.inputPool,
             constants.token0,
             constants.token1,
-            constants.poolImpl,
+            params.poolType,
             params.feeTier,
             params.tickSpread,
             params.twapLength

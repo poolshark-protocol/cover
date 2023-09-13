@@ -31,7 +31,7 @@ dataSources:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: PoolCreated(address,indexed address,indexed address,address,address,indexed address,uint16,int16,uint16)
+              - event: PoolCreated(address,indexed address,address,address,indexed bytes32,uint16,int16,uint16)
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
@@ -52,7 +52,7 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
-              - event: VolatilityTierEnabled(address,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
+              - event: VolatilityTierEnabled(bytes32,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
                 handler: handleFeeToTransfer
