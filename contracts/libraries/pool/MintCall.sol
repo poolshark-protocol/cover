@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Positions.sol';
+import '../utils/PositionTokens.sol';
 import '../utils/Collect.sol';
 
 library MintCall {
@@ -31,10 +32,11 @@ library MintCall {
         CoverPoolStructs.MintCache memory cache
     ) external returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
+            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+                // check for balance held
+                require(false, 'PositionNotFound()');
             // load existing position
             cache.position = positions[params.positionId];
-            if (cache.position.owner != msg.sender)
-                require(false, 'PositionNotFound()');
         }
         // resize position
         (params, cache.liquidityMinted) = Positions.resize(
@@ -47,7 +49,6 @@ library MintCall {
                 params.lower != cache.position.lower ||     // lower mismatch
                 params.upper != cache.position.upper) {     // upper mismatch
             CoverPoolStructs.CoverPosition memory newPosition;
-            newPosition.owner = params.to;
             newPosition.lower = params.lower;
             newPosition.upper = params.upper;
             // use new position in cache

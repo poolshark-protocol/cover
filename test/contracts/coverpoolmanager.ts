@@ -214,12 +214,18 @@ describe('CoverPoolManager Tests', function () {
   it('Should enable new twap source', async function () {
     await hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enablePoolType(psharkString, hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
+        .enablePoolType(
+          psharkString,
+          hre.props.uniswapV3Source.address,
+          hre.props.uniswapV3Source.address,
+          hre.props.uniswapV3Source.address
+        )
     
     const twapSource = await hre.props.coverPoolManager
       .poolTypes(psharkString)
     expect(twapSource[0]).to.be.equal(hre.props.uniswapV3Source.address)
     expect(twapSource[1]).to.be.equal(hre.props.uniswapV3Source.address)
+    expect(twapSource[2]).to.be.equal(hre.props.uniswapV3Source.address)
   })
 
 
@@ -227,7 +233,12 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
-        .enablePoolType(psharkString, hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
+        .enablePoolType(
+          psharkString,
+          hre.props.uniswapV3Source.address,
+          hre.props.uniswapV3Source.address,
+          hre.props.uniswapV3Source.address
+        )
     ).to.be.revertedWith('OwnerOnly()')
   })
 
@@ -235,7 +246,12 @@ describe('CoverPoolManager Tests', function () {
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.admin)
-        .enablePoolType(ethers.utils.formatBytes32String(''), hre.props.uniswapV3Source.address, hre.props.uniswapV3Source.address)
+        .enablePoolType(
+          ethers.utils.formatBytes32String(''),
+          hre.props.uniswapV3Source.address,
+          hre.props.uniswapV3Source.address,
+          hre.props.uniswapV3Source.address
+        )
     ).to.be.revertedWith('TwapSourceNameInvalid()')
   })
 

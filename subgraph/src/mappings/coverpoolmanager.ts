@@ -9,10 +9,10 @@ export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void 
     let tickSpreadParam    = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam    = BigInt.fromI32(event.params.twapLength)
     let auctionLengthParam = BigInt.fromI32(event.params.auctionLength)
-    let poolImplParam    = event.params.implAddress.toHex()
+    let poolTypeParam      = event.params.poolType.toHex()
 
     let loadManager        = safeLoadManager(event.address.toHex())
-    let loadVolatilityTier = safeLoadVolatilityTier(poolImplParam, feeTierParam, tickSpreadParam, twapLengthParam)
+    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeParam, feeTierParam, tickSpreadParam, twapLengthParam)
 
     let manager        = loadManager.entity
     let volatilityTier = loadVolatilityTier.entity
