@@ -17,6 +17,7 @@ import {
     EpochMap,
     Token20Batcher,
     PoolsharkRouter,
+    PositionERC1155,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -30,6 +31,8 @@ export interface BeforeEachProps {
     coverPoolManager: CoverPoolManager
     coverPoolFactory: CoverPoolFactory
     coverPoolImpl: CoverPool
+    coverPoolToken: PositionERC1155
+    positionERC1155: PositionERC1155
     poolRouter: PoolsharkRouter
     uniswapV3FactoryMock: UniswapV3FactoryMock
     uniswapV3PoolMock: UniswapV3PoolMock
@@ -83,6 +86,8 @@ export class GetBeforeEach {
         let coverPoolManager: CoverPoolManager
         let coverPoolFactory: CoverPoolFactory
         let coverPoolImpl: CoverPool
+        let coverPoolToken: PositionERC1155
+        let positionERC1155: PositionERC1155
         let poolRouter: PoolsharkRouter
         let uniswapV3FactoryMock: UniswapV3FactoryMock
         let uniswapV3PoolMock: UniswapV3PoolMock
@@ -114,6 +119,8 @@ export class GetBeforeEach {
             coverPoolManager,
             coverPoolFactory,
             coverPoolImpl,
+            coverPoolToken,
+            positionERC1155,
             poolRouter,
             uniswapV3FactoryMock,
             uniswapV3PoolMock,

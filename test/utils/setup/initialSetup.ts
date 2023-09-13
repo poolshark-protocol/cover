@@ -2,7 +2,7 @@ import { SUPPORTED_NETWORKS } from '../../../scripts/constants/supportedNetworks
 import { DeployAssist } from '../../../scripts/util/deployAssist'
 import { ContractDeploymentsKeys } from '../../../scripts/util/files/contractDeploymentKeys'
 import { ContractDeploymentsJson } from '../../../scripts/util/files/contractDeploymentsJson'
-import { CoverPool__factory, PoolsharkRouter__factory, QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
+import { CoverPool__factory, PoolsharkRouter__factory, PositionERC1155__factory, QuoteCall__factory, Token20Batcher__factory } from '../../../typechain'
 import { BurnCall__factory } from '../../../typechain'
 import { SwapCall__factory } from '../../../typechain'
 import { MintCall__factory } from '../../../typechain'
@@ -304,9 +304,21 @@ export class InitialSetup {
                 'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
             }
         )
+
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            PositionERC1155__factory,
+            'positionERC1155',
+            [
+              hre.props.coverPoolFactory.address
+            ]
+        )
+
         const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
             this.uniV3String,
             hre.props.coverPoolImpl.address,
+            hre.props.positionERC1155.address,
             hre.props.uniswapV3Source.address
         )
         await enableImplTxn.wait();
@@ -390,10 +402,12 @@ export class InitialSetup {
 
         hre.nonce += 1
 
-        let coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
+        let coverPoolAddress; let coverPoolTokenAddress;
+        [coverPoolAddress, coverPoolTokenAddress] = await hre.props.coverPoolFactory.getCoverPool(
             poolParams1
         )
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
+        hre.props.coverPoolToken = await hre.ethers.getContractAt('PositionERC1155', coverPoolTokenAddress)
 
         await this.deployAssist.saveContractDeployment(
             network,
