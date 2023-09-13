@@ -248,6 +248,7 @@ describe('CoverPool Tests', function () {
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
             revertMessage: '',
+            exactIn: true
         })
 
         if (deltaMaxBeforeCheck) {
