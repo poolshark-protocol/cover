@@ -12,6 +12,7 @@ import './EpochMap.sol';
 
 /// @notice Position management library for ranged liquidity.
 library Positions {
+    uint8 private constant _ENTERED = 2;
     uint256 internal constant Q96 = 0x1000000000000000000000000;
 
     using SafeCast for uint256;
@@ -485,6 +486,8 @@ library Positions {
     ) external view returns (
         CoverPoolStructs.CoverPosition memory
     ) {
+        if (state.unlocked == _ENTERED)
+            require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         CoverPoolStructs.UpdatePositionCache memory cache;
         (
             params,

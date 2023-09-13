@@ -20,7 +20,7 @@ abstract contract CoverPoolErrors {
     error CollectToZeroAddress();
     error Overflow();
     error NotEnoughOutputLiquidity();
-    error WaitUntilEnoughObservations();
+    error WaitUntilTwapLengthSufficient();
 }
 
 abstract contract CoverTicksErrors {

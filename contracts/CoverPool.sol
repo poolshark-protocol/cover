@@ -14,13 +14,13 @@ import './libraries/pool/MintCall.sol';
 import './libraries/pool/BurnCall.sol';
 import './libraries/math/ConstantProduct.sol';
 import './external/solady/LibClone.sol';
-
+import './external/openzeppelin/security/ReentrancyGuard.sol';
 
 /// @notice Poolshark Cover Pool Implementation
 contract CoverPool is
     ICoverPool,
-    CoverPoolStorage,
-    CoverPoolImmutables
+    CoverPoolImmutables,
+    ReentrancyGuard
 {
     address public immutable factory;
     address public immutable original;
@@ -30,16 +30,9 @@ contract CoverPool is
         _;
     }
 
-    
     modifier canoncialOnly() {
         _onlyCanoncialClones();
         _;
-    }
-
-    modifier lock() {
-        _prelock();
-        _;
-        _postlock();
     }
 
     constructor(
@@ -52,7 +45,7 @@ contract CoverPool is
     function mint(
         MintParams memory params
     ) external override
-        lock
+        nonReentrant(globalState)
         canoncialOnly
     {
         MintCache memory cache = MintCache({
@@ -77,22 +70,22 @@ contract CoverPool is
             cache.state,
             cache.constants
         );
-        cache = MintCall.perform(
-            params,
-            cache,
-            tickMap,
+        MintCall.perform(
+            params.zeroForOne ? positions0 : positions1,
             ticks,
-            params.zeroForOne ? positions0 : positions1
+            tickMap,
+            globalState,
+            pool0,
+            pool1,
+            params,
+            cache
         );
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
-        globalState = cache.state;
     }
 
     function burn(
         BurnParams memory params
     ) external override
-        lock
+        nonReentrant(globalState)
         canoncialOnly
     {
         if (params.to == address(0)) revert CollectToZeroAddress();
@@ -119,21 +112,21 @@ contract CoverPool is
                 cache.constants
         );
         cache = BurnCall.perform(
-            params, 
-            cache, 
-            tickMap,
+            params.zeroForOne ? positions0 : positions1,
             ticks,
-            params.zeroForOne ? positions0 : positions1
+            tickMap,
+            globalState,
+            pool0,
+            pool1,
+            params,
+            cache
         );
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
-        globalState = cache.state;
     }
 
     function swap(
         SwapParams memory params
     ) external override
-        lock
+        nonReentrant(globalState)
         canoncialOnly
     returns (
         int256,
@@ -226,6 +219,7 @@ contract CoverPool is
         bool setFees
     ) external override
         ownerOnly
+        nonReentrant(globalState)
         canoncialOnly
     returns (
         uint128 token0Fees,
@@ -272,19 +266,6 @@ contract CoverPool is
         int16 tickSpacing
     ) external pure returns (uint160, uint160) {
         return ConstantProduct.priceBounds(tickSpacing);
-    }
-
-    function _prelock() private {
-        if (globalState.unlocked == 0) {
-            globalState = Ticks.initialize(tickMap, pool0, pool1, globalState, immutables());
-        }
-        if (globalState.unlocked == 0) revert WaitUntilEnoughObservations();
-        if (globalState.unlocked == 2) revert Locked();
-        globalState.unlocked = 2;
-    }
-
-    function _postlock() private {
-        globalState.unlocked = 1;
     }
 
     function _onlyCanoncialClones() private view {
