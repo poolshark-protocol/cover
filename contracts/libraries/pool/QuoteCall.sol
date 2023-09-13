@@ -37,7 +37,7 @@ library QuoteCall {
                 amountInDelta: 0,
                 amount0Delta: 0,
                 amount1Delta: 0,
-                exactIn: true
+                exactIn: params.exactIn
             });
         }
         // call quote
