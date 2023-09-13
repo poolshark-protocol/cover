@@ -98,8 +98,8 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'WaitUntilEnoughObservations()',
-            collectRevertMessage: 'WaitUntilEnoughObservations()'
+            revertMessage: 'WaitUntilTwapLengthSufficient()',
+            collectRevertMessage: 'WaitUntilTwapLengthSufficient()'
         })
 
         // no-op swap
@@ -111,8 +111,8 @@ describe('CoverPool Tests', function () {
             priceLimit: minPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
-            revertMessage: 'WaitUntilEnoughObservations()',
-            syncRevertMessage: 'WaitUntilEnoughObservations()'
+            revertMessage: 'WaitUntilTwapLengthSufficient()',
+            syncRevertMessage: 'WaitUntilTwapLengthSufficient()'
         })
 
 
@@ -129,7 +129,7 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: tokenAmount.sub(1),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'WaitUntilEnoughObservations()',
+            revertMessage: 'WaitUntilTwapLengthSufficient()',
         })
 
     })
@@ -148,8 +148,8 @@ describe('CoverPool Tests', function () {
             liquidityIncrease: liquidityAmount,
             upperTickCleared: false,
             lowerTickCleared: false,
-            revertMessage: 'WaitUntilEnoughObservations()',
-            collectRevertMessage: 'WaitUntilEnoughObservations()',
+            revertMessage: 'WaitUntilTwapLengthSufficient()',
+            collectRevertMessage: 'WaitUntilTwapLengthSufficient()',
         })
 
         // no-op swap
@@ -161,8 +161,8 @@ describe('CoverPool Tests', function () {
             priceLimit: minPrice,
             balanceInDecrease: BN_ZERO,
             balanceOutIncrease: BN_ZERO,
-            revertMessage: 'WaitUntilEnoughObservations()',
-            syncRevertMessage: 'WaitUntilEnoughObservations()'
+            revertMessage: 'WaitUntilTwapLengthSufficient()',
+            syncRevertMessage: 'WaitUntilTwapLengthSufficient()'
         })
 
         // burn should revert
@@ -178,7 +178,7 @@ describe('CoverPool Tests', function () {
             balanceOutIncrease: tokenAmount.sub(1),
             lowerTickCleared: false,
             upperTickCleared: false,
-            revertMessage: 'WaitUntilEnoughObservations()',
+            revertMessage: 'WaitUntilTwapLengthSufficient()',
         })
     })
 
@@ -1045,7 +1045,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        if (debugMode) console.log("--------------- Bob #2 Burn -------------");
+        if (debugMode) console.log("--------------- Bob #1 Burn -------------");
 
         await validateBurn({
             signer: hre.props.bob,
@@ -1061,6 +1061,11 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         });
+
+        if (balanceCheck) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+        }
     });
 
     it("pool0 - outdated price does not perturb the pool accounting :: GUARDIAN AUDITS", async function () {

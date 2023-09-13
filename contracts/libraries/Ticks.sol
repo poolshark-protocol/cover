@@ -101,9 +101,9 @@ library Ticks {
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1,
-        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.GlobalState storage state,
         PoolsharkStructs.CoverImmutables memory constants 
-    ) external returns (CoverPoolStructs.GlobalState memory) {
+    ) external {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = constants.source.initialize(constants);
             if (state.unlocked == 1) {
@@ -134,7 +134,6 @@ library Ticks {
                 );
             }
         }
-        return state;
     }
 
     function insert(

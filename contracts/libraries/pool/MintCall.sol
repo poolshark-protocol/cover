@@ -116,13 +116,13 @@ library MintCall {
         pool0.liquidity = cache.pool0.liquidity;
         pool0.amountInDelta = cache.pool0.amountInDelta;
         pool0.amountInDeltaMaxClaimed = cache.pool0.amountInDeltaMaxClaimed;
-        pool0.amountOutDeltaMaxClaimed = cache.pool0.amountInDeltaMaxClaimed;
+        pool0.amountOutDeltaMaxClaimed = cache.pool0.amountOutDeltaMaxClaimed;
 
         // pool1
         pool1.price = cache.pool1.price;
         pool1.liquidity = cache.pool1.liquidity;
         pool1.amountInDelta = cache.pool1.amountInDelta;
         pool1.amountInDeltaMaxClaimed = cache.pool1.amountInDeltaMaxClaimed;
-        pool1.amountOutDeltaMaxClaimed = cache.pool1.amountInDeltaMaxClaimed;
+        pool1.amountOutDeltaMaxClaimed = cache.pool1.amountOutDeltaMaxClaimed;
     }
 }
