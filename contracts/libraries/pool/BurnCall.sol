@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Positions.sol';
+import '../utils/PositionTokens.sol';
 import '../utils/Collect.sol';
 import 'hardhat/console.sol';
 
@@ -36,9 +37,9 @@ library BurnCall {
         CoverPoolStructs.BurnCache memory cache
     ) external returns (CoverPoolStructs.BurnCache memory) {
         cache.position = positions[params.positionId];
-        if (cache.position.owner != msg.sender) {
+        if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+            // check for balance held
             require(false, 'PositionNotFound()');
-        }
         //TODO: should check epochs here
         if (cache.position.claimPriceLast > 0
             || params.claim != (params.zeroForOne ? cache.position.upper : cache.position.lower) 

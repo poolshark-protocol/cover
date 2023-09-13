@@ -219,6 +219,8 @@ export class InitialSetup {
             'positionsLib',
             [],
             {
+                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
                 'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address
             }
         )
@@ -262,11 +264,7 @@ export class InitialSetup {
             'burnCall',
             [],
             {
-                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address,
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+                'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address
             }
         )
 

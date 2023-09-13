@@ -50,7 +50,7 @@ contract CoverPool is
     {
         MintCache memory cache = MintCache({
             state: globalState,
-            position: CoverPosition(address(0),0,0,0,0,0,0,0),
+            position: CoverPosition(0,0,0,0,0,0,0),
             constants: immutables(),
             syncFees: SyncFees(0,0),
             liquidityMinted: 0,
@@ -91,7 +91,7 @@ contract CoverPool is
         if (params.to == address(0)) revert CollectToZeroAddress();
         BurnCache memory cache = BurnCache({
             state: globalState,
-            position: CoverPosition(address(0),0,0,0,0,0,0,0),
+            position: CoverPosition(0,0,0,0,0,0,0),
             constants: immutables(),
             syncFees: SyncFees(0,0),
             pool0: pool0,
