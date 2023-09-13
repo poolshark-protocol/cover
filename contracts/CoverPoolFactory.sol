@@ -26,7 +26,7 @@ contract CoverPoolFactory is
 
     function createCoverPool(
         CoverPoolParams memory params
-    ) external override returns (
+    ) public override returns (
         address pool,
         address poolToken
     ) {
@@ -136,9 +136,41 @@ contract CoverPoolFactory is
         );
     }
 
+    function createCoverPoolAndMint(
+        CoverPoolParams memory params,
+        ICoverPool.MintParams[] memory mintCoverParams
+    ) external returns (
+        address pool,
+        address poolToken
+    ) {
+        // check if pool exists
+        (
+            pool,
+            poolToken
+        ) = getCoverPool(
+            params
+        );
+        // create if pool doesn't exist
+        if (pool == address(0)) {
+            (
+                pool,
+                poolToken
+            ) = createCoverPool(
+                params
+            );
+        }
+        // mint initial cover positions
+        for (uint i = 0; i < mintCoverParams.length;) {
+            ICoverPool(pool).mint(mintCoverParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    } 
+
     function getCoverPool(
         CoverPoolParams memory params
-    ) external view override returns (
+    ) public view override returns (
         address pool,
         address poolToken
     ) {
