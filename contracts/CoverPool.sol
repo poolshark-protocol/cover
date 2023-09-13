@@ -219,6 +219,7 @@ contract CoverPool is
         bool setFees
     ) external override
         ownerOnly
+        nonReentrant(globalState)
         canoncialOnly
     returns (
         uint128 token0Fees,
