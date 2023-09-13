@@ -110,6 +110,7 @@ export interface ValidateSwapParams {
     revertMessage: string
     syncRevertMessage?: string
     splitInto?: number
+    exactIn?: boolean
 }
 
 export interface ValidateBurnParams {
@@ -249,7 +250,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const revertMessage = params.revertMessage
     const syncRevertMessage = params.syncRevertMessage
     const splitInto = params.splitInto && params.splitInto > 1 ? params.splitInto : 1
-
+    const exactIn = params.exactIn ?? true
     let balanceInBefore
     let balanceOutBefore
     if (zeroForOne) {
@@ -274,7 +275,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const quote = await hre.props.coverPool.quote({
         priceLimit: priceLimit,
         amount: amountIn,
-        exactIn: true,
+        exactIn: exactIn,
         zeroForOne: zeroForOne
     })
 
@@ -296,7 +297,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               zeroForOne: zeroForOne,
               amount: amountIn.div(splitInto),
               priceLimit: priceLimit,
-              exactIn: true,
+              exactIn: exactIn,
               callbackData: ethers.utils.formatBytes32String('')
             }], {gasLimit: 3000000})
             if (splitInto == 1) await txn.wait()
@@ -316,7 +317,7 @@ export async function validateSwap(params: ValidateSwapParams) {
               zeroForOne: zeroForOne,
               amount: amountIn.div(splitInto),
               priceLimit: priceLimit,
-              exactIn: true,
+              exactIn: exactIn,
               callbackData: ethers.utils.formatBytes32String('')
             }], {gasLimit: 3000000})
         ).to.be.revertedWith(revertMessage)
