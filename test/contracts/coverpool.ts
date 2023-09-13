@@ -1045,7 +1045,7 @@ describe('CoverPool Tests', function () {
             revertMessage: '',
         });
 
-        if (debugMode) console.log("--------------- Bob #2 Burn -------------");
+        if (debugMode) console.log("--------------- Bob #1 Burn -------------");
 
         await validateBurn({
             signer: hre.props.bob,
@@ -1061,6 +1061,11 @@ describe('CoverPool Tests', function () {
             upperTickCleared: true,
             revertMessage: '',
         });
+
+        if (true) {
+            console.log('balance after token0:', (await hre.props.token0.balanceOf(hre.props.coverPool.address)).toString())
+            console.log('balance after token1:', (await hre.props.token1.balanceOf(hre.props.coverPool.address)).toString())
+        }
     });
 
     it("pool0 - outdated price does not perturb the pool accounting :: GUARDIAN AUDITS", async function () {

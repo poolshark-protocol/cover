@@ -118,15 +118,15 @@ contract CoverPool is
                 cache.constants
         );
         cache = BurnCall.perform(
-            params, 
-            cache, 
-            tickMap,
+            params.zeroForOne ? positions0 : positions1,
             ticks,
-            params.zeroForOne ? positions0 : positions1
+            tickMap,
+            globalState,
+            pool0,
+            pool1,
+            params,
+            cache
         );
-        pool0 = cache.pool0;
-        pool1 = cache.pool1;
-        globalState = cache.state;
     }
 
     function swap(
