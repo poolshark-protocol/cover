@@ -26,7 +26,10 @@ contract CoverPoolFactory is
 
     function createCoverPool(
         CoverPoolParams memory params
-    ) external override returns (address pool) {
+    ) external override returns (
+        address pool,
+        address poolToken
+    ) {
         // validate token pair
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
             revert InvalidTokenAddress();
@@ -53,10 +56,12 @@ contract CoverPoolFactory is
         {
             (
                 address poolImpl,
+                address tokenImpl,
                 address twapSource
             ) = ICoverPoolManager(owner).poolTypes(params.poolType);
             if (poolImpl == address(0) || twapSource == address(0)) revert PoolTypeNotFound();
             constants.poolImpl = poolImpl;
+            constants.poolToken = tokenImpl;
             constants.source = ITwapSource(twapSource);
         }
         // get volatility tier config
@@ -82,14 +87,16 @@ contract CoverPoolFactory is
         constants.inputPool  = ITwapSource(constants.source).getPool(constants.token0, constants.token1, params.feeTier);
 
         // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-                                    constants.token0,
-                                    constants.token1,
-                                    constants.source,
-                                    constants.inputPool,
-                                    constants.tickSpread,
-                                    constants.twapLength
-                                ));
+        bytes32 key = keccak256(
+            abi.encode(
+                constants.token0,
+                constants.token1,
+                constants.source,
+                constants.inputPool,
+                constants.tickSpread,
+                constants.twapLength
+            )
+        );
         if (coverPools[key] != address(0)) {
             revert PoolAlreadyExists();
         }
@@ -99,21 +106,30 @@ contract CoverPoolFactory is
             constants.bounds.max
         ) = ICoverPool(constants.poolImpl).priceBounds(constants.tickSpread);
 
+        // launch pool token
+        constants.poolToken = constants.poolToken.cloneDeterministic({
+            salt: key,
+            data: abi.encodePacked(
+                constants.poolImpl
+            )
+        });
+
         // launch pool and save address
         pool = constants.poolImpl.cloneDeterministic({
             salt: key,
             data: encodeCover(constants)
         });
 
+        poolToken = constants.poolToken;
+
         coverPools[key] = pool;
 
         emit PoolCreated(
             pool,
-            address(constants.source),
             constants.inputPool,
             constants.token0,
             constants.token1,
-            constants.poolImpl,
+            params.poolType,
             params.feeTier,
             params.tickSpread,
             params.twapLength
@@ -122,13 +138,17 @@ contract CoverPoolFactory is
 
     function getCoverPool(
         CoverPoolParams memory params
-    ) external view override returns (address) {
+    ) external view override returns (
+        address pool,
+        address poolToken
+    ) {
         // set lexographical token address ordering
         address token0 = params.tokenIn < params.tokenOut ? params.tokenIn : params.tokenOut;
         address token1 = params.tokenIn < params.tokenOut ? params.tokenOut : params.tokenIn;
 
         (
-            ,
+            address poolImpl,
+            address tokenImpl,
             address source
         ) = ICoverPoolManager(owner).poolTypes(params.poolType);
         address inputPool  = ITwapSource(source).getPool(token0, token1, params.feeTier);
@@ -142,8 +162,17 @@ contract CoverPoolFactory is
                                     params.tickSpread,
                                     params.twapLength
                                 ));
+        
+        pool = coverPools[key];
 
-        return coverPools[key];
+        poolToken = LibClone.predictDeterministicAddress(
+            tokenImpl,
+            abi.encodePacked(
+                poolImpl
+            ),
+            key,
+            address(this)
+        );
     }
 
     function encodeCover(
@@ -154,6 +183,7 @@ contract CoverPoolFactory is
             constants.token0,
             constants.token1,
             constants.source,
+            constants.poolToken,
             constants.inputPool,
             constants.bounds.min,
             constants.bounds.max,

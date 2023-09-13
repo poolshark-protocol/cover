@@ -160,9 +160,9 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "implAddress",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "poolType",
+        "type": "bytes32"
       },
       {
         "indexed": false,

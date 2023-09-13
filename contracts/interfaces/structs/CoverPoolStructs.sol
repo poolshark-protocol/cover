@@ -54,7 +54,6 @@ interface CoverPoolStructs is PoolsharkStructs {
     }
 
     struct CoverPosition {
-        address owner;
         uint160 claimPriceLast;    /// @dev - highest price claimed at
         uint128 liquidity;         /// @dev - expected amount to be used not actual
         uint128 amountIn;          /// @dev - token amount already claimed; balance

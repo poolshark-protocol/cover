@@ -15,11 +15,11 @@ export function handlePoolCreated(event: PoolCreated): void {
     let feeTierParam = BigInt.fromI32(event.params.fee)
     let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam = BigInt.fromI32(event.params.twapLength)
-    let poolImplParam = event.params.poolImpl.toHex()
+    let poolTypeParam = event.params.poolType.toHex()
     let poolAddressParam = event.params.pool.toHex()
 
     // load from store
-    let loadVolatilityTier = safeLoadVolatilityTier(poolImplParam, feeTierParam, tickSpreadParam, twapLengthParam)
+    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeParam, feeTierParam, tickSpreadParam, twapLengthParam)
     let loadCoverPool = safeLoadCoverPool(poolAddressParam)
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())

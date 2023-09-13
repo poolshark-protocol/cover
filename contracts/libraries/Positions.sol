@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import './Ticks.sol';
 import './Deltas.sol';
+import '../interfaces/IPositionERC1155.sol';
 import '../interfaces/structs/CoverPoolStructs.sol';
 import '../interfaces/cover/ICoverPool.sol';
 import './math/OverflowMath.sol';
@@ -173,6 +174,12 @@ library Positions {
 
         if (cache.position.liquidity == 0) {
             cache.position.accumEpochLast = state.accumEpoch;
+            IPositionERC1155(constants.poolToken).mint(
+                params.to,
+                params.positionId,
+                1,
+                constants
+            );
         } else {
             // safety check in case we somehow get here
             if (
@@ -247,7 +254,7 @@ library Positions {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.RemoveParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal returns (uint128, CoverPoolStructs.GlobalState memory) {
+    ) external returns (uint128, CoverPoolStructs.GlobalState memory) {
         // initialize cache
         CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: positions[params.positionId],
@@ -325,9 +332,14 @@ library Positions {
 
         cache.position.liquidity -= uint128(params.amount);
         if (cache.position.liquidity == 0) {
-            cache.position.owner = address(0);
             cache.position.lower = 0;
             cache.position.upper = 0;
+            IPositionERC1155(constants.poolToken).burn(
+                msg.sender,
+                params.positionId,
+                1, 
+                constants
+            );
         }
         positions[params.positionId] = cache.position;
 
@@ -358,7 +370,7 @@ library Positions {
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal returns (
+    ) external returns (
             CoverPoolStructs.GlobalState memory,
             CoverPoolStructs.PoolState memory,
             int24
@@ -441,11 +453,16 @@ library Positions {
         }
         // clear position values
         if (cache.position.liquidity == 0) {
-            cache.position.owner = address(0);
             cache.position.lower = 0;
             cache.position.upper = 0;
             cache.position.accumEpochLast = 0;
             cache.position.claimPriceLast = 0;
+            IPositionERC1155(constants.poolToken).burn(
+                msg.sender,
+                params.positionId,
+                1, 
+                constants
+            );
         }
         // update position bounds
         if (params.zeroForOne) {
@@ -470,7 +487,7 @@ library Positions {
             cache.finalDeltas.amountOutDeltaMax,
             cache.position.claimPriceLast
         );
-        // return cached position in memory and transfer out
+
         return (state, pool, params.claim);
     }
 
