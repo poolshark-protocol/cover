@@ -315,6 +315,7 @@ describe('CoverPool Tests', function () {
             balanceInDecrease: BigNumber.from('99620704132805394769'),
             balanceOutIncrease: BigNumber.from('99999999999999999999'),
             revertMessage: '',
+            exactIn: true
         })
 
         await validateBurn({

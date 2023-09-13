@@ -68,7 +68,7 @@ library Ticks {
                     cache.output = ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
                 } else {
                     // input needs to be adjusted based on boost
-                    cache.input = ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true);
+                    cache.input = ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true) * (1e18 - cache.auctionBoost) / 1e18;
                     cache.output = cache.amountLeft;
                 }
                 cache.price = newPrice;
@@ -79,7 +79,7 @@ library Ticks {
                     cache.output = ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
                 } else {
                     // input needs to be adjusted based on boost
-                    cache.input = ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true);
+                    cache.input = ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true) * (1e18 - cache.auctionBoost) / 1e18;
                     cache.output = amountMax;
                 }
                 cache.price = nextPrice;
@@ -107,7 +107,7 @@ library Ticks {
                     cache.output = ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
                 } else {
                     // input needs to be adjusted based on boost
-                    cache.input = ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true);
+                    cache.input = ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true) * (1e18 - cache.auctionBoost) / 1e18;
                     cache.output = cache.amountLeft;
                 }
                 cache.price = newPrice;
@@ -118,7 +118,7 @@ library Ticks {
                     cache.output = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
                 } else {
                     // input needs to be adjusted based on boost
-                    cache.input = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true);
+                    cache.input = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true) * (1e18 - cache.auctionBoost) / 1e18;
                     cache.output = amountMax;
                 }
                 cache.price = nextPrice;

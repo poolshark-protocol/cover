@@ -275,7 +275,7 @@ export async function validateSwap(params: ValidateSwapParams) {
     const quote = await hre.props.coverPool.quote({
         priceLimit: priceLimit,
         amount: amountIn,
-        exactIn: true,
+        exactIn: exactIn,
         zeroForOne: zeroForOne
     })
 
