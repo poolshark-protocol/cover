@@ -28,7 +28,7 @@ library Ticks {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.SwapCache memory cache,
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal view returns (CoverPoolStructs.SwapCache memory) {
+    ) internal pure returns (CoverPoolStructs.SwapCache memory) {
         if ((zeroForOne ? priceLimit >= cache.price
                         : priceLimit <= cache.price) ||
             (cache.liquidity == 0))

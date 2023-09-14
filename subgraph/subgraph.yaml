@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0xD1f805fB8206FFE1B76E16c002a34739BE66f977'
+          address: '0x479C2Df7eD63ea26146Ac2092C55047C3928A5A6'
           abi: CoverPoolFactory
-          startBlock: 36320900
+          startBlock: 41521100
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x00F68a260Eb15Bb9DF3e0B9035154549ca410688'
+          address: '0x74db8d63FD2e6FAeA61a7a53bFB5Ab319d17f220'
           abi: CoverPoolManager
-          startBlock: 36320900
+          startBlock: 41521100
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -63,6 +63,7 @@ dataSources:
               - event: FactoryChanged(indexed address,indexed address)
                 handler: handleFactoryChanged
 templates:
+    # Cover Pool Events
     - kind: ethereum/contract
       name: CoverPoolTemplate
       network: arbitrum-goerli
@@ -107,7 +108,7 @@ templates:
                 handler: handleStashDeltasAccumulated
               - event: StashDeltasCleared(int24,bool)
                 handler: handleStashDeltasCleared
-                    # ERC-1155 events
+    # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template
       network: arbitrum-goerli

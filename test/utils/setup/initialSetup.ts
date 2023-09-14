@@ -61,13 +61,14 @@ export class InitialSetup {
         //   ).contractAddress
         //   hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         //   hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
-        // await this.deployAssist.deployContractWithRetry(
-        //     network,
-        //     // @ts-ignore
-        //     Token20Batcher__factory,
-        //     'token20Batcher',
-        //     []
-        // )
+        
+        await this.deployAssist.deployContractWithRetry(
+            network,
+            // @ts-ignore
+            Token20Batcher__factory,
+            'token20Batcher',
+            []
+        )
 
         await this.deployAssist.deployContractWithRetry(
             network,
@@ -329,8 +330,8 @@ export class InitialSetup {
             PoolsharkRouter__factory,
             'poolRouter',
             [
-              hre.props.coverPoolImpl.address,
-              hre.props.coverPoolFactory.address //TODO: needs to be coverPoolFactory
+              '0xbd6d010bcecc7440a72889546411e0edbb333ea2',  // limitPoolFactory
+              hre.props.coverPoolFactory.address
             ]
         )
 
