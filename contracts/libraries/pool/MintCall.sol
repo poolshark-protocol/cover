@@ -32,7 +32,7 @@ library MintCall {
         CoverPoolStructs.PoolState storage pool1,
         ICoverPool.MintParams memory params,
         CoverPoolStructs.MintCache memory cache
-    ) external returns (CoverPoolStructs.MintCache memory) {
+    ) internal returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
             if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
                 // check for balance held

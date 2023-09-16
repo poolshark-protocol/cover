@@ -36,7 +36,7 @@ library BurnCall {
         CoverPoolStructs.PoolState storage pool1,
         ICoverPool.BurnParams memory params,
         CoverPoolStructs.BurnCache memory cache
-    ) external {
+    ) internal {
         cache.position = positions[params.positionId];
         if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
             // check for balance held

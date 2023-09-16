@@ -266,7 +266,7 @@ library Positions {
         CoverPoolStructs.GlobalState memory state,
         CoverPoolStructs.RemoveParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external returns (uint128, CoverPoolStructs.GlobalState memory) {
+    ) internal returns (uint128, CoverPoolStructs.GlobalState memory) {
         // initialize cache
         CoverPoolStructs.CoverPositionCache memory cache = CoverPoolStructs.CoverPositionCache({
             position: positions[params.positionId],
@@ -383,7 +383,7 @@ library Positions {
         CoverPoolStructs.PoolState memory pool,
         CoverPoolStructs.UpdateParams memory params,
         PoolsharkStructs.CoverImmutables memory constants
-    ) external returns (
+    ) internal returns (
             CoverPoolStructs.GlobalState memory,
             CoverPoolStructs.PoolState memory,
             int24
