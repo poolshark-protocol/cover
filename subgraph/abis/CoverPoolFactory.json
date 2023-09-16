@@ -11,12 +11,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "twapSource",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "inputPool",
         "type": "address"
       },
@@ -34,9 +28,9 @@
       },
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "poolImpl",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "poolType",
+        "type": "bytes32"
       },
       {
         "indexed": false,

@@ -6,6 +6,7 @@ import '../../interfaces/cover/ICoverPool.sol';
 import '../Ticks.sol';
 
 library QuoteCall {
+    uint8 private constant _ENTERED = 2;
 
     function perform(
         ICoverPool.QuoteParams memory params,
@@ -15,6 +16,8 @@ library QuoteCall {
         int256,
         uint256
     ) {
+        if (cache.state.unlocked == _ENTERED)
+            require(false, 'ReentrancyGuardReadOnlyReentrantCall()');
         {
             CoverPoolStructs.PoolState memory pool = params.zeroForOne ? cache.pool1 : cache.pool0;
             cache = CoverPoolStructs.SwapCache({
@@ -34,7 +37,7 @@ library QuoteCall {
                 amountInDelta: 0,
                 amount0Delta: 0,
                 amount1Delta: 0,
-                exactIn: true
+                exactIn: params.exactIn
             });
         }
         // call quote

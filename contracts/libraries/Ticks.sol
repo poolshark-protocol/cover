@@ -41,7 +41,9 @@ library Ticks {
         cache.auctionBoost = ((cache.auctionDepth <= constants.auctionLength) ? cache.auctionDepth
                                                                               : constants.auctionLength
                              ) * 1e14 / constants.auctionLength * uint16(constants.tickSpread);
-        cache.amountBoosted = cache.amountLeft * (1e18 + cache.auctionBoost) / 1e18;
+        cache.amountBoosted = cache.amountLeft;
+        if (cache.exactIn)
+            cache.amountBoosted = cache.amountLeft * (1e18 + cache.auctionBoost) / 1e18;
         if (zeroForOne) {
             // trade token 0 (x) for token 1 (y)
             // price decreases
@@ -49,25 +51,40 @@ library Ticks {
                 // stop at price limit
                 nextPrice = priceLimit;
             }
+            // max input or output that we can get
             uint256 amountMax = cache.exactIn ? ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true)
                                               : ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
             // check if all input is used
             if (cache.amountBoosted <= amountMax) {
                 // calculate price after swap
+                uint256 newPrice = ConstantProduct.getNewPrice(
+                    cache.price,
+                    cache.liquidity,
+                    cache.amountBoosted,
+                    zeroForOne,
+                    cache.exactIn
+                );
                 if (cache.exactIn) {
-                    uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.amountBoosted, zeroForOne, cache.exactIn);
                     cache.input = cache.amountLeft;
-                    cache.output += ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
-                    cache.price = newPrice;
-                    cache.amountLeft = 0;
+                    cache.output = ConstantProduct.getDy(cache.liquidity, newPrice, cache.price, false);
+                } else {
+                    // input needs to be adjusted based on boost
+                    cache.input = ConstantProduct.getDx(cache.liquidity, newPrice, uint256(cache.price), true) * (1e18 - cache.auctionBoost) / 1e18;
+                    cache.output = cache.amountLeft;
                 }
+                cache.price = newPrice;
+                cache.amountLeft = 0;
             } else if (amountMax > 0) {
                 if (cache.exactIn) {
                     cache.input = amountMax * (1e18 - cache.auctionBoost) / 1e18; /// @dev - convert back to input amount
                     cache.output = ConstantProduct.getDy(cache.liquidity, nextPrice, cache.price, false);
-                    cache.price = nextPrice;
-                    cache.amountLeft -= cache.input;
+                } else {
+                    // input needs to be adjusted based on boost
+                    cache.input = ConstantProduct.getDx(cache.liquidity, nextPrice, cache.price, true) * (1e18 - cache.auctionBoost) / 1e18;
+                    cache.output = amountMax;
                 }
+                cache.price = nextPrice;
+                cache.amountLeft -= cache.exactIn ? cache.input : cache.output;
             }
         } else {
             // price increases
@@ -79,20 +96,34 @@ library Ticks {
                                               : ConstantProduct.getDx(cache.liquidity, uint256(cache.price), nextPrice, false);
             if (cache.amountBoosted <= amountMax) {
                 // calculate price after swap
+                uint256 newPrice = ConstantProduct.getNewPrice(
+                    cache.price,
+                    cache.liquidity,
+                    cache.amountBoosted,
+                    zeroForOne,
+                    cache.exactIn
+                );
                 if (cache.exactIn) {
-                    uint256 newPrice = ConstantProduct.getNewPrice(cache.price, cache.liquidity, cache.amountBoosted, zeroForOne, cache.exactIn);
                     cache.input = cache.amountLeft;
-                    cache.output += ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
-                    cache.price = newPrice;
-                    cache.amountLeft = 0;
+                    cache.output = ConstantProduct.getDx(cache.liquidity, cache.price, newPrice, false);
+                } else {
+                    // input needs to be adjusted based on boost
+                    cache.input = ConstantProduct.getDy(cache.liquidity, cache.price, newPrice, true) * (1e18 - cache.auctionBoost) / 1e18;
+                    cache.output = cache.amountLeft;
                 }
+                cache.price = newPrice;
+                cache.amountLeft = 0;
             } else if (amountMax > 0) {
                 if (cache.exactIn) {
                     cache.input = amountMax * (1e18 - cache.auctionBoost) / 1e18; 
                     cache.output = ConstantProduct.getDx(cache.liquidity, cache.price, nextPrice, false);
-                    cache.price = nextPrice;
-                    cache.amountLeft -= cache.input;
+                } else {
+                    // input needs to be adjusted based on boost
+                    cache.input = ConstantProduct.getDy(cache.liquidity, cache.price, nextPrice, true) * (1e18 - cache.auctionBoost) / 1e18;
+                    cache.output = amountMax;
                 }
+                cache.price = nextPrice;
+                cache.amountLeft -= cache.exactIn ? cache.input : cache.output;
             }
         }
         cache.amountInDelta = cache.input;
@@ -103,9 +134,9 @@ library Ticks {
         CoverPoolStructs.TickMap storage tickMap,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1,
-        CoverPoolStructs.GlobalState memory state,
+        CoverPoolStructs.GlobalState storage state,
         PoolsharkStructs.CoverImmutables memory constants 
-    ) internal returns (CoverPoolStructs.GlobalState memory) {
+    ) internal {
         if (state.unlocked == 0) {
             (state.unlocked, state.latestTick) = constants.source.initialize(constants);
             if (state.unlocked == 1) {
@@ -144,7 +175,6 @@ library Ticks {
                 );
             }
         }
-        return state;
     }
 
     function insert(

@@ -10,8 +10,9 @@ interface ICoverPoolManager is CoverPoolStructs {
     function poolTypes(
         bytes32 poolType
     ) external view returns (
-        address implAddress,
-        address sourceAddress
+        address poolImpl,
+        address tokenImpl,
+        address twapImpl
     );
     function volatilityTiers(
         bytes32 implName,

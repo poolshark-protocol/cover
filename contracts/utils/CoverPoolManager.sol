@@ -17,8 +17,9 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
     // sourceName => sourceAddress
-    mapping(bytes32 => address) internal _twapSources;
     mapping(bytes32 => address) internal _poolTypes;
+    mapping(bytes32 => address) internal _poolTokens;
+    mapping(bytes32 => address) internal _twapSources;
     // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
     mapping(bytes32 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
@@ -78,16 +79,18 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
 
     function enablePoolType(
         bytes32 poolType,
-        address implAddress,
-        address sourceAddress
+        address poolImpl,
+        address tokenImpl,
+        address twapImpl
     ) external onlyOwner {
-        if (poolType == bytes32("")) require (false, 'TwapSourceNameInvalid()');
-        if (implAddress == address(0) || sourceAddress == address(0)) require (false, 'TwapSourceAddressZero()');
+        if (poolType[0] == bytes32("")) require (false, 'TwapSourceNameInvalid()');
+        if (poolImpl == address(0) || twapImpl == address(0)) require (false, 'TwapSourceAddressZero()');
         if (_twapSources[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
         if (_poolTypes[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
-        _poolTypes[poolType] = implAddress;
-        _twapSources[poolType] = sourceAddress;
-        emit PoolTypeEnabled(poolType, implAddress, sourceAddress, ITwapSource(sourceAddress).factory());
+        _poolTypes[poolType] = poolImpl;
+        _poolTokens[poolType] = tokenImpl;
+        _twapSources[poolType] = twapImpl;
+        emit PoolTypeEnabled(poolType, poolImpl, twapImpl, ITwapSource(twapImpl).factory());
     }
 
     function enableVolatilityTier(
@@ -107,7 +110,6 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             require (false, 'ProtocolFeeCeilingExceeded()');
         }
         address sourceAddress = _twapSources[poolType];
-        address implAddress = _poolTypes[poolType];
         {
             // check fee tier exists
             if (sourceAddress == address(0)) require (false, 'TwapSourceNotFound()');
@@ -127,7 +129,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         _volatilityTiers[poolType][feeTier][tickSpread][twapLength] = volTier;
 
         emit VolatilityTierEnabled(
-            implAddress,
+            poolType,
             feeTier,
             tickSpread,
             twapLength,
@@ -208,10 +210,15 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     function poolTypes(
         bytes32 poolType
     ) external view returns (
-        address implAddress,
-        address sourceAddress
+        address poolImpl,
+        address tokenImpl,
+        address twapImpl
     ) {
-        return (_poolTypes[poolType], _twapSources[poolType]);
+        return (
+            _poolTypes[poolType],
+            _poolTokens[poolType],
+            _twapSources[poolType]
+        );
     }
 
     function volatilityTiers(

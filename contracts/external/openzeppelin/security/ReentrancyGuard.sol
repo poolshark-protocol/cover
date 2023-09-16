@@ -3,7 +3,10 @@
 
 pragma solidity 0.8.13;
 
+import '../../../base/storage/CoverPoolStorage.sol';
+import '../../../interfaces/cover/ICoverPool.sol';
 import '../../../interfaces/structs/CoverPoolStructs.sol';
+import '../../../libraries/Ticks.sol';
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.
@@ -21,7 +24,7 @@ import '../../../interfaces/structs/CoverPoolStructs.sol';
  * to protect against it, check out our blog post
  * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].
  */
-abstract contract ReentrancyGuard is CoverPoolStructs {
+abstract contract ReentrancyGuard is CoverPoolStructs, CoverPoolStorage {
     // Booleans are more expensive than uint256 or any type that takes up a full
     // word because each write operation emits an extra SLOAD to first read the
     // slot's contents, replace the bits taken up by the boolean, and then write
@@ -33,6 +36,7 @@ abstract contract ReentrancyGuard is CoverPoolStructs {
     // amount. Since refunds are capped to a percentage of the total
     // transaction's gas, it is best to keep them low in cases like this one, to
     // increase the likelihood of the full refund coming into effect.
+    uint8 private constant _UNINITIALIZED = 0;
     uint8 private constant _NOT_ENTERED = 1;
     uint8 private constant _ENTERED = 2;
 
@@ -67,9 +71,16 @@ abstract contract ReentrancyGuard is CoverPoolStructs {
     function _nonReentrantBefore(GlobalState storage state) private {
         // On the first call to nonReentrant, _status will be _NOT_ENTERED
         if (state.unlocked == _ENTERED) {
+            // pool has been reentered
             revert ReentrancyGuardReentrantCall();
+        } else if (state.unlocked == _UNINITIALIZED) {
+            // pool has not been initialized
+            Ticks.initialize(tickMap, pool0, pool1, globalState, ICoverPool(address(this)).immutables());
+            if (state.unlocked == 0) revert WaitUntilTwapLengthSufficient();
+        } else if (state.unlocked != _NOT_ENTERED) {
+            // unexpected state
+            revert ReentrancyGuardInvalidState();
         }
-
         // Any calls to nonReentrant after this point will fail
         state.unlocked = _ENTERED;
     }

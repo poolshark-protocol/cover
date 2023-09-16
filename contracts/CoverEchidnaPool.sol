@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import './CoverPoolFactory.sol';
 import './utils/CoverPoolManager.sol';
 import './test/Token20.sol';
+import './utils/PositionERC1155.sol';
 import './interfaces/structs/CoverPoolStructs.sol';
 import './libraries/math/ConstantProduct.sol';
 import './libraries/pool/MintCall.sol';
@@ -35,7 +36,8 @@ contract CoverEchidnaPool {
     int16 private constant MAX_TICK_JUMP = 200; // i.e. 10 * tickSpread
     int24 private constant MAX_TICK = 887260;
     int24 private constant MIN_TICK = -MAX_TICK;
-    address private immutable implementation;
+    address private immutable poolImpl;
+    address private immutable tokenImpl;
     address private immutable poolMock;
     address private immutable poolFactoryMock;
     address private immutable twapSource;
@@ -131,7 +133,8 @@ contract CoverEchidnaPool {
     constructor() {
         manager = new CoverPoolManager();
         factory = new CoverPoolFactory(address(manager));
-        implementation = address(new CoverPool(address(factory)));
+        poolImpl = address(new CoverPool(address(factory)));
+        tokenImpl = address(new PositionERC1155(address(factory)));
         tokenIn = new Token20("IN", "IN", 18);
         tokenOut = new Token20("OUT", "OUT", 18);
         (token0, token1) = address(tokenIn) < address(tokenOut) ? (tokenIn, tokenOut) 
@@ -156,7 +159,7 @@ contract CoverEchidnaPool {
         });
         
         // add pool type
-        manager.enablePoolType(bytes32(uint256(0x1)), address(implementation), twapSource);
+        manager.enablePoolType(bytes32(uint256(0x1)), poolImpl, tokenImpl, twapSource);
         manager.enableVolatilityTier(bytes32(uint256(0x1)), 500, 20, 5, volTier);
         ICoverPoolFactory.CoverPoolParams memory params;
         params.poolType = bytes32(uint256(0x1));
@@ -167,7 +170,8 @@ contract CoverEchidnaPool {
         params.twapLength = 5;
 
         // launch pool
-        address poolAddr = factory.createCoverPool(params);
+        address poolAddr;
+        (poolAddr,) = factory.createCoverPool(params);
         pool = CoverPool(poolAddr);
     }
 

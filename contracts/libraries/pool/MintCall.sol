@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../Positions.sol';
+import '../utils/PositionTokens.sol';
 import '../utils/Collect.sol';
 
 library MintCall {
@@ -22,18 +23,22 @@ library MintCall {
     error SimulateMint(int24 lower, int24 upper, bool positionCreated);
 
     function perform(
-        ICoverPool.MintParams memory params,
-        CoverPoolStructs.MintCache memory cache,
-        CoverPoolStructs.TickMap storage tickMap,
-        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         mapping(uint256 => CoverPoolStructs.CoverPosition)
-            storage positions
-    ) internal returns (CoverPoolStructs.MintCache memory) {
+            storage positions,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState storage globalState,
+        CoverPoolStructs.PoolState storage pool0,
+        CoverPoolStructs.PoolState storage pool1,
+        ICoverPool.MintParams memory params,
+        CoverPoolStructs.MintCache memory cache
+    ) external returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
+            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+                // check for balance held
+                require(false, 'PositionNotFound()');
             // load existing position
             cache.position = positions[params.positionId];
-            if (cache.position.owner != msg.sender)
-                require(false, 'PositionNotFound()');
         }
         // resize position
         (params, cache.liquidityMinted) = Positions.resize(
@@ -46,7 +51,6 @@ library MintCall {
                 params.lower != cache.position.lower ||     // lower mismatch
                 params.upper != cache.position.upper) {     // upper mismatch
             CoverPoolStructs.CoverPosition memory newPosition;
-            newPosition.owner = params.to;
             newPosition.lower = params.lower;
             newPosition.upper = params.upper;
             // use new position in cache
@@ -54,12 +58,13 @@ library MintCall {
             params.positionId = cache.state.positionIdNext;
             cache.state.positionIdNext += 1;
         }
+        // save global state to protect against reentrancy
+        save(cache, globalState, pool0, pool1);
         // params.amount must be > 0 here
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,
                                  params.amount
                                 );
-
         (cache.state, cache.position) = Positions.add(
             cache.position,
             ticks,
@@ -76,6 +81,8 @@ library MintCall {
             ),
             cache.constants
         );
+        positions[params.positionId] = cache.position;
+        save(cache, globalState, pool0, pool1);
         Collect.mint(
             cache,
             CoverPoolStructs.CollectParams(
@@ -88,25 +95,28 @@ library MintCall {
                 params.zeroForOne
             )
         );
-        positions[params.positionId] = cache.position;
         return cache;
     }
 
     // Echidna funcs
     function getResizedTicks(
-        ICoverPool.MintParams memory params,
-        CoverPoolStructs.MintCache memory cache,
-        CoverPoolStructs.TickMap storage tickMap,
-        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         mapping(uint256 => CoverPoolStructs.CoverPosition)
-            storage positions
+            storage positions,
+        mapping(int24 => CoverPoolStructs.Tick) storage ticks,
+        CoverPoolStructs.TickMap storage tickMap,
+        CoverPoolStructs.GlobalState storage globalState,
+        CoverPoolStructs.PoolState storage pool0,
+        CoverPoolStructs.PoolState storage pool1,
+        ICoverPool.MintParams memory params,
+        CoverPoolStructs.MintCache memory cache
     ) external {
         bool positionCreated = false;
         if (params.positionId > 0) {
+            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
+                // check for balance held
+                require(false, 'PositionNotFound()');
             // load existing position
             cache.position = positions[params.positionId];
-            if (cache.position.owner != msg.sender)
-                require(false, 'PositionNotFound()');
         }
         // assume cache.state is already set
 
@@ -122,7 +132,6 @@ library MintCall {
                 params.lower != cache.position.lower ||     // lower mismatch
                 params.upper != cache.position.upper) {     // upper mismatch
             CoverPoolStructs.CoverPosition memory newPosition;
-            newPosition.owner = params.to;
             newPosition.lower = params.lower;
             newPosition.upper = params.upper;
             // use new position in cache
@@ -130,7 +139,8 @@ library MintCall {
             params.positionId = cache.state.positionIdNext;
             cache.state.positionIdNext += 1;
         }
-
+        // save global state to protect against reentrancy
+        save(cache, globalState, pool0, pool1);
         // transfer in token amount
         SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
                                                    : cache.constants.token1,
@@ -153,7 +163,8 @@ library MintCall {
             ),
             cache.constants
         );
-        positionCreated = true;
+        positions[params.positionId] = cache.position;
+        save(cache, globalState, pool0, pool1);
         Collect.mint(
             cache,
             CoverPoolStructs.CollectParams(
@@ -168,5 +179,36 @@ library MintCall {
         );
 
         revert SimulateMint(params.lower, params.upper, positionCreated);
+    }
+
+    function save(
+        CoverPoolStructs.MintCache memory cache,
+        CoverPoolStructs.GlobalState storage globalState,
+        CoverPoolStructs.PoolState storage pool0,
+        CoverPoolStructs.PoolState storage pool1
+    ) internal {
+        // globalState
+        globalState.protocolFees = cache.state.protocolFees;
+        globalState.latestPrice = cache.state.latestPrice;
+        globalState.liquidityGlobal = cache.state.liquidityGlobal;
+        globalState.lastTime = cache.state.lastTime;
+        globalState.auctionStart = cache.state.auctionStart;
+        globalState.accumEpoch = cache.state.accumEpoch;
+        globalState.positionIdNext = cache.state.positionIdNext;
+        globalState.latestTick = cache.state.latestTick;
+        
+        // pool0
+        pool0.price = cache.pool0.price;
+        pool0.liquidity = cache.pool0.liquidity;
+        pool0.amountInDelta = cache.pool0.amountInDelta;
+        pool0.amountInDeltaMaxClaimed = cache.pool0.amountInDeltaMaxClaimed;
+        pool0.amountOutDeltaMaxClaimed = cache.pool0.amountOutDeltaMaxClaimed;
+
+        // pool1
+        pool1.price = cache.pool1.price;
+        pool1.liquidity = cache.pool1.liquidity;
+        pool1.amountInDelta = cache.pool1.amountInDelta;
+        pool1.amountInDeltaMaxClaimed = cache.pool1.amountInDeltaMaxClaimed;
+        pool1.amountOutDeltaMaxClaimed = cache.pool1.amountOutDeltaMaxClaimed;
     }
 }

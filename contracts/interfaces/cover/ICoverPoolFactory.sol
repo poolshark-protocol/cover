@@ -20,7 +20,10 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
      */
     function createCoverPool(
         CoverPoolParams memory params
-    ) external virtual returns (address pool);
+    ) external virtual returns (
+        address pool,
+        address poolToken
+    );
 
     /**
      * @notice Fetches an existing CoverPool.
@@ -28,5 +31,8 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
      */
     function getCoverPool(
         CoverPoolParams memory params
-    ) external view virtual returns (address pool);
+    ) external view virtual returns (
+        address pool,
+        address poolToken
+    );
 }

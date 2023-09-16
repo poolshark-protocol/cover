@@ -8,9 +8,15 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
+<<<<<<< HEAD
           address: '0x71621f34a927ff263Bf53787F74Ac7afD8D4F73D'
           abi: CoverPoolFactory
           startBlock: 37370657
+=======
+          address: '0x479C2Df7eD63ea26146Ac2092C55047C3928A5A6'
+          abi: CoverPoolFactory
+          startBlock: 41521100
+>>>>>>> master
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -31,15 +37,21 @@ dataSources:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: PoolCreated(address,indexed address,indexed address,address,address,indexed address,uint16,int16,uint16)
+              - event: PoolCreated(address,indexed address,address,address,indexed bytes32,uint16,int16,uint16)
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
+<<<<<<< HEAD
           address: '0x370156Cc3B867bC56660075c18E0b05fc03682F4'
           abi: CoverPoolManager
           startBlock: 37370647
+=======
+          address: '0x74db8d63FD2e6FAeA61a7a53bFB5Ab319d17f220'
+          abi: CoverPoolManager
+          startBlock: 41521100
+>>>>>>> master
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -52,7 +64,7 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
-              - event: VolatilityTierEnabled(address,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
+              - event: VolatilityTierEnabled(bytes32,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
                 handler: handleFeeToTransfer
@@ -63,6 +75,7 @@ dataSources:
               - event: FactoryChanged(indexed address,indexed address)
                 handler: handleFactoryChanged
 templates:
+    # Cover Pool Events
     - kind: ethereum/contract
       name: CoverPoolTemplate
       network: arbitrum-goerli
@@ -107,5 +120,28 @@ templates:
                 handler: handleStashDeltasAccumulated
               - event: StashDeltasCleared(int24,bool)
                 handler: handleStashDeltasCleared
+    # ERC-1155 events
+    - kind: ethereum/contract
+      name: PositionERC1155Template
+      network: arbitrum-goerli
+      source:
+          abi: PositionERC1155
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/coverpool.ts
+          entities:
+              - Token
+              - CoverPool
+              - Position
+          abis:
+              - name: PositionERC1155
+                file: ./abis/PositionERC1155.json
+          eventHandlers:
+              - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+                handler: handleTransferSingle
+              - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+                handler: handleTransferBatch
 
 

@@ -146,11 +146,11 @@ class LoadVolatilityTierRet {
     entity: VolatilityTier
     exists: boolean
 }
-export function safeLoadVolatilityTier(poolImpl: string, feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt): LoadVolatilityTierRet {
+export function safeLoadVolatilityTier(poolType: string, feeTier: BigInt, tickSpread: BigInt, twapLength: BigInt): LoadVolatilityTierRet {
     let exists = true
 
     let volatilityTierId = 
-                            poolImpl
+                            poolType
                             .concat('-')                        
                             .concat(feeTier.toString())
                             .concat('-')
