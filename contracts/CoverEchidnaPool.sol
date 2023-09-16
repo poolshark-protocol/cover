@@ -44,6 +44,7 @@ contract CoverEchidnaPool {
     CoverPoolFactory private immutable factory;
     CoverPoolManager private immutable manager;
     CoverPool private immutable pool;
+    PositionERC1155 private immutable token;
     Token20 private immutable token0;
     Token20 private immutable token1;
     Token20 private immutable tokenIn;
@@ -170,9 +171,10 @@ contract CoverEchidnaPool {
         params.twapLength = 5;
 
         // launch pool
-        address poolAddr;
-        (poolAddr,) = factory.createCoverPool(params);
+        address poolAddr; address poolToken;
+        (poolAddr, poolToken) = factory.createCoverPool(params);
         pool = CoverPool(poolAddr);
+        token = PositionERC1155(poolToken);
     }
 
     function mint(uint128 amount, bool zeroForOne, int24 lower, int24 upper) public tickPreconditions(lower, upper) {

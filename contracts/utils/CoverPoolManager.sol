@@ -83,7 +83,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address tokenImpl,
         address twapImpl
     ) external onlyOwner {
-        if (poolType[0] == bytes32("")) require (false, 'TwapSourceNameInvalid()');
+        if (poolType == bytes32("")) require (false, 'TwapSourceNameInvalid()');
         if (poolImpl == address(0) || twapImpl == address(0)) require (false, 'TwapSourceAddressZero()');
         if (_twapSources[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
         if (_poolTypes[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
