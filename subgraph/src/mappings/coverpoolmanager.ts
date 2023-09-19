@@ -17,6 +17,7 @@ export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void 
     let manager        = loadManager.entity
     let volatilityTier = loadVolatilityTier.entity
 
+    volatilityTier.poolType = poolTypeParam
     volatilityTier.feeAmount  = feeTierParam
     volatilityTier.tickSpread = tickSpreadParam
     volatilityTier.twapLength = twapLengthParam

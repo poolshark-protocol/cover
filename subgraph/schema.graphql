@@ -27,6 +27,7 @@ type CoverPoolManager @entity {
 type VolatilityTier @entity {
     # fee amount + tick spread + twap length + auction length
     id: ID!
+    poolType: String!
     feeAmount: BigInt!
     tickSpread: BigInt!
     twapLength: BigInt!
