@@ -50,6 +50,12 @@ interface ICoverPool is CoverPoolStructs {
          * @notice False if depositing token1, the second token address in lexographical order 
          */
         bool zeroForOne;
+
+        /**
+         * @custom:field callbackData
+         * @notice callback data which gets passed back to msg.sender at the end of a `mint` call
+         */
+        bytes callbackData;
     }
 
     /**

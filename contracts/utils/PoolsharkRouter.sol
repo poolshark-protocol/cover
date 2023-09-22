@@ -2,10 +2,12 @@
 pragma solidity 0.8.13;
 
 import '../interfaces/IPool.sol';
+import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/cover/ICoverPool.sol';
-import '../interfaces/callbacks/ILimitPoolSwapCallback.sol';
-import '../interfaces/callbacks/ICoverPoolSwapCallback.sol';
+import '../interfaces/limit/ILimitPoolFactory.sol';
+import '../interfaces/callbacks/ILimitPoolCallback.sol';
+import '../interfaces/callbacks/ICoverPoolCallback.sol';
 import '../libraries/utils/SafeTransfers.sol';
 import '../libraries/utils/SafeCast.sol';
 import '../interfaces/structs/PoolsharkStructs.sol';
@@ -13,7 +15,9 @@ import '../external/solady/LibClone.sol';
 
 contract PoolsharkRouter is
     PoolsharkStructs,
+    ILimitPoolMintCallback,
     ILimitPoolSwapCallback,
+    ICoverPoolMintCallback,
     ICoverPoolSwapCallback
 {
     using SafeCast for uint256;
@@ -27,6 +31,10 @@ contract PoolsharkRouter is
         address limitPoolFactory,
         address coverPoolFactory
     );
+
+    struct MintCallbackData {
+        address sender;
+    }
 
     struct SwapCallbackData {
         address sender;
@@ -45,6 +53,29 @@ contract PoolsharkRouter is
         );
     }
 
+    /// @inheritdoc ILimitPoolMintCallback
+    function limitPoolMintCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
+
+        // validate sender is a canonical limit pool
+        canonicalLimitPoolsOnly(constants);
+
+        // decode original sender
+        MintCallbackData memory _data = abi.decode(data, (MintCallbackData));
+        
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
     /// @inheritdoc ILimitPoolSwapCallback
     function limitPoolSwapCallback(
         int256 amount0Delta,
@@ -53,24 +84,8 @@ contract PoolsharkRouter is
     ) external override {
         PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
 
-        // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-            constants.poolImpl,
-            constants.token0,
-            constants.token1,
-            constants.swapFee
-        ));
-
-        // compute address
-        address predictedAddress = LibClone.predictDeterministicAddress(
-            constants.poolImpl,
-            encodeLimit(constants),
-            key,
-            limitPoolFactory
-        );
-
-        // revert on sender mismatch
-        if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
+        // validate sender is a canonical limit pool
+        canonicalLimitPoolsOnly(constants);
 
         // decode original sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
@@ -83,6 +98,29 @@ contract PoolsharkRouter is
         }
     }
 
+    /// @inheritdoc ICoverPoolMintCallback
+    function coverPoolMintCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
+
+        // validate sender is a canonical cover pool
+        canonicalCoverPoolsOnly(constants);
+
+        // decode original sender
+        MintCallbackData memory _data = abi.decode(data, (MintCallbackData));
+
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        } else {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    /// @inheritdoc ICoverPoolSwapCallback
     function coverPoolSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
@@ -90,26 +128,8 @@ contract PoolsharkRouter is
     ) external override {
         PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
 
-        // generate key for pool
-        bytes32 key = keccak256(abi.encode(
-            constants.token0,
-            constants.token1,
-            constants.source,
-            constants.inputPool,
-            constants.tickSpread,
-            constants.twapLength
-        ));
-
-        // compute address
-        address predictedAddress = LibClone.predictDeterministicAddress(
-            constants.poolImpl,
-            encodeCover(constants),
-            key,
-            coverPoolFactory
-        );
-
-        // revert on sender mismatch
-        if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
+        // validate sender is a canonical cover pool
+        canonicalCoverPoolsOnly(constants);
 
         // decode original sender
         SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
@@ -119,6 +139,48 @@ contract PoolsharkRouter is
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
         } else {
             SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    function multiMintLimit(
+        address[] memory pools,
+        MintLimitParams[] memory params
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            ILimitPool(pools[i]).mintLimit(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function multiMintRange(
+        address[] memory pools,
+        MintRangeParams[] memory params
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            IRangePool(pools[i]).mintRange(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function multiMintCover(
+        address[] memory pools,
+        ICoverPool.MintParams[] memory params
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            ICoverPool(pools[i]).mint(params[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -163,20 +225,6 @@ contract PoolsharkRouter is
         }
     }
 
-    function multiCall(
-        address[] memory pools,
-        SwapParams[] memory params 
-    ) external {
-        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
-        for (uint i = 0; i < pools.length;) {
-            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
-            ICoverPool(pools[i]).swap(params[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function multiSwapSplit(
         address[] memory pools,
         SwapParams[] memory params 
@@ -218,6 +266,20 @@ contract PoolsharkRouter is
         }
     }
 
+    function multiCall(
+        address[] memory pools,
+        SwapParams[] memory params 
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
+            ICoverPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function sortQuoteResults(
         QuoteParams[] memory params,
         QuoteResults[] memory results
@@ -247,7 +309,10 @@ contract PoolsharkRouter is
                     }
                     if (sortIndex != type(uint256).max) {
                         // add the sorted result
-                        sortedResults[sorted] = results[sortIndex];
+                        sortedResults[sorted].pool = results[sortIndex].pool;
+                        sortedResults[sorted].amountIn = results[sortIndex].amountIn;
+                        sortedResults[sorted].amountOut = results[sortIndex].amountOut;
+                        sortedResults[sorted].priceAfter = results[sortIndex].priceAfter;
 
                         // indicate this result was already sorted
                         results[sortIndex].priceAfter = 0;
@@ -262,6 +327,54 @@ contract PoolsharkRouter is
                     ++sorted;
                 }
             }
+    }
+
+    function canonicalLimitPoolsOnly(
+        PoolsharkStructs.LimitImmutables memory constants
+    ) private view {
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            constants.poolImpl,
+            constants.token0,
+            constants.token1,
+            constants.swapFee
+        ));
+
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            constants.poolImpl,
+            encodeLimit(constants),
+            key,
+            limitPoolFactory
+        );
+
+        // revert on sender mismatch
+        if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
+    }
+
+    function canonicalCoverPoolsOnly(
+        PoolsharkStructs.CoverImmutables memory constants
+    ) private view {
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+            constants.token0,
+            constants.token1,
+            constants.source,
+            constants.inputPool,
+            constants.tickSpread,
+            constants.twapLength
+        ));
+
+        // compute address
+        address predictedAddress = LibClone.predictDeterministicAddress(
+            constants.poolImpl,
+            encodeCover(constants),
+            key,
+            coverPoolFactory
+        );
+
+        // revert on sender mismatch
+        if (msg.sender != predictedAddress) require(false, 'InvalidCallerAddress()');
     }
 
     function encodeLimit(

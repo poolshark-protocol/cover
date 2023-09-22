@@ -2,11 +2,15 @@
 pragma solidity 0.8.13;
 
 import '../../interfaces/structs/CoverPoolStructs.sol';
+import '../../interfaces/callbacks/ICoverPoolCallback.sol';
+import '../../interfaces/IERC20Minimal.sol';
 import '../Positions.sol';
 import '../utils/PositionTokens.sol';
 import '../utils/Collect.sol';
+import 'hardhat/console.sol';
 
 library MintCall {
+    using SafeCast for uint128;
     event Mint(
         address indexed to,
         int24 lower,
@@ -32,9 +36,6 @@ library MintCall {
         CoverPoolStructs.MintCache memory cache
     ) external returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
-            if (PositionTokens.balanceOf(cache.constants, msg.sender, params.positionId) == 0)
-                // check for balance held
-                require(false, 'PositionNotFound()');
             // load existing position
             cache.position = positions[params.positionId];
         }
@@ -59,10 +60,7 @@ library MintCall {
         // save global state to protect against reentrancy
         save(cache, globalState, pool0, pool1);
         // params.amount must be > 0 here
-        SafeTransfers.transferIn(params.zeroForOne ? cache.constants.token0 
-                                                   : cache.constants.token1,
-                                 params.amount
-                                );
+
         (cache.state, cache.position) = Positions.add(
             cache.position,
             ticks,
@@ -80,7 +78,11 @@ library MintCall {
             cache.constants
         );
         positions[params.positionId] = cache.position;
+
+        // save state for reentrancy protection
         save(cache, globalState, pool0, pool1);
+
+        // collect sync fees
         Collect.mint(
             cache,
             CoverPoolStructs.CollectParams(
@@ -93,6 +95,18 @@ library MintCall {
                 params.zeroForOne
             )
         );
+
+        // check balance and execute callback
+        uint256 balanceStart = balance(params, cache);
+        ICoverPoolMintCallback(msg.sender).coverPoolMintCallback(
+            params.zeroForOne ? -int256(uint256(params.amount)) : int256(0),
+            params.zeroForOne ? int256(0) : -int256(uint256(params.amount)),
+            params.callbackData
+        );
+
+        // check balance requirements after callback
+        if (balance(params, cache) < balanceStart + params.amount)
+            require(false, 'MintInputAmountTooLow()');
         return cache;
     }
 
@@ -125,5 +139,24 @@ library MintCall {
         pool1.amountInDelta = cache.pool1.amountInDelta;
         pool1.amountInDeltaMaxClaimed = cache.pool1.amountInDeltaMaxClaimed;
         pool1.amountOutDeltaMaxClaimed = cache.pool1.amountOutDeltaMaxClaimed;
+    }
+
+    function balance(
+        ICoverPool.MintParams memory params,
+        CoverPoolStructs.MintCache memory cache
+    ) private view returns (uint256) {
+        (
+            bool success,
+            bytes memory data
+        ) = (params.zeroForOne ? cache.constants.token0
+                               : cache.constants.token1)
+                               .staticcall(
+                                    abi.encodeWithSelector(
+                                        IERC20Minimal.balanceOf.selector,
+                                        address(this)
+                                    )
+                                );
+        require(success && data.length >= 32);
+        return abi.decode(data, (uint256));
     }
 }
