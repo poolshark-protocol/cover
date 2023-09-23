@@ -25,8 +25,6 @@ interface ICoverPool is CoverPoolStructs {
         MintCoverParams memory params
     ) external;
 
-
-
     /**
      * @notice Withdraws the input token and returns any filled and/or unfilled amounts to the 'to' address specified. 
      * - E.g. User supplies 1 WETH in the range 1500 USDC per WETH to 1400 USDC per WETH
@@ -78,8 +76,6 @@ interface ICoverPool is CoverPoolStructs {
         int256 outAmount,
         uint256 priceAfter
     );
-
-
 
     /**
      * @notice Snapshots the current state of an existing position. 

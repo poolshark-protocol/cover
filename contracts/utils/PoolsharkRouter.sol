@@ -5,6 +5,7 @@ import '../interfaces/IPool.sol';
 import '../interfaces/range/IRangePool.sol';
 import '../interfaces/limit/ILimitPool.sol';
 import '../interfaces/cover/ICoverPool.sol';
+import '../interfaces/cover/ICoverPoolFactory.sol';
 import '../interfaces/limit/ILimitPoolFactory.sol';
 import '../interfaces/callbacks/ILimitPoolCallback.sol';
 import '../interfaces/callbacks/ICoverPoolCallback.sol';
@@ -274,6 +275,81 @@ contract PoolsharkRouter is
         for (uint i = 0; i < pools.length;) {
             params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
             ICoverPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function createLimitPoolAndMint(
+        ILimitPoolFactory.LimitPoolParams memory params,
+        MintRangeParams[] memory mintRangeParams,
+        MintLimitParams[] memory mintLimitParams
+    ) external returns (
+        address pool,
+        address poolToken 
+    ) {
+        // check if pool exists
+        (
+            pool,
+            poolToken
+        ) = ILimitPoolFactory(limitPoolFactory).getLimitPool(
+            params.poolType,
+            params.tokenIn,
+            params.tokenOut,
+            params.swapFee
+        );
+        // create if pool doesn't exist
+        if (pool == address(0)) {
+            (
+                pool,
+                poolToken
+            ) = ILimitPoolFactory(limitPoolFactory).createLimitPool(
+                params
+            );
+        }
+        // mint initial range positions
+        for (uint i = 0; i < mintRangeParams.length;) {
+            IRangePool(pool).mintRange(mintRangeParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+        // mint initial limit positions
+        for (uint i = 0; i < mintLimitParams.length;) {
+            ILimitPool(pool).mintLimit(mintLimitParams[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function createCoverPoolAndMint(
+        ICoverPoolFactory.CoverPoolParams memory params,
+        MintCoverParams[] memory mintCoverParams
+    ) external returns (
+        address pool,
+        address poolToken 
+    ) {
+        // check if pool exists
+        (
+            pool,
+            poolToken
+        ) = ICoverPoolFactory(coverPoolFactory).getCoverPool(
+            params
+        );
+        // create if pool doesn't exist
+        if (pool == address(0)) {
+            (
+                pool,
+                poolToken
+            ) = ICoverPoolFactory(coverPoolFactory).createCoverPool(
+                params
+            );
+        }
+        // mint initial cover positions
+        for (uint i = 0; i < mintCoverParams.length;) {
+            ICoverPool(pool).mint(mintCoverParams[i]);
             unchecked {
                 ++i;
             }
