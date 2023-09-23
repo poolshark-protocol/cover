@@ -61,7 +61,7 @@ describe('CoverPool Tests', function () {
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(coverImmutables.genesisTime).to.be.equal(currentTime - 2)
+        expect(coverImmutables.genesisTime).to.be.equal(currentTime)
         expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 

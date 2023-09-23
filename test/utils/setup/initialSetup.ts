@@ -162,6 +162,9 @@ export class InitialSetup {
                     hre.props.uniswapV3FactoryMock.address
                 ]
             )
+            await hre.props.uniswapV3PoolMock.setObservationCardinality('10', '10')
+
+            hre.nonce += 1;
         } else if (this.deployPoolsharkLimitSource) {
             const limitPoolFactoryAddress = (
                 await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
@@ -216,302 +219,280 @@ export class InitialSetup {
             )
         }
 
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            TickMap__factory,
-            'tickMapLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            EpochMap__factory,
-            'epochMapLib',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Deltas__factory,
-            'deltasLib',
-            [],
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Epochs__factory,
-            'epochsLib',
-            [],
-            {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Ticks__factory,
-            'ticksLib',
-            [],
-            {
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Claims__factory,
-            'claimsLib',
-            [],
-            {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            Positions__factory,
-            'positionsLib',
-            [],
-            {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            CoverPoolManager__factory,
-            'coverPoolManager',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            CoverPoolFactory__factory,
-            'coverPoolFactory',
-            [   
-                hre.props.coverPoolManager.address
-            ]
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            MintCall__factory,
-            'mintCall',
-            [],
-            {
-                'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
-                'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
-                'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            BurnCall__factory,
-            'burnCall',
-            [],
-            {
-                'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            SwapCall__factory,
-            'swapCall',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            QuoteCall__factory,
-            'quoteCall',
-            []
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            CoverPool__factory,
-            'coverPoolImpl',
-            [
-                hre.props.coverPoolFactory.address
-            ],
-            {
-                'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
-                'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
-                'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
-                'contracts/libraries/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
-                'contracts/libraries/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
-                'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
-                'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
-            }
-        )
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            // @ts-ignore
-            PositionERC1155__factory,
-            'positionERC1155',
-            [
-              hre.props.coverPoolFactory.address
-            ]
-        )
-
-        const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
-            this.uniV3String,
-            hre.props.coverPoolImpl.address,
-            hre.props.positionERC1155.address,
-            hre.props.uniswapV3Source.address
-        )
-        await enableImplTxn.wait();
-
-        hre.nonce += 1;
-
-        await this.deployAssist.deployContractWithRetry(
-            network,
-            //@ts-ignore
-            PoolsharkRouter__factory,
-            'poolRouter',
-            [
-              '0xbd6d010bcecc7440a72889546411e0edbb333ea2',  // limitPoolFactory
-              hre.props.coverPoolFactory.address
-            ]
-        )
-
-        const volTier1: VolatilityTier = {
-            minAmountPerAuction: BN_ZERO,
-            auctionLength: 5,
-            blockTime: 1000,
-            syncFee: 0,
-            fillFee: 0,
-            minPositionWidth: 1,
-            minAmountLowerPriced: true
+        if (this.deployContracts || hre.network.name == 'hardhat') {
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                TickMap__factory,
+                'tickMapLib',
+                []
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                EpochMap__factory,
+                'epochMapLib',
+                []
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Deltas__factory,
+                'deltasLib',
+                [],
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Epochs__factory,
+                'epochsLib',
+                [],
+                {
+                    'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                    'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                    'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Ticks__factory,
+                'ticksLib',
+                [],
+                {
+                    'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Claims__factory,
+                'claimsLib',
+                [],
+                {
+                    'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                    'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                    'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                Positions__factory,
+                'positionsLib',
+                [],
+                {
+                    'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                    'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                    'contracts/libraries/Claims.sol:Claims': hre.props.claimsLib.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                CoverPoolManager__factory,
+                'coverPoolManager',
+                []
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                CoverPoolFactory__factory,
+                'coverPoolFactory',
+                [   
+                    hre.props.coverPoolManager.address
+                ]
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                MintCall__factory,
+                'mintCall',
+                [],
+                {
+                    'contracts/libraries/Deltas.sol:Deltas': hre.props.deltasLib.address,
+                    'contracts/libraries/TickMap.sol:TickMap': hre.props.tickMapLib.address,
+                    'contracts/libraries/EpochMap.sol:EpochMap': hre.props.epochMapLib.address,
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                BurnCall__factory,
+                'burnCall',
+                [],
+                {
+                    'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                SwapCall__factory,
+                'swapCall',
+                []
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                QuoteCall__factory,
+                'quoteCall',
+                []
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                CoverPool__factory,
+                'coverPoolImpl',
+                [
+                    hre.props.coverPoolFactory.address
+                ],
+                {
+                    'contracts/libraries/Positions.sol:Positions': hre.props.positionsLib.address,
+                    'contracts/libraries/Ticks.sol:Ticks': hre.props.ticksLib.address,
+                    'contracts/libraries/Epochs.sol:Epochs': hre.props.epochsLib.address,
+                    'contracts/libraries/pool/MintCall.sol:MintCall': hre.props.mintCall.address,
+                    'contracts/libraries/pool/BurnCall.sol:BurnCall': hre.props.burnCall.address,
+                    'contracts/libraries/pool/SwapCall.sol:SwapCall': hre.props.swapCall.address,
+                    'contracts/libraries/pool/QuoteCall.sol:QuoteCall': hre.props.quoteCall.address
+                }
+            )
+    
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                // @ts-ignore
+                PositionERC1155__factory,
+                'positionERC1155',
+                [
+                  hre.props.coverPoolFactory.address
+                ]
+            )
+    
+            const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
+                this.uniV3String,
+                hre.props.coverPoolImpl.address,
+                hre.props.positionERC1155.address,
+                hre.props.uniswapV3Source.address
+            )
+            await enableImplTxn.wait();
+    
+            hre.nonce += 1;
         }
 
-        const enableVolTier1 = await hre.props.coverPoolManager.enableVolatilityTier(
-            this.uniV3String,
-            500, // feeTier
-            20,  // tickSpread
-            5,   // auctionLength (seconds)
-            volTier1
-        )
-        await enableVolTier1.wait();
-
-        hre.nonce += 1;
-
-        const volTier2: VolatilityTier = {
-            minAmountPerAuction: BN_ZERO,
-            auctionLength: 10,
-            blockTime: 1000,
-            syncFee: 500,
-            fillFee: 5000,
-            minPositionWidth: 5,
-            minAmountLowerPriced: false
+        if (this.deployRouter || hre.network.name == 'hardhat') {
+            await this.deployAssist.deployContractWithRetry(
+                network,
+                //@ts-ignore
+                PoolsharkRouter__factory,
+                'poolRouter',
+                [
+                  '0xbd6d010bcecc7440a72889546411e0edbb333ea2',  // limitPoolFactory
+                  hre.props.coverPoolFactory.address
+                ]
+            )
         }
-
-        const enableVolTier2 = await hre.props.coverPoolManager.enableVolatilityTier(
-            this.uniV3String,
-            500, // feeTier
-            40,  // tickSpread
-            10,  // auctionLength (seconds)
-            volTier2
-        )
-        await enableVolTier2.wait();
-
-        hre.nonce += 1;
-
-        const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
-            hre.props.coverPoolFactory.address
-        )
-        await setFactoryTxn.wait()
-
-        hre.nonce += 1
-
-        const poolParams1: CoverPoolParams = {
-            poolType: this.uniV3String,
-            tokenIn: hre.props.token0.address,
-            tokenOut: hre.props.token1.address,
-            feeTier: 500,
-            tickSpread: 20,
-            twapLength: 5
-        }
-
-        // create first cover pool
-        let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
-            poolParams1
-        )
-        await createPoolTxn.wait()
-
-        hre.nonce += 1
 
         let coverPoolAddress; let coverPoolTokenAddress;
-        [coverPoolAddress, coverPoolTokenAddress] = await hre.props.coverPoolFactory.getCoverPool(
-            poolParams1
-        )
-        hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
-        hre.props.coverPoolToken = await hre.ethers.getContractAt('PositionERC1155', coverPoolTokenAddress)
 
-        await this.deployAssist.saveContractDeployment(
-            network,
-            'CoverPool',
-            'coverPool',
-            hre.props.coverPool,
-            [hre.props.uniswapV3PoolMock.address]
-        )
+        if (this.deployPools && hre.network.name != 'hardhat') {
 
-        const poolParams2: CoverPoolParams = {
-            poolType: this.uniV3String,
-            tokenIn: hre.props.token0.address,
-            tokenOut: hre.props.token1.address,
-            feeTier: 500,
-            tickSpread: 40,
-            twapLength: 10
+        } else if (hre.network.name == 'hardhat') {
+            const volTier1: VolatilityTier = {
+                minAmountPerAuction: BN_ZERO,
+                auctionLength: 5,
+                blockTime: 1000,
+                syncFee: 0,
+                fillFee: 0,
+                minPositionWidth: 1,
+                minAmountLowerPriced: true
+            }
+    
+            const enableVolTier1 = await hre.props.coverPoolManager.enableVolatilityTier(
+                this.uniV3String,
+                500, // feeTier
+                20,  // tickSpread
+                5,   // auctionLength (seconds)
+                volTier1
+            )
+            await enableVolTier1.wait();
+    
+            hre.nonce += 1;
+    
+            const volTier2: VolatilityTier = {
+                minAmountPerAuction: BN_ZERO,
+                auctionLength: 10,
+                blockTime: 1000,
+                syncFee: 500,
+                fillFee: 5000,
+                minPositionWidth: 5,
+                minAmountLowerPriced: false
+            }
+    
+            const enableVolTier2 = await hre.props.coverPoolManager.enableVolatilityTier(
+                this.uniV3String,
+                500, // feeTier
+                40,  // tickSpread
+                10,  // auctionLength (seconds)
+                volTier2
+            )
+            await enableVolTier2.wait();
+    
+            hre.nonce += 1;
+    
+            const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
+                hre.props.coverPoolFactory.address
+            )
+            await setFactoryTxn.wait()
+    
+            hre.nonce += 1
+    
+            const poolParams1: CoverPoolParams = {
+                poolType: this.uniV3String,
+                tokenIn: hre.props.token0.address,
+                tokenOut: hre.props.token1.address,
+                feeTier: 500,
+                tickSpread: 20,
+                twapLength: 5
+            }
+    
+            // create first cover pool
+            let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
+                poolParams1
+            )
+            await createPoolTxn.wait();
+    
+            hre.nonce += 1;
+
+            [coverPoolAddress, coverPoolTokenAddress] = await hre.props.coverPoolFactory.getCoverPool(
+                poolParams1
+            );
         }
-
-        // create second cover pool
-        createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
-            poolParams2
-        )
-        await createPoolTxn.wait()
-
-        hre.nonce += 1
-
-        coverPoolAddress = await hre.props.coverPoolFactory.getCoverPool(
-            poolParams2
-        )
-        hre.props.coverPool2 = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
-
-        await this.deployAssist.saveContractDeployment(
-            network,
-            'CoverPool',
-            'coverPool2',
-            hre.props.coverPool2,
-            [hre.props.uniswapV3PoolMock.address]
-        )
-
-        await hre.props.uniswapV3PoolMock.setObservationCardinality('10', '10')
-
+        if (this.deployPools || hre.network.name == 'hardhat') {
+            hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
+            hre.props.coverPoolToken = await hre.ethers.getContractAt('PositionERC1155', coverPoolTokenAddress)
+    
+            await this.deployAssist.saveContractDeployment(
+                network,
+                'CoverPool',
+                'coverPool',
+                hre.props.coverPool,
+                [hre.props.uniswapV3PoolMock.address]
+            )
+        }
         return hre.nonce
     }
 
