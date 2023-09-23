@@ -312,6 +312,13 @@ export class InitialSetup {
                     hre.props.coverPoolManager.address
                 ]
             )
+
+            const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
+                hre.props.coverPoolFactory.address
+            )
+            await setFactoryTxn.wait()
+    
+            hre.nonce += 1
     
             await this.deployAssist.deployContractWithRetry(
                 network,
@@ -382,6 +389,7 @@ export class InitialSetup {
                   hre.props.coverPoolFactory.address
                 ]
             )
+
             if (hre.network.name == 'hardhat' || this.deployUniswapV3Source) {
                 const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
                     this.uniV3String,
@@ -400,6 +408,7 @@ export class InitialSetup {
                 )
                 await enableImplTxn.wait();
                 hre.nonce += 1;
+                console.log('impl enabled')
             }
         }
 
@@ -419,7 +428,132 @@ export class InitialSetup {
         let coverPoolAddress; let coverPoolTokenAddress;
 
         if (this.deployPools && hre.network.name != 'hardhat') {
+            let poolParams1: CoverPoolParams;
+            if (this.deployPoolsharkLimitSource) {
+                // ENABLE VOL TIER 1
+                console.log('vol tier 1')
+                const volTier1: VolatilityTier = {
+                    minAmountPerAuction: BN_ZERO,
+                    auctionLength: 12,
+                    blockTime: 300,
+                    syncFee: 0,
+                    fillFee: 0,
+                    minPositionWidth: 1,
+                    minAmountLowerPriced: true
+                }
 
+                const enableVolTier1 = await hre.props.coverPoolManager.enableVolatilityTier(
+                    this.poolsharkString,
+                    1000, // feeTier
+                    20,  // tickSpread
+                    12,   // twapLength (seconds) = ~40 arbitrum blocks
+                    volTier1
+                )
+                await enableVolTier1.wait();
+        
+                hre.nonce += 1;
+                console.log('pool 1')
+
+                // CREATE POOL 1
+                poolParams1 = {
+                    poolType: this.poolsharkString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    feeTier: 1000,
+                    tickSpread: 20,
+                    twapLength: 12
+                }
+                let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
+                    poolParams1
+                )
+                await createPoolTxn.wait();
+
+                hre.nonce += 1;
+
+                // CREATE VOL TIER 2
+                console.log('vol tier 2')
+                const volTier2: VolatilityTier = {
+                    minAmountPerAuction: BN_ZERO,
+                    auctionLength: 12,
+                    blockTime: 300,
+                    syncFee: 0,
+                    fillFee: 0,
+                    minPositionWidth: 1,
+                    minAmountLowerPriced: true
+                }
+
+                const enableVolTier2 = await hre.props.coverPoolManager.enableVolatilityTier(
+                    this.poolsharkString,
+                    3000, // feeTier
+                    60,   // tickSpread
+                    12,   // twapLength (seconds) = ~40 arbitrum blocks
+                    volTier2
+                )
+                await enableVolTier2.wait();
+        
+                hre.nonce += 1;
+
+                // CREATE POOL 2
+                console.log('pool 2')
+                const poolParams2: CoverPoolParams = {
+                    poolType: this.poolsharkString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    feeTier: 3000,
+                    tickSpread: 60,
+                    twapLength: 12
+                }
+                let createPoolTxn2 = await hre.props.coverPoolFactory.createCoverPool(
+                    poolParams2
+                )
+                await createPoolTxn2.wait();
+
+                hre.nonce += 1;
+
+                // CREATE VOL TIER 3
+                console.log('vol tier 3')
+                const volTier3: VolatilityTier = {
+                    minAmountPerAuction: BN_ZERO,
+                    auctionLength: 5 ,
+                    blockTime: 300,
+                    syncFee: 0,
+                    fillFee: 0,
+                    minPositionWidth: 1,
+                    minAmountLowerPriced: true
+                }
+
+                const enableVolTier3 = await hre.props.coverPoolManager.enableVolatilityTier(
+                    this.poolsharkString,
+                    10000, // feeTier
+                    200,  // tickSpread
+                    12,   // twapLength (seconds) = ~40 arbitrum blocks
+                    volTier3
+                )
+                await enableVolTier3.wait();
+        
+                hre.nonce += 1;
+
+                // CREATE POOL 3
+                console.log('pool 3')
+                const poolParams3: CoverPoolParams = {
+                    poolType: this.poolsharkString,
+                    tokenIn: hre.props.token0.address,
+                    tokenOut: hre.props.token1.address,
+                    feeTier: 10000,
+                    tickSpread: 200,
+                    twapLength: 12
+                }
+                let createPoolTxn3 = await hre.props.coverPoolFactory.createCoverPool(
+                    poolParams3
+                )
+                await createPoolTxn3.wait();
+
+                hre.nonce += 1;
+            }
+
+            [coverPoolAddress, coverPoolTokenAddress] = await hre.props.coverPoolFactory.getCoverPool(
+                poolParams1
+            );
         } else if (hre.network.name == 'hardhat') {
             const volTier1: VolatilityTier = {
                 minAmountPerAuction: BN_ZERO,
@@ -435,40 +569,12 @@ export class InitialSetup {
                 this.uniV3String,
                 500, // feeTier
                 20,  // tickSpread
-                5,   // auctionLength (seconds)
+                5,   // twapLength (seconds)
                 volTier1
             )
             await enableVolTier1.wait();
     
             hre.nonce += 1;
-    
-            const volTier2: VolatilityTier = {
-                minAmountPerAuction: BN_ZERO,
-                auctionLength: 10,
-                blockTime: 1000,
-                syncFee: 500,
-                fillFee: 5000,
-                minPositionWidth: 5,
-                minAmountLowerPriced: false
-            }
-    
-            const enableVolTier2 = await hre.props.coverPoolManager.enableVolatilityTier(
-                this.uniV3String,
-                500, // feeTier
-                40,  // tickSpread
-                10,  // auctionLength (seconds)
-                volTier2
-            )
-            await enableVolTier2.wait();
-    
-            hre.nonce += 1;
-    
-            const setFactoryTxn = await hre.props.coverPoolManager.setFactory(
-                hre.props.coverPoolFactory.address
-            )
-            await setFactoryTxn.wait()
-    
-            hre.nonce += 1
     
             const poolParams1: CoverPoolParams = {
                 poolType: this.uniV3String,
@@ -500,7 +606,7 @@ export class InitialSetup {
                 'CoverPool',
                 'coverPool',
                 hre.props.coverPool,
-                [hre.props.uniswapV3PoolMock.address]
+                []
             )
         }
         return hre.nonce

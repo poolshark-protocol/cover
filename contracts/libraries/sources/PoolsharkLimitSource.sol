@@ -67,7 +67,7 @@ contract PoolsharkLimitSource is ITwapSource {
         int24
     )
     {
-        return ILimitPoolManager(limitPoolManager).feeTiers(feeTier);
+        return int24(ILimitPoolManager(limitPoolManager).feeTiers(feeTier));
     }
 
     function getPool(

@@ -372,8 +372,8 @@ library Epochs {
         else
             auctionsElapsed = type(int32).max - 1;
 
-        // if 3/4 of twapLength or auctionLength has passed allow for latestTick move
-        if (timeElapsed > 3 * constants.twapLength / 4 ||
+        // if 3/4 of auctionLength or auctionLength has passed allow for latestTick move
+        if (timeElapsed > 3 * constants.auctionLength / 4 ||
             timeElapsed > constants.auctionLength) auctionsElapsed += 1;
         if (auctionsElapsed < 1) {
             return (state.latestTick, true);
