@@ -26,6 +26,7 @@ export class InitialSetup {
     private token0Decimals = 18
     private token1Decimals = 18
     private uniV3String = ethers.utils.formatBytes32String('UNI-V3')
+    private poolsharkString = ethers.utils.formatBytes32String('PSHARK-CPROD')
     private constantProductString =  ethers.utils.formatBytes32String('CONSTANT-PRODUCT')
     private deployAssist: DeployAssist
     private contractDeploymentsJson: ContractDeploymentsJson
@@ -381,16 +382,25 @@ export class InitialSetup {
                   hre.props.coverPoolFactory.address
                 ]
             )
-    
-            const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
-                this.uniV3String,
-                hre.props.coverPoolImpl.address,
-                hre.props.positionERC1155.address,
-                hre.props.uniswapV3Source.address
-            )
-            await enableImplTxn.wait();
-    
-            hre.nonce += 1;
+            if (hre.network.name == 'hardhat' || this.deployUniswapV3Source) {
+                const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
+                    this.uniV3String,
+                    hre.props.coverPoolImpl.address,
+                    hre.props.positionERC1155.address,
+                    hre.props.uniswapV3Source.address
+                )
+                await enableImplTxn.wait();
+                hre.nonce += 1;
+            } else if (this.deployPoolsharkLimitSource) {
+                const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
+                    this.poolsharkString,
+                    hre.props.coverPoolImpl.address,
+                    hre.props.positionERC1155.address,
+                    hre.props.poolsharkLimitSource.address
+                )
+                await enableImplTxn.wait();
+                hre.nonce += 1;
+            }
         }
 
         if (this.deployRouter || hre.network.name == 'hardhat') {
