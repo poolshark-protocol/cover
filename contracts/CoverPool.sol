@@ -43,7 +43,7 @@ contract CoverPool is
     }
 
     function mint(
-        MintParams memory params
+        MintCoverParams memory params
     ) external override
         nonReentrant(globalState)
         canoncialOnly
@@ -83,7 +83,7 @@ contract CoverPool is
     }
 
     function burn(
-        BurnParams memory params
+        BurnCoverParams memory params
     ) external override
         nonReentrant(globalState)
         canoncialOnly
@@ -190,7 +190,7 @@ contract CoverPool is
     }
 
     function snapshot(
-       SnapshotParams memory params 
+       SnapshotCoverParams memory params 
     ) external view override returns (
         CoverPosition memory
     ) {

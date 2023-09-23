@@ -172,7 +172,7 @@ contract PoolsharkRouter is
 
     function multiMintCover(
         address[] memory pools,
-        ICoverPool.MintParams[] memory params
+        PoolsharkStructs.MintCoverParams[] memory params
     ) external {
         if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
         for (uint i = 0; i < pools.length;) {

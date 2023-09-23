@@ -138,7 +138,7 @@ contract CoverPoolFactory is
 
     function createCoverPoolAndMint(
         CoverPoolParams memory params,
-        ICoverPool.MintParams[] memory mintCoverParams
+        PoolsharkStructs.MintCoverParams[] memory mintCoverParams
     ) external returns (
         address pool,
         address poolToken

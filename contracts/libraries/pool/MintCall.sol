@@ -32,7 +32,7 @@ library MintCall {
         CoverPoolStructs.GlobalState storage globalState,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1,
-        ICoverPool.MintParams memory params,
+        PoolsharkStructs.MintCoverParams memory params,
         CoverPoolStructs.MintCache memory cache
     ) external returns (CoverPoolStructs.MintCache memory) {
         if (params.positionId > 0) {
@@ -142,7 +142,7 @@ library MintCall {
     }
 
     function balance(
-        ICoverPool.MintParams memory params,
+        PoolsharkStructs.MintCoverParams memory params,
         CoverPoolStructs.MintCache memory cache
     ) private view returns (uint256) {
         (
