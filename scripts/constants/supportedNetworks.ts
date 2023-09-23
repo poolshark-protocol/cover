@@ -5,13 +5,13 @@ export enum SUPPORTED_NETWORKS {
     /* Testnet Supported  Networks */
     GOERLI = 'goerli',
     ARB_GOERLI = 'arb_goerli',
-    SCROLL_ALPHA = 'scroll_alpha'
+    SCROLL_SEPOLIA = 'scrollSepolia'
 }
 
 export enum TESTNET_NETWORKS {
     GOERLI = 'goerli',
     ARB_GOERLI = 'arb_goerli',
-    SCROLL_ALPHA = 'scroll_alpha'
+    SCROLL_SEPOLIA = 'scrollSepolia'
 }
 
 export enum LOCAL_NETWORKS {

@@ -177,6 +177,20 @@
                 "0x479C2Df7eD63ea26146Ac2092C55047C3928A5A6"
             ],
             "created": "2023-09-14T16:33:18.642Z"
+        },
+        "limitPoolManager": {
+            "contractName": "LimitPoolManager",
+            "contractAddress": "0xcf90a2148b8fe67dab958b75cd358890c4b4a891",
+            "constructorArguments": [],
+            "created": "2023-09-23T15:58:08.332Z"
+        },
+        "limitPoolFactory": {
+            "contractName": "LimitPoolFactory",
+            "contractAddress": "0x8b9303c8ad68229440f2856d4e8a3b7507b08b20",
+            "constructorArguments": [
+                "0xCF90A2148b8FE67dAB958b75cD358890c4B4a891"
+            ],
+            "created": "2023-09-23T15:58:09.898Z"
         }
     },
     "scroll_alpha": {

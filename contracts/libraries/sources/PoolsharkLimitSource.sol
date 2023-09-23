@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/external/poolshark/range/IRangePoolManager.sol';
-import '../../interfaces/external/poolshark/range/IRangePoolFactory.sol';
-import '../../interfaces/external/poolshark/range/IRangePool.sol';
+import '../../interfaces/external/poolshark/limit/ILimitPoolManager.sol';
+import '../../interfaces/external/poolshark/limit/ILimitPoolFactory.sol';
+import '../../interfaces/external/poolshark/limit/ILimitPool.sol';
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
 
-contract PoolsharkRangeSource is ITwapSource {
+contract PoolsharkLimitSource is ITwapSource {
     error WaitUntilBelowMaxTick();
     error WaitUntilAboveMinTick();
 
-    address public immutable rangePoolFactory;
-    address public immutable rangePoolManager;
+    bytes32 public immutable poolType;
+    address public immutable limitPoolFactory;
+    address public immutable limitPoolManager;
     /// @dev - set for Arbitrum mainnet
     uint32 public constant oneSecond = 1000;
 
     constructor(
-        address _rangePoolFactory,
-        address _rangePoolManager
+        address _limitPoolFactory,
+        address _limitPoolManager,
+        bytes32 _poolType
     ) {
-        rangePoolFactory = _rangePoolFactory;
-        rangePoolManager = _rangePoolManager;
+        limitPoolFactory = _limitPoolFactory;
+        limitPoolManager = _limitPoolManager;
+        poolType = _poolType;
     }
 
     function initialize(
@@ -55,7 +58,7 @@ contract PoolsharkRangeSource is ITwapSource {
     }
 
     function factory() external view returns (address) {
-        return rangePoolFactory;
+        return limitPoolFactory;
     }
 
     function feeTierTickSpacing(
@@ -64,7 +67,7 @@ contract PoolsharkRangeSource is ITwapSource {
         int24
     )
     {
-        return IRangePoolManager(rangePoolManager).feeTiers(feeTier);
+        return ILimitPoolManager(limitPoolManager).feeTiers(feeTier);
     }
 
     function getPool(
@@ -74,7 +77,7 @@ contract PoolsharkRangeSource is ITwapSource {
     ) external view returns(
         address pool
     ) {
-        return IRangePoolFactory(rangePoolFactory).getRangePool(token0, token1, feeTier);
+        (pool,) = ILimitPoolFactory(limitPoolFactory).getLimitPool(poolType, token0, token1, feeTier);
     }
 
     function calculateAverageTick(
@@ -112,7 +115,7 @@ contract PoolsharkRangeSource is ITwapSource {
         secondsAgos[1] = timeDelta;
         secondsAgos[2] = constants.twapLength - timeDelta;
         secondsAgos[3] = constants.twapLength;
-        (int56[] memory tickSecondsAccum,,,,) = IRangePool(constants.inputPool).sample(secondsAgos);
+        (int56[] memory tickSecondsAccum,,,,) = ILimitPool(constants.inputPool).sample(secondsAgos);
         
           /// @dev take the smallest absolute value of 4 samples
         averageTicks[0] = int24(((tickSecondsAccum[0] - tickSecondsAccum[2]) / (int32(secondsAgos[2] - secondsAgos[0]))));
@@ -140,13 +143,16 @@ contract PoolsharkRangeSource is ITwapSource {
     )
     {
         (
-            ,,,,,,,,,,
-            IRangePool.SampleState memory samples,
-        ) = IRangePool(pool).poolState();
-        return (samples.length >= blockCount, samples.lengthNext >= blockCount);
+            ILimitPool.RangePoolState memory poolState,
+            ,,,,,
+        ) = ILimitPool(pool).globalState();
+        return (
+            poolState.samples.length >= blockCount,
+            poolState.samples.lengthNext >= blockCount
+        );
     }
 
     function _increaseSampleLength(address pool, uint32 blockCount) internal {
-        IRangePool(pool).increaseSampleLength(uint16(blockCount));
+        ILimitPool(pool).increaseSampleLength(uint16(blockCount));
     }
 }
