@@ -12,7 +12,13 @@ contract UniswapV3Source is ITwapSource {
     error WaitUntilAboveMinTick();
 
     address public immutable uniV3Factory;
-    uint32 public constant oneSecond = 1000;
+    uint16 public constant oneSecond = 1000;
+
+    event SampleCountInitialized (
+        uint16 sampleCount,
+        uint16 sampleCountMax,
+        uint16 sampleCountRequired
+    );
 
     constructor(
         address _uniV3Factory
@@ -28,20 +34,27 @@ contract UniswapV3Source is ITwapSource {
     )
     {
         // get the number of blocks covered by the twapLength
-        uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.sampleInterval;
+        uint16 blockCount = constants.twapLength * oneSecond / constants.sampleInterval;
         (
-            bool observationsCountEnough,
-            bool observationsLengthEnough
-        ) = _isPoolObservationsEnough(
-                constants.inputPool,
-                blockCount
-        );
-        if (!observationsLengthEnough) {
+            uint16 cardinality,
+            uint16 cardinalityNext
+        ) = _getObservationsCardinality(constants.inputPool);
+        if (cardinalityNext < blockCount) {
             _increaseV3Observations(constants.inputPool, blockCount);
+            emit SampleCountInitialized(
+                cardinality,
+                cardinalityNext,
+                blockCount
+            );
             return (0, 0);
-        } else if (!observationsCountEnough) {
+        } else if (cardinality < blockCount) {
             return (0, 0);
         }
+        emit SampleCountInitialized(
+            cardinality,
+            cardinalityNext,
+            blockCount
+        );
         // ready to initialize if we get here
         initializable = 1;
         int24[4] memory averageTicks = _calculateAverageTicks(constants);
@@ -126,17 +139,14 @@ contract UniswapV3Source is ITwapSource {
         }
     }
 
-    function _isPoolObservationsEnough(
-        address pool,
-        uint32 blockCount
+    function _getObservationsCardinality(
+        address pool
     ) internal view returns (
-        bool,
-        bool
+        uint16 cardinality,
+        uint16 cardinalityNext
     )
     {
-
-        (, , , uint16 observationsCount, uint16 observationsLength, , ) = IUniswapV3Pool(pool).slot0();
-        return (observationsCount >= blockCount, observationsLength >= blockCount);
+        (, , , cardinality, cardinalityNext, , ) = IUniswapV3Pool(pool).slot0();
     }
 
     function _increaseV3Observations(address pool, uint32 blockCount) internal {

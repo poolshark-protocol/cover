@@ -15,8 +15,13 @@ contract PoolsharkLimitSource is ITwapSource {
     bytes32 public immutable poolType;
     address public immutable limitPoolFactory;
     address public immutable limitPoolManager;
-    /// @dev - set for Arbitrum mainnet
-    uint32 public constant oneSecond = 1000;
+    uint16 public constant oneSecond = 1000;
+
+    event SampleCountInitialized (
+        uint16 sampleCount,
+        uint16 sampleCountMax,
+        uint16 sampleCountRequired
+    );
 
     constructor(
         address _limitPoolFactory,
@@ -36,21 +41,29 @@ contract PoolsharkLimitSource is ITwapSource {
     )
     {
         // get the number of blocks covered by the twapLength
-        uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.sampleInterval;
+        uint16 blockCount = uint16(constants.twapLength) * oneSecond / constants.sampleInterval;
         (
-            bool sampleCountEnough,
-            bool sampleLengthEnough
-        ) = _isPoolSampleCountEnough(
-                constants.inputPool,
-                blockCount
-        );
-        if (!sampleLengthEnough) {
+            uint16 sampleCount,
+            uint16 sampleCountMax
+        ) = _getSampleCount(constants.inputPool);
+
+        if (sampleCountMax < blockCount) {
             _increaseSampleCount(constants.inputPool, blockCount);
+            emit SampleCountInitialized (
+                sampleCount,
+                sampleCountMax,
+                blockCount
+            );
             return (0, 0);
-        } else if (!sampleCountEnough) {
+        } else if (sampleCount < blockCount) {
             return (0, 0);
         }
-         // ready to initialize if we get here
+        emit SampleCountInitialized (
+            sampleCount,
+            sampleCountMax,
+            blockCount
+        );
+         // ready to initialize
         initializable = 1;
         int24[4] memory averageTicks = _calculateAverageTicks(constants);
         // take the average of the 4 samples as a starting tick
@@ -134,12 +147,11 @@ contract PoolsharkLimitSource is ITwapSource {
         }
     }
 
-    function _isPoolSampleCountEnough(
-        address pool,
-        uint32 blockCount
+    function _getSampleCount(
+        address pool
     ) internal view returns (
-        bool,
-        bool
+        uint16,
+        uint16
     )
     {
         (
@@ -147,8 +159,8 @@ contract PoolsharkLimitSource is ITwapSource {
             ,,,,,
         ) = ILimitPool(pool).globalState();
         return (
-            poolState.samples.count >= blockCount,
-            poolState.samples.countMax >= blockCount
+            poolState.samples.count,
+            poolState.samples.countMax
         );
     }
 

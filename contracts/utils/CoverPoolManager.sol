@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.13;
 
+import '../interfaces/IPositionERC1155.sol';
 import '../interfaces/cover/ICoverPool.sol';
 import '../interfaces/cover/ICoverPoolFactory.sol';
 import '../interfaces/cover/ICoverPoolManager.sol';
@@ -16,7 +17,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     address public factory;
     uint16  public constant MAX_PROTOCOL_FEE = 1e4; /// @dev - max protocol fee of 1%
     uint16  public constant oneSecond = 1000;
-    // sourceName => sourceAddress
+    // poolType => impl address
     mapping(bytes32 => address) internal _poolTypes;
     mapping(bytes32 => address) internal _poolTokens;
     mapping(bytes32 => address) internal _twapSources;
@@ -83,10 +84,22 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address tokenImpl,
         address twapImpl
     ) external onlyOwner {
-        if (poolType[0] == bytes32("")) require (false, 'TwapSourceNameInvalid()');
-        if (poolImpl == address(0) || twapImpl == address(0)) require (false, 'TwapSourceAddressZero()');
-        if (_twapSources[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
-        if (_poolTypes[poolType] != address(0)) require (false, 'ImplementationAlreadyExists()');
+        // valid poolType name
+        if(poolType == bytes32(""))
+            require (false, 'PoolTypeNameInvalid()');
+        // invalid impl address
+        if(poolImpl == address(0) || twapImpl == address(0) || tokenImpl == address(0))
+            require (false, 'TwapSourceAddressZero()');
+        // pool type already exists
+        if(_twapSources[poolType] != address(0) || _poolTypes[poolType] != address(0))
+            require (false, 'PoolTypeAlreadyExists()');
+        // check for poolType mismatch
+        if(ITwapSource(twapImpl).poolType() != poolType)
+            require (false, 'PoolTypeTwapSourceMismatch()');
+        // check for poolImpl mismatch
+        if(IPositionERC1155(tokenImpl).poolImpl() != poolImpl)
+            require (false, 'PoolImplTokenImplMismatch()');
+
         _poolTypes[poolType] = poolImpl;
         _poolTokens[poolType] = tokenImpl;
         _twapSources[poolType] = twapImpl;
