@@ -1,0 +1,29 @@
+1. set values for production
+   - volatility tiers
+   - pool types
+
+2. copy 'limitPoolFactory' and 'limitPoolManager' from limit deployment
+
+3. set booleans for first deployment
+    private deployRouter = false
+    private deployTokens = false
+    private deployPools = true
+    private deployContracts = true
+    private deployPoolsharkLimitSource = true
+    private deployUniswapV3Source = false
+
+4. run first deployment
+
+5. verify contracts
+    - remove coverPool from scripts\autogen\contract-deployments-keys.ts
+    - 2nd verification run for Ticks
+    - 3rd verification run for Positions
+    - manually verify proxies on Arbiscan
+        * coverPool
+        * coverPoolToken
+
+6. add contracts on Tenderly
+
+7. increase observations on Limit Pools
+
+8. mint first position(s)
