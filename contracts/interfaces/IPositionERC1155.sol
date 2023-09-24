@@ -74,6 +74,4 @@ interface IPositionERC1155 is IERC165, PoolsharkStructs {
         uint256[] calldata id,
         uint256[] calldata amount
     ) external;
-
-    function poolImpl() external view returns(address);
 }

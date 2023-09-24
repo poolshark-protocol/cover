@@ -12,6 +12,7 @@ contract PoolsharkLimitSource is ITwapSource {
     error WaitUntilBelowMaxTick();
     error WaitUntilAboveMinTick();
 
+    // poolType on limitPoolFactory
     bytes32 public immutable poolType;
     address public immutable limitPoolFactory;
     address public immutable limitPoolManager;

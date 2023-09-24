@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.13;
 
-import '../interfaces/IPositionERC1155.sol';
 import '../interfaces/cover/ICoverPool.sol';
 import '../interfaces/cover/ICoverPoolFactory.sol';
 import '../interfaces/cover/ICoverPoolManager.sol';
@@ -93,12 +92,6 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         // pool type already exists
         if(_twapSources[poolType] != address(0) || _poolTypes[poolType] != address(0))
             require (false, 'PoolTypeAlreadyExists()');
-        // check for poolType mismatch
-        if(ITwapSource(twapImpl).poolType() != poolType)
-            require (false, 'PoolTypeTwapSourceMismatch()');
-        // check for poolImpl mismatch
-        if(IPositionERC1155(tokenImpl).poolImpl() != poolImpl)
-            require (false, 'PoolImplTokenImplMismatch()');
 
         _poolTypes[poolType] = poolImpl;
         _poolTokens[poolType] = tokenImpl;

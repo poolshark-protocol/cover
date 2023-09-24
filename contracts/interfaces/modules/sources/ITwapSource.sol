@@ -34,7 +34,4 @@ interface ITwapSource {
 
     function factory()
         external view returns (address);
-    
-    function poolType()
-        external view returns (bytes32);
 }
