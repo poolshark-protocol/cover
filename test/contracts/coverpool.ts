@@ -131,7 +131,6 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'WaitUntilTwapLengthSufficient()',
         })
-
     })
 
     it('pool1 - Should wait until enough observations', async function () {

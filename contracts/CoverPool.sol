@@ -30,6 +30,11 @@ contract CoverPool is
         _;
     }
 
+    modifier factoryOnly() {
+        _onlyFactory();
+        _;
+    }
+
     modifier canoncialOnly() {
         _onlyCanoncialClones();
         _;
@@ -40,6 +45,19 @@ contract CoverPool is
     ) {
         original = address(this);
         factory = factory_;
+    }
+
+    function initialize() 
+        external 
+            factoryOnly
+    {
+        Ticks.initialize(
+            tickMap,
+            pool0,
+            pool1,
+            globalState,
+            ICoverPool(address(this)).immutables()
+        );
     }
 
     function mint(
@@ -256,7 +274,7 @@ contract CoverPool is
             tickSpread(),
             twapLength(),
             auctionLength(),
-            blockTime(),
+            sampleInterval(),
             token0Decimals(),
             token1Decimals(),
             minAmountLowerPriced()
@@ -311,7 +329,7 @@ contract CoverPool is
             constants.auctionLength
         );
         bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
@@ -321,5 +339,9 @@ contract CoverPool is
 
     function _onlyOwner() private view {
         if (msg.sender != owner()) revert OwnerOnly();
+    }
+
+    function _onlyFactory() private view {
+        if (msg.sender != factory) revert FactoryOnly();
     }
 }

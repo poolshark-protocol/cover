@@ -36,7 +36,7 @@ interface IRangePool is PoolsharkStructs {
         uint128 feesOwed1
     );
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
+    function increaseSampleCount(
+        uint16 newSampleCountMax
     ) external;
 }

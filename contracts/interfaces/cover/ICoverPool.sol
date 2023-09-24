@@ -10,7 +10,10 @@ import '../structs/PoolsharkStructs.sol';
  * @notice Defines the basic interface for a Cover Pool.
  */
 interface ICoverPool is CoverPoolStructs {
-    
+    /**
+     * @notice Initializes the TWAP source
+     */
+    function initialize() external;
 
     /**
      * @notice Deposits `amountIn` of asset to be auctioned off each time price range is crossed further into.

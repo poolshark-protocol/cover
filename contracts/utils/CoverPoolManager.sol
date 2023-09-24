@@ -104,7 +104,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             require (false, 'VolatilityTierAlreadyEnabled()');
         } else if (volTier.auctionLength == 0 ||  volTier.minPositionWidth <= 0) {
             require (false, 'VolatilityTierCannotBeZero()');
-        } else if (twapLength < 5 * volTier.blockTime / oneSecond) {
+        } else if (twapLength < 5 * volTier.sampleInterval / oneSecond) {
             require (false, 'VoltatilityTierTwapTooShort()');
         } else if (volTier.syncFee > 10000 || volTier.fillFee > 10000) {
             require (false, 'ProtocolFeeCeilingExceeded()');
@@ -125,7 +125,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
                 require (false, 'TickSpreadNotAtLeastDoubleTickSpread()');
             }
         }
-        // twapLength * blockTime should never overflow uint16
+        // twapLength * sampleInterval should never overflow uint16
         _volatilityTiers[poolType][feeTier][tickSpread][twapLength] = volTier;
 
         emit VolatilityTierEnabled(
@@ -135,7 +135,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
             twapLength,
             volTier.minAmountPerAuction,
             volTier.auctionLength,
-            volTier.blockTime,
+            volTier.sampleInterval,
             volTier.syncFee,
             volTier.fillFee,
             volTier.minPositionWidth,

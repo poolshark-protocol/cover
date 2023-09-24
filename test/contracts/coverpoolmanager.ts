@@ -28,7 +28,9 @@ describe('CoverPoolManager Tests', function () {
     await gBefore()
   })
 
-  this.beforeEach(async function () {})
+  this.beforeEach(async function () {
+    await hre.props.uniswapV3PoolMock.setObservationCardinality('5', '5')
+  })
 
   it('Should be able to change owner', async function () {
     // check pool contract owner
@@ -164,7 +166,7 @@ describe('CoverPoolManager Tests', function () {
     const volTier: VolatilityTier = {
       minAmountPerAuction: ethers.utils.parseUnits("1", 18),
       auctionLength: 40,
-      blockTime: 1000,
+      sampleInterval: 1000,
       syncFee: 0,
       fillFee: 0,
       minPositionWidth: 4,
@@ -181,7 +183,7 @@ describe('CoverPoolManager Tests', function () {
     const volTier: VolatilityTier = {
       minAmountPerAuction: ethers.utils.parseUnits("1", 18),
       auctionLength: 20,
-      blockTime: 1000,
+      sampleInterval: 1000,
       syncFee: 0,
       fillFee: 0,
       minPositionWidth: 1,
@@ -198,7 +200,7 @@ describe('CoverPoolManager Tests', function () {
     const volTier: VolatilityTier = {
       minAmountPerAuction: ethers.utils.parseUnits("1", 18),
       auctionLength: 20,
-      blockTime: 1000,
+      sampleInterval: 1000,
       syncFee: 0,
       fillFee: 0,
       minPositionWidth: 1,
@@ -312,12 +314,13 @@ describe('CoverPoolManager Tests', function () {
     const volTier: VolatilityTier = {
       minAmountPerAuction: ethers.utils.parseUnits("1", 18),
       auctionLength: 30,
-      blockTime: 1000,
+      sampleInterval: 1000,
       syncFee: 50,
       fillFee: 500,
       minPositionWidth: 5,
       minAmountLowerPriced: true
     }
+
     await expect(
       hre.props.coverPoolManager
         .connect(hre.props.bob)
@@ -330,22 +333,21 @@ describe('CoverPoolManager Tests', function () {
         .enableVolatilityTier(uniV3String, "500", "20", "5", volTier)
     ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
-    await expect(
+    await 
       hre.props.coverPoolManager
         .connect(hre.props.admin)
         .enableVolatilityTier(uniV3String, "500", "40", "10", volTier)
-    ).to.be.revertedWith('VolatilityTierAlreadyEnabled()')
 
     let volatilityTierConfig = await
       hre.props.coverPoolManager
         .volatilityTiers(uniV3String, "500", "40", "10");
-    expect(volatilityTierConfig[0]).to.be.equal(BN_ZERO)
-    expect(volatilityTierConfig[1]).to.be.equal(10)
+    expect(volatilityTierConfig[0]).to.be.equal(ethers.utils.parseUnits("1", 18))
+    expect(volatilityTierConfig[1]).to.be.equal(30)
     expect(volatilityTierConfig[2]).to.be.equal(1000)
-    expect(volatilityTierConfig[3]).to.be.equal(500)
-    expect(volatilityTierConfig[4]).to.be.equal(5000)
+    expect(volatilityTierConfig[3]).to.be.equal(50)
+    expect(volatilityTierConfig[4]).to.be.equal(500)
     expect(volatilityTierConfig[5]).to.be.equal(5)
-    expect(volatilityTierConfig[6]).to.be.equal(false)
+    expect(volatilityTierConfig[6]).to.be.equal(true)
 
     expect((await
         hre.props.coverPoolManager

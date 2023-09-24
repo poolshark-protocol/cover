@@ -43,8 +43,8 @@ export class MintPosition {
         await validateMint({
             signer: hre.props.alice,
             recipient: hre.props.alice.address,
-            lower: '78000',
-            upper: '79000',
+            lower: '71000', //1211
+            upper: '70000', //1096
             amount: token1Amount,
             zeroForOne: true,
             balanceInDecrease: token1Amount,

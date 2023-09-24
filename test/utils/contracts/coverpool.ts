@@ -23,7 +23,7 @@ export interface PoolState {
 export interface VolatilityTier {
     minAmountPerAuction: BigNumber // based on 18 decimals and then converted based on token decimals
     auctionLength: number
-    blockTime: number  // average block time where 1e3 is 1 second
+    sampleInterval: number  // average block time where 1e3 is 1 second
     syncFee: number
     fillFee: number
     minPositionWidth: number
@@ -44,7 +44,7 @@ export interface CoverImmutables {
     tickSpread: number
     twapLength: number
     auctionLength: number
-    blockTime: number
+    sampleInterval: number
     token0Decimals: number
     token1Decimals: number
     minAmountLowerPriced: boolean

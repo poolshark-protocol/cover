@@ -10,7 +10,7 @@ abstract contract CoverPoolManagerEvents {
         uint16  twapLength,
         uint128 minAmountPerAuction,
         uint16  auctionLength,
-        uint16  blockTime,
+        uint16  sampleInterval,
         uint16  syncFee,
         uint16  fillFee,
         int16   minPositionWidth,

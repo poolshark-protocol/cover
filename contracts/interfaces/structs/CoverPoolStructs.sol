@@ -66,7 +66,7 @@ interface CoverPoolStructs is PoolsharkStructs {
     struct VolatilityTier {
         uint128 minAmountPerAuction; // based on 18 decimals and then converted based on token decimals
         uint16  auctionLength;
-        uint16  blockTime; // average block time where 1e3 is 1 second
+        uint16  sampleInterval; // average block time where 1e3 is 1 second
         uint16  syncFee;
         uint16  fillFee;
         int16   minPositionWidth;

@@ -11,8 +11,8 @@ contract LimitPoolMock is ILimitPool {
     int24 public tickSpacing;
     uint256 swapFee;
 
-    uint16 sampleLength;
-    uint16 sampleLengthNext;
+    uint16 sampleCount;
+    uint16 sampleCountMax;
 
     int56 tickCumulative0;
     int56 tickCumulative1;
@@ -31,8 +31,8 @@ contract LimitPoolMock is ILimitPool {
         token1 = _token1;
         swapFee = _swapFee;
         tickSpacing = _tickSpacing;
-        sampleLength = 4;
-        sampleLengthNext = 4;
+        sampleCount = 4;
+        sampleCountMax = 4;
         tickCumulative0 = 10;
         tickCumulative1 = 9;
         tickCumulative2 = 6;
@@ -54,8 +54,8 @@ contract LimitPoolMock is ILimitPool {
     {
         pool.samples = SampleState(
                 4,
-                sampleLength,
-                sampleLengthNext
+                sampleCount,
+                sampleCountMax
         );
         pool0;
         pool1;
@@ -91,8 +91,10 @@ contract LimitPoolMock is ILimitPool {
         averageTick;
     }
 
-    function increaseSampleLength(uint16 cardinalityNext) external {
-        sampleLengthNext = cardinalityNext;
+    function increaseSampleCount(
+        uint16 newSampleCountMax
+    ) external {
+        sampleCountMax = newSampleCountMax;
     }
 
     function setTickCumulatives(int56 _tickCumulative0, int56 _tickCumulative1, int56 _tickCumulative2, int56 _tickCumulative3) external {
@@ -102,8 +104,8 @@ contract LimitPoolMock is ILimitPool {
         tickCumulative3 = _tickCumulative3;
     }
 
-    function setObservationCardinality(uint16 _sampleLength, uint16 _sampleLengthNext) external {
-        sampleLength = _sampleLength;
-        sampleLengthNext = _sampleLengthNext;
+    function setObservationCardinality(uint16 _sampleCount, uint16 _sampleCountMax) external {
+        sampleCount = _sampleCount;
+        sampleCountMax = _sampleCountMax;
     }
 }

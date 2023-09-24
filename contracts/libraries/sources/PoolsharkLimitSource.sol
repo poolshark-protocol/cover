@@ -36,16 +36,16 @@ contract PoolsharkLimitSource is ITwapSource {
     )
     {
         // get the number of blocks covered by the twapLength
-        uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.blockTime;
+        uint32 blockCount = uint32(constants.twapLength) * oneSecond / constants.sampleInterval;
         (
             bool sampleCountEnough,
             bool sampleLengthEnough
-        ) = _isPoolSamplesEnough(
+        ) = _isPoolSampleCountEnough(
                 constants.inputPool,
                 blockCount
         );
         if (!sampleLengthEnough) {
-            _increaseSampleLength(constants.inputPool, blockCount);
+            _increaseSampleCount(constants.inputPool, blockCount);
             return (0, 0);
         } else if (!sampleCountEnough) {
             return (0, 0);
@@ -108,9 +108,9 @@ contract PoolsharkLimitSource is ITwapSource {
     {
         uint32[] memory secondsAgos = new uint32[](4);
         /// @dev - take 4 samples
-        /// @dev - twapLength must be >= 5 * blockTime
-        uint32 timeDelta = constants.blockTime / oneSecond == 0 ? 2
-                                                                : constants.blockTime * 2 / oneSecond; 
+        /// @dev - twapLength must be >= 5 * sampleInterval
+        uint32 timeDelta = constants.sampleInterval / oneSecond == 0 ? 2
+                                                                : constants.sampleInterval * 2 / oneSecond; 
         secondsAgos[0] = 0;
         secondsAgos[1] = timeDelta;
         secondsAgos[2] = constants.twapLength - timeDelta;
@@ -134,7 +134,7 @@ contract PoolsharkLimitSource is ITwapSource {
         }
     }
 
-    function _isPoolSamplesEnough(
+    function _isPoolSampleCountEnough(
         address pool,
         uint32 blockCount
     ) internal view returns (
@@ -147,12 +147,12 @@ contract PoolsharkLimitSource is ITwapSource {
             ,,,,,
         ) = ILimitPool(pool).globalState();
         return (
-            poolState.samples.length >= blockCount,
-            poolState.samples.lengthNext >= blockCount
+            poolState.samples.count >= blockCount,
+            poolState.samples.countMax >= blockCount
         );
     }
 
-    function _increaseSampleLength(address pool, uint32 blockCount) internal {
-        ILimitPool(pool).increaseSampleLength(uint16(blockCount));
+    function _increaseSampleCount(address pool, uint32 blockCount) internal {
+        ILimitPool(pool).increaseSampleCount(uint16(blockCount));
     }
 }

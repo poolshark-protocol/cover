@@ -332,7 +332,7 @@ contract PositionERC1155 is
             constants.auctionLength
         );
         bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced

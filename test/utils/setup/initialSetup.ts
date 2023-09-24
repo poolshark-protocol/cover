@@ -163,7 +163,7 @@ export class InitialSetup {
                     hre.props.uniswapV3FactoryMock.address
                 ]
             )
-            await hre.props.uniswapV3PoolMock.setObservationCardinality('10', '10')
+            await hre.props.uniswapV3PoolMock.setObservationCardinality('4', '4')
 
             hre.nonce += 1;
         } else if (this.deployPoolsharkLimitSource) {
@@ -435,7 +435,7 @@ export class InitialSetup {
                 const volTier1: VolatilityTier = {
                     minAmountPerAuction: BN_ZERO,
                     auctionLength: 12,
-                    blockTime: 300,
+                    sampleInterval: 1000,
                     syncFee: 0,
                     fillFee: 0,
                     minPositionWidth: 1,
@@ -475,7 +475,7 @@ export class InitialSetup {
                 const volTier2: VolatilityTier = {
                     minAmountPerAuction: BN_ZERO,
                     auctionLength: 12,
-                    blockTime: 300,
+                    sampleInterval: 1000,
                     syncFee: 0,
                     fillFee: 0,
                     minPositionWidth: 1,
@@ -515,7 +515,7 @@ export class InitialSetup {
                 const volTier3: VolatilityTier = {
                     minAmountPerAuction: BN_ZERO,
                     auctionLength: 5 ,
-                    blockTime: 300,
+                    sampleInterval: 1000,
                     syncFee: 0,
                     fillFee: 0,
                     minPositionWidth: 1,
@@ -558,7 +558,7 @@ export class InitialSetup {
             const volTier1: VolatilityTier = {
                 minAmountPerAuction: BN_ZERO,
                 auctionLength: 5,
-                blockTime: 1000,
+                sampleInterval: 1000,
                 syncFee: 0,
                 fillFee: 0,
                 minPositionWidth: 1,
@@ -669,6 +669,15 @@ export class InitialSetup {
                 'readCoverPoolSetup'
             )
         ).contractAddress
+        const poolsharkRouterAddress = (
+            await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+                {
+                    networkName: hre.network.name,
+                    objectName: 'poolRouter',
+                },
+                'readCoverPoolSetup'
+            )
+        ).contractAddress
 
         hre.props.token0 = await hre.ethers.getContractAt('Token20', token0Address)
         hre.props.token1 = await hre.ethers.getContractAt('Token20', token1Address)
@@ -676,6 +685,7 @@ export class InitialSetup {
         hre.props.coverPool = await hre.ethers.getContractAt('CoverPool', coverPoolAddress)
         hre.props.coverPoolFactory = await hre.ethers.getContractAt('CoverPoolFactory', coverPoolFactoryAddress)
         hre.props.uniswapV3PoolMock = await hre.ethers.getContractAt('UniswapV3PoolMock', uniswapV3PoolMockAddress)
+        hre.props.poolRouter = await hre.ethers.getContractAt('PoolsharkRouter', poolsharkRouterAddress)
 
         return nonce
     }

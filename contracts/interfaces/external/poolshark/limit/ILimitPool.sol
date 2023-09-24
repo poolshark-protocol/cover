@@ -17,8 +17,8 @@ interface ILimitPool {
 
     struct SampleState {
         uint16  index;
-        uint16  length;
-        uint16  lengthNext;
+        uint16  count;
+        uint16  countMax;
     }
 
     struct LimitPoolState {
@@ -39,8 +39,8 @@ interface ILimitPool {
         int24 averageTick
     );
 
-    function increaseSampleLength(
-        uint16 sampleLengthNext
+    function increaseSampleCount(
+        uint16 newSampleCountMax
     ) external;
 
     function globalState() external view returns (

@@ -75,7 +75,7 @@ contract CoverPoolFactory is
             if (config.auctionLength == 0) revert VolatilityTierNotSupported();
             constants.minAmountPerAuction = config.minAmountPerAuction;
             constants.auctionLength = config.auctionLength;
-            constants.blockTime = config.blockTime;
+            constants.sampleInterval = config.sampleInterval;
             constants.minPositionWidth = config.minPositionWidth;
             constants.minAmountLowerPriced = config.minAmountLowerPriced;
         }
@@ -119,6 +119,8 @@ contract CoverPoolFactory is
             salt: key,
             data: encodeCover(constants)
         });
+
+        ICoverPool(pool).initialize();
 
         poolToken = constants.poolToken;
 
@@ -195,7 +197,7 @@ contract CoverPoolFactory is
             constants.auctionLength
         );
         bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
