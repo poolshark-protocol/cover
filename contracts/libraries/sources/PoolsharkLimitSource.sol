@@ -4,11 +4,12 @@ pragma solidity 0.8.13;
 import '../../interfaces/external/poolshark/limit/ILimitPoolManager.sol';
 import '../../interfaces/external/poolshark/limit/ILimitPoolFactory.sol';
 import '../../interfaces/external/poolshark/limit/ILimitPool.sol';
+import '../../base/events/TwapSourceEvents.sol';
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
 
-contract PoolsharkLimitSource is ITwapSource {
+contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     error WaitUntilBelowMaxTick();
     error WaitUntilAboveMinTick();
 
@@ -17,12 +18,6 @@ contract PoolsharkLimitSource is ITwapSource {
     address public immutable limitPoolFactory;
     address public immutable limitPoolManager;
     uint16 public constant oneSecond = 1000;
-
-    event SampleCountInitialized (
-        uint16 sampleCount,
-        uint16 sampleCountMax,
-        uint16 sampleCountRequired
-    );
 
     constructor(
         address _limitPoolFactory,
@@ -51,6 +46,7 @@ contract PoolsharkLimitSource is ITwapSource {
         if (sampleCountMax < blockCount) {
             _increaseSampleCount(constants.inputPool, blockCount);
             emit SampleCountInitialized (
+                msg.sender,
                 sampleCount,
                 sampleCountMax,
                 blockCount
@@ -60,6 +56,7 @@ contract PoolsharkLimitSource is ITwapSource {
             return (0, 0);
         }
         emit SampleCountInitialized (
+            msg.sender,
             sampleCount,
             sampleCountMax,
             blockCount

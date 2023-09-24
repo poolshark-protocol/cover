@@ -9,6 +9,7 @@ import {
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'
+import { TwapSource } from '../../../generated/schema'
 
 class LoadBasePriceRet {
     entity: BasePrice
@@ -31,7 +32,6 @@ export function safeLoadBasePrice(name: string): LoadBasePriceRet {
         exists: exists,
     }
 }
-
 class LoadTokenRet {
     entity: Token
     exists: boolean
@@ -138,6 +138,26 @@ export function safeLoadManager(address: string): LoadManagerRet {
 
     return {
         entity: managerEntity,
+        exists: exists,
+    }
+}
+
+class LoadTwapSourceRet {
+    entity: TwapSource
+    exists: boolean
+}
+export function safeLoadTwapSource(address: string): LoadTwapSourceRet {
+    let exists = true
+
+    let twapSourceEntity = TwapSource.load(address)
+
+    if (!twapSourceEntity) {
+        twapSourceEntity = new TwapSource(address)
+        exists = false
+    }
+
+    return {
+        entity: twapSourceEntity,
         exists: exists,
     }
 }

@@ -52,6 +52,8 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
+              - event: PoolTypeEnabled(bytes32,address,address,address)
+                handler: handlePoolTypeEnabled
               - event: VolatilityTierEnabled(bytes32,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
@@ -108,6 +110,25 @@ templates:
                 handler: handleStashDeltasAccumulated
               - event: StashDeltasCleared(int24,bool)
                 handler: handleStashDeltasCleared
+    # TwapSource events
+    - kind: ethereum/contract
+      name: TwapSourceTemplate
+      network: arbitrum-goerli
+      source:
+          abi: TwapSource
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/twapsource.ts
+          entities:
+              - TwapSource
+          abis:
+              - name: TwapSource
+                file: ./abis/TwapSource.json
+          eventHandlers:
+              - event: SampleCountInitialized(indexed address,uint16,uint16,uint16)
+                handler: handleSampleCountInitialized
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template

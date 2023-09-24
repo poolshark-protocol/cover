@@ -57,12 +57,6 @@ abstract contract CoverPoolEvents {
         uint160 pool1Price
     );
 
-    event SampleCountInitialized (
-        uint16 sampleCount,
-        uint16 sampleCountMax,
-        uint16 sampleCountRequired
-    );
-
     event Sync(
         uint160 pool0Price,
         uint160 pool1Price,

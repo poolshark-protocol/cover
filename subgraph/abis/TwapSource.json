@@ -1,0 +1,33 @@
+[
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "coverPool",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "sampleCount",
+          "type": "uint16"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "sampleCountMax",
+          "type": "uint16"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "sampleCountRequired",
+          "type": "uint16"
+        }
+      ],
+      "name": "SampleCountInitialized",
+      "type": "event"
+    }
+]

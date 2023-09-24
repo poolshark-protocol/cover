@@ -1,6 +1,7 @@
 type CoverPoolFactory @entity {
     # poolAddress
     id: ID!
+    manager: CoverPoolManager!
     poolCount: BigInt!
     txnCount: BigInt!
     volumeUsdTotal: BigDecimal!
@@ -20,7 +21,7 @@ type CoverPoolManager @entity {
     id: ID!
     owner: Bytes!
     feeTo: Bytes!
-    # factory: CoverPoolFactory!
+    factory: CoverPoolFactory!
     volatilityTiers: [VolatilityTier!]!
 }
 
@@ -36,6 +37,10 @@ type VolatilityTier @entity {
     # creation stats
     createdAtTimestamp: BigInt!
     createdAtBlockNumber: BigInt!
+}
+
+type TwapSource @entity {
+    id: ID!
 }
 
 type Token @entity {
@@ -75,6 +80,11 @@ type CoverPool @entity {
     inputPool: Bytes!
     volatilityTier: VolatilityTier!
     genesisTime: BigInt!
+
+    # sample status
+    sampleCount: BigInt!
+    sampleCountMax: BigInt!
+    sampleCountRequired: BigInt!
 
     liquidity: BigInt!
     liquidityGlobal: BigInt!
