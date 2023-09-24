@@ -150,12 +150,12 @@
         },
         "poolRouter": {
             "contractName": "PoolsharkRouter",
-            "contractAddress": "0x4aefd9449f4d827c4e5343a719ed082e68a1e145",
+            "contractAddress": "0x991743beef1a9f890adc1c289dea0aa1d498d86a",
             "constructorArguments": [
-                "0x8b9303c8ad68229440f2856d4e8a3b7507b08b20",
-                "0xe36E4b8A8CCCA7a6580f8A7d4F18A2DB27EEf35c"
+                "0xab21829ec97c5fb6fc5edee736235fa7ca1fbb0a",
+                "0xc9Dc6657e02349445c0FF45EBaCd3B2534d7b198"
             ],
-            "created": "2023-09-23T23:15:36.059Z"
+            "created": "2023-09-24T16:01:11.026Z"
         },
         "positionERC1155": {
             "contractName": "PositionERC1155",

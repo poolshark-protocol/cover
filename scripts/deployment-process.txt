@@ -3,6 +3,7 @@
    - pool types
 
 2. copy 'limitPoolFactory' and 'limitPoolManager' from limit deployment
+   - paste into scripts\autogen\contract-deployments.json
 
 3. set booleans for first deployment
     private deployRouter = false
@@ -21,6 +22,13 @@
     - manually verify proxies on Arbiscan
         * coverPool
         * coverPoolToken
+
+6. deploy poolRouter on Limit
+   - deploy
+   - verify contract
+
+7. copy 'poolRouter' from limit deployment
+    - paste into scripts\autogen\contract-deployments.json
 
 6. add contracts on Tenderly
 
