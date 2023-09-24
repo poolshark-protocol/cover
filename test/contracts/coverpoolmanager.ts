@@ -254,7 +254,7 @@ describe('CoverPoolManager Tests', function () {
           hre.props.uniswapV3Source.address,
           hre.props.uniswapV3Source.address
         )
-    ).to.be.revertedWith('TwapSourceNameInvalid()')
+    ).to.be.revertedWith('PoolTypeNameInvalid()')
   })
 
   it('Should update sync and fill fees on pool', async function () {
