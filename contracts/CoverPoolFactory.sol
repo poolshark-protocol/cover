@@ -120,6 +120,7 @@ contract CoverPoolFactory is
             data: encodeCover(constants)
         });
 
+        // intialize twap source
         ICoverPool(pool).initialize();
 
         poolToken = constants.poolToken;

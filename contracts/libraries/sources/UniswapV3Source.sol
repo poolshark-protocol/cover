@@ -3,22 +3,17 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/external/uniswap/v3/IUniswapV3Factory.sol';
 import '../../interfaces/external/uniswap/v3/IUniswapV3Pool.sol';
+import '../../base/events/TwapSourceEvents.sol';
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
 
-contract UniswapV3Source is ITwapSource {
+contract UniswapV3Source is ITwapSource, TwapSourceEvents {
     error WaitUntilBelowMaxTick();
     error WaitUntilAboveMinTick();
 
     address public immutable uniV3Factory;
     uint16 public constant oneSecond = 1000;
-
-    event SampleCountInitialized (
-        uint16 sampleCount,
-        uint16 sampleCountMax,
-        uint16 sampleCountRequired
-    );
 
     constructor(
         address _uniV3Factory
@@ -42,6 +37,7 @@ contract UniswapV3Source is ITwapSource {
         if (cardinalityNext < blockCount) {
             _increaseV3Observations(constants.inputPool, blockCount);
             emit SampleCountInitialized(
+                msg.sender,
                 cardinality,
                 cardinalityNext,
                 blockCount
@@ -51,6 +47,7 @@ contract UniswapV3Source is ITwapSource {
             return (0, 0);
         }
         emit SampleCountInitialized(
+            msg.sender,
             cardinality,
             cardinalityNext,
             blockCount

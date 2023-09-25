@@ -43,24 +43,19 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
             uint16 sampleCountMax
         ) = _getSampleCount(constants.inputPool);
 
-        if (sampleCountMax < blockCount) {
-            _increaseSampleCount(constants.inputPool, blockCount);
-            emit SampleCountInitialized (
-                msg.sender,
-                sampleCount,
-                sampleCountMax,
-                blockCount
-            );
-            return (0, 0);
-        } else if (sampleCount < blockCount) {
-            return (0, 0);
-        }
         emit SampleCountInitialized (
             msg.sender,
             sampleCount,
             sampleCountMax,
             blockCount
         );
+
+        if (sampleCountMax < blockCount) {
+            _increaseSampleCount(constants.inputPool, blockCount);
+            return (0, 0);
+        } else if (sampleCount < blockCount) {
+            return (0, 0);
+        }
          // ready to initialize
         initializable = 1;
         int24[4] memory averageTicks = _calculateAverageTicks(constants);
@@ -148,18 +143,17 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     function _getSampleCount(
         address pool
     ) internal view returns (
-        uint16,
-        uint16
+        uint16 sampleCount,
+        uint16 sampleCountMax
     )
     {
         (
             ILimitPool.RangePoolState memory poolState,
             ,,,,,
         ) = ILimitPool(pool).globalState();
-        return (
-            poolState.samples.count,
-            poolState.samples.countMax
-        );
+        
+        sampleCount = poolState.samples.count;
+        sampleCountMax = poolState.samples.countMax;
     }
 
     function _increaseSampleCount(address pool, uint32 blockCount) internal {

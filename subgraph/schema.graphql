@@ -17,6 +17,13 @@ type BasePrice @entity {
     USD: BigDecimal!
 }
 
+type PoolRouter @entity {
+    id: ID!
+
+    limitPoolFactory: Bytes!
+    coverPoolFactory: Bytes!
+}
+
 type CoverPoolManager @entity {
     id: ID!
     owner: Bytes!

@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, MintLog, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
+import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, MintLog, PoolRouter, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
 import { ONE_BD, ONE_BI } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -29,6 +29,25 @@ export function safeLoadBasePrice(name: string): LoadBasePriceRet {
 
     return {
         entity: basePriceEntity,
+        exists: exists,
+    }
+}
+
+class LoadPoolRouterRet {
+    entity: PoolRouter
+    exists: boolean
+}
+export function safeLoadPoolRouter(routerAddress: string): LoadPoolRouterRet {
+    let exists = true
+    let poolRouterEntity = PoolRouter.load(routerAddress)
+
+    if (!poolRouterEntity) {
+        poolRouterEntity = new PoolRouter(routerAddress)
+        exists = false
+    }
+
+    return {
+        entity: poolRouterEntity,
         exists: exists,
     }
 }

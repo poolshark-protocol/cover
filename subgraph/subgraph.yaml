@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0x479C2Df7eD63ea26146Ac2092C55047C3928A5A6'
+          address: '0x4b0288914ea8ab81da888e74f93da0062212ddcc'
           abi: CoverPoolFactory
-          startBlock: 41521100
+          startBlock: 43471400
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x74db8d63FD2e6FAeA61a7a53bFB5Ab319d17f220'
+          address: '0xf76088f4c5ad2a138f68870449f019e0e93e1510'
           abi: CoverPoolManager
-          startBlock: 41521100
+          startBlock: 43471400
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -64,6 +64,26 @@ dataSources:
                 handler: handleProtocolFeesCollected
               - event: FactoryChanged(indexed address,indexed address)
                 handler: handleFactoryChanged
+    - kind: ethereum/contract
+      name: PoolsharkRouter
+      network: arbitrum-goerli
+      source:
+          address: '0xdb11885eac2a8944438322349925ac0de3159392'
+          abi: PoolsharkRouter
+          startBlock: 43471400
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/coverpoolrouter.ts
+          entities:
+              - PoolsharkRouter
+          abis:
+              - name: PoolsharkRouter
+                file: ./abis/PoolsharkRouter.json
+          eventHandlers:
+              - event: RouterDeployed(address,address,address)
+                handler: handleRouterDeployed
 templates:
     # Cover Pool Events
     - kind: ethereum/contract
