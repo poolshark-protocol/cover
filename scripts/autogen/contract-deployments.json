@@ -142,7 +142,7 @@
         },
         "coverPoolImpl": {
             "contractName": "CoverPool",
-            "contractAddress": "0xebae6ac9aeaa46b321b7541e044ec10f4225c57c",
+            "contractAddress": "0x021d33056507e041b8e799530af4088123d334a1",
             "constructorArguments": [
                 "0x4B0288914Ea8aB81DA888e74F93DA0062212ddcC"
             ],
