@@ -192,7 +192,8 @@ type Tick @entity {
     index: BigInt!
     price0: BigDecimal!
     price1: BigDecimal!
-    epochLast: BigInt!
+    epochLast0: BigInt!
+    epochLast1: BigInt!
 }
 
 type TickDeltas @entity {
