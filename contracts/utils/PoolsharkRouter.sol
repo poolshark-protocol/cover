@@ -54,6 +54,52 @@ contract PoolsharkRouter is
         );
     }
 
+    /// @inheritdoc ILimitPoolSwapCallback
+    function limitPoolSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
+
+        // validate sender is a canonical limit pool
+        canonicalLimitPoolsOnly(constants);
+
+        // decode original sender
+        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
+    /// @inheritdoc ICoverPoolSwapCallback
+    function coverPoolSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
+
+        // validate sender is a canonical cover pool
+        canonicalCoverPoolsOnly(constants);
+
+        // decode original sender
+        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
+        
+        // transfer from swap caller
+        if (amount0Delta < 0) {
+            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
+        }
+        if (amount1Delta < 0) {
+            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
+        }
+    }
+
     /// @inheritdoc ILimitPoolMintCallback
     function limitPoolMintCallback(
         int256 amount0Delta,
@@ -77,50 +123,6 @@ contract PoolsharkRouter is
         }
     }
 
-    /// @inheritdoc ILimitPoolSwapCallback
-    function limitPoolSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        PoolsharkStructs.LimitImmutables memory constants = ILimitPool(msg.sender).immutables();
-
-        // validate sender is a canonical limit pool
-        canonicalLimitPoolsOnly(constants);
-
-        // decode original sender
-        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
-        
-        // transfer from swap caller
-        if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
-        }
-    }
-
-    /// @inheritdoc ICoverPoolSwapCallback
-    function coverPoolSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        PoolsharkStructs.CoverImmutables memory constants = ICoverPool(msg.sender).immutables();
-
-        // validate sender is a canonical cover pool
-        canonicalCoverPoolsOnly(constants);
-
-        // decode original sender
-        SwapCallbackData memory _data = abi.decode(data, (SwapCallbackData));
-        
-        // transfer from swap caller
-        if (amount0Delta < 0) {
-            SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
-            SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
-        }
-    }
-
     /// @inheritdoc ICoverPoolMintCallback
     function coverPoolMintCallback(
         int256 amount0Delta,
@@ -138,7 +140,8 @@ contract PoolsharkRouter is
         // transfer from swap caller
         if (amount0Delta < 0) {
             SafeTransfers.transferInto(constants.token0, _data.sender, uint256(-amount0Delta));
-        } else {
+        }
+        if (amount1Delta < 0) {
             SafeTransfers.transferInto(constants.token1, _data.sender, uint256(-amount1Delta));
         }
     }
@@ -500,7 +503,9 @@ contract PoolsharkRouter is
             constants.poolToken,
             constants.inputPool,
             constants.bounds.min,
-            constants.bounds.max,
+            constants.bounds.max
+        );
+        bytes memory value2 = abi.encodePacked(
             constants.minAmountPerAuction,
             constants.genesisTime,
             constants.minPositionWidth,
@@ -508,12 +513,12 @@ contract PoolsharkRouter is
             constants.twapLength,
             constants.auctionLength
         );
-        bytes memory value2 = abi.encodePacked(
+        bytes memory value3 = abi.encodePacked(
             constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
         );
-        return abi.encodePacked(value1, value2);
+        return abi.encodePacked(value1, value2, value3);
     }
 }
