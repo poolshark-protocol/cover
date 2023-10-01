@@ -1,6 +1,6 @@
 import { log } from '@graphprotocol/graph-ts'
 import { PoolCreated } from '../../generated/CoverPoolFactory/CoverPoolFactory'
-import { CoverPoolTemplate } from '../../generated/templates'
+import { CoverPoolTemplate, LimitSamplesTemplate } from '../../generated/templates'
 import {
     fetchTokenSymbol,
     fetchTokenName,
@@ -16,11 +16,12 @@ export function handlePoolCreated(event: PoolCreated): void {
     let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam = BigInt.fromI32(event.params.twapLength)
     let poolTypeParam = event.params.poolType.toString()
-    let poolAddressParam = event.params.pool.toHex()
+    let poolAddressParam = event.params.pool
+    let inputPoolParam = event.params.inputPool
 
     // load from store
     let loadVolatilityTier = safeLoadVolatilityTier(poolTypeParam, feeTierParam, tickSpreadParam, twapLengthParam)
-    let loadCoverPool = safeLoadCoverPool(poolAddressParam)
+    let loadCoverPool = safeLoadCoverPool(poolAddressParam.toHex())
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
     let loadToken1 = safeLoadToken(event.params.token1.toHexString())
@@ -75,5 +76,9 @@ export function handlePoolCreated(event: PoolCreated): void {
     token1.save()
 
     // create the tracked contract based on the template
-    CoverPoolTemplate.create(event.params.pool)
+    CoverPoolTemplate.create(poolAddressParam)
+
+    if (poolTypeParam == 'PSHARK-CPROD') {
+        LimitSamplesTemplate.create(inputPoolParam)
+    }
 }

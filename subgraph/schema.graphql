@@ -93,9 +93,10 @@ type CoverPool @entity {
     sampleCountMax: BigInt!
     sampleCountRequired: BigInt!
 
+    newLatestTick: BigInt!
+    latestTick: BigInt!
     liquidity: BigInt!
     liquidityGlobal: BigInt!
-    latestTick: BigInt!
     auctionEpoch: BigInt!
     auctionStart: BigInt!
 
@@ -128,6 +129,23 @@ type CoverPool @entity {
     createdAtBlockNumber: BigInt!
     updatedAtTimestamp: BigInt!
     updatedAtBlockNumber: BigInt!
+}
+
+type LimitPool @entity {
+    # poolAddress
+    id: ID!
+
+    coverPool: CoverPool!
+
+    samples: [Sample!]!
+    samplesRecorded: BigInt!
+}
+
+type Sample @entity {
+    # poolAddress + sample number
+    id: ID!
+    tickSecondsAccum: BigInt!
+    blockTimestamp: BigInt!
 }
 
 type Position @entity {

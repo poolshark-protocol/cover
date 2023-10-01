@@ -116,6 +116,11 @@ interface ICoverPool is CoverPoolStructs {
         CoverImmutables memory constants
     );
 
+    function syncLatestTick(
+    ) external view returns (
+        int24 newLatestTick
+    );
+
     function priceBounds(
         int16 tickSpacing
     ) external pure returns (

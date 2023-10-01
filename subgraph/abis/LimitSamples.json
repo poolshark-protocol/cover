@@ -1,0 +1,21 @@
+[
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": false,
+            "internalType": "int56",
+            "name": "tickSecondsAccum",
+            "type": "int56"
+            },
+            {
+            "indexed": false,
+            "internalType": "uint160",
+            "name": "secondsPerLiquidityAccum",
+            "type": "uint160"
+            }
+        ],
+        "name": "SampleRecorded",
+        "type": "event"
+    }
+]

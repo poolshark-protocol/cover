@@ -144,6 +144,15 @@ library Epochs {
         return (state, cache.syncFees, pool0, pool1);
     }
 
+    function syncLatestTick(
+        CoverPoolStructs.GlobalState memory state,
+        PoolsharkStructs.CoverImmutables memory constants
+    ) external view returns (
+        int24 newLatestTick
+    ) {
+        (newLatestTick,) = _syncTick(state, constants);
+    }
+
     function syncLatest(
         mapping(int24 => CoverPoolStructs.Tick) storage ticks,
         CoverPoolStructs.TickMap storage tickMap,

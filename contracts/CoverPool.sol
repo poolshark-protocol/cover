@@ -281,6 +281,13 @@ contract CoverPool is
         );
     }
 
+    function syncLatestTick() external view returns (int24) {
+        return Epochs.syncLatestTick(
+            globalState,
+            immutables()
+        );
+    }
+
     function priceBounds(
         int16 tickSpacing
     ) external pure returns (uint160, uint160) {

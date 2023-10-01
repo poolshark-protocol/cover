@@ -149,6 +149,25 @@ templates:
           eventHandlers:
               - event: SampleCountInitialized(indexed address,uint16,uint16,uint16)
                 handler: handleSampleCountInitialized
+    # InputPool events
+    - kind: ethereum/contract
+      name: LimitSamplesTemplate
+      network: arbitrum-goerli
+      source:
+          abi: LimitSamples
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/limit/samples.ts
+          entities:
+              - CoverPool
+          abis:
+              - name: LimitSamples
+                file: ./abis/LimitSamples.json
+          eventHandlers:
+              - event: SampleRecorded(int56,uint160)
+                handler: handleSampleRecorded
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template

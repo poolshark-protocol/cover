@@ -521,4 +521,18 @@ contract PoolsharkRouter is
         );
         return abi.encodePacked(value1, value2, value3);
     }
+
+    function multiCall(
+        address[] memory pools,
+        SwapParams[] memory params 
+    ) external {
+        if (pools.length != params.length) require(false, 'InputArrayLengthsMismatch()');
+        for (uint i = 0; i < pools.length;) {
+            params[i].callbackData = abi.encode(SwapCallbackData({sender: msg.sender}));
+            ICoverPool(pools[i]).swap(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
 }

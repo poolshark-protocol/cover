@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, MintLog, PoolRouter, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
+import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, LimitPool, MintLog, PoolRouter, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
 import { ONE_BD, ONE_BI } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -227,7 +227,6 @@ export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
         tickEntity = new Tick(tickId)
         tickEntity.pool = address
         tickEntity.index = index
-        tickEntity.epochLast = ONE_BI
         // 1.0001^tick is token1/token0.
         tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
         tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
@@ -283,6 +282,25 @@ export function safeLoadCoverPoolFactory(factoryAddress: string): LoadCoverPoolF
 
     return {
         entity: coverPoolFactoryEntity,
+        exists: exists,
+    }
+}
+
+class LoadLimitPoolRet {
+    entity: LimitPool
+    exists: boolean
+}
+export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
+    let exists = true
+    let limitPoolEntity = LimitPool.load(poolAddress)
+
+    if (!limitPoolEntity) {
+        limitPoolEntity = new LimitPool(poolAddress)
+        exists = false
+    }
+
+    return {
+        entity: limitPoolEntity,
         exists: exists,
     }
 }
