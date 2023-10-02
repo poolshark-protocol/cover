@@ -44,7 +44,7 @@ export class MintPosition {
         // 0xBd5db4c7D55C086107f4e9D17c4c34395D1B1E1E
         await validateMint({
             signer: hre.props.alice,
-            recipient: '0xBd5db4c7D55C086107f4e9D17c4c34395D1B1E1E',
+            recipient: '0x65f5B282E024e3d6CaAD112e848dEc3317dB0902',
             lower: '73400', //1096
             upper: '73600', //1211
             amount: token1Amount,

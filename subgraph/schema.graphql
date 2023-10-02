@@ -136,9 +136,6 @@ type LimitPool @entity {
     id: ID!
 
     coverPool: CoverPool!
-
-    samples: [Sample!]!
-    samplesRecorded: BigInt!
 }
 
 type Sample @entity {

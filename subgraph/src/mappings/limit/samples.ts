@@ -13,11 +13,8 @@ export function handleSampleRecorded(event: SampleRecorded): void {
     let loadCoverPool = safeLoadCoverPool(limitPool.coverPool)
     let coverPool = loadCoverPool.entity
 
-    // increment sample count
-    limitPool.samplesRecorded = limitPool.samplesRecorded.plus(ONE_BI)
-    if (limitPool.samplesRecorded.le(coverPool.sampleCountMax))
+    if (limitPool.samplesRecorded.le(coverPool.sampleCountMax)) {
         coverPool.sampleCount = limitPool.samplesRecorded
-
-    limitPool.save()
-    coverPool.save()
+        coverPool.save()
+    }
 }

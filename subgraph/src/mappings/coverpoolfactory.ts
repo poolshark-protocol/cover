@@ -6,7 +6,7 @@ import {
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
+import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadLimitPool, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI } from '../constants/constants'
 
@@ -70,15 +70,21 @@ export function handlePoolCreated(event: PoolCreated): void {
     factory.poolCount = factory.poolCount.plus(ONE_BI)
     factory.txnCount  = factory.txnCount.plus(ONE_BI)
 
-    pool.save()
-    factory.save()
-    token0.save()
-    token1.save()
-
     // create the tracked contract based on the template
     CoverPoolTemplate.create(poolAddressParam)
 
     if (poolTypeParam == 'PSHARK-CPROD') {
+        let loadLimitPool = safeLoadLimitPool(inputPoolParam.toHex())
+        let limitPool = loadLimitPool.entity
+        if (!loadLimitPool.exists) {
+            limitPool.coverPool = poolAddressParam.toHex()
+            limitPool.save()
+        }
         LimitSamplesTemplate.create(inputPoolParam)
     }
+
+    pool.save()
+    factory.save()
+    token0.save()
+    token1.save()
 }
