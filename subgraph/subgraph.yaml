@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0x4b0288914ea8ab81da888e74f93da0062212ddcc'
+          address: '0xf8f75a39663e97d36da4be2882608513512f4cf0'
           abi: CoverPoolFactory
-          startBlock: 43471400
+          startBlock: 44921100
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -37,9 +37,9 @@ dataSources:
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0xf76088f4c5ad2a138f68870449f019e0e93e1510'
+          address: '0x7877a681d1290d80ed0272a920b9a5cee8fd2fac'
           abi: CoverPoolManager
-          startBlock: 43471400
+          startBlock: 44921100
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -68,9 +68,9 @@ dataSources:
       name: PoolsharkRouter
       network: arbitrum-goerli
       source:
-          address: '0xdb11885eac2a8944438322349925ac0de3159392'
+          address: '0xbe033a8649376bf3ac06cae9439c2612b582532c'
           abi: PoolsharkRouter
-          startBlock: 43471400
+          startBlock: 44996083
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6

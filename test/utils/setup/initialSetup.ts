@@ -514,7 +514,7 @@ export class InitialSetup {
                 console.log('vol tier 3')
                 const volTier3: VolatilityTier = {
                     minAmountPerAuction: BN_ZERO,
-                    auctionLength: 5 ,
+                    auctionLength: 5,
                     sampleInterval: 1000,
                     syncFee: 0,
                     fillFee: 0,
