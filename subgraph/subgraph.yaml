@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0xf8f75a39663e97d36da4be2882608513512f4cf0'
+          address: '0xc4230d3f673a44bf125c94effd1a6cc44202e0b8'
           abi: CoverPoolFactory
-          startBlock: 44921100
+          startBlock: 52612037
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -31,15 +31,15 @@ dataSources:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: PoolCreated(address,indexed address,address,address,indexed bytes32,uint16,int16,uint16)
+              - event: PoolCreated(address,indexed address,address,address,uint16,int16,uint16,indexed uint8)
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x7877a681d1290d80ed0272a920b9a5cee8fd2fac'
+          address: '0x87131ccc50786e387cfebcaafa522073a8e43548'
           abi: CoverPoolManager
-          startBlock: 44921100
+          startBlock: 52612031
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -52,9 +52,9 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
-              - event: PoolTypeEnabled(bytes32,address,address,address)
+              - event: PoolTypeEnabled(uint8,bytes32,address,address,address)
                 handler: handlePoolTypeEnabled
-              - event: VolatilityTierEnabled(bytes32,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
+              - event: VolatilityTierEnabled(uint8,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
                 handler: handleFeeToTransfer
@@ -68,9 +68,9 @@ dataSources:
       name: PoolsharkRouter
       network: arbitrum-goerli
       source:
-          address: '0xbe033a8649376bf3ac06cae9439c2612b582532c'
+          address: '0x6ccccc845849b76f3acb3affcca28a6035e41a20'
           abi: PoolsharkRouter
-          startBlock: 44996083
+          startBlock: 52612031
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6

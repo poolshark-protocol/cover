@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import '../../interfaces/external/poolshark/limit/ILimitPoolManager.sol';
-import '../../interfaces/external/poolshark/limit/ILimitPoolFactory.sol';
-import '../../interfaces/external/poolshark/limit/ILimitPool.sol';
+import '../../interfaces/limit/ILimitPoolManager.sol';
+import '../../interfaces/limit/ILimitPoolFactory.sol';
+import '../../interfaces/limit/ILimitPool.sol';
 import '../../base/events/TwapSourceEvents.sol';
+import '../../interfaces/cover/ICoverPool.sol';
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
@@ -14,7 +15,7 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     error WaitUntilAboveMinTick();
 
     // poolType on limitPoolFactory
-    bytes32 public immutable poolType;
+    uint8 public immutable poolType;
     address public immutable limitPoolFactory;
     address public immutable limitPoolManager;
     uint16 public constant oneSecond = 1000;
@@ -22,7 +23,7 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     constructor(
         address _limitPoolFactory,
         address _limitPoolManager,
-        bytes32 _poolType
+        uint8 _poolType
     ) {
         limitPoolFactory = _limitPoolFactory;
         limitPoolManager = _limitPoolManager;
@@ -36,8 +37,8 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
         int24 startingTick
     )
     {
-        // get the number of blocks covered by the twapLength
-        uint16 blockCount = uint16(constants.twapLength) * oneSecond / constants.sampleInterval;
+        // get the number of samples covered by the twapLength
+        uint16 samplesRequired = uint16(constants.twapLength) * oneSecond / constants.sampleInterval;
         (
             uint16 sampleCount,
             uint16 sampleCountMax
@@ -47,18 +48,18 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
             msg.sender,
             sampleCount,
             sampleCountMax,
-            blockCount
+            samplesRequired
         );
 
-        if (sampleCountMax < blockCount) {
-            _increaseSampleCount(constants.inputPool, blockCount);
+        if (sampleCountMax < samplesRequired) {
+            _increaseSampleCount(constants.inputPool, samplesRequired);
             return (0, 0);
-        } else if (sampleCount < blockCount) {
+        } else if (sampleCount < samplesRequired) {
             return (0, 0);
         }
          // ready to initialize
         initializable = 1;
-        int24[4] memory averageTicks = _calculateAverageTicks(constants);
+        int24[4] memory averageTicks = calculateAverageTicks(constants);
         // take the average of the 4 samples as a starting tick
         startingTick = (averageTicks[0] + averageTicks[1] + averageTicks[2] + averageTicks[3]) / 4;
     }
@@ -83,7 +84,7 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     ) external view returns(
         address pool
     ) {
-        (pool,) = ILimitPoolFactory(limitPoolFactory).getLimitPool(poolType, token0, token1, feeTier);
+        (pool,) = ILimitPoolFactory(limitPoolFactory).getLimitPool(token0, token1, feeTier, poolType);
     }
 
     function calculateAverageTick(
@@ -93,7 +94,7 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
         int24 averageTick
     )
     {
-        int24[4] memory averageTicks = _calculateAverageTicks(constants);
+        int24[4] memory averageTicks = calculateAverageTicks(constants);
         int24 minTickVariance = ConstantProduct.maxTick(constants.tickSpread) * 2;
         for (uint i; i < 4; i++) {
             int24 absTickVariance = latestTick - averageTicks[i] >= 0 ? latestTick - averageTicks[i]
@@ -106,9 +107,9 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
         }
     }
 
-    function _calculateAverageTicks(
+    function calculateAverageTicks(
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal view returns (
+    ) public view returns (
         int24[4] memory averageTicks
     )
     {
@@ -137,6 +138,49 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
                 averageTicks[i] = minAverageTick;
             if (averageTicks[i] > maxAverageTick)
                 averageTicks[i] = maxAverageTick;
+        }
+    }
+
+    function syncLatestTick(
+        PoolsharkStructs.CoverImmutables memory constants,
+        address coverPool
+    ) external view returns (
+        int24 latestTick,
+        bool twapReady
+    ) {
+        if (constants.inputPool == address(0))
+            return (0, false);
+        (
+            uint16 sampleCount,
+            uint16 sampleCountMax
+        ) = _getSampleCount(constants.inputPool);
+
+        // check twap readiness
+        uint16 samplesRequired = uint16(constants.twapLength) * 
+                                    oneSecond / constants.sampleInterval;
+        if (sampleCountMax < samplesRequired) {
+            return (0, false);
+        } else if (sampleCount < samplesRequired) {
+            return (0, false);
+        }
+        // ready to initialize
+        twapReady = true;
+
+        // if pool exists check unlocked state
+        uint8 unlockedState = 0;
+        if (coverPool != address(0)) {
+            CoverPoolStructs.GlobalState memory state = ICoverPool(coverPool).syncGlobalState();
+            unlockedState = state.unlocked;
+        }
+        if (unlockedState == 0) {
+            // pool uninitialized
+            int24[4] memory averageTicks = calculateAverageTicks(constants);
+            // take the average of the 4 samples as a starting tick
+            latestTick = (averageTicks[0] + averageTicks[1] + averageTicks[2] + averageTicks[3]) / 4;
+            latestTick = (latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
+        } else {
+            // pool initialized
+            latestTick = ICoverPool(coverPool).syncLatestTick();
         }
     }
 

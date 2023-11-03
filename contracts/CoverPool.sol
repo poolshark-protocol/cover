@@ -49,7 +49,6 @@ contract CoverPool is
 
     function initialize() 
         external 
-            factoryOnly
     {
         Ticks.initialize(
             tickMap,
@@ -286,6 +285,10 @@ contract CoverPool is
             globalState,
             immutables()
         );
+    }
+
+    function syncGlobalState() external view returns (GlobalState memory) {
+        return globalState;
     }
 
     function priceBounds(

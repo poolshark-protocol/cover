@@ -27,12 +27,6 @@
         "type": "address"
       },
       {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "poolType",
-        "type": "bytes32"
-      },
-      {
         "indexed": false,
         "internalType": "uint16",
         "name": "fee",
@@ -49,6 +43,12 @@
         "internalType": "uint16",
         "name": "twapLength",
         "type": "uint16"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint8",
+        "name": "poolTypeId",
+        "type": "uint8"
       }
     ],
     "name": "PoolCreated",

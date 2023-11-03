@@ -6,12 +6,12 @@ import '../../base/storage/CoverPoolFactoryStorage.sol';
 abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
 
     struct CoverPoolParams {
-        bytes32 poolType;
         address tokenIn;
         address tokenOut;
         uint16 feeTier;
         int16  tickSpread;
         uint16 twapLength;
+        uint8 poolTypeId;
     }
 
     /**

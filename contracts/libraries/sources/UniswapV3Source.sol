@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import '../../interfaces/external/uniswap/v3/IUniswapV3Factory.sol';
 import '../../interfaces/external/uniswap/v3/IUniswapV3Pool.sol';
 import '../../base/events/TwapSourceEvents.sol';
+import '../../interfaces/cover/ICoverPool.sol';
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/modules/sources/ITwapSource.sol';
 import '../math/ConstantProduct.sol';
@@ -54,7 +55,7 @@ contract UniswapV3Source is ITwapSource, TwapSourceEvents {
         );
         // ready to initialize if we get here
         initializable = 1;
-        int24[4] memory averageTicks = _calculateAverageTicks(constants);
+        int24[4] memory averageTicks = calculateAverageTicks(constants);
         // take the average of the 4 samples as a starting tick
         startingTick = (averageTicks[0] + averageTicks[1] + averageTicks[2] + averageTicks[3]) / 4;
     }
@@ -89,7 +90,7 @@ contract UniswapV3Source is ITwapSource, TwapSourceEvents {
         int24 averageTick
     )
     {
-        int24[4] memory averageTicks = _calculateAverageTicks(constants);
+        int24[4] memory averageTicks = calculateAverageTicks(constants);
         int24 minTickVariance = ConstantProduct.maxTick(constants.tickSpread) * 2;
         for (uint i; i < 4; i++) {
             int24 absTickVariance = latestTick - averageTicks[i] >= 0 ? latestTick - averageTicks[i]
@@ -102,9 +103,9 @@ contract UniswapV3Source is ITwapSource, TwapSourceEvents {
         }
     }
 
-    function _calculateAverageTicks(
+    function calculateAverageTicks(
         PoolsharkStructs.CoverImmutables memory constants
-    ) internal view returns (
+    ) public view returns (
         int24[4] memory averageTicks
     )
     {
@@ -133,6 +134,48 @@ contract UniswapV3Source is ITwapSource, TwapSourceEvents {
                 averageTicks[i] = minAverageTick;
             if (averageTicks[i] > maxAverageTick)
                 averageTicks[i] = maxAverageTick;
+        }
+    }
+
+    function syncLatestTick(
+        PoolsharkStructs.CoverImmutables memory constants,
+        address coverPool
+    ) external view returns (
+        int24 latestTick,
+        bool twapReady
+    ) {
+        if (constants.inputPool == address(0))
+            return (0, false);
+        
+        uint16 samplesRequired = uint16(constants.twapLength) * oneSecond / constants.sampleInterval;
+        (
+            uint16 sampleCount,
+            uint16 sampleCountMax
+        ) = _getObservationsCardinality(constants.inputPool);
+
+        if (sampleCountMax < samplesRequired) {
+            return (0, false);
+        } else if (sampleCount < samplesRequired) {
+            return (0, false);
+        }
+        // ready to initialize
+        twapReady = true;
+
+        // if pool exists check unlocked state
+        uint8 unlockedState = 0;
+        if (coverPool != address(0)) {
+            CoverPoolStructs.GlobalState memory state = ICoverPool(coverPool).syncGlobalState();
+            unlockedState = state.unlocked;
+        }
+        if (unlockedState == 0) {
+            // pool uninitialized
+            int24[4] memory averageTicks = calculateAverageTicks(constants);
+            // take the average of the 4 samples as a starting tick
+            latestTick = (averageTicks[0] + averageTicks[1] + averageTicks[2] + averageTicks[3]) / 4;
+            latestTick = (latestTick / int24(constants.tickSpread)) * int24(constants.tickSpread);
+        } else {
+            // pool initialized
+            latestTick = ICoverPool(coverPool).syncLatestTick();
         }
     }
 

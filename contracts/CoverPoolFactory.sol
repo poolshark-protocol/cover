@@ -32,7 +32,7 @@ contract CoverPoolFactory is
     ) {
         // validate token pair
         if (params.tokenIn == params.tokenOut || params.tokenIn == address(0) || params.tokenOut == address(0)) {
-            revert InvalidTokenAddress();
+            require(false, "InvalidTokenAddress()");
         }
         CoverImmutables memory constants;
         constants.owner = owner;
@@ -46,7 +46,7 @@ contract CoverPoolFactory is
             uint8 token1Decimals = ERC20(constants.token1).decimals();
             if (token0Decimals > 18 || token1Decimals > 18
             || token0Decimals < 6 || token1Decimals < 6) {
-                revert InvalidTokenDecimals();
+                require(false, "InvalidTokenDecimals()");
             }
             constants.token0Decimals = token0Decimals;
             constants.token1Decimals = token1Decimals;
@@ -55,24 +55,26 @@ contract CoverPoolFactory is
         // get twap source
         {
             (
-                address poolImpl,
-                address tokenImpl,
-                address twapSource
-            ) = ICoverPoolManager(owner).poolTypes(params.poolType);
-            if (poolImpl == address(0) || twapSource == address(0)) revert PoolTypeNotFound();
-            constants.poolImpl = poolImpl;
-            constants.poolToken = tokenImpl;
-            constants.source = ITwapSource(twapSource);
+                address _poolImpl,
+                address _tokenImpl,
+                address _twapSource
+            ) = ICoverPoolManager(owner).poolTypes(params.poolTypeId);
+            if (_poolImpl == address(0) || _twapSource == address(0))
+                require(false, "PoolTypeNotFound()");
+            constants.poolImpl = _poolImpl;
+            constants.poolToken = _tokenImpl;
+            constants.source = ITwapSource(_twapSource);
         }
         // get volatility tier config
         {
             VolatilityTier memory config = ICoverPoolManager(owner).volatilityTiers(
-                params.poolType,
+                params.poolTypeId,
                 params.feeTier,
                 params.tickSpread,
                 params.twapLength
             );
-            if (config.auctionLength == 0) revert VolatilityTierNotSupported();
+            if (config.auctionLength == 0)
+                require(false, "VolatilityTierNotSupported()");
             constants.minAmountPerAuction = config.minAmountPerAuction;
             constants.auctionLength = config.auctionLength;
             constants.sampleInterval = config.sampleInterval;
@@ -82,10 +84,11 @@ contract CoverPoolFactory is
         // record genesis time
         constants.tickSpread = params.tickSpread;
         constants.twapLength = params.twapLength;
-        constants.genesisTime   = uint32(block.timestamp);
+        constants.genesisTime = uint32(block.timestamp);
         // get reference pool
         constants.inputPool  = ITwapSource(constants.source).getPool(constants.token0, constants.token1, params.feeTier);
-
+        if (constants.inputPool == address(0))
+            require (false, "InputPoolDoesNotExist()");
         // generate key for pool
         bytes32 key = keccak256(
             abi.encode(
@@ -132,10 +135,10 @@ contract CoverPoolFactory is
             constants.inputPool,
             constants.token0,
             constants.token1,
-            params.poolType,
             params.feeTier,
             params.tickSpread,
-            params.twapLength
+            params.twapLength,
+            params.poolTypeId
         );
     }
 
@@ -153,7 +156,7 @@ contract CoverPoolFactory is
             address poolImpl,
             address tokenImpl,
             address source
-        ) = ICoverPoolManager(owner).poolTypes(params.poolType);
+        ) = ICoverPoolManager(owner).poolTypes(params.poolTypeId);
         address inputPool  = ITwapSource(source).getPool(token0, token1, params.feeTier);
 
         // generate key for pool
@@ -176,6 +179,76 @@ contract CoverPoolFactory is
             key,
             address(this)
         );
+    }
+
+    function syncLatestTick(
+        CoverPoolParams memory params
+    ) external view returns (
+        int24 latestTick,
+        bool inputPoolExists,
+        bool twapReady
+    ) {
+        if (params.tokenIn == params.tokenOut || 
+                params.tokenIn == address(0) || 
+                params.tokenOut == address(0)) {
+            return (0, false, false);
+        }
+        CoverImmutables memory constants;
+        // set lexographical token address ordering
+        constants.token0 = params.tokenIn < params.tokenOut ? params.tokenIn : params.tokenOut;
+        constants.token1 = params.tokenIn < params.tokenOut ? params.tokenOut : params.tokenIn;
+        // get twap source
+        {
+            (
+                ,,
+                address _twapSource
+            ) = ICoverPoolManager(owner).poolTypes(params.poolTypeId);
+            if (_twapSource == address(0))
+                return (0, false, false);
+            constants.source = ITwapSource(constants.source);
+        }
+        constants.inputPool  = ITwapSource(constants.source).getPool(constants.token0, constants.token1, params.feeTier);
+
+        if (constants.inputPool == address(0))
+            return (0, false, false);
+        
+        inputPoolExists = true;
+
+        // generate key for pool
+        bytes32 key = keccak256(abi.encode(
+                                    constants.token0,
+                                    constants.token1,
+                                    constants.source,
+                                    constants.inputPool,
+                                    params.tickSpread,
+                                    params.twapLength
+                                ));
+
+        // validate erc20 decimals
+        {
+            uint8 token0Decimals = ERC20(constants.token0).decimals();
+            uint8 token1Decimals = ERC20(constants.token1).decimals();
+            if (token0Decimals > 18 || token1Decimals > 18
+            || token0Decimals < 6 || token1Decimals < 6) {
+                return (0, true, false);
+            }
+        }
+        // get volatility tier config
+        {
+            VolatilityTier memory config = ICoverPoolManager(owner).volatilityTiers(
+                params.poolTypeId,
+                params.feeTier,
+                params.tickSpread,
+                params.twapLength
+            );
+            if (config.auctionLength == 0)
+                return (0, true, false);
+            constants.sampleInterval = config.sampleInterval;
+        }
+        constants.tickSpread = params.tickSpread;
+        constants.twapLength = params.twapLength;
+
+        (latestTick, twapReady) = ITwapSource(constants.source).syncLatestTick(constants, coverPools[key]);
     }
 
     function encodeCover(

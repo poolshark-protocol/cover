@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import '../interfaces/external/poolshark/limit/ILimitPool.sol';
+import '../interfaces/limit/ILimitPool.sol';
 import './UniswapV3PoolMock.sol';
 
-contract LimitPoolMock is ILimitPool {
+contract LimitPoolMock is PoolsharkStructs {
     address internal admin;
     address public token0;
     address public token1;
@@ -41,7 +41,7 @@ contract LimitPoolMock is ILimitPool {
 
     function globalState()
         external
-        view override
+        view
         returns (
             RangePoolState memory pool,
             LimitPoolState memory pool0,
@@ -67,7 +67,7 @@ contract LimitPoolMock is ILimitPool {
 
     function sample(
         uint32[] calldata secondsAgos
-    ) external view override returns (
+    ) external view returns (
             int56[]   memory tickSecondsAccum,
             uint160[] memory secondsPerLiquidityAccum,
             uint160 averagePrice,

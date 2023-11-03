@@ -18,6 +18,20 @@ interface ITwapSource {
         int24 averageTick
     );
 
+    function calculateAverageTicks(
+        PoolsharkStructs.CoverImmutables memory constants
+    ) external view returns (
+        int24[4] memory averageTicks
+    );
+
+    function syncLatestTick(
+        PoolsharkStructs.CoverImmutables memory constants,
+        address coverPool
+    ) external view returns (
+        int24 latestTick,
+        bool twapReady
+    );
+
     function getPool(
         address tokenA,
         address tokenB,

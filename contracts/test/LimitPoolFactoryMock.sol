@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import '../interfaces/external/poolshark/limit/ILimitPoolFactory.sol';
+import '../interfaces/limit/ILimitPoolFactory.sol';
 import './LimitPoolMock.sol';
 
-contract LimitPoolFactoryMock is ILimitPoolFactory {
+contract LimitPoolFactoryMock {
     address mockPool;
     address mockPool2;
     address owner;
@@ -30,14 +30,14 @@ contract LimitPoolFactoryMock is ILimitPoolFactory {
     }
 
     function getLimitPool(
-        bytes32 poolType,
         address tokenIn,
         address tokenOut,
-        uint16 feeTier
-    ) external view override returns (address pool, address poolToken) {
+        uint16 feeTier,
+        uint8 poolTypeId
+    ) external view returns (address pool, address poolToken) {
         address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
-        poolType;
+        poolTypeId;
         poolToken;
         
         pool = limitPools[token0][token1][feeTier];

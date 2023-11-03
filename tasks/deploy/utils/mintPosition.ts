@@ -42,6 +42,21 @@ export class MintPosition {
         // 0x1DcF623EDf118E4B21b4C5Dc263bb735E170F9B8
         // 0x9dA9409D17DeA285B078af06206941C049F692Dc
         // 0xBd5db4c7D55C086107f4e9D17c4c34395D1B1E1E
+        const txn = await hre.props.poolRouter.createCoverPoolAndMint(
+            {
+                poolType: ethers.utils.formatBytes32String("PSHARK-CPROD"),
+                tokenIn: '0x0bfaaafa6e8fb009cd4e2bd3693f2eec2d18b053',
+                tokenOut: '0xEbfF7a98149b4774c9743C5D1f382305Fe5422c9',
+                feeTier: "1000",
+                tickSpread: "20",
+                twapLength: "12"
+            },
+            []
+        , {gasLimit: 3_000_000})
+
+        await txn.wait();
+
+        return;
         await validateMint({
             signer: hre.props.alice,
             recipient: '0x65f5B282E024e3d6CaAD112e848dEc3317dB0902',

@@ -269,6 +269,24 @@ contract PoolsharkRouter is
         }
     }
 
+    function multiSnapshotLimit(
+        address[] memory pools,
+        SnapshotLimitParams[] memory params 
+    ) external view returns(
+        uint128[] memory amountIns,
+        uint128[] memory amountOuts
+    ) {
+        amountIns = new uint128[](pools.length);
+        amountOuts = new uint128[](pools.length);
+        for (uint i = 0; i < pools.length;) {
+            if (pools[i] == address(0)) require(false, "InvalidPoolAddress()");
+            (amountIns[i], amountOuts[i]) = ILimitPool(pools[i]).snapshotLimit(params[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function createLimitPoolAndMint(
         ILimitPoolFactory.LimitPoolParams memory params,
         MintRangeParams[] memory mintRangeParams,
@@ -282,10 +300,10 @@ contract PoolsharkRouter is
             pool,
             poolToken
         ) = ILimitPoolFactory(limitPoolFactory).getLimitPool(
-            params.poolType,
             params.tokenIn,
             params.tokenOut,
-            params.swapFee
+            params.swapFee,
+            params.poolTypeId
         );
         // create if pool doesn't exist
         if (pool == address(0)) {
@@ -298,14 +316,22 @@ contract PoolsharkRouter is
         }
         // mint initial range positions
         for (uint i = 0; i < mintRangeParams.length;) {
-            IRangePool(pool).mintRange(mintRangeParams[i]);
+            mintRangeParams[i].positionId = 0;
+            mintRangeParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            try IRangePool(pool).mintRange(mintRangeParams[i]){
+            } catch { 
+            }
             unchecked {
                 ++i;
             }
         }
         // mint initial limit positions
         for (uint i = 0; i < mintLimitParams.length;) {
-            ILimitPool(pool).mintLimit(mintLimitParams[i]);
+            mintLimitParams[i].positionId = 0;
+            mintLimitParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            try ILimitPool(pool).mintLimit(mintLimitParams[i]) {
+            } catch { 
+            }
             unchecked {
                 ++i;
             }
@@ -337,7 +363,11 @@ contract PoolsharkRouter is
         }
         // mint initial cover positions
         for (uint i = 0; i < mintCoverParams.length;) {
-            ICoverPool(pool).mint(mintCoverParams[i]);
+            mintCoverParams[i].positionId = 0;
+            mintCoverParams[i].callbackData = abi.encode(MintCallbackData({sender: msg.sender}));
+            try ICoverPool(pool).mint(mintCoverParams[i]){
+            } catch { 
+            }
             unchecked {
                 ++i;
             }
@@ -373,12 +403,12 @@ contract PoolsharkRouter is
                 // check if result already sorted
                 if (!locals.sortedFlags[index]) {
                     if (params[0].exactIn) {
-                        if (results[index].amountOut >= locals.sortAmount) {
+                        if (results[index].amountOut > 0 && results[index].amountOut >= locals.sortAmount) {
                             locals.sortIndex = index;
                             locals.sortAmount = results[index].amountOut;
                         }
                     } else {
-                        if (results[index].amountIn <= locals.sortAmount) {
+                        if (results[index].amountIn > 0 && results[index].amountIn <= locals.sortAmount) {
                             locals.sortIndex = index;
                             locals.sortAmount = results[index].amountIn;
                         }

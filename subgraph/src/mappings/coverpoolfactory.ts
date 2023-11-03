@@ -15,12 +15,12 @@ export function handlePoolCreated(event: PoolCreated): void {
     let feeTierParam = BigInt.fromI32(event.params.fee)
     let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam = BigInt.fromI32(event.params.twapLength)
-    let poolTypeParam = event.params.poolType.toString()
+    let poolTypeIdParam: string = event.params.poolTypeId.toString()
     let poolAddressParam = event.params.pool
     let inputPoolParam = event.params.inputPool
 
     // load from store
-    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeParam, feeTierParam, tickSpreadParam, twapLengthParam)
+    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeIdParam, feeTierParam, tickSpreadParam, twapLengthParam)
     let loadCoverPool = safeLoadCoverPool(poolAddressParam.toHex())
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
@@ -73,7 +73,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     // create the tracked contract based on the template
     CoverPoolTemplate.create(poolAddressParam)
 
-    if (poolTypeParam == 'PSHARK-CPROD') {
+    if (poolTypeIdParam == '0') {
         let loadLimitPool = safeLoadLimitPool(inputPoolParam.toHex())
         let limitPool = loadLimitPool.entity
         if (!loadLimitPool.exists) {

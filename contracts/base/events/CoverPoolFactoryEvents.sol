@@ -7,9 +7,9 @@ abstract contract CoverPoolFactoryEvents {
         address indexed inputPool,
         address token0,
         address token1,
-        bytes32 indexed poolType,
         uint16 fee,
         int16 tickSpread,
-        uint16 twapLength
+        uint16 twapLength,
+        uint8 indexed poolTypeId
     );
 }

@@ -5,8 +5,8 @@ pragma solidity 0.8.13;
 interface ILimitPoolManager {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
-    function implementations(
-        bytes32 poolType
+    function poolTypes(
+        uint8 poolType
     ) external view returns (
         address poolImpl,
         address tokenImpl

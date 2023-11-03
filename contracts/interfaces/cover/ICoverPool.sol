@@ -127,4 +127,9 @@ interface ICoverPool is CoverPoolStructs {
         uint160 minPrice,
         uint160 maxPrice
     );
+
+    function syncGlobalState(
+    ) external view returns (
+        GlobalState memory state
+    );
 }

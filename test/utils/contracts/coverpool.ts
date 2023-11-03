@@ -56,12 +56,12 @@ export interface PriceBounds {
 }
 
 export interface CoverPoolParams {
-    poolType: any // bytes
     tokenIn: string
     tokenOut: string
     feeTier: number
     tickSpread: number
     twapLength: number
+    poolTypeId: number
 }
 
 export interface Tick {

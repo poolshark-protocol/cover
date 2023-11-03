@@ -33,7 +33,7 @@ export class InitialSetup {
     private contractDeploymentsKeys: ContractDeploymentsKeys
 
     /// DEPLOY CONFIG
-    private deployRouter = false
+    private deployRouter = true
     private deployTokens = false
     private deployPools = true
     private deployContracts = true
@@ -50,8 +50,75 @@ export class InitialSetup {
 
         const network = SUPPORTED_NETWORKS[hre.network.name.toUpperCase()]
 
+        // await this.deployAssist.deployContractWithRetry(
+        //     network,
+        //     //@ts-ignore
+        //     PoolsharkRouter__factory,
+        //     'poolRouter',
+        //     [
+        //       '0xd0219266568eae5c1eea960e3eacf1a1e149aab0',  // limitPoolFactory
+        //       '0x4FddF20f10BfBc722B013F154762395dA5ba477f'
+        //     ]
+        // )
+
+        // return;
+
+        // const limitPoolFactoryAddress = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //         {
+        //             networkName: hre.network.name,
+        //             objectName: 'limitPoolFactory',
+        //         },
+        //         'initialSetup'
+        //         )
+        // ).contractAddress
+
+        // const limitPoolManagerAddress = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //         {
+        //             networkName: hre.network.name,
+        //             objectName: 'limitPoolManager',
+        //         },
+        //         'initialSetup'
+        //         )
+        // ).contractAddress
+
+        // await this.deployAssist.deployContractWithRetry(
+        //     network,
+        //     // @ts-ignore
+        //     PoolsharkLimitSource__factory,
+        //     'poolsharkLimitSource',
+        //     [
+        //         limitPoolFactoryAddress,
+        //         limitPoolManagerAddress,
+        //         0
+        //     ]
+        // )
+
+        // const coverPoolManagerAddress = (
+        //     await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
+        //         {
+        //             networkName: hre.network.name,
+        //             objectName: 'coverPoolManager',
+        //         },
+        //         'initialSetup'
+        //         )
+        // ).contractAddress
+
+        // await this.deployAssist.deployContractWithRetry(
+        //     network,
+        //     // @ts-ignore
+        //     CoverPoolFactory__factory,
+        //     'coverPoolFactory',
+        //     [   
+        //         coverPoolManagerAddress,
+        //         hre.props.poolsharkLimitSource.address
+        //     ]
+        // )
+
+        // return;
+
         if (!this.deployTokens && hre.network.name != 'hardhat') {
-        
             const token0Address = (
                 await this.contractDeploymentsJson.readContractDeploymentsJsonFile(
                     {
@@ -195,7 +262,7 @@ export class InitialSetup {
                 [
                     limitPoolFactoryAddress,
                     limitPoolManagerAddress,
-                    this.constantProductString
+                    0
                 ]
             )
         } else if (this.deployUniswapV3Source) {
@@ -309,7 +376,7 @@ export class InitialSetup {
                 CoverPoolFactory__factory,
                 'coverPoolFactory',
                 [   
-                    hre.props.coverPoolManager.address
+                    hre.props.coverPoolManager.address,
                 ]
             )
 
@@ -401,14 +468,13 @@ export class InitialSetup {
                 hre.nonce += 1;
             } else if (this.deployPoolsharkLimitSource) {
                 const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
-                    this.poolsharkString,
                     hre.props.coverPoolImpl.address,
                     hre.props.positionERC1155.address,
-                    hre.props.poolsharkLimitSource.address
+                    hre.props.poolsharkLimitSource.address,
+                    this.poolsharkString
                 )
                 await enableImplTxn.wait();
                 hre.nonce += 1;
-                console.log('impl enabled')
             }
         }
 
@@ -419,7 +485,7 @@ export class InitialSetup {
                 PoolsharkRouter__factory,
                 'poolRouter',
                 [
-                  '0xbd6d010bcecc7440a72889546411e0edbb333ea2',  // limitPoolFactory
+                  '0xd0219266568eae5c1eea960e3eacf1a1e149aab0',  // limitPoolFactory
                   hre.props.coverPoolFactory.address
                 ]
             )
@@ -443,7 +509,7 @@ export class InitialSetup {
                 }
 
                 const enableVolTier1 = await hre.props.coverPoolManager.enableVolatilityTier(
-                    this.poolsharkString,
+                    0,
                     1000, // feeTier
                     20,  // tickSpread
                     12,   // twapLength (seconds) = ~40 arbitrum blocks
@@ -456,7 +522,7 @@ export class InitialSetup {
 
                 // CREATE POOL 1
                 poolParams1 = {
-                    poolType: this.poolsharkString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     feeTier: 1000,
@@ -483,7 +549,7 @@ export class InitialSetup {
                 }
 
                 const enableVolTier2 = await hre.props.coverPoolManager.enableVolatilityTier(
-                    this.poolsharkString,
+                    0,
                     3000, // feeTier
                     60,   // tickSpread
                     12,   // twapLength (seconds) = ~40 arbitrum blocks
@@ -496,7 +562,7 @@ export class InitialSetup {
                 // CREATE POOL 2
                 console.log('pool 2')
                 const poolParams2: CoverPoolParams = {
-                    poolType: this.poolsharkString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     feeTier: 3000,
@@ -523,7 +589,7 @@ export class InitialSetup {
                 }
 
                 const enableVolTier3 = await hre.props.coverPoolManager.enableVolatilityTier(
-                    this.poolsharkString,
+                    0,
                     10000, // feeTier
                     200,  // tickSpread
                     12,   // twapLength (seconds) = ~40 arbitrum blocks
@@ -536,7 +602,7 @@ export class InitialSetup {
                 // CREATE POOL 3
                 console.log('pool 3')
                 const poolParams3: CoverPoolParams = {
-                    poolType: this.poolsharkString,
+                    poolTypeId: 0,
                     tokenIn: hre.props.token0.address,
                     tokenOut: hre.props.token1.address,
                     feeTier: 10000,
@@ -566,7 +632,7 @@ export class InitialSetup {
             }
     
             const enableVolTier1 = await hre.props.coverPoolManager.enableVolatilityTier(
-                this.uniV3String,
+                0,
                 500, // feeTier
                 20,  // tickSpread
                 5,   // twapLength (seconds)
@@ -577,20 +643,21 @@ export class InitialSetup {
             hre.nonce += 1;
     
             const poolParams1: CoverPoolParams = {
-                poolType: this.uniV3String,
+                poolTypeId: 0,
                 tokenIn: hre.props.token0.address,
                 tokenOut: hre.props.token1.address,
                 feeTier: 500,
                 tickSpread: 20,
                 twapLength: 5
             }
-    
+            console.log('about to create pool')
             // create first cover pool
-            let createPoolTxn = await hre.props.coverPoolFactory.createCoverPool(
-                poolParams1
+            let createPoolTxn = await hre.props.poolRouter.createCoverPoolAndMint(
+                poolParams1,
+                []
             )
             await createPoolTxn.wait();
-    
+            console.log('pool created')
             hre.nonce += 1;
 
             [coverPoolAddress, coverPoolTokenAddress] = await hre.props.coverPoolFactory.getCoverPool(
@@ -693,7 +760,7 @@ export class InitialSetup {
     public async createCoverPool(): Promise<void> {
 
         const poolParams: CoverPoolParams = {
-            poolType: this.uniV3String,
+            poolTypeId: 0,
             tokenIn: hre.props.token0.address,
             tokenOut: hre.props.token1.address,
             feeTier: 500,

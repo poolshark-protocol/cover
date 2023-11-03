@@ -51,11 +51,11 @@ interface PoolsharkStructs {
     }
 
     struct LimitPoolParams {
-        bytes32 poolType;
         address tokenIn;
         address tokenOut;
         uint160 startPrice;
         uint16  swapFee;
+        uint8   poolTypeId;
     }
 
     struct MintLimitParams {
@@ -99,6 +99,41 @@ interface PoolsharkStructs {
         uint32 positionId;
         int24 claim;
         bool zeroForOne;
+    }
+
+    struct FeesParams {
+        uint16 protocolSwapFee0;
+        uint16 protocolSwapFee1;
+        uint16 protocolFillFee0;
+        uint16 protocolFillFee1;
+        uint8 setFeesFlags;
+    }
+
+    struct LimitPoolState {
+        uint160 price; /// @dev Starting price current
+        uint128 liquidity; /// @dev Liquidity currently active
+        uint128 protocolFees;
+        uint16 protocolFillFee;
+        int24 tickAtPrice;
+    }
+
+    struct RangePoolState {
+        SampleState  samples;
+        uint200 feeGrowthGlobal0;
+        uint200 feeGrowthGlobal1;
+        uint160 secondsPerLiquidityAccum;
+        uint160 price;               /// @dev Starting price current
+        uint128 liquidity;           /// @dev Liquidity currently active
+        int56   tickSecondsAccum;
+        int24   tickAtPrice;
+        uint16 protocolSwapFee0;
+        uint16 protocolSwapFee1;
+    }
+
+    struct SampleState {
+        uint16  index;
+        uint16  count;
+        uint16  countMax;
     }
 
     /**
