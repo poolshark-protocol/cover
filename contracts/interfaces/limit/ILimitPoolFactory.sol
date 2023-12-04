@@ -15,7 +15,7 @@ abstract contract ILimitPoolFactory is PoolsharkStructs {
         address tokenIn,
         address tokenOut,
         uint16  swapFee,
-        uint8   poolTypeId
+        uint16   poolTypeId
     ) external view virtual returns (
         address pool,
         address poolToken

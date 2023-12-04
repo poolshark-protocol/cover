@@ -15,7 +15,7 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     error WaitUntilAboveMinTick();
 
     // poolType on limitPoolFactory
-    uint8 public immutable poolType;
+    uint16 public immutable poolType;
     address public immutable limitPoolFactory;
     address public immutable limitPoolManager;
     uint16 public constant oneSecond = 1000;
@@ -23,7 +23,7 @@ contract PoolsharkLimitSource is ITwapSource, TwapSourceEvents {
     constructor(
         address _limitPoolFactory,
         address _limitPoolManager,
-        uint8 _poolType
+        uint16 _poolType
     ) {
         limitPoolFactory = _limitPoolFactory;
         limitPoolManager = _limitPoolManager;

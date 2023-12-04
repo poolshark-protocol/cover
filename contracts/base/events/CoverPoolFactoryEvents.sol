@@ -10,6 +10,6 @@ abstract contract CoverPoolFactoryEvents {
         uint16 fee,
         int16 tickSpread,
         uint16 twapLength,
-        uint8 indexed poolTypeId
+        uint16 indexed poolTypeId
     );
 }

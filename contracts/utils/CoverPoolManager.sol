@@ -22,7 +22,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     mapping(uint256 => address) internal _poolTypes;
     mapping(uint256 => address) internal _poolTokens;
     mapping(uint256 => address) internal _twapSources;
-    // sourceName => feeTier => tickSpread => twapLength => VolatilityTier
+    // poolTypeId => feeTier => tickSpread => twapLength => VolatilityTier
     mapping(uint256 => mapping(uint16 => mapping(int16 => mapping(uint16 => VolatilityTier)))) internal _volatilityTiers;
 
     using SafeCast for uint256;
@@ -87,7 +87,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         address twapImpl_,
         bytes32 poolTypeName_
     ) external onlyOwner {
-        uint8 poolTypeId_ = _poolTypeNames.length.toUint8();
+        uint16 poolTypeId_ = _poolTypeNames.length.toUint16();
         // valid poolType name
         if(poolTypeName_ == bytes32(""))
             require (false, 'PoolTypeNameInvalid()');
@@ -101,11 +101,11 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
         _poolTokens[poolTypeId_] = tokenImpl_;
         _twapSources[poolTypeId_] = twapImpl_;
         _poolTypeNames.push(poolTypeName_);
-        emit PoolTypeEnabled(poolTypeId_, poolTypeName_, poolImpl_, twapImpl_, ITwapSource(twapImpl_).factory());
+        emit PoolTypeEnabled(poolTypeName_, poolImpl_, twapImpl_, ITwapSource(twapImpl_).factory(), poolTypeId_);
     }
 
     function enableVolatilityTier(
-        uint8 poolTypeId,
+        uint16  poolTypeId,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
@@ -155,7 +155,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     function modifyVolatilityTierFees(
-        uint8 poolTypeId,
+        uint16 poolTypeId,
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength,
@@ -219,7 +219,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     function poolTypes(
-        uint8 poolTypeId
+        uint16 poolTypeId
     ) external view returns (
         address poolImpl,
         address tokenImpl,
@@ -233,7 +233,7 @@ contract CoverPoolManager is ICoverPoolManager, CoverPoolManagerEvents {
     }
 
     function volatilityTiers(
-        uint8 poolTypeId,
+        uint16 poolTypeId,
         uint16 feeTier,
         int16 tickSpread,
         uint16 twapLength

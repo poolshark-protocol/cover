@@ -468,7 +468,7 @@ export class InitialSetup {
                 hre.nonce += 1;
             } else if (this.deployPoolsharkLimitSource) {
                 const enableImplTxn = await hre.props.coverPoolManager.enablePoolType(
-                    hre.props.coverPoolImpl.address,
+                    hre.props.coverPoolImpl.addre6ss,
                     hre.props.positionERC1155.address,
                     hre.props.poolsharkLimitSource.address,
                     this.poolsharkString

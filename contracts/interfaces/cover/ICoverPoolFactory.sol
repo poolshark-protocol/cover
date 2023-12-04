@@ -11,7 +11,7 @@ abstract contract ICoverPoolFactory is CoverPoolFactoryStorage {
         uint16 feeTier;
         int16  tickSpread;
         uint16 twapLength;
-        uint8 poolTypeId;
+        uint16 poolTypeId;
     }
 
     /**
