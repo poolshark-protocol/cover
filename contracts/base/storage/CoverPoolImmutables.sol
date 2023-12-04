@@ -60,7 +60,7 @@ contract CoverPoolImmutables is Clone {
         return _getArgUint16(186);
     }
 
-    function blockTime() public pure returns (uint16) {
+    function sampleInterval() public pure returns (uint16) {
         return _getArgUint16(188);
     }
 

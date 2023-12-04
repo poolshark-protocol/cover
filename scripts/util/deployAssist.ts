@@ -119,7 +119,7 @@ export class DeployAssist {
                 network,
                 contractName,
                 objectName,
-                contract.address,
+                contract.address.toLocaleLowerCase(),
                 constructorArguments
             )
             await this.contractDeploymentsKeys.addContractDeploymentKey({

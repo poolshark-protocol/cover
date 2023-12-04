@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
 import { CoverPoolFactory as FactoryContract } from '../../generated/CoverPoolFactory/CoverPoolFactory'
-export let FACTORY_ADDRESS = '0x479c2df7ed63ea26146ac2092c55047c3928a5a6'
+export let FACTORY_ADDRESS = '0xf8f75a39663e97d36da4be2882608513512f4cf0'
 export let WETH_ADDRESS = '0x0bfaaafa6e8fb009cd4e2bd3693f2eec2d18b053'
 
 // tokens where USD value is safe to use for globals
@@ -16,7 +16,7 @@ export let STABLE_COINS: string[] = [
 ]
 
 // used for safe eth pricing 
-export const STABLE_POOL_ADDRESS = '0xa91eb93a6be6e49dbf7af22f7c04c8b219f0cc93'
+export const STABLE_POOL_ADDRESS = '0xaaa678556b92c93e81e15107bb43df9980f4255d'
 
 // determines which token to use for eth<-> rate, true means stable is token0 in pool above 
 export const STABLE_IS_TOKEN_0 = false

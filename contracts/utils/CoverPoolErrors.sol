@@ -45,9 +45,7 @@ abstract contract CoverPoolFactoryErrors {
     error VolatilityTierNotSupported();
     error InvalidTickSpread();
     error PoolTypeNotFound();
-    error CurveMathNotFound();
-    error TickSpreadNotMultipleOfTickSpacing();
-    error TickSpreadNotAtLeastDoubleTickSpread();
+    error InputPoolDoesNotExist();
 }
 
 abstract contract CoverTransferErrors {

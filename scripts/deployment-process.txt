@@ -1,0 +1,43 @@
+1. yarn clean; yarn compile 
+
+2. set values for production
+   - volatility tiers
+   - pool types
+
+3. copy 'limitPoolFactory' and 'limitPoolManager' from limit deployment
+   - paste into scripts\autogen\contract-deployments.json
+
+4. set booleans for first deployment
+    private deployRouter = false
+    private deployTokens = false
+    private deployPools = true
+    private deployContracts = true
+    private deployPoolsharkLimitSource = true
+    private deployUniswapV3Source = false
+
+5. run first deployment
+
+6. verify contracts
+    - remove coverPool from scripts\autogen\contract-deployments-keys.ts
+    - 2nd verification run for Ticks
+    - 3rd verification run for Positions
+    - manually verify proxies on Arbiscan
+        * coverPool
+        * coverPoolToken
+
+7. deploy poolRouter on Limit
+   - deploy
+   - verify contract
+
+8. copy 'poolRouter' from limit deployment
+    - paste into scripts\autogen\contract-deployments.json
+
+9. add contracts on Tenderly
+
+10. increase observations on Limit Pools
+
+11. mint first position(s)
+
+12. Subgraph setup
+- subgraph.yaml => factory, manager, router addresses, startBlock
+- constants.ts => FACTORY_ADDRESS down to => STABLE_IS_TOKEN_0

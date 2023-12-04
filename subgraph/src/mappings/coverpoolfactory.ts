@@ -1,12 +1,12 @@
 import { log } from '@graphprotocol/graph-ts'
 import { PoolCreated } from '../../generated/CoverPoolFactory/CoverPoolFactory'
-import { CoverPoolTemplate } from '../../generated/templates'
+import { CoverPoolTemplate, LimitSamplesTemplate } from '../../generated/templates'
 import {
     fetchTokenSymbol,
     fetchTokenName,
     fetchTokenDecimals,
 } from './utils/helpers'
-import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
+import { safeLoadCoverPool, safeLoadCoverPoolFactory, safeLoadLimitPool, safeLoadToken, safeLoadVolatilityTier } from './utils/loads'
 import { BigInt } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS, ONE_BI } from '../constants/constants'
 
@@ -15,12 +15,13 @@ export function handlePoolCreated(event: PoolCreated): void {
     let feeTierParam = BigInt.fromI32(event.params.fee)
     let tickSpreadParam = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam = BigInt.fromI32(event.params.twapLength)
-    let poolTypeParam = event.params.poolType.toHex()
-    let poolAddressParam = event.params.pool.toHex()
+    let poolTypeIdParam: string = event.params.poolTypeId.toString()
+    let poolAddressParam = event.params.pool
+    let inputPoolParam = event.params.inputPool
 
     // load from store
-    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeParam, feeTierParam, tickSpreadParam, twapLengthParam)
-    let loadCoverPool = safeLoadCoverPool(poolAddressParam)
+    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeIdParam, feeTierParam, tickSpreadParam, twapLengthParam)
+    let loadCoverPool = safeLoadCoverPool(poolAddressParam.toHex())
     let loadCoverPoolFactory = safeLoadCoverPoolFactory(FACTORY_ADDRESS.toLowerCase())
     let loadToken0 = safeLoadToken(event.params.token0.toHexString())
     let loadToken1 = safeLoadToken(event.params.token1.toHexString())
@@ -69,11 +70,21 @@ export function handlePoolCreated(event: PoolCreated): void {
     factory.poolCount = factory.poolCount.plus(ONE_BI)
     factory.txnCount  = factory.txnCount.plus(ONE_BI)
 
+    // create the tracked contract based on the template
+    CoverPoolTemplate.create(poolAddressParam)
+
+    if (poolTypeIdParam == '0') {
+        let loadLimitPool = safeLoadLimitPool(inputPoolParam.toHex())
+        let limitPool = loadLimitPool.entity
+        if (!loadLimitPool.exists) {
+            limitPool.coverPool = poolAddressParam.toHex()
+            limitPool.save()
+        }
+        LimitSamplesTemplate.create(inputPoolParam)
+    }
+
     pool.save()
     factory.save()
     token0.save()
     token1.save()
-
-    // create the tracked contract based on the template
-    CoverPoolTemplate.create(event.params.pool)
 }

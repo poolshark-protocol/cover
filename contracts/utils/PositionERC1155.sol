@@ -323,7 +323,9 @@ contract PositionERC1155 is
             constants.poolToken,
             constants.inputPool,
             constants.bounds.min,
-            constants.bounds.max,
+            constants.bounds.max
+        );
+        bytes memory value2 = abi.encodePacked(
             constants.minAmountPerAuction,
             constants.genesisTime,
             constants.minPositionWidth,
@@ -331,12 +333,12 @@ contract PositionERC1155 is
             constants.twapLength,
             constants.auctionLength
         );
-        bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+        bytes memory value3 = abi.encodePacked(
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
         );
-        return abi.encodePacked(value1, value2);
+        return abi.encodePacked(value1, value2, value3);
     }
 }

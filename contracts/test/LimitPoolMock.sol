@@ -1,18 +1,18 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import '../interfaces/external/poolshark/range/IRangePool.sol';
+import '../interfaces/limit/ILimitPool.sol';
 import './UniswapV3PoolMock.sol';
 
-contract RangePoolMock is IRangePool {
+contract LimitPoolMock is PoolsharkStructs {
     address internal admin;
     address public token0;
     address public token1;
     int24 public tickSpacing;
     uint256 swapFee;
 
-    uint16 observationCardinality;
-    uint16 observationCardinalityNext;
+    uint16 sampleCount;
+    uint16 sampleCountMax;
 
     int56 tickCumulative0;
     int56 tickCumulative1;
@@ -31,55 +31,43 @@ contract RangePoolMock is IRangePool {
         token1 = _token1;
         swapFee = _swapFee;
         tickSpacing = _tickSpacing;
-        observationCardinality = 4;
-        observationCardinalityNext = 4;
+        sampleCount = 4;
+        sampleCountMax = 4;
         tickCumulative0 = 10;
         tickCumulative1 = 9;
         tickCumulative2 = 6;
         tickCumulative3 = 5;
     }
 
-    function poolState()
+    function globalState()
         external
-        view override
+        view
         returns (
-            uint8,
-            uint16,
-            int24,
-            int56,
-            uint160,
-            uint160,
-            uint128,
-            uint128,
-            uint200,
-            uint200,
-            SampleState memory,
-            ProtocolFees memory
+            RangePoolState memory pool,
+            LimitPoolState memory pool0,
+            LimitPoolState memory pool1,
+            uint128 liquidityGlobal,
+            uint32 positionIdNext,
+            uint32 epoch,
+            uint8 unlocked
         )
     {
-        return (
-            1,
-            0,
-            0,
-            0,
-            0,
-            1 << 96,
-            0,
-            0,
-            0,
-            0,
-            SampleState(
+        pool.samples = SampleState(
                 4,
-                observationCardinality,
-                observationCardinalityNext
-            ),
-            ProtocolFees(0,0)
+                sampleCount,
+                sampleCountMax
         );
+        pool0;
+        pool1;
+        liquidityGlobal;
+        positionIdNext;
+        epoch;
+        unlocked;
     }
 
     function sample(
         uint32[] calldata secondsAgos
-    ) external view override returns (
+    ) external view returns (
             int56[]   memory tickSecondsAccum,
             uint160[] memory secondsPerLiquidityAccum,
             uint160 averagePrice,
@@ -103,8 +91,10 @@ contract RangePoolMock is IRangePool {
         averageTick;
     }
 
-    function increaseSampleLength(uint16 cardinalityNext) external {
-        observationCardinalityNext = cardinalityNext;
+    function increaseSampleCount(
+        uint16 newSampleCountMax
+    ) external {
+        sampleCountMax = newSampleCountMax;
     }
 
     function setTickCumulatives(int56 _tickCumulative0, int56 _tickCumulative1, int56 _tickCumulative2, int56 _tickCumulative3) external {
@@ -114,8 +104,8 @@ contract RangePoolMock is IRangePool {
         tickCumulative3 = _tickCumulative3;
     }
 
-    function setObservationCardinality(uint16 _observationCardinality, uint16 _observationCardinalityNext) external {
-        observationCardinality = _observationCardinality;
-        observationCardinalityNext = _observationCardinalityNext;
+    function setObservationCardinality(uint16 _sampleCount, uint16 _sampleCountMax) external {
+        sampleCount = _sampleCount;
+        sampleCountMax = _sampleCountMax;
     }
 }

@@ -1,23 +1,34 @@
-import { safeLoadManager, safeLoadCoverPoolFactory, safeLoadVolatilityTier } from './utils/loads'
+import { safeLoadManager, safeLoadCoverPoolFactory, safeLoadVolatilityTier, safeLoadTwapSource } from './utils/loads'
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { FACTORY_ADDRESS } from '../constants/constants'
-import { FactoryChanged, FeeToTransfer, OwnerTransfer, ProtocolFeesCollected } from '../../generated/CoverPoolManager/CoverPoolManager'
+import { FactoryChanged, FeeToTransfer, OwnerTransfer, PoolTypeEnabled, ProtocolFeesCollected } from '../../generated/CoverPoolManager/CoverPoolManager'
 import { VolatilityTierEnabled } from '../../generated/CoverPoolManager/CoverPoolManager'
+import { TwapSourceTemplate } from '../../generated/templates'
+
+export function handlePoolTypeEnabled(event: PoolTypeEnabled): void {
+    let twapSourceAddressParam = event.params.sourceAddress
+    let loadTwapSource = safeLoadTwapSource(twapSourceAddressParam.toHex())
+    if (!loadTwapSource.exists) {
+        TwapSourceTemplate.create(twapSourceAddressParam)
+    }
+    let twapSource = loadTwapSource.entity
+    twapSource.save()
+}
 
 export function handleVolatilityTierEnabled(event: VolatilityTierEnabled): void {
     let feeTierParam       = BigInt.fromI32(event.params.feeTier)
     let tickSpreadParam    = BigInt.fromI32(event.params.tickSpread)
     let twapLengthParam    = BigInt.fromI32(event.params.twapLength)
     let auctionLengthParam = BigInt.fromI32(event.params.auctionLength)
-    let poolTypeParam      = event.params.poolType.toHex()
+    let poolTypeIdParam: string = event.params.poolTypeId.toString()
 
     let loadManager        = safeLoadManager(event.address.toHex())
-    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeParam, feeTierParam, tickSpreadParam, twapLengthParam)
+    let loadVolatilityTier = safeLoadVolatilityTier(poolTypeIdParam, feeTierParam, tickSpreadParam, twapLengthParam)
 
     let manager        = loadManager.entity
     let volatilityTier = loadVolatilityTier.entity
 
-    volatilityTier.poolType = poolTypeParam
+    volatilityTier.poolTypeId = poolTypeIdParam
     volatilityTier.feeAmount  = feeTierParam
     volatilityTier.tickSpread = tickSpreadParam
     volatilityTier.twapLength = twapLengthParam
@@ -38,11 +49,11 @@ export function handleFactoryChanged(event: FactoryChanged): void {
     let manager = loadManager.entity
     let factory = loadRangePoolFactory.entity
     
-    // manager.factory = factory.id
-    // factory.owner = manager.id
+    manager.factory = factory.id
+    factory.manager = manager.id
     
-    // manager.save()
-    // factory.save()
+    manager.save()
+    factory.save()
 }
 
 export function handleProtocolFeesCollected(event: ProtocolFeesCollected): void {
@@ -74,12 +85,11 @@ export function handleOwnerTransfer(event: OwnerTransfer): void {
 
     if(!loadManager.exists) {
         manager.feeTo = newOwnerParam
-        // manager.factory = FACTORY_ADDRESS
+        manager.factory = FACTORY_ADDRESS.toLowerCase()
     }
     if(!loadFactory.exists) {
-        //factory.owner = manager.id
+        factory.manager = manager.id
     }
-
     manager.owner = newOwnerParam
 
     manager.save()

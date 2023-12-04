@@ -1,16 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.13;
 
-import '../interfaces/external/poolshark/range/IRangePoolFactory.sol';
-import './RangePoolMock.sol';
+import '../interfaces/limit/ILimitPoolFactory.sol';
+import './LimitPoolMock.sol';
 
-contract RangePoolFactoryMock is IRangePoolFactory {
+contract LimitPoolFactoryMock {
     address mockPool;
     address mockPool2;
     address owner;
 
     mapping(uint24 => int24) public feeTierTickSpacing;
-    mapping(address => mapping(address => mapping(uint24 => address))) public rangePools;
+    mapping(address => mapping(address => mapping(uint24 => address))) public limitPools;
 
     constructor(address tokenA, address tokenB) {
         owner = msg.sender;
@@ -21,22 +21,25 @@ contract RangePoolFactoryMock is IRangePoolFactory {
         feeTierTickSpacing[10000] = 200;
 
         // create mock pool 1
-        mockPool = address(new RangePoolMock(tokenA, tokenB, 500, 10));
-        rangePools[tokenA][tokenB][500] = mockPool;
+        mockPool = address(new LimitPoolMock(tokenA, tokenB, 500, 10));
+        limitPools[tokenA][tokenB][500] = mockPool;
 
         // create mock pool 2
-        mockPool2 = address(new RangePoolMock(tokenA, tokenB, 3000, 60));
-        rangePools[tokenA][tokenB][3000] = mockPool2;
+        mockPool2 = address(new LimitPoolMock(tokenA, tokenB, 3000, 60));
+        limitPools[tokenA][tokenB][3000] = mockPool2;
     }
 
-    function getRangePool(
+    function getLimitPool(
         address tokenIn,
         address tokenOut,
-        uint16 feeTier
-    ) external view override returns (address) {
+        uint16 feeTier,
+        uint8 poolTypeId
+    ) external view returns (address pool, address poolToken) {
         address token0 = tokenIn < tokenOut ? tokenIn : tokenOut;
         address token1 = tokenIn < tokenOut ? tokenOut : tokenIn;
+        poolTypeId;
+        poolToken;
         
-        return rangePools[token0][token1][feeTier];
+        pool = limitPools[token0][token1][feeTier];
     }
 }

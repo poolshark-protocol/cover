@@ -649,7 +649,8 @@ export function handleFinalDeltasAccumulated(event: FinalDeltasAccumulated): voi
     let accumTickDeltas = loadAccumTickDeltas.entity
 
     pool.liquidityGlobal = pool.liquidityGlobal.minus(accumTickDeltas.liquidityMinus)
-    accumTick.epochLast = auctionEpochParam
+    if (isPool0Param) accumTick.epochLast0 = auctionEpochParam
+    else              accumTick.epochLast1 = auctionEpochParam
     accumTickDeltas.liquidityMinus = BIGINT_ZERO
     accumTickDeltas.amountInDelta = accumTickDeltas.amountInDelta.plus(amountInDeltaParam)
     accumTickDeltas.amountOutDelta = accumTickDeltas.amountOutDelta.plus(amountOutDeltaParam)
@@ -679,7 +680,8 @@ export function handleStashDeltasAccumulated(event: StashDeltasAccumulated): voi
     let stashTick = loadStashTick.entity
     let stashTickDeltas = loadStashTickDeltas.entity
 
-    stashTick.epochLast = auctionEpochParam
+    if (isPool0Param) stashTick.epochLast0 = auctionEpochParam
+    else              stashTick.epochLast1 = auctionEpochParam
     stashTickDeltas.amountInDelta = stashTickDeltas.amountInDelta.plus(amountInDeltaParam)
     stashTickDeltas.amountOutDelta = stashTickDeltas.amountOutDelta.plus(amountOutDeltaParam)
     stashTickDeltas.amountInDeltaMaxStashed = stashTickDeltas.amountInDeltaMaxStashed.plus(amountInDeltaMaxStashedParam)

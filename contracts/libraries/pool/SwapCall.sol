@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import '../../interfaces/structs/CoverPoolStructs.sol';
 import '../../interfaces/IERC20Minimal.sol';
-import '../../interfaces/callbacks/ICoverPoolSwapCallback.sol';
+import '../../interfaces/callbacks/ICoverPoolCallback.sol';
 import '../Epochs.sol';
 import '../Positions.sol';
 import '../utils/Collect.sol';

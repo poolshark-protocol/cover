@@ -18,6 +18,7 @@ import {
     Token20Batcher,
     PoolsharkRouter,
     PositionERC1155,
+    PoolsharkLimitSource,
 } from '../../../typechain'
 import { InitialSetup } from './initialSetup'
 import { MintCall } from '../../../typechain'
@@ -41,6 +42,7 @@ export interface BeforeEachProps {
     epochsLib: Epochs
     epochMapLib: EpochMap
     ticksLib: Ticks
+    poolsharkLimitSource: PoolsharkLimitSource
     uniswapV3Source: UniswapV3Source
     claimsLib: Claims
     positionsLib: Positions
@@ -96,6 +98,7 @@ export class GetBeforeEach {
         let epochsLib: Epochs
         let epochMapLib: EpochMap
         let ticksLib: Ticks
+        let poolsharkLimitSource: PoolsharkLimitSource
         let uniswapV3Source: UniswapV3Source
         let claimsLib: Claims
         let positionsLib: Positions
@@ -129,6 +132,7 @@ export class GetBeforeEach {
             epochsLib,
             epochMapLib,
             ticksLib,
+            poolsharkLimitSource,
             uniswapV3Source,
             claimsLib,
             positionsLib,

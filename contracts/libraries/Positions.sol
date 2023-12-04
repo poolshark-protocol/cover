@@ -49,11 +49,11 @@ library Positions {
 
     function resize(
         CoverPoolStructs.CoverPosition memory position,
-        ICoverPool.MintParams memory params,
+        PoolsharkStructs.MintCoverParams memory params,
         CoverPoolStructs.GlobalState memory state,
         PoolsharkStructs.CoverImmutables memory constants
     ) internal pure returns (
-        ICoverPool.MintParams memory,
+        PoolsharkStructs.MintCoverParams memory,
         uint256
     )
     {

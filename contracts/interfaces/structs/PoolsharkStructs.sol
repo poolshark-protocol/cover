@@ -32,7 +32,7 @@ interface PoolsharkStructs {
         int16  tickSpread;
         uint16 twapLength;
         uint16 auctionLength;
-        uint16 blockTime;
+        uint16 sampleInterval;
         uint8 token0Decimals;
         uint8 token1Decimals;
         bool minAmountLowerPriced;
@@ -48,6 +48,229 @@ interface PoolsharkStructs {
         int256 amountIn;
         int256 amountOut;
         uint160 priceAfter;
+    }
+
+    struct LimitPoolParams {
+        address tokenIn;
+        address tokenOut;
+        uint160 startPrice;
+        uint16  swapFee;
+        uint16  poolTypeId;
+    }
+
+    struct MintLimitParams {
+        address to;
+        uint128 amount;
+        uint96 mintPercent;
+        uint32 positionId;
+        int24 lower;
+        int24 upper;
+        bool zeroForOne;
+        bytes callbackData;
+    }
+
+    struct BurnLimitParams {
+        address to;
+        uint128 burnPercent;
+        uint32 positionId;
+        int24 claim;
+        bool zeroForOne;
+    }
+
+    struct MintRangeParams {
+        address to;
+        int24 lower;
+        int24 upper;
+        uint32 positionId;
+        uint128 amount0;
+        uint128 amount1;
+        bytes callbackData;
+    }
+
+    struct BurnRangeParams {
+        address to;
+        uint32 positionId;
+        uint128 burnPercent;
+    }
+
+    struct SnapshotLimitParams {
+        address owner;
+        uint128 burnPercent;
+        uint32 positionId;
+        int24 claim;
+        bool zeroForOne;
+    }
+
+    struct FeesParams {
+        uint16 protocolSwapFee0;
+        uint16 protocolSwapFee1;
+        uint16 protocolFillFee0;
+        uint16 protocolFillFee1;
+        uint8 setFeesFlags;
+    }
+
+    struct LimitPoolState {
+        uint160 price; /// @dev Starting price current
+        uint128 liquidity; /// @dev Liquidity currently active
+        uint128 protocolFees;
+        uint16 protocolFillFee;
+        int24 tickAtPrice;
+    }
+
+    struct RangePoolState {
+        SampleState  samples;
+        uint200 feeGrowthGlobal0;
+        uint200 feeGrowthGlobal1;
+        uint160 secondsPerLiquidityAccum;
+        uint160 price;               /// @dev Starting price current
+        uint128 liquidity;           /// @dev Liquidity currently active
+        int56   tickSecondsAccum;
+        int24   tickAtPrice;
+        uint16 protocolSwapFee0;
+        uint16 protocolSwapFee1;
+    }
+
+    struct SampleState {
+        uint16  index;
+        uint16  count;
+        uint16  countMax;
+    }
+
+    /**
+     * @custom:struct MintCoverParams
+     */
+    struct MintCoverParams {
+        /**
+         * @custom:field to
+         * @notice Address for the receiver of the minted position
+         */
+        address to;
+
+        /**
+         * @custom:field amount
+         * @notice Token amount to be deposited into the minted position
+         */
+        uint128 amount;
+
+        /**
+         * @custom:field positionId
+         * @notice 0 if creating a new position; id of previous if adding liquidity
+         */
+        uint32 positionId;
+
+        /**
+         * @custom:field lower
+         * @notice The lower price tick for the position range
+         */
+        int24 lower;
+
+        /**
+         * @custom:field upper
+         * @notice The upper price tick for the position range
+         */
+        int24 upper;
+
+        /**
+         * @custom:field zeroForOne
+         * @notice True if depositing token0, the first token address in lexographical order
+         * @notice False if depositing token1, the second token address in lexographical order 
+         */
+        bool zeroForOne;
+
+        /**
+         * @custom:field callbackData
+         * @notice callback data which gets passed back to msg.sender at the end of a `mint` call
+         */
+        bytes callbackData;
+    }
+
+    /**
+     * @custom:struct BurnCoverParams
+     */
+    struct BurnCoverParams {
+        /**
+         * @custom:field to
+         * @notice Address for the receiver of the collected position amounts
+         */
+        address to;
+
+        /**
+         * @custom:field burnPercent
+         * @notice Percent of the remaining liquidity to be removed
+         * @notice 1e38 represents 100%
+         * @notice 5e37 represents 50%
+         * @notice 1e37 represents 10%
+         */
+        uint128 burnPercent;
+
+        /**
+         * @custom:field positionId
+         * @notice 0 if creating a new position; id of previous if adding liquidity
+         */
+        uint32 positionId;
+
+        /**
+         * @custom:field claim
+         * @notice The most recent tick crossed in this range
+         * @notice if `zeroForOne` is true, claim tick progresses from upper => lower
+         * @notice if `zeroForOne` is false, claim tick progresses from lower => upper
+         */
+        int24 claim;
+
+        /**
+         * @custom:field zeroForOne
+         * @notice True if deposited token0, the first token address in lexographical order
+         * @notice False if deposited token1, the second token address in lexographical order 
+         */
+        bool zeroForOne;
+
+        /**
+         * @custom:field sync
+         * @notice True will sync the pool latestTick
+         * @notice False will skip syncing latestTick 
+         */
+        bool sync;
+    }
+
+    /**
+     * @custom:struct SnapshotCoverParams
+     */
+    struct SnapshotCoverParams {
+        /**
+         * @custom:field to
+         * @notice Address of the position owner
+         */
+        address owner;
+
+        /**
+         * @custom:field positionId
+         * @notice id of position
+         */
+        uint32 positionId;
+
+        /**
+         * @custom:field burnPercent
+         * @notice Percent of the remaining liquidity to be removed
+         * @notice 1e38 represents 100%
+         * @notice 5e37 represents 50%
+         * @notice 1e37 represents 10%
+         */
+        uint128 burnPercent;
+
+        /**
+         * @custom:field claim
+         * @notice The most recent tick crossed in this range
+         * @notice if `zeroForOne` is true, claim tick progresses from upper => lower
+         * @notice if `zeroForOne` is false, claim tick progresses from lower => upper
+         */
+        int24 claim;
+
+        /**
+         * @custom:field zeroForOne
+         * @notice True if deposited token0, the first token address in lexographical order
+         * @notice False if deposited token1, the second token address in lexographical order 
+         */
+        bool zeroForOne;
     }
 
     /**

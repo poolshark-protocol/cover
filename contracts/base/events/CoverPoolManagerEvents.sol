@@ -4,23 +4,24 @@ pragma solidity 0.8.13;
 abstract contract CoverPoolManagerEvents {
     event FactoryChanged(address indexed previousFactory, address indexed newFactory);
     event VolatilityTierEnabled(
-        bytes32 poolType,
+        uint16 poolTypeId,
         uint16  feeTier,
         int16   tickSpread,
         uint16  twapLength,
         uint128 minAmountPerAuction,
         uint16  auctionLength,
-        uint16  blockTime,
+        uint16  sampleInterval,
         uint16  syncFee,
         uint16  fillFee,
         int16   minPositionWidth,
         bool    minLowerPriced
     );
     event PoolTypeEnabled(
-        bytes32 poolType,
+        bytes32 poolTypeName,
         address implAddress,
         address sourceAddress,
-        address factoryAddress
+        address factoryAddress,
+        uint16  poolTypeId
     );
     event FeeToTransfer(address indexed previousFeeTo, address indexed newFeeTo);
     event OwnerTransfer(address indexed previousOwner, address indexed newOwner);

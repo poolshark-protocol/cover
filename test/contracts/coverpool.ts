@@ -61,7 +61,7 @@ describe('CoverPool Tests', function () {
         const latestTick = globalState.latestTick
 
         expect(liquidity).to.be.equal(BN_ZERO)
-        expect(coverImmutables.genesisTime).to.be.equal(currentTime - 2)
+        expect(coverImmutables.genesisTime).to.be.equal(currentTime)
         expect(amountInDelta).to.be.equal(BN_ZERO)
         expect(latestTick).to.be.equal(BN_ZERO)
 
@@ -131,7 +131,6 @@ describe('CoverPool Tests', function () {
             upperTickCleared: false,
             revertMessage: 'WaitUntilTwapLengthSufficient()',
         })
-
     })
 
     it('pool1 - Should wait until enough observations', async function () {
@@ -3532,6 +3531,7 @@ describe('CoverPool Tests', function () {
             lowerTickCleared: false,
             revertMessage: '',
         })
+
         if (debugMode) await getTick(false, 600000, true)
         await validateSync(600000)
 

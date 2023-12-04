@@ -1,6 +1,7 @@
 type CoverPoolFactory @entity {
     # poolAddress
     id: ID!
+    manager: CoverPoolManager!
     poolCount: BigInt!
     txnCount: BigInt!
     volumeUsdTotal: BigDecimal!
@@ -16,18 +17,25 @@ type BasePrice @entity {
     USD: BigDecimal!
 }
 
+type PoolRouter @entity {
+    id: ID!
+
+    limitPoolFactory: Bytes!
+    coverPoolFactory: Bytes!
+}
+
 type CoverPoolManager @entity {
     id: ID!
     owner: Bytes!
     feeTo: Bytes!
-    # factory: CoverPoolFactory!
+    factory: CoverPoolFactory!
     volatilityTiers: [VolatilityTier!]!
 }
 
 type VolatilityTier @entity {
     # fee amount + tick spread + twap length + auction length
     id: ID!
-    poolType: String!
+    poolTypeId: String!
     feeAmount: BigInt!
     tickSpread: BigInt!
     twapLength: BigInt!
@@ -36,6 +44,10 @@ type VolatilityTier @entity {
     # creation stats
     createdAtTimestamp: BigInt!
     createdAtBlockNumber: BigInt!
+}
+
+type TwapSource @entity {
+    id: ID!
 }
 
 type Token @entity {
@@ -76,9 +88,15 @@ type CoverPool @entity {
     volatilityTier: VolatilityTier!
     genesisTime: BigInt!
 
+    # sample status
+    sampleCount: BigInt!
+    sampleCountMax: BigInt!
+    sampleCountRequired: BigInt!
+
+    newLatestTick: BigInt!
+    latestTick: BigInt!
     liquidity: BigInt!
     liquidityGlobal: BigInt!
-    latestTick: BigInt!
     auctionEpoch: BigInt!
     auctionStart: BigInt!
 
@@ -111,6 +129,21 @@ type CoverPool @entity {
     createdAtBlockNumber: BigInt!
     updatedAtTimestamp: BigInt!
     updatedAtBlockNumber: BigInt!
+}
+
+type LimitPool @entity {
+    # poolAddress
+    id: ID!
+
+    coverPool: CoverPool!
+    samplesRecorded: BigInt!
+}
+
+type Sample @entity {
+    # poolAddress + sample number
+    id: ID!
+    tickSecondsAccum: BigInt!
+    blockTimestamp: BigInt!
 }
 
 type Position @entity {
@@ -175,7 +208,8 @@ type Tick @entity {
     index: BigInt!
     price0: BigDecimal!
     price1: BigDecimal!
-    epochLast: BigInt!
+    epochLast0: BigInt!
+    epochLast1: BigInt!
 }
 
 type TickDeltas @entity {

@@ -4,20 +4,65 @@ pragma solidity 0.8.13;
 import '../structs/PoolsharkStructs.sol';
 
 interface ILimitPool is PoolsharkStructs {
-    function immutables() external view returns (LimitImmutables memory);
-    
-    function swap(
-        SwapParams memory params
-    ) external returns (
-        int256 amount0,
-        int256 amount1
+    function initialize(
+        uint160 startPrice
+    ) external;
+
+    function mintLimit(
+        MintLimitParams memory params
+    ) external;
+
+    function burnLimit(
+        BurnLimitParams memory params
+    ) external;
+
+    function snapshotLimit(
+        SnapshotLimitParams memory params
+    ) external view returns(
+        uint128,
+        uint128
     );
 
-    function quote(
-        QuoteParams memory params
+    function fees(
+        FeesParams memory params
+    ) external returns (
+        uint128 token0Fees,
+        uint128 token1Fees
+    );
+
+    function immutables(
+    ) external view returns(
+        LimitImmutables memory
+    );
+
+    function priceBounds(
+        int16 tickSpacing
+    ) external pure returns (
+        uint160 minPrice,
+        uint160 maxPrice
+    );
+
+    function sample(
+        uint32[] memory secondsAgo
     ) external view returns (
-        int256 inAmount,
-        int256 outAmount,
-        uint160 priceAfter
+        int56[]   memory tickSecondsAccum,
+        uint160[] memory secondsPerLiquidityAccum,
+        uint160 averagePrice,
+        uint128 averageLiquidity,
+        int24 averageTick
+    );
+
+    function increaseSampleCount(
+        uint16 newSampleCountMax
+    ) external;
+
+    function globalState() external view returns (
+        RangePoolState memory pool,
+        LimitPoolState memory pool0,
+        LimitPoolState memory pool1,
+        uint128 liquidityGlobal,
+        uint32 positionIdNext,
+        uint32 epoch,
+        uint8 unlocked
     );
 }

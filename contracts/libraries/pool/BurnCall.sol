@@ -33,7 +33,7 @@ library BurnCall {
         CoverPoolStructs.GlobalState storage globalState,
         CoverPoolStructs.PoolState storage pool0,
         CoverPoolStructs.PoolState storage pool1,
-        ICoverPool.BurnParams memory params,
+        PoolsharkStructs.BurnCoverParams memory params,
         CoverPoolStructs.BurnCache memory cache
     ) external returns (CoverPoolStructs.BurnCache memory) {
         cache.position = positions[params.positionId];

@@ -8,9 +8,9 @@ dataSources:
       name: CoverPoolFactory
       network: arbitrum-goerli
       source:
-          address: '0x479C2Df7eD63ea26146Ac2092C55047C3928A5A6'
+          address: '0xc4230d3f673a44bf125c94effd1a6cc44202e0b8'
           abi: CoverPoolFactory
-          startBlock: 41521100
+          startBlock: 52612037
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -31,15 +31,15 @@ dataSources:
               - name: ERC20NameBytes
                 file: ./abis/ERC20NameBytes.json
           eventHandlers:
-              - event: PoolCreated(address,indexed address,address,address,indexed bytes32,uint16,int16,uint16)
+              - event: PoolCreated(address,indexed address,address,address,uint16,int16,uint16,indexed uint8)
                 handler: handlePoolCreated
     - kind: ethereum/contract
       name: CoverPoolManager
       network: arbitrum-goerli
       source:
-          address: '0x74db8d63FD2e6FAeA61a7a53bFB5Ab319d17f220'
+          address: '0x87131ccc50786e387cfebcaafa522073a8e43548'
           abi: CoverPoolManager
-          startBlock: 41521100
+          startBlock: 52612031
       mapping:
           kind: ethereum/events
           apiVersion: 0.0.6
@@ -52,7 +52,9 @@ dataSources:
               - name: CoverPoolManager
                 file: ./abis/CoverPoolManager.json
           eventHandlers:
-              - event: VolatilityTierEnabled(bytes32,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
+              - event: PoolTypeEnabled(uint8,bytes32,address,address,address)
+                handler: handlePoolTypeEnabled
+              - event: VolatilityTierEnabled(uint8,uint16,int16,uint16,uint128,uint16,uint16,uint16,uint16,int16,bool)
                 handler: handleVolatilityTierEnabled
               - event: FeeToTransfer(indexed address,indexed address)
                 handler: handleFeeToTransfer
@@ -62,6 +64,26 @@ dataSources:
                 handler: handleProtocolFeesCollected
               - event: FactoryChanged(indexed address,indexed address)
                 handler: handleFactoryChanged
+    - kind: ethereum/contract
+      name: PoolsharkRouter
+      network: arbitrum-goerli
+      source:
+          address: '0x6ccccc845849b76f3acb3affcca28a6035e41a20'
+          abi: PoolsharkRouter
+          startBlock: 52612031
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/coverpoolrouter.ts
+          entities:
+              - PoolsharkRouter
+          abis:
+              - name: PoolsharkRouter
+                file: ./abis/PoolsharkRouter.json
+          eventHandlers:
+              - event: RouterDeployed(address,address,address)
+                handler: handleRouterDeployed
 templates:
     # Cover Pool Events
     - kind: ethereum/contract
@@ -108,6 +130,44 @@ templates:
                 handler: handleStashDeltasAccumulated
               - event: StashDeltasCleared(int24,bool)
                 handler: handleStashDeltasCleared
+    # TwapSource events
+    - kind: ethereum/contract
+      name: TwapSourceTemplate
+      network: arbitrum-goerli
+      source:
+          abi: TwapSource
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/twapsource.ts
+          entities:
+              - TwapSource
+          abis:
+              - name: TwapSource
+                file: ./abis/TwapSource.json
+          eventHandlers:
+              - event: SampleCountInitialized(indexed address,uint16,uint16,uint16)
+                handler: handleSampleCountInitialized
+    # InputPool events
+    - kind: ethereum/contract
+      name: LimitSamplesTemplate
+      network: arbitrum-goerli
+      source:
+          abi: LimitSamples
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.6
+          language: wasm/assemblyscript
+          file: ./src/mappings/limit/samples.ts
+          entities:
+              - CoverPool
+          abis:
+              - name: LimitSamples
+                file: ./abis/LimitSamples.json
+          eventHandlers:
+              - event: SampleRecorded(int56,uint160)
+                handler: handleSampleRecorded
     # ERC-1155 events
     - kind: ethereum/contract
       name: PositionERC1155Template

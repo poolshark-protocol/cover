@@ -23,7 +23,7 @@ export interface PoolState {
 export interface VolatilityTier {
     minAmountPerAuction: BigNumber // based on 18 decimals and then converted based on token decimals
     auctionLength: number
-    blockTime: number  // average block time where 1e3 is 1 second
+    sampleInterval: number  // average block time where 1e3 is 1 second
     syncFee: number
     fillFee: number
     minPositionWidth: number
@@ -44,7 +44,7 @@ export interface CoverImmutables {
     tickSpread: number
     twapLength: number
     auctionLength: number
-    blockTime: number
+    sampleInterval: number
     token0Decimals: number
     token1Decimals: number
     minAmountLowerPriced: boolean
@@ -56,12 +56,12 @@ export interface PriceBounds {
 }
 
 export interface CoverPoolParams {
-    poolType: any // bytes
     tokenIn: string
     tokenOut: string
     feeTier: number
     tickSpread: number
     twapLength: number
+    poolTypeId: number
 }
 
 export interface Tick {
@@ -200,7 +200,7 @@ export async function validateSync(newLatestTick: number, autoSync: boolean = tr
 
     /// send a "no op" swap to trigger accumulate
     const token1Balance = await hre.props.token1.balanceOf(signer.address)
-    await hre.props.token1.connect(signer).approve(hre.props.coverPool.address, token1Balance)
+    await hre.props.token1.connect(signer).approve(hre.props.poolRouter.address, token1Balance)
 
     if (autoSync) {
         if (!revertMessage || revertMessage == '') {
@@ -383,13 +383,13 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
         balanceOutBefore = await hre.props.token1.balanceOf(params.signer.address)
         await hre.props.token0
             .connect(params.signer)
-            .approve(hre.props.coverPool.address, amountDesired)
+            .approve(hre.props.poolRouter.address, amountDesired)
     } else {
         balanceInBefore = await hre.props.token1.balanceOf(params.signer.address)
         balanceOutBefore = await hre.props.token0.balanceOf(params.signer.address)
         await hre.props.token1
             .connect(params.signer)
-            .approve(hre.props.coverPool.address, amountDesired)
+            .approve(hre.props.poolRouter.address, amountDesired)
     }
 
     let lowerTickBefore: Tick
@@ -411,29 +411,41 @@ export async function validateMint(params: ValidateMintParams): Promise<number> 
 
     if (revertMessage == '') {
         // console.log('MINT CALL')
-        const txn = await hre.props.coverPool
+        const txn = await hre.props.poolRouter
             .connect(params.signer)
-            .mint({
-                to: recipient,
-                amount: amountDesired,
-                positionId: positionId,
-                lower: lower,
-                upper: upper,
-                zeroForOne: zeroForOne
-            })
-        await txn.wait()
-    } else {
-        await expect(
-            hre.props.coverPool
-                .connect(params.signer)
-                .mint({
-                    to: params.signer.address,
+            .multiMintCover(
+            [hre.props.coverPool.address],
+            [
+                {
+                    to: recipient,
+                    amount: amountDesired,
                     positionId: positionId,
                     lower: lower,
                     upper: upper,
+                    zeroForOne: zeroForOne,
+                    callbackData: ethers.utils.formatBytes32String('')
+                }
+            ]
+            , {gasLimit: 3000000})
+        await txn.wait()
+    } else {
+        await expect(
+            hre.props.poolRouter
+            .connect(params.signer)
+            .multiMintCover(
+            [hre.props.coverPool.address],
+            [
+                {
+                    to: recipient,
                     amount: amountDesired,
-                    zeroForOne: zeroForOne
-                })
+                    positionId: positionId,
+                    lower: lower,
+                    upper: upper,
+                    zeroForOne: zeroForOne,
+                    callbackData: ethers.utils.formatBytes32String('')
+                }
+            ]
+            , {gasLimit: 3000000})
         ).to.be.revertedWith(revertMessage)
         return expectedPositionId
     }

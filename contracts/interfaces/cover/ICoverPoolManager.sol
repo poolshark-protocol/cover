@@ -8,14 +8,14 @@ interface ICoverPoolManager is CoverPoolStructs {
     function owner() external view returns (address);
     function feeTo() external view returns (address);
     function poolTypes(
-        bytes32 poolType
+        uint16 poolTypeId
     ) external view returns (
         address poolImpl,
         address tokenImpl,
         address twapImpl
     );
     function volatilityTiers(
-        bytes32 implName,
+        uint16 poolTypeId,
         uint16 feeTier,
         int16  tickSpread,
         uint16 twapLength

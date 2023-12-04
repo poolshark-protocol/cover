@@ -1,5 +1,5 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
-import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, MintLog, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
+import { BasePrice, BurnLog, CoverPool, CoverPoolFactory, CoverPoolManager, LimitPool, MintLog, PoolRouter, Position, Tick, TickDeltas, Token, VolatilityTier } from '../../../generated/schema'
 import { ONE_BD, ONE_BI } from '../../constants/constants'
 import {
     fetchTokenSymbol,
@@ -9,6 +9,7 @@ import {
 } from './helpers'
 import { bigDecimalExponated, safeDiv } from './math'
 import { getEthPriceInUSD } from './price'
+import { TwapSource } from '../../../generated/schema'
 
 class LoadBasePriceRet {
     entity: BasePrice
@@ -32,6 +33,24 @@ export function safeLoadBasePrice(name: string): LoadBasePriceRet {
     }
 }
 
+class LoadPoolRouterRet {
+    entity: PoolRouter
+    exists: boolean
+}
+export function safeLoadPoolRouter(routerAddress: string): LoadPoolRouterRet {
+    let exists = true
+    let poolRouterEntity = PoolRouter.load(routerAddress)
+
+    if (!poolRouterEntity) {
+        poolRouterEntity = new PoolRouter(routerAddress)
+        exists = false
+    }
+
+    return {
+        entity: poolRouterEntity,
+        exists: exists,
+    }
+}
 class LoadTokenRet {
     entity: Token
     exists: boolean
@@ -142,6 +161,26 @@ export function safeLoadManager(address: string): LoadManagerRet {
     }
 }
 
+class LoadTwapSourceRet {
+    entity: TwapSource
+    exists: boolean
+}
+export function safeLoadTwapSource(address: string): LoadTwapSourceRet {
+    let exists = true
+
+    let twapSourceEntity = TwapSource.load(address)
+
+    if (!twapSourceEntity) {
+        twapSourceEntity = new TwapSource(address)
+        exists = false
+    }
+
+    return {
+        entity: twapSourceEntity,
+        exists: exists,
+    }
+}
+
 class LoadVolatilityTierRet {
     entity: VolatilityTier
     exists: boolean
@@ -188,7 +227,6 @@ export function safeLoadTick(address: string, index: BigInt): LoadTickRet {
         tickEntity = new Tick(tickId)
         tickEntity.pool = address
         tickEntity.index = index
-        tickEntity.epochLast = ONE_BI
         // 1.0001^tick is token1/token0.
         tickEntity.price0 = bigDecimalExponated(BigDecimal.fromString('1.0001'), BigInt.fromI32(tickEntity.index.toI32()))
         tickEntity.price1 = safeDiv(ONE_BD, tickEntity.price0)
@@ -244,6 +282,25 @@ export function safeLoadCoverPoolFactory(factoryAddress: string): LoadCoverPoolF
 
     return {
         entity: coverPoolFactoryEntity,
+        exists: exists,
+    }
+}
+
+class LoadLimitPoolRet {
+    entity: LimitPool
+    exists: boolean
+}
+export function safeLoadLimitPool(poolAddress: string): LoadLimitPoolRet {
+    let exists = true
+    let limitPoolEntity = LimitPool.load(poolAddress)
+
+    if (!limitPoolEntity) {
+        limitPoolEntity = new LimitPool(poolAddress)
+        exists = false
+    }
+
+    return {
+        entity: limitPoolEntity,
         exists: exists,
     }
 }

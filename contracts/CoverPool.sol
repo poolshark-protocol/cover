@@ -30,6 +30,11 @@ contract CoverPool is
         _;
     }
 
+    modifier factoryOnly() {
+        _onlyFactory();
+        _;
+    }
+
     modifier canoncialOnly() {
         _onlyCanoncialClones();
         _;
@@ -42,8 +47,20 @@ contract CoverPool is
         factory = factory_;
     }
 
+    function initialize() 
+        external 
+    {
+        Ticks.initialize(
+            tickMap,
+            pool0,
+            pool1,
+            globalState,
+            ICoverPool(address(this)).immutables()
+        );
+    }
+
     function mint(
-        MintParams memory params
+        MintCoverParams memory params
     ) external override
         nonReentrant(globalState)
         canoncialOnly
@@ -83,7 +100,7 @@ contract CoverPool is
     }
 
     function burn(
-        BurnParams memory params
+        BurnCoverParams memory params
     ) external override
         nonReentrant(globalState)
         canoncialOnly
@@ -190,7 +207,7 @@ contract CoverPool is
     }
 
     function snapshot(
-       SnapshotParams memory params 
+       SnapshotCoverParams memory params 
     ) external view override returns (
         CoverPosition memory
     ) {
@@ -256,11 +273,22 @@ contract CoverPool is
             tickSpread(),
             twapLength(),
             auctionLength(),
-            blockTime(),
+            sampleInterval(),
             token0Decimals(),
             token1Decimals(),
             minAmountLowerPriced()
         );
+    }
+
+    function syncLatestTick() external view returns (int24) {
+        return Epochs.syncLatestTick(
+            globalState,
+            immutables()
+        );
+    }
+
+    function syncGlobalState() external view returns (GlobalState memory) {
+        return globalState;
     }
 
     function priceBounds(
@@ -302,7 +330,9 @@ contract CoverPool is
             constants.poolToken,
             constants.inputPool,
             constants.bounds.min,
-            constants.bounds.max,
+            constants.bounds.max
+        );
+        bytes memory value2 = abi.encodePacked(
             constants.minAmountPerAuction,
             constants.genesisTime,
             constants.minPositionWidth,
@@ -310,16 +340,20 @@ contract CoverPool is
             constants.twapLength,
             constants.auctionLength
         );
-        bytes memory value2 = abi.encodePacked(
-            constants.blockTime,
+        bytes memory value3 = abi.encodePacked(
+            constants.sampleInterval,
             constants.token0Decimals,
             constants.token1Decimals,
             constants.minAmountLowerPriced
         );
-        return abi.encodePacked(value1, value2);
+        return abi.encodePacked(value1, value2, value3);
     }
 
     function _onlyOwner() private view {
         if (msg.sender != owner()) revert OwnerOnly();
+    }
+
+    function _onlyFactory() private view {
+        if (msg.sender != factory) revert FactoryOnly();
     }
 }
